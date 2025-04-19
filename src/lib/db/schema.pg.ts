@@ -3,7 +3,7 @@ import { pgTable, text, timestamp, json, uuid } from "drizzle-orm/pg-core";
 
 export const ChatThreadSchema = pgTable("chat_thread", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
-  title: text("title").notNull(),
+  title: text("").notNull(),
   userId: text("user_id").notNull(),
   createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });

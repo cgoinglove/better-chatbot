@@ -23,6 +23,7 @@ export async function generateTitleFromUserMessageAction({
   message,
   model,
 }: { message: Message; model: LanguageModel }) {
+  console.log("Model", model.modelId);
   const { text: title } = await generateText({
     model,
     system: CREATE_THREAD_TITLE_PROMPT,
