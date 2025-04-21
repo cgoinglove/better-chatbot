@@ -82,23 +82,7 @@ export const isToolCallUnsupported = (model: LanguageModel) => {
   ].includes(model);
 };
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-export const DEFAULT_MODEL = "gpt-4.1-mini";
-=======
 export const DEFAULT_MODEL = "claude-3-5-sonnet";
->>>>>>> Stashed changes
-=======
-export const DEFAULT_MODEL = "claude-3-5-sonnet";
->>>>>>> Stashed changes
-=======
-export const DEFAULT_MODEL = "claude-3-5-sonnet";
->>>>>>> Stashed changes
-=======
-export const DEFAULT_MODEL = "claude-3-5-sonnet";
->>>>>>> Stashed changes
 
 const fallbackModel = allModels.anthropic["claude-3-5-sonnet"];
 
