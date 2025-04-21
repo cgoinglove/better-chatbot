@@ -1,0 +1,28 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Docker Container Management in LLM Sandbox
+
+LLM Sandbox uses Docker containers as the primary isolation mechanism for executing LLM-generated code safely. This rule covers the Docker container management patterns and best practices within the project.
+
+## Docker Integration
+
+- Docker containers provide an isolated execution environment with controlled resources
+- Container lifecycle management (create, start, stop, remove) is abstracted by the sandbox API
+- Resource limits (CPU, memory, network) can be configured for each container
+
+## Security Considerations
+
+- Containers run with minimal privileges and without host access
+- Volume mounting is strictly controlled to prevent host filesystem access
+- Network access can be restricted or disabled entirely
+- Environment variables are carefully sanitized before being passed to containers
+
+## Container Configuration
+
+- Base images are minimal and security-focused
+- Container networking is isolated by default
+- Execution time limits can be enforced to prevent resource exhaustion
+- Output capture is managed for retrieval of execution results

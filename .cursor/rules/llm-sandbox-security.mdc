@@ -1,0 +1,39 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# LLM Sandbox Security Guidelines
+
+Security is a core concern when executing LLM-generated code. This rule outlines the security principles and mechanisms used in LLM Sandbox.
+
+## Security Architecture
+
+- **Layered Defense**: Multiple security layers prevent escapes and access to sensitive resources
+- **Privilege Separation**: Code runs with minimal required privileges
+- **Resource Quotas**: Strict limits on CPU, memory, disk, and network usage
+- **Execution Timeouts**: Time-bounded execution prevents resource exhaustion attacks
+
+## Code Execution Flow
+
+1. LLM generates code
+2. Code is validated and sanitized
+3. Sandbox environment is prepared with appropriate restrictions
+4. Code is executed in isolated container
+5. Results are captured and returned
+6. Container is cleaned up regardless of execution outcome
+
+## Common Attack Vectors (Prevented)
+
+- Container escape attempts
+- Resource exhaustion (CPU/memory/disk)
+- Network access to internal services
+- Persistent access attempts
+- Data exfiltration
+
+## Security Best Practices
+
+- Regularly update base container images
+- Apply principle of least privilege for all executions
+- Implement comprehensive logging and monitoring
+- Never execute code with host access or elevated privileges

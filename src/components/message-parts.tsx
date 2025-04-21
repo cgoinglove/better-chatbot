@@ -1,31 +1,39 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+import JsonView from "@/components/ui/json-view";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { useCopy } from "@/hooks/use-copy";
+import { cn } from "@/lib/utils";
+import type { UseChatHelpers } from "@ai-sdk/react";
 import { UIMessage } from "ai";
 import {
+  BookMarked,
   Check,
-  Copy,
   ChevronDown,
+  ChevronDownIcon,
+  Copy,
   Loader2,
   Pencil,
-  ChevronDownIcon,
   RefreshCw,
+  RotateCcw,
 } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
-import { Button } from "ui/button";
-import { Markdown } from "./markdown";
-import { PastesContentCard } from "./pasts-content";
-import { cn } from "lib/utils";
-import JsonView from "ui/json-view";
 import { useState } from "react";
+import { AddToLibraryDialog } from "./library";
+import { Markdown } from "./markdown";
 import { MessageEditor } from "./message-editor";
-import type { UseChatHelpers } from "@ai-sdk/react";
-import { useCopy } from "@/hooks/use-copy";
+import { PastesContentCard } from "./pasts-content";
 
-import { Card, CardContent } from "ui/card";
-import { AnimatePresence, motion } from "framer-motion";
-import { SelectModel } from "./select-model";
-import { customModelProvider } from "lib/ai/models";
 import { deleteMessagesByChatIdAfterTimestampAction } from "@/app/api/chat/actions";
+import { Card, CardContent } from "@/components/ui/card";
+import { customModelProvider } from "@/lib/ai/models";
+import { AnimatePresence, motion } from "framer-motion";
+import { FileAttachmentView } from "./file-attachment-view";
+import { SelectModel } from "./select-model";
 
 import { toast } from "sonner";
 import { safe } from "ts-safe";
@@ -35,6 +43,10 @@ type MessagePart = UIMessage["parts"][number];
 type TextMessagePart = Extract<MessagePart, { type: "text" }>;
 type AssistMessagePart = Extract<MessagePart, { type: "text" }>;
 type ToolMessagePart = Extract<MessagePart, { type: "tool-invocation" }>;
+type FileAttachmentMessagePart = Extract<
+  MessagePart,
+  { type: "file-attachment" }
+>;
 
 interface UserMessagePartProps {
   part: TextMessagePart;
@@ -42,6 +54,7 @@ interface UserMessagePartProps {
   message: UIMessage;
   setMessages: UseChatHelpers["setMessages"];
   reload: UseChatHelpers["reload"];
+  append?: UseChatHelpers["append"];
 }
 
 interface AssistMessagePartProps {
@@ -57,15 +70,44 @@ interface ToolMessagePartProps {
   part: ToolMessagePart;
 }
 
+interface FileAttachmentMessagePartProps {
+  part: FileAttachmentMessagePart;
+}
+
 export const UserMessagePart = ({
   part,
   isLast,
   message,
   setMessages,
   reload,
+  append,
 }: UserMessagePartProps) => {
   const { copied, copy } = useCopy();
   const [mode, setMode] = useState<"view" | "edit">("view");
+  const [isResending, setIsResending] = useState(false);
+  const [isLibraryDialogOpen, setIsLibraryDialogOpen] = useState(false);
+
+  const handleResend = async () => {
+    try {
+      setIsResending(true);
+
+      // Create a new message with the same content
+      if (append) {
+        await append({
+          role: "user",
+          content: "",
+          parts: message.parts,
+        });
+      } else {
+        toast.error("Cannot resend message: append function not available");
+      }
+    } catch (error) {
+      toast.error("Failed to resend message");
+      console.error("Failed to resend message:", error);
+    } finally {
+      setIsResending(false);
+    }
+  };
 
   if (mode === "edit") {
     return (
@@ -115,7 +157,7 @@ export const UserMessagePart = ({
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
-                  data-testid="message-edit-button"
+                  data-testid="message-copy-button"
                   variant="ghost"
                   size="icon"
                   className={cn(
@@ -128,9 +170,54 @@ export const UserMessagePart = ({
               </TooltipTrigger>
               <TooltipContent side="bottom">Copy</TooltipContent>
             </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  data-testid="message-save-to-library-button"
+                  variant="ghost"
+                  size="icon"
+                  className={cn(
+                    "size-3! p-4! opacity-0 group-hover/message:opacity-100",
+                  )}
+                  onClick={() => setIsLibraryDialogOpen(true)}
+                >
+                  <BookMarked className="size-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">Save to Library</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  data-testid="message-resend-button"
+                  variant="ghost"
+                  size="icon"
+                  className={cn(
+                    "size-3! p-4! opacity-0 group-hover/message:opacity-100",
+                  )}
+                  onClick={handleResend}
+                  disabled={isResending}
+                >
+                  {isResending ? (
+                    <Loader2 className="animate-spin" />
+                  ) : (
+                    <RotateCcw />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">Resend</TooltipContent>
+            </Tooltip>
           </>
         )}
       </div>
+
+      <AddToLibraryDialog
+        isOpen={isLibraryDialogOpen}
+        onClose={() => setIsLibraryDialogOpen(false)}
+        content={part.text}
+        source={message.id}
+        sourceType="chat"
+      />
     </div>
   );
 };
@@ -147,8 +234,11 @@ export const AssistMessagePart = ({
 }: AssistMessagePartProps) => {
   const { copied, copy } = useCopy();
   const [isLoading, setIsLoading] = useState(false);
+  const [model, setModel] = useState<string>("claude-3-5-sonnet");
+  const [isLibraryDialogOpen, setIsLibraryDialogOpen] = useState(false);
 
-  const handleModelChange = (model: string) => {
+  const handleModelChange = (newModel: string) => {
+    setModel(newModel);
     safe(() => setIsLoading(true))
       .ifOk(() => deleteMessagesByChatIdAfterTimestampAction(message.id))
       .ifOk(() =>
@@ -163,7 +253,7 @@ export const AssistMessagePart = ({
       .ifOk(() =>
         reload({
           body: {
-            model,
+            model: newModel,
             action: "update-assistant",
             id: threadId,
           },
@@ -201,9 +291,25 @@ export const AssistMessagePart = ({
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
+              <Button
+                data-testid="message-save-to-library-button"
+                variant="ghost"
+                size="icon"
+                className={cn(
+                  "size-3! p-4! opacity-0 group-hover/message:opacity-100",
+                )}
+                onClick={() => setIsLibraryDialogOpen(true)}
+              >
+                <BookMarked className="size-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Save to Library</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
               <div>
                 <SelectModel
-                  model={""}
+                  model={model || "claude-3-5-sonnet"}
                   onSelect={handleModelChange}
                   providers={modelList}
                 >
@@ -224,6 +330,14 @@ export const AssistMessagePart = ({
           </Tooltip>
         </div>
       )}
+
+      <AddToLibraryDialog
+        isOpen={isLibraryDialogOpen}
+        onClose={() => setIsLibraryDialogOpen(false)}
+        content={part.text}
+        source={message.id}
+        sourceType="chat"
+      />
     </div>
   );
 };
@@ -290,6 +404,29 @@ export const ToolMessagePart = ({ part }: ToolMessagePartProps) => {
           </CardContent>
         </Card>
       )}
+    </div>
+  );
+};
+
+export const FileAttachmentMessagePart = ({
+  part,
+}: FileAttachmentMessagePartProps) => {
+  const { file_attachment } = part;
+
+  return (
+    <div className="flex flex-col gap-2 my-2">
+      <FileAttachmentView
+        attachments={[
+          {
+            id: file_attachment.id,
+            filename: file_attachment.filename,
+            originalFilename: file_attachment.filename,
+            mimetype: file_attachment.mimetype,
+            url: file_attachment.url,
+            thumbnailUrl: file_attachment.thumbnailUrl,
+          },
+        ]}
+      />
     </div>
   );
 };

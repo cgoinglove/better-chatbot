@@ -1,26 +1,37 @@
 import {
+  Tool,
+  type UIMessage,
   appendResponseMessages,
   createDataStreamResponse,
   smoothStream,
   streamText,
-  Tool,
-  type UIMessage,
 } from "ai";
 
 import { generateTitleFromUserMessageAction } from "@/app/api/chat/actions";
 import { customModelProvider, isToolCallUnsupported } from "lib/ai/models";
+import { aiTools } from "lib/ai/tools";
 
-import { getMockUserSession } from "lib/mock";
-import { mcpClientsManager } from "../mcp/mcp-manager";
-
-import { chatService } from "lib/db/chat-service";
-import logger from "logger";
-import { SYSTEM_TIME_PROMPT } from "lib/ai/prompts";
 import { ChatMessageAnnotation } from "app-types/chat";
+import { RuleEngine } from "lib/ai/rule-engine";
+import { chatService } from "lib/db/chat-service";
+import { fileService } from "lib/db/file-service";
+import { getMockUserSession } from "lib/mock";
+import logger from "logger";
+import { mcpClientsManager } from "../mcp/mcp-manager";
 
 const { insertMessage, insertThread, selectThread } = chatService;
 
 export const maxDuration = 120;
+
+// Get system prompt with rules
+async function getSystemPrompt(userId: string): Promise<string> {
+  const ruleEngine = RuleEngine.getInstance();
+  const systemPrompt = await ruleEngine.generateSystemPrompt(userId);
+  return (
+    systemPrompt ||
+    "You are a helpful AI assistant that can use tools when needed."
+  );
+}
 
 const filterToolsByMentions = (
   mentions: string[],
@@ -82,17 +93,26 @@ export async function POST(request: Request) {
       .flatMap((annotation) => annotation.requiredTools)
       .filter(Boolean) as string[];
 
-    const tools = mcpClientsManager.tools();
+    // Combine MCP tools with direct AI tools
+    const mcpTools = mcpClientsManager.tools();
+    const tools = { ...mcpTools, ...aiTools };
 
     const model = customModelProvider.getModel(modelName);
 
     const toolChoice = !activeTool ? "none" : "auto";
 
+    // Get system prompt with rules
+    const systemPrompt = await getSystemPrompt(userId);
+
     return createDataStreamResponse({
+      // Pass initial data with threadId
+      initialData: {
+        threadId: thread.id,
+      },
       execute: (dataStream) => {
         const result = streamText({
           model,
-          system: SYSTEM_TIME_PROMPT,
+          system: systemPrompt,
           messages,
           experimental_transform: smoothStream({ chunking: "word" }),
           tools: isToolCallUnsupported(model)
@@ -103,20 +123,53 @@ export async function POST(request: Request) {
           maxSteps: 5,
           toolChoice,
           onFinish: async ({ response }) => {
+            // Make sure response and response.messages exist before proceeding
+            if (!response || !response.messages) {
+              console.error("Invalid response in onFinish:", response);
+              return;
+            }
+
             const [, assistantMessage] = appendResponseMessages({
               messages: [message],
               responseMessages: response.messages,
             });
 
+            // Make sure thread exists before proceeding
+            if (!thread || !thread.id) {
+              console.error("Thread is undefined or missing ID in onFinish");
+              return;
+            }
+
             if (action !== "update-assistant") {
+              // Extract file attachments from message parts
+              const fileAttachments = message.parts
+                .filter((part) => part.type === "file-attachment")
+                .map((part) => (part as any).file_attachment);
+
               await insertMessage({
                 threadId: thread.id,
                 model: null,
                 role: "user",
                 parts: message.parts,
-                attachments: [],
+                attachments: fileAttachments,
                 id: message.id,
               });
+
+              // Create file attachments in the database
+              for (const attachment of fileAttachments) {
+                try {
+                  await fileService.createAttachment({
+                    fileId: attachment.id,
+                    messageId: message.id,
+                    filename: attachment.filename,
+                    mimetype: attachment.mimetype,
+                    url: attachment.url,
+                    thumbnailUrl: attachment.thumbnailUrl,
+                  });
+                } catch (error) {
+                  logger.error("Error creating file attachment:", error);
+                }
+              }
             }
 
             await insertMessage({

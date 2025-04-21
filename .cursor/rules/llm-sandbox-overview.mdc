@@ -1,0 +1,25 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# LLM Sandbox Project Overview
+
+LLM Sandbox is a lightweight and portable sandbox environment designed to run large language model (LLM) generated code in a safe and isolated manner using Docker containers. This project provides an easy-to-use interface for setting up, managing, and executing code in a controlled Docker environment.
+
+## Key Features
+
+- **Isolated Execution Environment**: Securely runs LLM-generated code in Docker containers
+- **Multiple Container Technologies**: Supports Docker, Kubernetes, and Podman
+- **Simple Installation**: Available via pip with optional dependencies
+  - Basic: `pip install llm-sandbox`
+  - Docker: `pip install llm-sandbox[docker]`
+  - Kubernetes: `pip install llm-sandbox[kubernetes]`
+  - Podman: `pip install llm-sandbox[podman]`
+
+## Core Concepts
+
+- **Isolation**: Sandboxing LLM-generated code to prevent security risks
+- **Portability**: Running in containerized environments for consistency
+- **Safety**: Protecting the host system from potentially harmful code
+- **Ease of Use**: Simplified interface for container management

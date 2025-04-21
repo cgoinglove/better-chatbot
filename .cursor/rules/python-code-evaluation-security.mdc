@@ -1,0 +1,40 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Python Code Evaluation Security
+
+## Risks of Using `eval()` and `exec()`
+
+Using `eval()` or `exec()` in Python applications creates significant security risks. These functions execute arbitrary code with the full privileges of the application process.
+
+## Vulnerable Sandboxing Patterns
+
+The following pattern is **not secure**:
+
+```python
+def calculate(expression):
+    # This is NOT a secure sandbox
+    restricted_globals = {"__builtins__": None}
+    allowed_names = {k: v for k, v in math.__dict__.items() if not k.startswith("__")}
+    return eval(expression, restricted_globals, allowed_names)
+```
+
+This can be bypassed using class introspection techniques:
+```python
+().__class__.__base__.__subclasses__()[108].load_module('os').system('command')
+```
+
+## Secure Alternatives
+
+1. Use dedicated expression parsers like `sympy`, `asteval`, or `numexpr` that are designed for safe evaluation.
+2. Use a proper sandboxing solution like `RestrictedPython` or consider containerization.
+3. Whenever possible, avoid dynamic code evaluation entirely.
+
+## Implementation Recommendations
+
+- Never use `eval()`, `exec()` or `pickle.loads()` with untrusted input
+- Implement strict input validation before any code evaluation
+- Use the principle of least privilege when executing external code
+- Consider using Python's `ast` module to parse and analyze code before execution

@@ -1,19 +1,19 @@
 "use client";
 
-import type { UIMessage } from "ai";
+import { appStore } from "@/app/store";
 import { useChat } from "@ai-sdk/react";
-import { toast } from "sonner";
-import { mutate } from "swr";
+import type { UIMessage } from "ai";
+import clsx from "clsx";
+import { generateUUID } from "lib/utils";
+import logger from "logger";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef } from "react";
-import PromptInput from "./prompt-input";
-import clsx from "clsx";
-import { appStore } from "@/app/store";
-import { generateUUID } from "lib/utils";
-import { PreviewMessage, ThinkingMessage } from "./message";
-import { Greeting } from "./greeting";
-import logger from "logger";
+import { toast } from "sonner";
+import { mutate } from "swr";
 import { useShallow } from "zustand/shallow";
+import { Greeting } from "./greeting";
+import { PreviewMessage, ThinkingMessage } from "./message";
+import PromptInput from "./prompt-input";
 
 type Props = {
   threadId: string;
@@ -38,17 +38,19 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
     setMessages,
     stop,
   } = useChat({
-    id: threadId,
+    id: threadId || undefined, // Ensure undefined is passed if threadId is empty string or null
     api: "/api/chat",
-    body: { id: threadId, model, activeTool },
+    body: { id: threadId || undefined, model, activeTool },
     initialMessages: initialMessages,
     sendExtraMessageFields: true,
     generateId: generateUUID,
     experimental_throttle: 100,
-    onFinish: () => {
+    onFinish: (result) => {
       mutate("threads");
-      if (!threadId) {
-        router.push(`/chat/${threadId}`);
+      // Only redirect if we have a valid threadId from the response
+      const newThreadId = result?.threadId || threadId;
+      if (newThreadId && !threadId) {
+        router.push(`/chat/${newThreadId}`);
       }
     },
     onError: (error) => {
@@ -122,6 +124,7 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
                 isLoading={isLoading && messages.length - 1 === index}
                 setMessages={setMessages}
                 reload={reload}
+                append={append}
                 className={needSpaceClass(index) ? spaceClass : ""}
               />
             ))}

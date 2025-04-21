@@ -1,0 +1,46 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# LLM Function Execution Security
+
+## LLM-Driven Function Execution
+
+When implementing systems where language models (LLMs) can trigger function execution, special care must be taken to prevent security vulnerabilities.
+
+## Function Execution Pipeline Security
+
+The typical flow involves:
+1. User input → LLM
+2. LLM generates function call objects (name + parameters)
+3. System extracts function call objects
+4. System executes the specified functions
+5. Results returned to user
+
+## Security Considerations
+
+### Function Registry Validation
+
+- Maintain a strict whitelist of allowed functions
+- Validate function names against the whitelist before execution
+- Never allow dynamic function resolution or string-based function lookup without strict validation
+
+### Parameter Validation
+
+- Validate all parameters according to a predefined schema before execution
+- Implement type checking and bounds checking for numeric inputs
+- Sanitize string inputs, especially when used in operations that interact with the system
+
+### Execution Context Isolation
+
+- Execute functions in a restricted environment when possible
+- Implement proper authorization checks for each function call
+- Consider using capability-based security models
+
+## Common Vulnerabilities
+
+- Insufficient function name validation enabling arbitrary function execution
+- Lack of parameter validation leading to injection attacks
+- Improper sandboxing of evaluation contexts
+- Excessive permission levels for executed functions

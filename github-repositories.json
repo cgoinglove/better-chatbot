@@ -1,0 +1,13 @@
+[
+  {
+    "name": "mcp-client-chatbot",
+    "path": "D:\\mcp-client-chatbot",
+    "url": "https://github.com/sashathelambo/mcp-client-chatbot.git",
+    "branch": "main",
+    "lastCommit": {
+      "hash": "17cb215",
+      "message": "Implement deleteAllThreads functionality in chat service and integrate it into the AppSidebarThreads component for enhanced thread management. Update UI to include a delete option in the sidebar with appropriate loading and success/error handling.",
+      "date": "8 hours ago"
+    }
+  }
+]

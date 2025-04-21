@@ -1,0 +1,84 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# LLM Sandbox API Usage Patterns
+
+This rule covers the API usage patterns for the LLM Sandbox library, demonstrating how to properly set up and use the sandbox for executing LLM-generated code.
+
+## Basic Usage
+
+```python
+from llm_sandbox import Sandbox
+
+# Create a sandbox instance
+sandbox = Sandbox()
+
+# Execute code in the sandbox
+code = """
+def hello():
+    return "Hello from sandbox!"
+
+print(hello())
+"""
+
+result = sandbox.execute(code)
+print(result.output)  # Prints the output from the sandboxed execution
+```
+
+## Sandbox Configuration
+
+```python
+from llm_sandbox import Sandbox, SandboxConfig
+
+# Configure sandbox with specific limitations
+config = SandboxConfig(
+    memory_limit="256m",
+    cpu_limit=1.0,
+    timeout_seconds=30,
+    network_enabled=False,
+    allow_file_writes=False
+)
+
+# Create a sandbox with custom configuration
+sandbox = Sandbox(config=config)
+```
+
+## Advanced Usage with Different Container Technologies
+
+### Docker (default)
+```python
+from llm_sandbox import Sandbox
+sandbox = Sandbox(container_type="docker")
+```
+
+### Kubernetes
+```python
+from llm_sandbox import Sandbox
+sandbox = Sandbox(container_type="kubernetes", namespace="llm-sandbox")
+```
+
+### Podman
+```python
+from llm_sandbox import Sandbox
+sandbox = Sandbox(container_type="podman")
+```
+
+## Error Handling
+
+```python
+from llm_sandbox import Sandbox, SandboxExecutionError
+
+sandbox = Sandbox()
+
+try:
+    result = sandbox.execute(potentially_problematic_code)
+    print(result.output)
+except SandboxExecutionError as e:
+    print(f"Execution failed: {e}")
+finally:
+    # Sandbox automatically cleans up resources,
+    # but you can also do it explicitly
+    sandbox.cleanup()
+```

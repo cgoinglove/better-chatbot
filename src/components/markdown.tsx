@@ -1,9 +1,10 @@
-import Link from "next/link";
-import React, { memo, PropsWithChildren } from "react";
-import ReactMarkdown, { type Components } from "react-markdown";
-import { PreBlock } from "./pre-block";
 import { isJson, isString, toAny } from "lib/utils";
+import Link from "next/link";
+import { PropsWithChildren, memo } from "react";
+import ReactMarkdown, { type Components } from "react-markdown";
 import JsonView from "ui/json-view";
+import { CodeBlock } from "./code-block";
+import { PreBlock } from "./pre-block";
 
 const FadeIn = memo(({ children }: PropsWithChildren) => {
   return <span className="fade-in animate-in duration-1000">{children}</span>;
@@ -43,6 +44,29 @@ const components: Partial<Components> = {
     );
   },
   pre: ({ children }) => {
+    // Check if this is a code block with language
+    if (children && children.props && children.props.className) {
+      const language = children.props.className.replace("language-", "");
+      const code = children.props.children;
+
+      // If it's a code block with a supported language, use CodeBlock
+      if (
+        language &&
+        code &&
+        [
+          "javascript",
+          "typescript",
+          "python",
+          "shell",
+          "powershell",
+          "batch",
+        ].includes(language)
+      ) {
+        return <CodeBlock code={code} language={language} />;
+      }
+    }
+
+    // Otherwise use the default PreBlock
     return <PreBlock>{children}</PreBlock>;
   },
   ol: ({ node, children, ...props }) => {

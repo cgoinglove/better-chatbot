@@ -1,0 +1,101 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# SandboxSession Lifecycle
+
+The `SandboxSession` class is responsible for managing the complete lifecycle of sandbox environments in LLM Sandbox. This class handles the creation, usage, and destruction of Docker containers in which LLM-generated code is executed.
+
+## Lifecycle Phases
+
+### 1. Initialization
+
+The session begins by creating a `SandboxSession` instance with the desired configuration:
+
+```python
+from llm_sandbox import SandboxSession, SandboxConfig
+
+# Configure the sandbox environment
+config = SandboxConfig(
+    memory_limit="512m",
+    cpu_limit=1.0,
+    timeout_seconds=60,
+    base_image="python:3.9-slim"
+)
+
+# Initialize the session
+session = SandboxSession(config=config)
+```
+
+### 2. Opening the Session
+
+After initialization, the session must be opened to prepare the environment:
+
+```python
+# This builds/pulls the Docker image and starts the container
+session.open()
+```
+
+During this phase:
+- The Docker image is built or pulled
+- A new container is created with the specified constraints
+- The container is started and prepared for code execution
+
+### 3. Running Code
+
+Once the session is open, code can be executed within the sandbox:
+
+```python
+# Execute Python code in the sandbox
+result = session.run("""
+def calculate():
+    return 2 + 2
+
+print(f"The result is {calculate()}")
+""")
+
+# Access execution output
+print(result.output)
+```
+
+Multiple code executions can be performed in the same session:
+
+```python
+result1 = session.run("print('First execution')")
+result2 = session.run("print('Second execution')")
+```
+
+### 4. Closing the Session
+
+When finished, the session should be properly closed to release resources:
+
+```python
+# Stops and removes the container
+session.close()
+```
+
+Sessions can also be used as context managers for automatic cleanup:
+
+```python
+with SandboxSession() as session:
+    result = session.run("print('Hello, sandbox world!')")
+    print(result.output)
+# Container is automatically stopped and removed when exiting the context
+```
+
+## Error Handling
+
+The session lifecycle includes proper error handling to ensure resources are cleaned up:
+
+```python
+try:
+    session = SandboxSession()
+    session.open()
+    result = session.run(code)
+except Exception as e:
+    print(f"Error during execution: {e}")
+finally:
+    if session:
+        session.close()
+```

@@ -1,3 +1,4 @@
+import "./init-db"; // Import the database initialization module
 import { pgChatService } from "./queries.pg";
 import { sqliteChatService } from "./queries.sqlite";
 

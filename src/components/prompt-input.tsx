@@ -1,21 +1,27 @@
 "use client";
 
+import { appStore } from "@/app/store";
+import { UseChatHelpers } from "@ai-sdk/react";
+import { GitHubFileSearchResult } from "app-types/github";
+import { customModelProvider } from "lib/ai/models";
 import { cn } from "lib/utils";
 import { Check, CornerRightUp, Paperclip, Pause } from "lucide-react";
 import { ReactNode, useMemo, useState } from "react";
 import { Button } from "ui/button";
-import { notImplementedToast } from "ui/shared-toast";
-import { PastesContentCard } from "./pasts-content";
-import { UseChatHelpers } from "@ai-sdk/react";
-import { SelectModel } from "./select-model";
-import { appStore } from "@/app/store";
 import { useShallow } from "zustand/shallow";
-import { customModelProvider } from "lib/ai/models";
+import { GitHubFileViewer } from "./github-file-viewer";
+import { GitHubRepositorySelector } from "./github-repository-selector";
+import { GitHubSearch } from "./github-search";
+import { PastesContentCard } from "./pasts-content";
+import { SelectModel } from "./select-model";
 
-import { McpListCombo } from "./mcp-list-combo";
-import { createMCPToolId } from "lib/ai/mcp/mcp-tool-id";
 import { ChatMessageAnnotation } from "app-types/chat";
+import { createMCPToolId } from "lib/ai/mcp/mcp-tool-id";
 import dynamic from "next/dynamic";
+import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
+import { FileAttachmentView } from "./file-attachment-view";
+import { FileUpload, UploadedFile } from "./file-upload";
+import { McpListCombo } from "./mcp-list-combo";
 
 interface PromptInputProps {
   placeholder?: string;
@@ -43,12 +49,19 @@ export default function PromptInput({
   onStop,
   isLoading,
 }: PromptInputProps) {
-  const [appStoreMutate, model, activeTool, mcpList] = appStore(
+  const [
+    appStoreMutate,
+    model,
+    activeTool,
+    mcpList,
+    currentGithubRepositoryId,
+  ] = appStore(
     useShallow((state) => [
       state.mutate,
       state.model,
       state.activeTool,
       state.mcpList,
+      state.currentGithubRepositoryId,
     ]),
   );
 
@@ -61,6 +74,11 @@ export default function PromptInput({
   }, []);
 
   const [pastedContents, setPastedContents] = useState<string[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [showFileUpload, setShowFileUpload] = useState(false);
+  const [showGithubSearch, setShowGithubSearch] = useState(false);
+  const [selectedGithubFile, setSelectedGithubFile] =
+    useState<GitHubFileSearchResult | null>(null);
 
   const toolList = useMemo(() => {
     return mcpList
@@ -98,7 +116,22 @@ export default function PromptInput({
       text: content,
     }));
 
-    if (userMessage.length === 0 && pastedContentsParsed.length === 0) {
+    const fileAttachments = uploadedFiles.map((file) => ({
+      type: "file-attachment" as const,
+      file_attachment: {
+        id: file.id,
+        filename: file.filename,
+        mimetype: file.mimetype,
+        url: file.url,
+        thumbnailUrl: file.thumbnailUrl,
+      },
+    }));
+
+    if (
+      userMessage.length === 0 &&
+      pastedContentsParsed.length === 0 &&
+      fileAttachments.length === 0
+    ) {
       return;
     }
 
@@ -115,6 +148,7 @@ export default function PromptInput({
     }
     setPastedContents([]);
     setToolMentionItems([]);
+    setUploadedFiles([]);
     setInput("");
     append!({
       role: "user",
@@ -122,6 +156,7 @@ export default function PromptInput({
       annotations,
       parts: [
         ...pastedContentsParsed,
+        ...fileAttachments,
         {
           type: "text",
           text: userMessage,
@@ -169,15 +204,41 @@ export default function PromptInput({
                   />
                 ))}
               </div>
+
+              {uploadedFiles.length > 0 && (
+                <div className="flex w-full items-start gap-2 mb-2">
+                  <FileAttachmentView
+                    attachments={uploadedFiles}
+                    compact
+                    onRemove={(id) => {
+                      setUploadedFiles((prev) =>
+                        prev.filter((file) => file.id !== id),
+                      );
+                    }}
+                  />
+                </div>
+              )}
               <div className="flex w-full items-center z-30">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="cursor-pointer"
-                  onClick={notImplementedToast}
-                >
-                  <Paperclip />
-                </Button>
+                <Popover open={showFileUpload} onOpenChange={setShowFileUpload}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="cursor-pointer"
+                    >
+                      <Paperclip />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80 p-2" align="start">
+                    <FileUpload
+                      onFileUpload={(file) => {
+                        setUploadedFiles((prev) => [...prev, file]);
+                        setShowFileUpload(false);
+                      }}
+                      uploadedFiles={uploadedFiles}
+                    />
+                  </PopoverContent>
+                </Popover>
 
                 <SelectModel
                   onSelect={(model) => {
@@ -191,6 +252,17 @@ export default function PromptInput({
                   </Button>
                 </SelectModel>
                 <div className="flex-1" />
+                {currentGithubRepositoryId && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowGithubSearch(true)}
+                    className="mr-1"
+                  >
+                    Search Code
+                  </Button>
+                )}
+                <GitHubRepositorySelector />
                 <McpListCombo>
                   <Button
                     variant={activeTool ? "secondary" : "ghost"}
@@ -234,6 +306,28 @@ export default function PromptInput({
           </div>
         </fieldset>
       </div>
+
+      {/* GitHub Search Dialog */}
+      {showGithubSearch && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-card border rounded-lg shadow-lg w-full max-w-2xl p-6">
+            <h2 className="text-xl font-bold mb-4">
+              Search Code in Repository
+            </h2>
+            {selectedGithubFile ? (
+              <GitHubFileViewer
+                file={selectedGithubFile}
+                onClose={() => setSelectedGithubFile(null)}
+              />
+            ) : (
+              <GitHubSearch
+                onSelect={(file) => setSelectedGithubFile(file)}
+                onCancel={() => setShowGithubSearch(false)}
+              />
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

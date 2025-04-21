@@ -1,17 +1,18 @@
 "use client";
 
+import type { UseChatHelpers } from "@ai-sdk/react";
 import type { UIMessage } from "ai";
-import { memo, useMemo } from "react";
 import equal from "fast-deep-equal";
 import { motion } from "framer-motion";
 import { cn } from "lib/utils";
-import type { UseChatHelpers } from "@ai-sdk/react";
+import { memo, useMemo } from "react";
 import { Alert, AlertDescription, AlertTitle } from "ui/alert";
 import {
-  UserMessagePart,
   AssistMessagePart,
-  ToolMessagePart,
+  FileAttachmentMessagePart,
   ReasoningPart,
+  ToolMessagePart,
+  UserMessagePart,
 } from "./message-parts";
 
 interface Props {
@@ -20,6 +21,7 @@ interface Props {
   isLoading: boolean;
   setMessages: UseChatHelpers["setMessages"];
   reload: UseChatHelpers["reload"];
+  append?: UseChatHelpers["append"];
   className?: string;
 }
 
@@ -29,6 +31,7 @@ const PurePreviewMessage = ({
   setMessages,
   isLoading,
   reload,
+  append,
   className,
 }: Props) => {
   const isUserMessage = useMemo(() => message.role === "user", [message.role]);
@@ -80,6 +83,7 @@ const PurePreviewMessage = ({
                   message={message}
                   setMessages={setMessages}
                   reload={reload}
+                  append={append}
                 />
               );
             }
@@ -100,6 +104,10 @@ const PurePreviewMessage = ({
 
             if (part.type === "tool-invocation") {
               return <ToolMessagePart key={key} part={part} />;
+            }
+
+            if (part.type === "file-attachment") {
+              return <FileAttachmentMessagePart key={key} part={part} />;
             }
           })}
         </div>
