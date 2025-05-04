@@ -5,8 +5,13 @@ import { anthropic } from "@ai-sdk/anthropic";
 import { xai } from "@ai-sdk/xai";
 import { LanguageModel, wrapLanguageModel } from "ai";
 import { gemmaToolMiddleware } from "@ai-sdk-tool/parser";
+import { getAllCustomProviderModels } from "./custom-providers";
 
-export const allModels = {
+/**
+ * Define base models that are always available regardless of configuration
+ * These models form the core of the available AI models in the application
+ */
+const baseModels = {
   openai: {
     "4o-mini": openai("gpt-4o-mini", {}),
     "gpt-4.1": openai("gpt-4.1"),
@@ -43,7 +48,22 @@ export const allModels = {
       middleware: gemmaToolMiddleware,
     }),
   },
-} as const;
+  // Include all custom OpenAI-compatible providers (including OpenRouter)
+  ...getAllCustomProviderModels(),
+};
+
+/**
+ * Export all models without conditional loading
+ *
+ * Ensure all models are visible in the UI. Models will appear in the dropdown even if
+ * their respective API keys are not set, but will fail gracefully at runtime.
+ *
+ * To use custom provider models (including OpenRouter):
+ * 1. Set the appropriate API key environment variable
+ * 2. Configure models through environment variables
+ * 3. See README.md for detailed configuration instructions
+ */
+export const allModels = baseModels;
 
 export const isToolCallUnsupportedModel = (model: LanguageModel) => {
   return [
