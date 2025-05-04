@@ -2,11 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/layouts/theme-provider";
-import { SidebarProvider } from "ui/sidebar";
-import { AppSidebar } from "@/components/layouts/app-sidebar";
-import { AppHeader } from "@/components/layouts/app-header";
+import { SessionProvider } from "next-auth/react";
 import { Toaster } from "ui/sonner";
-import "./api/mcp/mcp-manager";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,21 +30,17 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <SidebarProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="dark"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <AppSidebar />
-            <main className="relative w-full flex flex-col h-screen">
-              <AppHeader />
-              <div className="flex-1 overflow-y-auto">{children}</div>
-            </main>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <SessionProvider>
+            {children}
             <Toaster richColors />
-          </ThemeProvider>
-        </SidebarProvider>
+          </SessionProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

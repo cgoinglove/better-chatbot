@@ -37,7 +37,7 @@ const ToolsList = memo(({ tools }: { tools: MCPToolInfo[] }) => (
   <div className="space-y-2 pr-2">
     {tools.map((tool) => (
       <ToolDetailPopup key={tool.name} tool={tool}>
-        <div className="flex cursor-pointer bg-secondary/50 rounded-md p-2 hover:bg-secondary/80 transition-colors">
+        <div className="flex cursor-pointer bg-secondary rounded-md p-2 hover:bg-input transition-colors">
           <div className="flex-1 w-full">
             <p className="font-medium text-sm mb-1">{tool.name}</p>
             <p className="text-xs text-muted-foreground line-clamp-1">
@@ -54,15 +54,6 @@ const ToolsList = memo(({ tools }: { tools: MCPToolInfo[] }) => (
 ));
 
 ToolsList.displayName = "ToolsList";
-
-// Configuration viewer component
-const ConfigViewer = memo(({ config }: { config: any }) => (
-  <div className="overflow-visible">
-    <JsonView data={config} />
-  </div>
-));
-
-ConfigViewer.displayName = "ConfigViewer";
 
 // Error alert component
 const ErrorAlert = memo(({ error }: { error: string }) => (
@@ -205,19 +196,19 @@ export const MCPCard = memo(function MCPCard({
       {errorMessage && <ErrorAlert error={errorMessage} />}
 
       <div className="relative">
-        <CardContent className="flex flex-row gap-4 text-sm max-h-[300px] overflow-auto">
-          <div className="w-1/2 min-w-0 flex flex-col">
-            <div className="flex items-center gap-2 mb-2 sticky top-0 pt-2 pb-1 z-10">
+        <CardContent className="flex min-w-0 h-full flex-row gap-4 text-sm max-h-[240px] overflow-y-auto">
+          <div className="w-1/2 min-w-0 flex flex-col h-full pr-2 border-r">
+            <div className="flex items-center gap-2 mb-2 pt-2 pb-1 z-10">
               <Settings size={14} className="text-muted-foreground" />
               <h5 className="text-muted-foreground text-sm font-medium">
                 Configuration
               </h5>
             </div>
-            <ConfigViewer config={config} />
+            <JsonView data={config} />
           </div>
 
-          <div className="w-1/2 min-w-0 border-l pl-4 flex flex-col">
-            <div className="flex items-center gap-2 mb-4 sticky top-0 pt-2 pb-1 z-10">
+          <div className="w-1/2 min-w-0  flex flex-col h-full">
+            <div className="flex items-center gap-2 mb-4 pt-2 pb-1 z-10">
               <Wrench size={14} className="text-muted-foreground" />
               <h5 className="text-muted-foreground text-sm font-medium">
                 Available Tools

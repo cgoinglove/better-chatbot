@@ -33,3 +33,19 @@ export type MCPServerInfo = {
   status: "connected" | "disconnected" | "loading";
   toolInfo: MCPToolInfo[];
 };
+
+// export type McpService = {
+//   selectServers: () => Promise<McpServerEntity[]>;
+//   insertServer: (server: {
+//     name: string;
+//     config: MCPServerConfig;
+//     enabled?: boolean;
+//   }) => Promise<McpServerEntity>;
+//   updateServer: (server: {
+//     id: string;
+//     name?: string;
+//     config?: MCPServerConfig;
+//     enabled?: boolean;
+//   }) => Promise<McpServerEntity>;
+//   deleteServer: (id: string) => Promise<void>;
+// };

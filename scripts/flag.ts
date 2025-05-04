@@ -3,11 +3,11 @@ import { existsSync, mkdirSync } from "node:fs";
 import logger from "logger";
 import { colorize } from "consola/utils";
 
-const VERSION = "0.0.6";
+export const FLAG_VERSION = "1.0.0";
 
 const CACHE_PATH = join(process.cwd(), "node_modules/.mcp-chatbot-cache");
 
-const flagPath = join(CACHE_PATH, VERSION);
+const flagPath = join(CACHE_PATH, FLAG_VERSION);
 
 const flagCheck = () => {
   if (existsSync(flagPath)) {
@@ -31,7 +31,7 @@ if (command === "generate") {
 } else {
   if (!flagCheck()) {
     logger.error(
-      `${colorize("cyan", "🔄 UPDATE REQUIRED")} - ${colorize("yellow", `Version ${VERSION}`)}:\n\n👇🏻 Please run the following commands for proper operation:\n\n${colorize("green", "pnpm initial")}`,
+      `${colorize("cyan", "🔄 UPDATE REQUIRED")} - ${colorize("yellow", `Version ${FLAG_VERSION}`)}:\n\n👇🏻 Please run the following commands for proper operation:\n\n${colorize("green", "pnpm initial")}`,
     );
     process.exit(1);
   }

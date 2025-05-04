@@ -17,7 +17,6 @@ import {
 } from "@/app/api/chat/actions";
 import { customModelProvider, isToolCallUnsupportedModel } from "lib/ai/models";
 
-import { getMockUserSession } from "lib/mock";
 import { mcpClientsManager } from "../mcp/mcp-manager";
 
 import { chatService } from "lib/db/chat-service";
@@ -29,6 +28,9 @@ import { z } from "zod";
 import { errorIf, safe } from "ts-safe";
 import { callMcpToolAction } from "../mcp/actions";
 import { extractMCPToolId } from "lib/ai/mcp/mcp-tool-id";
+import { auth } from "../auth/auth";
+import { redirect } from "next/navigation";
+import { defaultTools } from "lib/ai/tools";
 
 const { insertMessage, insertThread, upsertMessage } = chatService;
 
@@ -39,7 +41,7 @@ const requestBodySchema = z.object({
   messages: z.array(z.any()) as z.ZodType<Message[]>,
   model: z.string(),
   projectId: z.string().optional(),
-  action: z.enum(["update-assistant", ""]).optional(),
+  action: z.enum(["update-assistant", "temporary-chat", ""]).optional(),
   toolChoice: z.enum(["auto", "none", "manual"]).optional(),
 });
 
@@ -57,15 +59,21 @@ export async function POST(request: Request) {
 
     let thread = id ? await rememberThreadAction(id) : null;
 
-    const userId = getMockUserSession().id;
+    const session = await auth();
+
+    if (!session?.user.id) {
+      return redirect("/login");
+    }
 
     const message = messages.at(-1)!;
+
+    const isNoStore = action == "temporary-chat";
 
     if (!message) {
       return new Response("No user message found", { status: 400 });
     }
 
-    if (!thread) {
+    if (!thread && !isNoStore) {
       const title = await generateTitleFromUserMessageAction({
         message,
         model: customModelProvider.getModel(modelName),
@@ -74,7 +82,7 @@ export async function POST(request: Request) {
       thread = await insertThread({
         title,
         id: id ?? generateUUID(),
-        userId,
+        userId: session.user.id,
         projectId: projectId ?? null,
       });
     }
@@ -89,21 +97,20 @@ export async function POST(request: Request) {
     const mcpTools = mcpClientsManager.tools();
 
     const model = customModelProvider.getModel(modelName);
-
     const systemPrompt = mergeSystemPrompt(
-      SYSTEM_TIME_PROMPT,
-      projectInstructions?.systemPrompt,
+      projectInstructions?.systemPrompt || "- You are a helpful assistant.",
+      SYSTEM_TIME_PROMPT(session),
     );
-
     const isToolCallAllowed =
       !isToolCallUnsupportedModel(model) && toolChoice != "none";
+
+    const requiredToolsAnnotations = annotations
+      .flatMap((annotation) => annotation.requiredTools)
+      .filter(Boolean) as string[];
 
     const tools = safe(mcpTools)
       .map(errorIf(() => !isToolCallAllowed && "Not allowed"))
       .map((tools) => {
-        const requiredToolsAnnotations = annotations
-          .flatMap((annotation) => annotation.requiredTools)
-          .filter(Boolean) as string[];
         return filterToolsByMentions(requiredToolsAnnotations, tools);
       })
       .map((tools) => {
@@ -111,6 +118,9 @@ export async function POST(request: Request) {
           return disableToolExecution(tools);
         }
         return tools;
+      })
+      .map((tools) => {
+        return { ...defaultTools, ...tools };
       })
       .orElse(undefined);
 
@@ -140,14 +150,19 @@ export async function POST(request: Request) {
           maxSteps: 10,
           experimental_transform: smoothStream({ chunking: "word" }),
           tools,
+          toolChoice:
+            isToolCallAllowed && requiredToolsAnnotations.length > 0
+              ? "required"
+              : "auto",
           onFinish: async ({ response, usage }) => {
+            if (isNoStore) return;
             const appendMessages = appendResponseMessages({
               messages: [message],
               responseMessages: response.messages,
             });
             if (action !== "update-assistant" && message.role == "user") {
               await insertMessage({
-                threadId: thread.id,
+                threadId: thread!.id,
                 model: null,
                 role: message.role,
                 parts: message.parts!,
@@ -163,7 +178,7 @@ export async function POST(request: Request) {
               dataStream.writeMessageAnnotation(usage.completionTokens);
               await upsertMessage({
                 model: modelName,
-                threadId: thread.id,
+                threadId: thread!.id,
                 role: assistantMessage.role,
                 id: assistantMessage.id,
                 parts: assistantMessage.parts as UIMessage["parts"],

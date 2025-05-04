@@ -63,6 +63,7 @@ export type ChatService = {
   deleteMessagesByChatIdAfterTimestamp(messageId: string): Promise<void>;
 
   deleteNonProjectThreads(userId: string): Promise<void>;
+  deleteAllThreads(userId: string): Promise<void>;
 
   insertProject(
     project: Omit<Project, "id" | "createdAt" | "updatedAt">,

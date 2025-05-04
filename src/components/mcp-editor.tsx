@@ -25,6 +25,7 @@ import { updateMcpClientAction } from "@/app/api/mcp/actions";
 import { insertMcpClientAction } from "@/app/api/mcp/actions";
 import equal from "fast-deep-equal";
 import { Alert, AlertDescription, AlertTitle } from "ui/alert";
+import { z } from "zod";
 
 interface MCPEditorProps {
   initialConfig?: MCPServerConfig;
@@ -55,6 +56,7 @@ export default function MCPEditor({
   const shouldInsert = useMemo(() => isNull(initialName), [initialName]);
   const [isLoading, setIsLoading] = useState(false);
   const [jsonError, setJsonError] = useState<string | null>(null);
+  const [nameError, setNameError] = useState<string | null>(null);
 
   const convertDebounce = useMemo(() => createDebounce(), []);
   const errorDebounce = useMemo(() => createDebounce(), []);
@@ -69,14 +71,32 @@ export default function MCPEditor({
     initialConfig ? JSON.stringify(initialConfig, null, 2) : "",
   );
 
+  // Name validation schema
+  const nameSchema = z.string().regex(/^[a-zA-Z0-9\-]+$/, {
+    message: "Name must contain only alphanumeric characters and hyphens",
+  });
+
+  const validateName = (nameValue: string): boolean => {
+    const result = nameSchema.safeParse(nameValue);
+    if (!result.success) {
+      setNameError(
+        "Name must contain only alphanumeric characters (A-Z, a-z, 0-9) and hyphens (-)",
+      );
+      return false;
+    }
+    setNameError(null);
+    return true;
+  };
+
   const saveDisabled = useMemo(() => {
     return (
       name.trim() === "" ||
       isLoading ||
       !!jsonError ||
+      !!nameError ||
       !isMaybeMCPServerConfig(config)
     );
-  }, [isLoading, jsonError, config, name]);
+  }, [isLoading, jsonError, nameError, config, name]);
 
   // Validate
   const validateConfig = (jsonConfig: unknown): boolean => {
@@ -96,6 +116,15 @@ export default function MCPEditor({
     if (!name) {
       return handleErrorWithToast(
         new Error("Name is required"),
+        "mcp-editor-error",
+      );
+    }
+
+    if (!validateName(name)) {
+      return handleErrorWithToast(
+        new Error(
+          "Name must contain only alphanumeric characters (A-Z, a-z, 0-9) and hyphens (-)",
+        ),
         "mcp-editor-error",
       );
     }
@@ -147,9 +176,14 @@ export default function MCPEditor({
           id="name"
           value={name}
           disabled={!shouldInsert}
-          onChange={(e) => setName(e.target.value)}
+          onChange={(e) => {
+            setName(e.target.value);
+            if (e.target.value) validateName(e.target.value);
+          }}
           placeholder="Enter mcp server name"
+          className={nameError ? "border-destructive" : ""}
         />
+        {nameError && <p className="text-xs text-destructive">{nameError}</p>}
       </div>
       <div className="space-y-4">
         <div className="space-y-2">

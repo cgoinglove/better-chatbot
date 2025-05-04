@@ -58,23 +58,25 @@ export default function PromptInput({
   const [pastedContents, setPastedContents] = useState<string[]>([]);
 
   const toolList = useMemo(() => {
-    return mcpList
-      .filter((mcp) => mcp.status === "connected")
-      .flatMap((mcp) => [
-        {
-          id: mcp.name,
-          label: mcp.name,
-          type: "server",
-        },
-        ...mcp.toolInfo.map((tool) => {
-          const id = createMCPToolId(mcp.name, tool.name);
-          return {
-            id,
-            label: id,
-            type: "tool",
-          };
-        }),
-      ]);
+    return (
+      mcpList
+        ?.filter((mcp) => mcp.status === "connected")
+        .flatMap((mcp) => [
+          {
+            id: mcp.name,
+            label: mcp.name,
+            type: "server",
+          },
+          ...mcp.toolInfo.map((tool) => {
+            const id = createMCPToolId(mcp.name, tool.name);
+            return {
+              id,
+              label: id,
+              type: "tool",
+            };
+          }),
+        ]) ?? []
+    );
   }, [mcpList]);
 
   const handlePaste = (e: React.ClipboardEvent) => {

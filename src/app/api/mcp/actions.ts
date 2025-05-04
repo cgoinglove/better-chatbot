@@ -4,6 +4,7 @@ import type { MCPServerConfig } from "app-types/mcp";
 import { mcpClientsManager } from "./mcp-manager";
 import { isMaybeMCPServerConfig } from "lib/ai/mcp/is-mcp-config";
 import { detectConfigChanges } from "lib/ai/mcp/mcp-config-diff";
+import { z } from "zod";
 
 export async function selectMcpClientsAction() {
   const list = mcpClientsManager.getClients();
@@ -55,6 +56,19 @@ export async function insertMcpClientAction(
   name: string,
   config: MCPServerConfig,
 ) {
+  // Validate name to ensure it only contains alphanumeric characters and hyphens
+  const nameSchema = z.string().regex(/^[a-zA-Z0-9\-]+$/, {
+    message:
+      "Name must contain only alphanumeric characters (A-Z, a-z, 0-9) and hyphens (-)",
+  });
+
+  const result = nameSchema.safeParse(name);
+  if (!result.success) {
+    throw new Error(
+      "Name must contain only alphanumeric characters (A-Z, a-z, 0-9) and hyphens (-)",
+    );
+  }
+
   await mcpClientsManager.addClient(name, config);
 }
 

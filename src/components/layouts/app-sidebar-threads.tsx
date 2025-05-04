@@ -22,7 +22,7 @@ import {
   DropdownMenuTrigger,
 } from "ui/dropdown-menu";
 import {
-  deleteNonProjectThreadsAction,
+  deleteThreadsAction,
   selectThreadListByUserIdAction,
 } from "@/app/api/chat/actions";
 import { toast } from "sonner";
@@ -30,6 +30,8 @@ import { useShallow } from "zustand/shallow";
 import { useRouter } from "next/navigation";
 import useSWR, { mutate } from "swr";
 import { handleErrorWithToast } from "ui/shared-toast";
+import { useEffect } from "react";
+import { signOut } from "next-auth/react";
 
 export function AppSidebarThreads() {
   const mounted = useMounted();
@@ -38,17 +40,17 @@ export function AppSidebarThreads() {
     useShallow((state) => [state.mutate, state.currentThreadId]),
   );
 
-  const { data: threadList, isLoading } = useSWR(
-    "threads",
-    selectThreadListByUserIdAction,
-    {
-      onError: handleErrorWithToast,
-      fallbackData: [],
-      onSuccess: (data) => storeMutate({ threadList: data }),
-    },
-  );
+  const {
+    data: threadList,
+    isLoading,
+    error,
+  } = useSWR("threads", selectThreadListByUserIdAction, {
+    onError: handleErrorWithToast,
+    fallbackData: [],
+    onSuccess: (data) => storeMutate({ threadList: data }),
+  });
   const handleDeleteAllThreads = async () => {
-    await toast.promise(deleteNonProjectThreadsAction(), {
+    await toast.promise(deleteThreadsAction(), {
       loading: "Deleting all threads...",
       success: () => {
         storeMutate({ threadList: [] });
@@ -59,6 +61,13 @@ export function AppSidebarThreads() {
       error: "Failed to delete all threads",
     });
   };
+  useEffect(() => {
+    if (error) {
+      signOut({
+        redirectTo: "/login",
+      });
+    }
+  }, [error]);
 
   return (
     <SidebarGroup>

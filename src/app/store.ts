@@ -1,8 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { getMockUserSession } from "lib/mock";
 import type { ChatThread, Project } from "app-types/chat";
-import type { User } from "app-types/user";
+
 import { DEFAULT_MODEL } from "lib/ai/models";
 import { MCPServerInfo } from "app-types/mcp";
 export interface AppState {
@@ -11,7 +10,7 @@ export interface AppState {
   projectList: Omit<Project, "instructions">[];
   currentThreadId: ChatThread["id"] | null;
   currentProjectId: Project["id"] | null;
-  user: User;
+
   toolChoice: "auto" | "none" | "manual";
   model: string;
 }
@@ -28,12 +27,9 @@ export const appStore = create<AppState & AppDispatch>()(
       mcpList: [],
       currentThreadId: null,
       currentProjectId: null,
-      user: getMockUserSession(),
       toolChoice: "auto",
       modelList: [],
-
       model: DEFAULT_MODEL,
-
       mutate: set,
     }),
     {

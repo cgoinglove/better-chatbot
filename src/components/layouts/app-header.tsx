@@ -113,10 +113,34 @@ export function AppHeader() {
         </Tooltip>
       </TooltipProvider>
       {componentByPage}
+      <div className="flex-1" />
+      <Link
+        href={
+          currentPaths.startsWith("/temporary-chat") ? "/" : "/temporary-chat"
+        }
+      >
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              size={"sm"}
+              variant={
+                currentPaths.startsWith("/temporary-chat")
+                  ? "secondary"
+                  : "ghost"
+              }
+            >
+              {/* <MessageCircleDashed className="w-4 h-4 fill-foreground" /> */}
+              temporary
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent align="end" side="bottom">
+            <p>Temporary Chat</p>
+          </TooltipContent>
+        </Tooltip>
+      </Link>
       <Link
         href="https://github.com/cgoinglove/mcp-client-chatbot"
         target="_blank"
-        className="ml-auto"
       >
         <Button variant="ghost" size="icon">
           <GithubIcon className="w-4 h-4 fill-foreground" />

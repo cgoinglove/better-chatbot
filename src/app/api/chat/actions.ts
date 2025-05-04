@@ -15,14 +15,13 @@ import {
 
 import type { ChatThread, Project } from "app-types/chat";
 
-import { getMockUserSession } from "lib/mock";
-
 import { chatService } from "lib/db/chat-service";
 import { customModelProvider } from "lib/ai/models";
 import { toAny } from "lib/utils";
 import { MCPToolInfo } from "app-types/mcp";
 import { serverCache } from "lib/cache";
 import { CacheKeys } from "lib/cache/cache-keys";
+import { auth } from "../auth/auth";
 
 const {
   deleteThread,
@@ -31,13 +30,22 @@ const {
   selectThread,
   selectThreadsByUserId,
   updateThread,
-  deleteNonProjectThreads,
+  deleteAllThreads,
   selectProjectsByUserId,
   insertProject,
   selectProjectById,
   updateProject,
   deleteProject,
 } = chatService;
+
+export async function getUserId() {
+  const session = await auth();
+  const userId = session?.user?.id;
+  if (!userId) {
+    throw new Error("User not found");
+  }
+  return userId;
+}
 
 export async function generateTitleFromUserMessageAction({
   message,
@@ -72,7 +80,7 @@ export async function deleteMessagesByChatIdAfterTimestampAction(
 }
 
 export async function selectThreadListByUserIdAction() {
-  const userId: string = getMockUserSession().id;
+  const userId = await getUserId();
   const threads = await selectThreadsByUserId(userId);
   return threads;
 }
@@ -81,12 +89,13 @@ export async function updateThreadAction(
   id: string,
   thread: Partial<Omit<ChatThread, "createdAt" | "updatedAt" | "userId">>,
 ) {
-  await updateThread(id, { ...thread, userId: getMockUserSession().id });
+  const userId = await getUserId();
+  await updateThread(id, { ...thread, userId });
 }
 
-export async function deleteNonProjectThreadsAction() {
-  const userId: string = getMockUserSession().id;
-  await deleteNonProjectThreads(userId);
+export async function deleteThreadsAction() {
+  const userId = await getUserId();
+  await deleteAllThreads(userId);
 }
 
 export async function generateExampleToolSchemaAction(options: {
@@ -116,7 +125,7 @@ export async function generateExampleToolSchemaAction(options: {
 }
 
 export async function selectProjectListByUserIdAction() {
-  const userId: string = getMockUserSession().id;
+  const userId = await getUserId();
   const projects = await selectProjectsByUserId(userId);
   return projects;
 }
@@ -128,7 +137,7 @@ export async function insertProjectAction({
   name: string;
   instructions?: Project["instructions"];
 }) {
-  const userId: string = getMockUserSession().id;
+  const userId = await getUserId();
   const project = await insertProject({
     name,
     userId,
@@ -148,7 +157,7 @@ export async function insertProjectWithThreadAction({
   instructions?: Project["instructions"];
   threadId: string;
 }) {
-  const userId: string = getMockUserSession().id;
+  const userId = await getUserId();
   const project = await insertProject({
     name,
     userId,
@@ -210,4 +219,10 @@ export async function rememberThreadAction(threadId: string) {
   }
   await serverCache.set(key, thread);
   return thread;
+}
+
+export async function updateProjectNameAction(id: string, name: string) {
+  const updatedProject = await updateProject(id, { name });
+  await serverCache.delete(CacheKeys.project(id));
+  return updatedProject;
 }

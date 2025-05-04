@@ -10,8 +10,8 @@ const url = process.env.USE_FILE_SYSTEM_DB
   : process.env.POSTGRES_URL!;
 
 const schema = process.env.USE_FILE_SYSTEM_DB
-  ? "./src/lib/db/schema.sqlite.ts"
-  : "./src/lib/db/schema.pg.ts";
+  ? "./src/lib/db/sqlite/schema.sqlite.ts"
+  : "./src/lib/db/pg/schema.pg.ts";
 
 const out = process.env.USE_FILE_SYSTEM_DB
   ? "./src/lib/db/migrations/sqlite"

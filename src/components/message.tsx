@@ -3,7 +3,7 @@
 import type { UIMessage } from "ai";
 import { memo, useMemo } from "react";
 import equal from "fast-deep-equal";
-import { motion } from "framer-motion";
+
 import { cn } from "lib/utils";
 import type { UseChatHelpers } from "@ai-sdk/react";
 import { Alert, AlertDescription, AlertTitle } from "ui/alert";
@@ -13,6 +13,7 @@ import {
   ToolMessagePart,
   ReasoningPart,
 } from "./message-parts";
+import { Think } from "ui/think";
 
 interface Props {
   message: UIMessage;
@@ -39,7 +40,7 @@ const PurePreviewMessage = ({
 }: Props) => {
   const isUserMessage = useMemo(() => message.role === "user", [message.role]);
   return (
-    <div className="w-full mx-auto max-w-3xl px-6 group/message fade-in animate-in">
+    <div className="w-full mx-auto max-w-3xl px-6 group/message">
       <div
         className={cn(
           className,
@@ -117,6 +118,7 @@ const PurePreviewMessage = ({
               );
             }
           })}
+          {isLoading && isLastMessage && <Think />}
         </div>
       </div>
     </div>
@@ -130,43 +132,9 @@ export const PreviewMessage = memo(
     if (prevProps.isLoading !== nextProps.isLoading) return false;
     if (prevProps.isLastMessage !== nextProps.isLastMessage) return false;
     if (prevProps.className !== nextProps.className) return false;
+    if (prevProps.status !== nextProps.status) return false;
     if (prevProps.onPoxyToolCall !== nextProps.onPoxyToolCall) return false;
     if (!equal(prevProps.message.parts, nextProps.message.parts)) return false;
     return true;
   },
 );
-
-export const ThinkingMessage = ({ className }: { className?: string }) => {
-  const role = "assistant";
-  return (
-    <motion.div
-      data-testid="message-assistant-loading"
-      className={cn("w-full mx-auto max-w-3xl px-4 group/message", className)}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1, transition: { delay: 1 } }}
-      data-role={role}
-    >
-      <div className="flex flex-col gap-2 w-full">
-        <div className="flex flex-col gap-4 text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <div className="flex space-x-2">
-              <motion.div
-                className="h-2 w-2 rounded-full bg-primary"
-                animate={{
-                  scale: [1, 1.5, 1],
-                  opacity: [0.6, 1, 0.6],
-                }}
-                transition={{
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: 0,
-                }}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-    </motion.div>
-  );
-};

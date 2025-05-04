@@ -1,6 +1,6 @@
 "use client";
 
-import { SidebarGroupLabel } from "ui/sidebar";
+import { SidebarGroupLabel, SidebarMenuAction } from "ui/sidebar";
 import Link from "next/link";
 import { SidebarMenuButton, SidebarMenuSkeleton } from "ui/sidebar";
 import { SidebarGroupContent, SidebarMenu, SidebarMenuItem } from "ui/sidebar";
@@ -87,7 +87,10 @@ export function AppSidebarProjects() {
             ) : (
               <div className="flex flex-col gap-1">
                 {projectList?.map((project) => (
-                  <SidebarMenu key={project.id} className={"group/thread mr-0"}>
+                  <SidebarMenu
+                    key={project.id}
+                    className={"group/project mr-0"}
+                  >
                     <SidebarMenuItem className="px-2 cursor-pointer">
                       <SidebarMenuButton
                         asChild
@@ -103,16 +106,12 @@ export function AppSidebarProjects() {
                             className="flex items-center min-w-0 w-full"
                           >
                             <p className="truncate">{project.name}</p>
-                            <ProjectDropdown projectId={project.id}>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="ml-auto opacity-0 group-hover/projects:opacity-100"
-                              >
-                                <MoreHorizontal className="size-4" />
-                              </Button>
-                            </ProjectDropdown>
                           </Link>
+                          <SidebarMenuAction className="opacity-0 group-hover/project:opacity-100 mr-2">
+                            <ProjectDropdown project={project} side="right">
+                              <MoreHorizontal className="size-4" />
+                            </ProjectDropdown>
+                          </SidebarMenuAction>
                         </div>
                       </SidebarMenuButton>
                     </SidebarMenuItem>

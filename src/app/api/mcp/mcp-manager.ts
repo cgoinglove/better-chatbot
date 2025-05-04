@@ -3,7 +3,6 @@ import {
   createMCPClientsManager,
   type MCPClientsManager,
 } from "lib/ai/mcp/create-mcp-clients-manager";
-import { IS_DEV } from "lib/const";
 
 declare global {
   // eslint-disable-next-line no-var
@@ -13,17 +12,13 @@ declare global {
 const storage = createFileBasedMCPConfigsStorage();
 
 let mcpClientsManager: MCPClientsManager;
-if (IS_DEV) {
+
+if (!process.env.MCP_NO_INITIAL) {
   if (!globalThis.__mcpClientsManager__) {
     globalThis.__mcpClientsManager__ = createMCPClientsManager(storage);
     await globalThis.__mcpClientsManager__.init();
   }
   mcpClientsManager = globalThis.__mcpClientsManager__;
-} else {
-  mcpClientsManager = createMCPClientsManager(storage);
-  if (!process.env.MCP_NO_INITIAL) {
-    mcpClientsManager.init();
-  }
 }
 
 export { mcpClientsManager };

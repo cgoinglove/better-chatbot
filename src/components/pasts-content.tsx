@@ -1,6 +1,6 @@
 "use client";
 
-import { Copy, X } from "lucide-react";
+import { Check, Copy, X } from "lucide-react";
 import { useState } from "react";
 import { Button } from "ui/button";
 import {
@@ -15,6 +15,7 @@ import {
 } from "ui/dialog";
 import { Textarea } from "ui/textarea";
 import { Markdown } from "./markdown";
+import { useCopy } from "@/hooks/use-copy";
 
 type PastesContentCardProps = {
   initialContent: string;
@@ -30,6 +31,7 @@ export function PastesContentCard({
   readonly,
 }: PastesContentCardProps) {
   const [content, setContent] = useState(initialContent);
+  const { copied, copy } = useCopy();
 
   return (
     <Dialog>
@@ -66,10 +68,10 @@ export function PastesContentCard({
                 variant="ghost"
                 size="icon"
                 onClick={() => {
-                  navigator.clipboard.writeText(content);
+                  copy(content);
                 }}
               >
-                <Copy />
+                {copied ? <Check /> : <Copy />}
               </Button>
             </DialogTitle>
           </DialogHeader>

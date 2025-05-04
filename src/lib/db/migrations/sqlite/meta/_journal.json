@@ -5,22 +5,8 @@
     {
       "idx": 0,
       "version": "6",
-      "when": 1744558224504,
-      "tag": "0000_real_redwing",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "6",
-      "when": 1745504272121,
-      "tag": "0001_lean_human_cannonball",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "6",
-      "when": 1745898880775,
-      "tag": "0002_faulty_nightcrawler",
+      "when": 1746201314886,
+      "tag": "0000_thin_infant_terrible",
       "breakpoints": true
     }
   ]

@@ -6,6 +6,10 @@ export default (phase: string) => {
   }
   const nextConfig: NextConfig = {
     serverExternalPackages: ["@libsql/client"],
+    cleanDistDir: true,
+    devIndicators: {
+      position: "bottom-right",
+    },
     /* config options here */
   };
   return nextConfig;

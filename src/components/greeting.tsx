@@ -1,8 +1,7 @@
 "use client";
 
-import { appStore } from "@/app/store";
 import { motion } from "framer-motion";
-
+import { useSession } from "next-auth/react";
 function getGreetingByTime() {
   const hour = new Date().getHours();
   if (hour < 12) return "Good morning";
@@ -11,7 +10,9 @@ function getGreetingByTime() {
 }
 
 export const Greeting = () => {
-  const user = appStore((state) => state.user);
+  const { data: session } = useSession();
+
+  const user = session?.user;
 
   const greeting = getGreetingByTime();
 
@@ -26,7 +27,7 @@ export const Greeting = () => {
     >
       <div className="rounded-xl p-6 flex flex-col gap-2 leading-relaxed text-center">
         <h1 className="text-4xl font-semibold">
-          {greeting}, {user.name}
+          {greeting}, {user?.name}
         </h1>
         <div className="text-muted-foreground text-4xl">
           <p>How can I help you today?</p>

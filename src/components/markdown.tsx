@@ -30,7 +30,7 @@ const components: Partial<Components> = {
   blockquote: ({ children }) => {
     return (
       <div className="px-4">
-        <blockquote className="relative flex items-center bg-accent/30 p-6 rounded-2xl my-6 overflow-hidden border">
+        <blockquote className="relative bg-accent/30 p-6 rounded-2xl my-6 overflow-hidden border">
           <WordByWordFadeIn>{children}</WordByWordFadeIn>
         </blockquote>
       </div>
