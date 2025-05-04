@@ -24,6 +24,7 @@ MCP Client Chatbot is a 100% community-driven open source project.
   - [✨ Key Features](#-key-features)
   - [🚀 Getting Started](#-getting-started)
     - [Environment Variables](#environment-variables)
+    - [Custom OpenAI-Compatible Providers](#custom-openai-compatible-providers)
     - [MCP Server Setup](#mcp-server-setup)
   - [💡 Use Cases](#-use-cases)
   - [🗺️ Roadmap: Upcoming Features](#️-roadmap-upcoming-features)
@@ -135,6 +136,49 @@ SQLite is the default DB (`db.sqlite`). To use PostgreSQL, set `USE_FILE_SYSTEM_
 
 -----
 
+### Custom OpenAI-Compatible Providers
+
+MCP Client Chatbot supports connecting to any OpenAI-compatible API provider, including:
+
+- [OpenRouter](https://openrouter.ai)
+- [LocalAI](https://localai.io)
+- [Groq](https://groq.com)
+- Any other provider with an OpenAI-compatible API endpoint
+
+#### OpenRouter Configuration
+
+1. Get an API key from [OpenRouter](https://openrouter.ai)
+2. Add to your `.env` file:
+   ```
+   OPENROUTER_API_KEY=your_api_key_here
+   SITE_URL=https://example.com   # Optional: Your site URL for attribution
+   SITE_NAME=MCP Client Chatbot   # Optional: Your app name for attribution
+   
+   # Define which models to use (format: display_name:model_id)
+   CUSTOM_PROVIDER_MODELS_openrouter=claude:anthropic/claude-3-opus,llama-3:meta/llama-3-70b
+   ```
+
+#### Other Custom Providers
+
+Configure any OpenAI-compatible provider:
+
+```dotenv
+# Format: provider_name:base_url:api_key_env_var,...
+CUSTOM_PROVIDERS=localai:http://localhost:8080/v1:LOCALAI_API_KEY,groq:https://api.groq.com/v1:GROQ_API_KEY
+
+# API keys for each provider
+LOCALAI_API_KEY=your_localai_key
+GROQ_API_KEY=your_groq_key
+
+# Models for each provider (format: display_name:model_id)
+CUSTOM_PROVIDER_MODELS_localai=llama3:llama-3-70b-chat,wizard:wizard-13b
+CUSTOM_PROVIDER_MODELS_groq=llama3-70b:llama3-70b-v2,mixtral:mixtral-8x7b-32768
+```
+
+Remember to restart the app after updating environment variables.
+
+-----
+
 ### MCP Server Setup
 
 You can connect MCP tools via:
@@ -172,8 +216,6 @@ We're making MCP Client Chatbot even more powerful with these planned features:
 
 We welcome all contributions! Bug reports, feature ideas, code improvements — everything helps us build the best local AI assistant.
 
-Let’s build it together 🚀
+Let's build it together 🚀
 
 <img src="https://contrib.rocks/image?repo=cgoinglove/mcp-client-chatbot" />
-
-
