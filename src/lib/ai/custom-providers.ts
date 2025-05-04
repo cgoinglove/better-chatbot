@@ -42,19 +42,6 @@ export const parseCustomProviders = (): CustomProviderConfig[] => {
   // Start with an empty array of providers
   let providers: CustomProviderConfig[] = [];
 
-  // Add OpenRouter as a custom provider if API key is set
-  if (process.env.OPENROUTER_API_KEY) {
-    providers.push({
-      name: "openrouter",
-      baseURL: "https://openrouter.ai/api/v1",
-      apiKeyEnvVar: "OPENROUTER_API_KEY",
-      headers: {
-        "HTTP-Referer": process.env.SITE_URL || "",
-        "X-Title": process.env.SITE_NAME || "MCP Client Chatbot",
-      },
-    });
-  }
-
   // Parse custom providers from CUSTOM_PROVIDERS env var
   if (customProvidersStr) {
     const parsedProviders = customProvidersStr
@@ -70,10 +57,20 @@ export const parseCustomProviders = (): CustomProviderConfig[] => {
         
         if (!name || !baseURL || !apiKeyEnvVar) return null;
 
+        // Add any custom headers if needed based on provider configuration
+        let headers: Record<string, string> | undefined = undefined;
+        if (name.trim() === "openrouter") {
+          headers = {
+            "HTTP-Referer": process.env.SITE_URL || "",
+            "X-Title": process.env.SITE_NAME || "MCP Client Chatbot",
+          };
+        }
+
         return {
           name: name.trim(),
           baseURL: baseURL.trim(),
           apiKeyEnvVar: apiKeyEnvVar.trim(),
+          headers,
         };
       })
       .filter((config): config is CustomProviderConfig => config !== null);
