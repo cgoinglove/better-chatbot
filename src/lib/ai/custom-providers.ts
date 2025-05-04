@@ -60,7 +60,14 @@ export const parseCustomProviders = (): CustomProviderConfig[] => {
     const parsedProviders = customProvidersStr
       .split(",")
       .map((providerStr) => {
-        const [name, baseURL, apiKeyEnvVar] = providerStr.split(":");
+        // Split by colon and extract parts more intelligently to handle URLs with colons
+        const parts = providerStr.split(":");
+        if (parts.length < 3) return null; // Need at least 3 parts
+        
+        const name = parts[0];
+        const apiKeyEnvVar = parts[parts.length - 1];
+        const baseURL = parts.slice(1, parts.length - 1).join(":");
+        
         if (!name || !baseURL || !apiKeyEnvVar) return null;
 
         return {
