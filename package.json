@@ -34,6 +34,7 @@
     "@ai-sdk/anthropic": "^1.2.10",
     "@ai-sdk/google": "^1.2.14",
     "@ai-sdk/openai": "^1.3.20",
+    "@ai-sdk/openai-compatible": "^0.2.13",
     "@ai-sdk/react": "^1.2.9",
     "@ai-sdk/xai": "^1.2.15",
     "@libsql/client": "^0.15.4",
