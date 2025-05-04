@@ -44,7 +44,8 @@ export const parseCustomProviders = (): CustomProviderConfig[] => {
 
   // Parse custom providers from CUSTOM_PROVIDERS env var
   if (customProvidersStr) {
-    const parsedProviders = customProvidersStr
+    // First, map strings to provider configs or null
+    const mappedProviders = customProvidersStr
       .split(",")
       .map((providerStr) => {
         // Split by colon and extract parts more intelligently to handle URLs with colons
@@ -72,8 +73,12 @@ export const parseCustomProviders = (): CustomProviderConfig[] => {
           apiKeyEnvVar: apiKeyEnvVar.trim(),
           headers,
         };
-      })
-      .filter((config): config is CustomProviderConfig => config !== null);
+      });
+      
+    // Then filter out nulls and cast to the correct type
+    const parsedProviders: CustomProviderConfig[] = mappedProviders.filter(
+      (config): config is NonNullable<typeof config> => config !== null
+    );
 
     // Add the parsed providers to the array
     providers = [...providers, ...parsedProviders];
