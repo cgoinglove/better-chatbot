@@ -89,9 +89,10 @@ describe("Custom Providers", () => {
   });
   
   describe("parseCustomProviders", () => {
-    it("should add OpenRouter as a provider when OPENROUTER_API_KEY is set", () => {
+    it("should add OpenRouter only when included in CUSTOM_PROVIDERS", () => {
       // Set up environment variable
       process.env.OPENROUTER_API_KEY = "test-api-key";
+      process.env.CUSTOM_PROVIDERS = "openrouter:https://openrouter.ai/api/v1:OPENROUTER_API_KEY";
       
       // Test the function
       const result = parseCustomProviders();
@@ -110,6 +111,7 @@ describe("Custom Providers", () => {
       process.env.OPENROUTER_API_KEY = "test-api-key";
       process.env.SITE_URL = "https://example.com";
       process.env.SITE_NAME = "Test App";
+      process.env.CUSTOM_PROVIDERS = "openrouter:https://openrouter.ai/api/v1:OPENROUTER_API_KEY";
       
       // Test the function
       const result = parseCustomProviders();
@@ -124,6 +126,7 @@ describe("Custom Providers", () => {
     it("should use default values for OpenRouter headers when not provided", () => {
       // Set up environment variable
       process.env.OPENROUTER_API_KEY = "test-api-key";
+      process.env.CUSTOM_PROVIDERS = "openrouter:https://openrouter.ai/api/v1:OPENROUTER_API_KEY";
       // SITE_URL and SITE_NAME not set
       
       // Test the function
@@ -157,10 +160,10 @@ describe("Custom Providers", () => {
       });
     });
     
-    it("should combine OpenRouter and custom providers when both are configured", () => {
-      // Set up environment variables
+    it("should include multiple providers when they are all configured in CUSTOM_PROVIDERS", () => {
+      // Set up environment variables with both OpenRouter and other providers
       process.env.OPENROUTER_API_KEY = "test-api-key";
-      process.env.CUSTOM_PROVIDERS = "provider1:http://api.provider1.com/v1:PROVIDER1_API_KEY";
+      process.env.CUSTOM_PROVIDERS = "openrouter:https://openrouter.ai/api/v1:OPENROUTER_API_KEY,provider1:http://api.provider1.com/v1:PROVIDER1_API_KEY";
       
       // Test the function
       const result = parseCustomProviders();
@@ -205,8 +208,8 @@ describe("Custom Providers", () => {
       process.env.OPENROUTER_API_KEY = "test-api-key";
       process.env.CUSTOM_PROVIDER_MODELS_openrouter = "claude:anthropic/claude-3-opus";
       
-      // Set up a custom provider
-      process.env.CUSTOM_PROVIDERS = "localai:http://localhost:8080/v1:LOCALAI_API_KEY";
+      // Set up all providers in CUSTOM_PROVIDERS
+      process.env.CUSTOM_PROVIDERS = "openrouter:https://openrouter.ai/api/v1:OPENROUTER_API_KEY,localai:http://localhost:8080/v1:LOCALAI_API_KEY";
       process.env.CUSTOM_PROVIDER_MODELS_localai = "llama:llama-3-70b-chat";
       
       // Get providers
