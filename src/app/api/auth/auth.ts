@@ -1,5 +1,5 @@
 import { compare } from "bcrypt-ts";
-import { userService } from "lib/db/user-service";
+import { userService } from "lib/db/service";
 import NextAuth, { type DefaultSession } from "next-auth";
 import type { DefaultJWT } from "next-auth/jwt";
 import Credentials from "next-auth/providers/credentials";

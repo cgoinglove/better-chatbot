@@ -3,7 +3,7 @@ import { existsSync, mkdirSync } from "node:fs";
 import logger from "logger";
 import { colorize } from "consola/utils";
 
-export const FLAG_VERSION = "1.0.0";
+export const FLAG_VERSION = "1.1.0";
 
 const CACHE_PATH = join(process.cwd(), "node_modules/.mcp-chatbot-cache");
 

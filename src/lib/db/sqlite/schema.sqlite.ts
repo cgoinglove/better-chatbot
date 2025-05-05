@@ -1,5 +1,10 @@
 import { sql } from "drizzle-orm";
-import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
+import {
+  sqliteTable,
+  text,
+  integer,
+  primaryKey,
+} from "drizzle-orm/sqlite-core";
 
 export const ChatThreadSchema = sqliteTable("chat_thread", {
   id: text("id").primaryKey().notNull(),
@@ -39,6 +44,17 @@ export const UserSchema = sqliteTable("user", {
   updatedAt: integer("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
+export const McpServerBindingSchema = sqliteTable(
+  "mcp_server_binding",
+  {
+    ownerType: text("owner_type").notNull(),
+    ownerId: text("owner_id").notNull(),
+    config: text("config").default(sql`'{}'`).notNull(),
+    createdAt: integer("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: integer("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (tbl) => [primaryKey({ columns: [tbl.ownerType, tbl.ownerId] })],
+);
 // export const McpServerSchema = sqliteTable("mcp_server", {
 //   id: text("id").primaryKey().notNull().default(sql`(random())`),
 //   enabled: integer("enabled").notNull().default(1),

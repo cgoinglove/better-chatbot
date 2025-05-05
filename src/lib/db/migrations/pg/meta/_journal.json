@@ -8,6 +8,13 @@
       "when": 1746202772129,
       "tag": "0000_past_nebula",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1746462028815,
+      "tag": "0001_slimy_tarot",
+      "breakpoints": true
     }
   ]
 }

@@ -14,17 +14,19 @@ import { createMCPToolId } from "lib/ai/mcp/mcp-tool-id";
 import { ChatMessageAnnotation } from "app-types/chat";
 import dynamic from "next/dynamic";
 import { ToolChoiceDropDown } from "./tool-choice-dropdown";
-import { McpServerDropDown } from "./mcp-server-dropdown";
-import { MCPIcon } from "ui/mcp-icon";
+
+import { MCPServerBindingSelector } from "./mcp-server-binding";
+import { MCPServerBinding } from "app-types/mcp";
 
 interface PromptInputProps {
   placeholder?: string;
   setInput: (value: string) => void;
   input: string;
   onStop: () => void;
+  ownerType?: MCPServerBinding["ownerType"];
+  ownerId: string;
   append: UseChatHelpers["append"];
-
-  threadId: string;
+  isTemporaryChat?: boolean;
   isLoading?: boolean;
 }
 
@@ -42,6 +44,9 @@ export default function PromptInput({
   setInput,
   onStop,
   isLoading,
+  isTemporaryChat,
+  ownerType = "thread",
+  ownerId,
 }: PromptInputProps) {
   const [appStoreMutate, model, mcpList] = appStore(
     useShallow((state) => [state.mutate, state.model, state.mcpList]),
@@ -170,16 +175,16 @@ export default function PromptInput({
                 </div>
 
                 <ToolChoiceDropDown />
-                <McpServerDropDown>
-                  <Button
-                    variant={"outline"}
-                    className="rounded-full bg-secondary font-semibold"
-                  >
-                    <MCPIcon className="size-3.5 fill-muted-foreground" />
-                    MCP Server
-                  </Button>
-                </McpServerDropDown>
+                {!isTemporaryChat && (
+                  <MCPServerBindingSelector
+                    ownerId={ownerId}
+                    ownerType={ownerType}
+                    align="start"
+                    side="top"
+                  />
+                )}
                 <div className="flex-1" />
+
                 <SelectModel
                   onSelect={(model) => {
                     appStoreMutate({ model });

@@ -205,9 +205,11 @@ export default function ChatBot({
       )}
       <div className={clsx(messages.length && "absolute bottom-14", "w-full")}>
         <PromptInput
-          threadId={threadId}
           input={input}
           append={append}
+          ownerId={threadId}
+          ownerType="thread"
+          isTemporaryChat={action == "temporary-chat"}
           setInput={setInput}
           isLoading={isLoading}
           onStop={stop}

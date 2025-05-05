@@ -12,6 +12,7 @@ import {
 
 import {
   generateTitleFromUserMessageAction,
+  rememberMcpBindingAction,
   rememberProjectInstructionsAction,
   rememberThreadAction,
 } from "@/app/api/chat/actions";
@@ -19,7 +20,7 @@ import { customModelProvider, isToolCallUnsupportedModel } from "lib/ai/models";
 
 import { mcpClientsManager } from "../mcp/mcp-manager";
 
-import { chatService } from "lib/db/chat-service";
+import { chatService } from "lib/db/service";
 import logger from "logger";
 import { SYSTEM_TIME_PROMPT } from "lib/ai/prompts";
 import { ChatMessageAnnotation, ToolInvocationUIPart } from "app-types/chat";
@@ -31,6 +32,7 @@ import { extractMCPToolId } from "lib/ai/mcp/mcp-tool-id";
 import { auth } from "../auth/auth";
 import { redirect } from "next/navigation";
 import { defaultTools } from "lib/ai/tools";
+import { MCPServerBindingConfig } from "app-types/mcp";
 
 const { insertMessage, insertThread, upsertMessage } = chatService;
 
@@ -87,6 +89,8 @@ export async function POST(request: Request) {
       });
     }
 
+    const mcpBinding = id ? await rememberMcpBindingAction(id, "thread") : null;
+
     const projectInstructions = projectId
       ? await rememberProjectInstructionsAction(projectId)
       : null;
@@ -111,7 +115,16 @@ export async function POST(request: Request) {
     const tools = safe(mcpTools)
       .map(errorIf(() => !isToolCallAllowed && "Not allowed"))
       .map((tools) => {
-        return filterToolsByMentions(requiredToolsAnnotations, tools);
+        if (requiredToolsAnnotations.length) {
+          return filterToolsByMentions(requiredToolsAnnotations, tools);
+        }
+        if (isNoStore) {
+          return {};
+        }
+        if (mcpBinding) {
+          return filterToolsByMcpBinding(mcpBinding, tools);
+        }
+        return tools;
       })
       .map((tools) => {
         if (toolChoice == "manual") {
@@ -206,6 +219,20 @@ export async function POST(request: Request) {
       status: 500,
     });
   }
+}
+
+function filterToolsByMcpBinding(
+  mcpBinding: MCPServerBindingConfig,
+  tools: Record<string, Tool>,
+) {
+  return objectFlow(tools).filter((_tool, key) => {
+    const { serverName, toolName } = extractMCPToolId(key);
+    const binding = mcpBinding[serverName];
+    if (binding?.allowedTools) {
+      return binding.allowedTools.includes(toolName);
+    }
+    return false;
+  });
 }
 
 function filterToolsByMentions(

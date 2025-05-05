@@ -1,85 +1,24 @@
-import type {
-  ChatMessage,
-  ChatService,
-  ChatThread,
-  Project,
-} from "app-types/chat";
+import { ChatMessage, ChatService, ChatThread, Project } from "app-types/chat";
+
+import { sqliteDb as db } from "../db.sqlite";
 import {
   ChatMessageSchema,
   ChatThreadSchema,
+  McpServerBindingSchema,
   ProjectSchema,
-  UserSchema,
-} from "./schema.sqlite";
-import { sqliteDb as db } from "./db.sqlite";
+} from "../schema.sqlite";
+import {
+  convertToChatMessage,
+  convertToChatThread,
+  convertToDate,
+  convertToProject,
+  convertToTimestamp,
+} from "./utils";
 import { and, desc, eq, gte, isNull, sql } from "drizzle-orm";
+import { MCPServerBindingOwnerType } from "app-types/mcp";
 import { generateUUID } from "lib/utils";
-import { UIMessage } from "ai";
-import { User, UserService, UserZodSchema } from "app-types/user";
-import { generateHashedPassword } from "../utils";
+import { sqliteMcpService } from "./mcp-service.sqlite";
 
-const convertToDate = (timestamp: number): Date => {
-  return new Date(timestamp);
-};
-
-const convertToTimestamp = (date: Date): number => {
-  return date.getTime();
-};
-
-const convertToChatThread = (row: {
-  id: string;
-  createdAt: number;
-  title: string;
-  userId: string;
-  projectId: string | null;
-}): ChatThread => {
-  return {
-    id: row.id,
-    createdAt: convertToDate(row.createdAt),
-    title: row.title,
-    userId: row.userId,
-    projectId: row.projectId,
-  };
-};
-
-const convertToProject = (row: {
-  id: string;
-  createdAt: number;
-  updatedAt: number;
-  name: string;
-  userId: string;
-  instructions?: string | null;
-}): Project => {
-  return {
-    id: row.id,
-    createdAt: convertToDate(row.createdAt),
-    updatedAt: convertToDate(row.updatedAt),
-    name: row.name,
-    userId: row.userId,
-    instructions: row.instructions ? JSON.parse(row.instructions) : [],
-  };
-};
-
-const convertToChatMessage = (row: {
-  id: string;
-  createdAt: number;
-  threadId: string;
-  role: string;
-  parts: string;
-  attachments: string | null;
-  annotations: string | null;
-  model: string | null;
-}): ChatMessage => {
-  return {
-    id: row.id,
-    createdAt: convertToDate(row.createdAt),
-    threadId: row.threadId,
-    role: row.role as UIMessage["role"],
-    parts: JSON.parse(row.parts) as UIMessage["parts"],
-    attachments: row.attachments ? JSON.parse(row.attachments) : [],
-    model: row.model,
-    annotations: row.annotations ? JSON.parse(row.annotations) : [],
-  };
-};
 /**
  * @deprecated
  */
@@ -87,17 +26,29 @@ export const sqliteChatService: ChatService = {
   insertThread: async (
     thread: Omit<ChatThread, "createdAt">,
   ): Promise<ChatThread> => {
-    const result = await db
+    const [result] = await db
       .insert(ChatThreadSchema)
       .values({
         title: thread.title,
         userId: thread.userId,
         projectId: thread.projectId,
         id: thread.id,
-        createdAt: convertToTimestamp(new Date()),
       })
       .returning();
-    return convertToChatThread(result[0]);
+    if (thread.projectId) {
+      const mcpServerBinding = await sqliteMcpService.selectMcpServerBinding(
+        thread.projectId,
+        MCPServerBindingOwnerType.Project,
+      );
+      if (mcpServerBinding) {
+        await sqliteMcpService.saveMcpServerBinding({
+          ownerId: result.id,
+          ownerType: MCPServerBindingOwnerType.Thread,
+          config: mcpServerBinding.config,
+        });
+      }
+    }
+    return convertToChatThread(result);
   },
 
   selectThread: async (id: string): Promise<ChatThread | null> => {
@@ -174,6 +125,17 @@ export const sqliteChatService: ChatService = {
     await db
       .delete(ChatMessageSchema)
       .where(eq(ChatMessageSchema.threadId, id));
+    await db
+      .delete(McpServerBindingSchema)
+      .where(
+        and(
+          eq(McpServerBindingSchema.ownerId, id),
+          eq(
+            McpServerBindingSchema.ownerType,
+            MCPServerBindingOwnerType.Thread,
+          ),
+        ),
+      );
     await db.delete(ChatThreadSchema).where(eq(ChatThreadSchema.id, id));
   },
 
@@ -186,7 +148,6 @@ export const sqliteChatService: ChatService = {
         model: message.model || null,
         role: message.role,
         threadId: message.threadId,
-        createdAt: convertToTimestamp(new Date()),
         id: message.id,
         parts: JSON.stringify(message.parts),
         annotations: JSON.stringify(message.annotations),
@@ -205,7 +166,6 @@ export const sqliteChatService: ChatService = {
       .insert(ChatMessageSchema)
       .values({
         id: message.id,
-        createdAt: convertToTimestamp(new Date()),
         model: message.model || null,
         role: message.role,
         threadId: message.threadId,
@@ -361,128 +321,17 @@ export const sqliteChatService: ChatService = {
     await Promise.all(
       threadIds.map((threadId) => sqliteChatService.deleteThread(threadId.id)),
     );
+    await db
+      .delete(McpServerBindingSchema)
+      .where(
+        and(
+          eq(McpServerBindingSchema.ownerId, id),
+          eq(
+            McpServerBindingSchema.ownerType,
+            MCPServerBindingOwnerType.Project,
+          ),
+        ),
+      );
     await db.delete(ProjectSchema).where(eq(ProjectSchema.id, id));
   },
 };
-
-/**
- * @deprecated
- */
-export const sqliteUserService: UserService = {
-  register: async (
-    user: Omit<User, "id"> & { plainPassword: string },
-  ): Promise<User> => {
-    const parsedUser = UserZodSchema.parse({
-      ...user,
-      password: user.plainPassword,
-    });
-    const exists = await sqliteUserService.existsByEmail(parsedUser.email);
-    if (exists) {
-      throw new Error("User already exists");
-    }
-    const hashedPassword = generateHashedPassword(parsedUser.password);
-    const result = await db
-      .insert(UserSchema)
-      .values({ ...parsedUser, password: hashedPassword })
-      .returning();
-    return result[0];
-  },
-  existsByEmail: async (email: string): Promise<boolean> => {
-    const result = await db
-      .select()
-      .from(UserSchema)
-      .where(eq(UserSchema.email, email));
-    return result.length > 0;
-  },
-  selectByEmail: async (
-    email: string,
-  ): Promise<(User & { password: string }) | null> => {
-    const [result] = await db
-      .select()
-      .from(UserSchema)
-      .where(eq(UserSchema.email, email));
-    return result;
-  },
-  updateUser: async (
-    id: string,
-    user: Pick<User, "name" | "image">,
-  ): Promise<User> => {
-    const [result] = await db
-      .update(UserSchema)
-      .set({
-        name: user.name,
-        image: user.image,
-        updatedAt: convertToTimestamp(new Date()),
-      })
-      .where(eq(UserSchema.id, id))
-      .returning();
-    return result;
-  },
-};
-
-// const convertToMcpServer = (row: {
-//   id: string;
-//   enabled: number;
-//   name: string;
-//   config: string;
-//   createdAt: number;
-//   updatedAt: number;
-// }): McpServerEntity => {
-//   return {
-//     id: row.id,
-//     enabled: row.enabled === 1,
-//     name: row.name,
-//     config: JSON.parse(row.config),
-//     createdAt: convertToDate(row.createdAt),
-//     updatedAt: convertToDate(row.updatedAt),
-//   };
-// };
-
-// export const sqliteMcpService: McpService = {
-//   selectServers: async (): Promise<McpServerEntity[]> => {
-//     const result = await db.select().from(McpServerSchema);
-//     return result.map(convertToMcpServer);
-//   },
-//   insertServer: async (server: {
-//     name: string;
-//     config: MCPServerConfig;
-//     enabled?: boolean;
-//   }): Promise<McpServerEntity> => {
-//     if (!isMaybeMCPServerConfig(server.config)) {
-//       throw new Error("Invalid MCP server configuration");
-//     }
-//     const result = await db
-//       .insert(McpServerSchema)
-//       .values({
-//         ...server,
-//         config: JSON.stringify(server.config),
-//         enabled: server.enabled ? 1 : 0,
-//       })
-//       .returning();
-//     return convertToMcpServer(result[0]);
-//   },
-//   updateServer: async (server: {
-//     id: string;
-//     name?: string;
-//     config?: MCPServerConfig;
-//     enabled?: boolean;
-//   }): Promise<McpServerEntity> => {
-//     if (!isMaybeMCPServerConfig(server.config)) {
-//       throw new Error("Invalid MCP server configuration");
-//     }
-//     const result = await db
-//       .update(McpServerSchema)
-//       .set({
-//         ...server,
-//         config: JSON.stringify(server.config),
-//         enabled: server.enabled ? 1 : 0,
-//         updatedAt: convertToTimestamp(new Date()),
-//       })
-//       .where(eq(McpServerSchema.id, server.id))
-//       .returning();
-//     return convertToMcpServer(result[0]);
-//   },
-//   deleteServer: async (id: string): Promise<void> => {
-//     await db.delete(McpServerSchema).where(eq(McpServerSchema.id, id));
-//   },
-// };

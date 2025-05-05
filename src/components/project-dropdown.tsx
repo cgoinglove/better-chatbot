@@ -132,12 +132,14 @@ function UpdateProjectNameDialog({
     e.stopPropagation();
     setIsUpdating(true);
     return safe(() => updateProjectNameAction(projectId, name))
+
       .watch(({ isOk, error }) => {
         setIsUpdating(false);
         setIsOpen(false);
         if (isOk) {
           onUpdated(name);
           mutate("projects");
+          mutate(`/projects/${projectId}`);
           toast.success("Project updated");
         } else {
           toast.error(error.message || "Failed to update project");

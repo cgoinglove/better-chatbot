@@ -34,18 +34,34 @@ export type MCPServerInfo = {
   toolInfo: MCPToolInfo[];
 };
 
-// export type McpService = {
-//   selectServers: () => Promise<McpServerEntity[]>;
-//   insertServer: (server: {
-//     name: string;
-//     config: MCPServerConfig;
-//     enabled?: boolean;
-//   }) => Promise<McpServerEntity>;
-//   updateServer: (server: {
-//     id: string;
-//     name?: string;
-//     config?: MCPServerConfig;
-//     enabled?: boolean;
-//   }) => Promise<McpServerEntity>;
-//   deleteServer: (id: string) => Promise<void>;
-// };
+export enum MCPServerBindingOwnerType {
+  Project = "project",
+  Thread = "thread",
+}
+
+export type MCPServerBindingConfig = {
+  [mcpId: string]: {
+    serverName: string;
+    allowedTools: string[];
+  };
+};
+
+export type MCPServerBinding = {
+  ownerType: MCPServerBindingOwnerType | (string & {});
+  ownerId: string;
+  config: MCPServerBindingConfig;
+};
+
+export type McpService = {
+  saveMcpServerBinding(entity: MCPServerBinding): Promise<MCPServerBinding>;
+
+  selectMcpServerBinding(
+    ownerId: string,
+    ownerType: MCPServerBinding["ownerType"],
+  ): Promise<MCPServerBinding | null>;
+
+  deleteMcpServerBinding(
+    ownerId: string,
+    ownerType: MCPServerBinding["ownerType"],
+  ): Promise<void>;
+};

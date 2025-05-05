@@ -26,7 +26,6 @@ import { notImplementedToast } from "ui/shared-toast";
 import { Skeleton } from "ui/skeleton";
 import { useShallow } from "zustand/shallow";
 
-// 카드 컴포넌트 생성
 interface FeatureCardProps {
   title: string;
   description: string;
@@ -71,7 +70,7 @@ export default function ProjectPage() {
   });
 
   const router = useRouter();
-  const threadId = useMemo(() => generateUUID(), [id]);
+  const threadId = useMemo(() => generateUUID(), []);
 
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
@@ -141,9 +140,10 @@ export default function ProjectPage() {
         )}
 
         <PromptInput
-          threadId={threadId}
+          ownerId={id as string}
           input={input}
           append={append}
+          ownerType="project"
           setInput={setInput}
           isLoading={isLoading}
           onStop={stop}

@@ -1,7 +1,7 @@
 "use server";
 
 import { User, UserZodSchema } from "app-types/user";
-import { userService } from "lib/db/user-service";
+import { userService } from "lib/db/service";
 import { signIn } from "./auth";
 
 import { safe } from "ts-safe";
