@@ -178,7 +178,8 @@ export default function ChatBot({
               return (
                 <PreviewMessage
                   threadId={threadId}
-                  key={message.id}
+                  messageIndex={index}
+                  key={index}
                   message={message}
                   status={status}
                   onPoxyToolCall={

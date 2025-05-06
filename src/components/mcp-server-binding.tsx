@@ -241,9 +241,9 @@ export const MCPServerBindingSelector = (
                 ) : (
                   items.map((item) => (
                     <div key={item.id} className={cn("px-4 py-2")}>
-                      <div className="hover:bg-input flex flex-col w-full rounded-lg bg-secondary border overflow-hidden">
+                      <div className="flex flex-col w-full rounded-lg bg-secondary border overflow-hidden">
                         <div
-                          className="flex items-center gap-2 w-full cursor-pointer p-5 transition-colors"
+                          className="flex items-center w-full cursor-pointer px-5 transition-colors h-16 hover:bg-input"
                           onClick={() => handleToggleExpanded(item.id)}
                         >
                           <span
@@ -270,18 +270,26 @@ export const MCPServerBindingSelector = (
                           <span className="text-xs text-muted-foreground">
                             {item.tools.length} tools
                           </span>
-                          <div className="h-4 mx-2">
+                          <div className="h-4 ml-4">
                             <Separator orientation="vertical" />
                           </div>
 
-                          <Switch
-                            checked={item.checked}
-                            className="hover:scale-110"
-                            onClick={(e) => e.stopPropagation()}
-                            onCheckedChange={() => handleToggleMcp(item.id)}
-                          />
+                          <div
+                            className="h-full flex items-center px-4 group/switch"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleToggleMcp(item.id);
+                            }}
+                          >
+                            <Switch
+                              checked={item.checked}
+                              className="group-hover/switch:scale-110 duration-75"
+                              onClick={(e) => e.stopPropagation()}
+                              onCheckedChange={() => handleToggleMcp(item.id)}
+                            />
+                          </div>
 
-                          <div className="h-4 pl-1 mx-2">
+                          <div className="h-4 mr-4">
                             <Separator orientation="vertical" />
                           </div>
                           <ChevronRightIcon
@@ -327,7 +335,23 @@ export const MCPServerBindingSelector = (
               </div>
             </div>
           </CardContent>
-          <CardFooter className="py-2! flex justify-end border-t">
+          <CardFooter className="py-2! flex justify-end gap-2 border-t">
+            <Button
+              variant={"ghost"}
+              onClick={() => {
+                setConfig(
+                  mcpServerList?.reduce((acc, server) => {
+                    acc[server.name] = {
+                      serverName: server.name,
+                      allowedTools: [],
+                    };
+                    return acc;
+                  }, {} as MCPServerBindingConfig) ?? {},
+                );
+              }}
+            >
+              Clear All
+            </Button>
             <Button
               onClick={handleSave}
               className="font-semibold"

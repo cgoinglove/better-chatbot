@@ -25,6 +25,7 @@ interface Props {
   className?: string;
   onPoxyToolCall?: (answer: boolean) => void;
   status: UseChatHelpers["status"];
+  messageIndex: number;
 }
 
 const PurePreviewMessage = ({
@@ -37,8 +38,10 @@ const PurePreviewMessage = ({
   status,
   className,
   onPoxyToolCall,
+  messageIndex,
 }: Props) => {
   const isUserMessage = useMemo(() => message.role === "user", [message.role]);
+
   return (
     <div className="w-full mx-auto max-w-3xl px-6 group/message">
       <div
@@ -65,7 +68,7 @@ const PurePreviewMessage = ({
           )}
 
           {message.parts?.map((part, index) => {
-            const key = `message-${message.id}-part-${part.type}-${index}`;
+            const key = `message-${messageIndex}-part-${part.type}-${index}`;
             const isLastPart = index === message.parts.length - 1;
 
             if (part.type === "reasoning") {
