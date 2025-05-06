@@ -91,7 +91,7 @@ export const MCPServerBindingSelector = (
           checked: allowedTools.includes(tool.name),
           description: tool.description,
         })),
-        status: server.error ? "error" : server.status,
+        error: server.error,
       };
     });
   }, [config, mcpServerList]);
@@ -162,6 +162,7 @@ export const MCPServerBindingSelector = (
   }, [config, storedConfig]);
 
   useEffect(() => {
+    if (!open) return;
     if (storedConfig) {
       setConfig(storedConfig);
     } else {
@@ -174,7 +175,7 @@ export const MCPServerBindingSelector = (
       }, {}) as MCPServerBindingConfig;
       setConfig(allCheckConfig);
     }
-  }, [storedConfig, mcpServerList]);
+  }, [storedConfig, mcpServerList, open]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -254,16 +255,9 @@ export const MCPServerBindingSelector = (
                           >
                             {item.serverName}
                           </span>
-                          {item.status !== "connected" && (
-                            <span
-                              className={cn(
-                                "text-xs",
-                                item.status == "error"
-                                  ? "text-destructive"
-                                  : "text-muted-foreground",
-                              )}
-                            >
-                              {item.status}
+                          {Boolean(item.error) && (
+                            <span className={cn("text-xs text-destructive")}>
+                              error
                             </span>
                           )}
                           <div className="flex-1" />

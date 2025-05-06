@@ -14,9 +14,13 @@ import { isMaybeSseConfig, isMaybeStdioConfig } from "./is-mcp-config";
 import logger from "logger";
 import type { ConsolaInstance } from "consola";
 import { colorize } from "consola/utils";
-import { isNull, Locker, toAny } from "lib/utils";
+import { createDebounce, isNull, Locker, toAny } from "lib/utils";
 
 import { safe, watchError } from "ts-safe";
+
+type ClientOptions = {
+  autoDisconnectSeconds?: number;
+};
 
 /**
  * Client class for Model Context Protocol (MCP) server connections
@@ -35,11 +39,14 @@ export class MCPClient {
   constructor(
     private name: string,
     private serverConfig: MCPServerConfig,
+    private options: ClientOptions = {},
+    private disconnectDebounce = createDebounce(),
   ) {
     this.log = logger.withDefaults({
       message: colorize("cyan", `MCP Client ${this.name}: `),
     });
   }
+
   getInfo(): MCPServerInfo {
     return {
       name: this.name,
@@ -52,6 +59,14 @@ export class MCPClient {
       error: this.error,
       toolInfo: this.toolInfo,
     };
+  }
+
+  private scheduleAutoDisconnect() {
+    if (this.options.autoDisconnectSeconds) {
+      this.disconnectDebounce(() => {
+        this.disconnect();
+      }, this.options.autoDisconnectSeconds * 1000);
+    }
   }
 
   /**
@@ -144,6 +159,7 @@ export class MCPClient {
         });
         return prev;
       }, {});
+      this.scheduleAutoDisconnect();
     } catch (error) {
       this.log.error(error);
       this.isConnected = false;
@@ -165,18 +181,20 @@ export class MCPClient {
   }
   async callTool(toolName: string, input?: unknown) {
     return safe(() => this.log.info("tool call", toolName))
-      .map(() =>
-        this.client?.callTool({
+      .map(async () => {
+        const client = await this.connect();
+        return client?.callTool({
           name: toolName,
           arguments: input as Record<string, unknown>,
-        }),
-      )
+        });
+      })
       .ifOk((v) => {
         if (isNull(v)) {
           throw new Error("Tool call failed with null");
         }
         return v;
       })
+      .ifOk(() => this.scheduleAutoDisconnect())
       .watch(watchError((e) => this.log.error("Tool call failed", toolName, e)))
       .unwrap();
   }
@@ -188,4 +206,5 @@ export class MCPClient {
 export const createMCPClient = (
   name: string,
   serverConfig: MCPServerConfig,
-): MCPClient => new MCPClient(name, serverConfig);
+  options: ClientOptions = {},
+): MCPClient => new MCPClient(name, serverConfig, options);

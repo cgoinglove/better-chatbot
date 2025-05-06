@@ -86,6 +86,9 @@ export async function connectMcpClientAction(name: string) {
   await client?.connect();
 }
 
+/**
+ * @deprecated
+ */
 export async function disconnectMcpClientAction(name: string) {
   const client = mcpClientsManager
     .getClients()

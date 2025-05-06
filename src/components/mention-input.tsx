@@ -20,7 +20,7 @@ import { WrenchIcon } from "lucide-react";
 import { MCPIcon } from "ui/mcp-icon";
 import { extractMCPToolId } from "lib/ai/mcp/mcp-tool-id";
 
-type MentionItemType = "tool" | "server";
+type MentionItemType = "tool" | "server" | (string & {});
 
 interface MentionInputProps {
   input?: string;
@@ -30,7 +30,11 @@ interface MentionInputProps {
   ) => void;
   onEnter?: () => void;
   placeholder?: string;
-  items?: { id: string; label: string; type }[];
+  items?: {
+    id: string;
+    label: string;
+    type?: MentionItemType;
+  }[];
   onPaste?: (e: React.ClipboardEvent) => void;
 }
 
