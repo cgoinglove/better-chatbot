@@ -50,7 +50,7 @@ export class MCPClientsManager {
   tools() {
     return Object.fromEntries(
       Array.from(this.clients.values())
-        .filter((client) => !client.getInfo().error)
+        .filter((client) => client.getInfo().status === "connected")
         .flatMap((client) =>
           Object.entries(client.tools).map(([name, tool]) => [
             createMCPToolId(client.getInfo().name, name),
@@ -69,9 +69,7 @@ export class MCPClientsManager {
         await this.storage.save(name, serverConfig);
       }
     }
-    const client = createMCPClient(name, serverConfig, {
-      autoDisconnectSeconds: 60 * 10,
-    });
+    const client = createMCPClient(name, serverConfig);
     this.clients.set(name, client);
     return client.connect();
   }

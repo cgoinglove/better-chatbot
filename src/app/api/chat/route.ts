@@ -159,7 +159,7 @@ export async function POST(request: Request) {
         const result = streamText({
           model,
           system: systemPrompt,
-          messages,
+          messages: messages.map(excludeContent),
           maxSteps: 10,
           experimental_transform: smoothStream({ chunking: "word" }),
           tools,
@@ -309,4 +309,11 @@ function extractMenualToolInvocationPart(
   if (lastPart.type != "tool-invocation") return null;
   if (typeof toAny(lastPart.toolInvocation)?.result != "boolean") return null;
   return lastPart!;
+}
+
+function excludeContent(message: Message): Message {
+  return {
+    ...message,
+    content: "",
+  };
 }

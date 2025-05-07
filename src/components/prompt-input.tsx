@@ -65,7 +65,7 @@ export default function PromptInput({
   const toolList = useMemo(() => {
     return (
       mcpList
-        ?.filter((mcp) => !mcp.error)
+        ?.filter((mcp) => mcp.status === "connected")
         .flatMap((mcp) => [
           {
             id: mcp.name,
