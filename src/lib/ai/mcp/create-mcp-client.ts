@@ -8,6 +8,8 @@ import {
   MCPStdioConfigZodSchema,
   type MCPServerConfig,
   type MCPToolInfo,
+  type MCPPromptInfo,
+  type MCPPrompt,
 } from "app-types/mcp";
 import { jsonSchema, Tool, tool, ToolExecutionOptions } from "ai";
 import { isMaybeSseConfig, isMaybeStdioConfig } from "./is-mcp-config";
@@ -35,6 +37,10 @@ export class MCPClient {
   toolInfo: MCPToolInfo[] = [];
   // Tool instances that can be used for AI functions
   tools: { [key: string]: Tool } = {};
+  // Information about available prompts from the server
+  promptInfo: MCPPromptInfo[] = [];
+  // Prompt instances that can be used
+  prompts: { [key: string]: MCPPrompt } = {};
 
   constructor(
     private name: string,
@@ -58,6 +64,7 @@ export class MCPClient {
           : "disconnected",
       error: this.error,
       toolInfo: this.toolInfo,
+      promptInfo: this.promptInfo,
     };
   }
 
@@ -137,6 +144,36 @@ export class MCPClient {
             inputSchema: tool.inputSchema,
           }) as MCPToolInfo,
       );
+      
+      // Fetch available prompts
+      try {
+        const promptsResponse = await client.listPrompts();
+        this.promptInfo = promptsResponse.prompts.map(prompt => ({
+          name: prompt.name,
+          description: prompt.description || '',
+          arguments: (prompt.arguments || []).map(sdkArg => ({
+            name: sdkArg.name,
+            description: sdkArg.description, // Assumes sdkArg.description is compatible or undefined
+            required: sdkArg.required ?? false, // Default 'required' to false if undefined
+          })),
+        }));
+        
+        // Create callable prompt objects
+        this.prompts = this.promptInfo.reduce((acc, prompt) => {
+          acc[prompt.name] = {
+            name: prompt.name,
+            description: prompt.description,
+            execute: (args: Record<string, any>) => this.getPrompt(prompt.name, args)
+          };
+          return acc;
+        }, {} as Record<string, MCPPrompt>);
+        
+        this.log.info(`Loaded ${this.promptInfo.length} prompts from MCP server`);
+      } catch (error) {
+        this.log.warn("Failed to fetch prompts:", error);
+        // Don't fail the connection if prompts can't be loaded
+        // The server might not support prompts
+      }
 
       // Create AI SDK tool wrappers for each MCP tool
       this.tools = toolResponse.tools.reduce((prev, _tool) => {
@@ -199,6 +236,25 @@ export class MCPClient {
         }
       })
       .unwrap();
+  }
+  
+  async getPrompt(promptName: string, args: Record<string, any>) {
+    if (!this.client || !this.isConnected) {
+      throw new Error("Client not connected");
+    }
+    
+    try {
+      this.log.info("prompt call", promptName);
+      const prompt = await this.client.getPrompt({
+        name: promptName,
+        arguments: args
+      });
+      
+      return prompt;
+    } catch (error) {
+      this.log.error("Prompt call failed", promptName, error);
+      throw error;
+    }
   }
 }
 

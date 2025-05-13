@@ -33,10 +33,29 @@ export type MCPToolInfo = {
   };
 };
 
+export type MCPPromptArgumentInfo = {
+  name: string;
+  description?: string;
+  required: boolean;
+};
+
+export type MCPPromptInfo = {
+  name: string;
+  description: string;
+  arguments: MCPPromptArgumentInfo[];
+};
+
+export type MCPPrompt = {
+  name: string;
+  description: string;
+  execute: (args: Record<string, any>) => Promise<any>;
+};
+
 export type MCPServerInfo = {
   name: string;
   config: MCPServerConfig;
   error?: unknown;
   status: "connected" | "disconnected" | "loading";
   toolInfo: MCPToolInfo[];
+  promptInfo?: MCPPromptInfo[];
 };

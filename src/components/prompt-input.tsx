@@ -2,6 +2,7 @@
 
 import { ChevronDown, CornerRightUp, Paperclip, Pause } from "lucide-react";
 import { ReactNode, useCallback, useMemo, useState } from "react";
+import { SlashPromptButton } from "./ui/slash-prompt-button";
 import { Button } from "ui/button";
 import { notImplementedToast } from "ui/shared-toast";
 import { PastesContentCard } from "./pasts-content";
@@ -182,12 +183,27 @@ export default function PromptInput({
                 ))}
               </div>
               <div className="flex w-full items-center z-30 gap-1.5">
+                {/* Slash commands temporarily disabled
+                <div
+                  className="cursor-pointer text-muted-foreground border rounded-full p-2 bg-transparent hover:bg-muted transition-all duration-200"
+                  onClick={() => setUseSlashCommands(prev => !prev)}
+                  title={useSlashCommands ? "Disable slash commands" : "Enable slash commands"}
+                >
+                  <span className="text-xs font-mono">{useSlashCommands ? "/cmd" : "@mention"}</span>
+                </div>
+                */}
                 <div
                   className="cursor-pointer text-muted-foreground border rounded-full p-2 bg-transparent hover:bg-muted transition-all duration-200"
                   onClick={notImplementedToast}
                 >
                   <Paperclip className="size-4" />
                 </div>
+                
+                <SlashPromptButton 
+                  onPromptResult={(result) => {
+                    setInput(input + result);
+                  }}
+                />
 
                 {!toolDisabled && (
                   <>

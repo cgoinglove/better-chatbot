@@ -127,3 +127,40 @@ export async function callMcpToolAction(
     return res;
   });
 }
+
+export async function listMcpPromptsAction() {
+  const clients = mcpClientsManager.getClients();
+  
+  // Create a map of all available prompts from all connected MCP servers
+  return clients
+    .filter((client) => client.getInfo().status === "connected")
+    .flatMap((client) => {
+      const serverName = client.getInfo().name;
+      // Iterate over client.promptInfo which contains MCPPromptInfo objects
+      return (client.promptInfo || []).map((promptInfo) => ({
+        id: `${serverName}/${promptInfo.name}`,
+        name: promptInfo.name,
+        description: promptInfo.description || "",
+        serverName,
+        arguments: promptInfo.arguments || []
+      }));
+    });
+}
+
+export async function callMcpPromptAction(
+  mcpName: string,
+  promptName: string,
+  args?: Record<string, unknown>,
+) {
+  const client = mcpClientsManager
+    .getClients()
+    .find((client) => client.getInfo().name === mcpName);
+  if (!client) {
+    throw new Error("Client not found");
+  }
+  return client.getPrompt(promptName, args || {}).catch((error) => {
+    throw new Error(
+      error?.message ?? "Failed to execute prompt"
+    );
+  });
+}

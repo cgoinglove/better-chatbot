@@ -61,6 +61,31 @@ export class MCPClientsManager {
   }
 
   /**
+   * Returns all prompts from all clients with server name prefix
+   */
+  prompts() {
+    return Object.fromEntries(
+      Array.from(this.clients.values())
+        .filter((client) => client.getInfo().status === "connected")
+        .flatMap((client) => {
+          const serverInfo = client.getInfo();
+          // Use promptInfo which contains the full MCPPromptInfo including arguments
+          return (serverInfo.promptInfo || []).map((promptInfoItem) => [
+            `${serverInfo.name}/${promptInfoItem.name}`,
+            { 
+              name: promptInfoItem.name,
+              description: promptInfoItem.description,
+              arguments: promptInfoItem.arguments, // Now arguments are included
+              serverName: serverInfo.name,
+              // Note: The 'execute' function is not part of MCPPromptInfo.
+              // The executePrompt method on the manager handles actual execution.
+            }
+          ]);
+        }),
+    );
+  }
+
+  /**
    * Adds a new client with the given name and configuration
    */
   async addClient(name: string, serverConfig: MCPServerConfig) {
@@ -119,6 +144,22 @@ export class MCPClientsManager {
 
   getClients() {
     return Array.from(this.clients.values());
+  }
+  
+  /**
+   * Execute a prompt from a specific MCP server
+   */
+  async executePrompt(serverName: string, promptName: string, args: Record<string, any>) {
+    const client = this.clients.get(serverName);
+    if (!client) {
+      throw new Error(`MCP server "${serverName}" not found`);
+    }
+    
+    if (!client.prompts[promptName]) {
+      throw new Error(`Prompt "${promptName}" not found in server "${serverName}"`);
+    }
+    
+    return client.prompts[promptName].execute(args);
   }
 }
 
