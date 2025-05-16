@@ -1,11 +1,7 @@
 "use client";
 
 import type { JSX } from "react";
-import {
-  bundledLanguages,
-  codeToHast,
-  type BundledLanguage,
-} from "shiki/bundle/web";
+import { bundledLanguages, codeToHast, type BundledLanguage } from "shiki/bundle/web";
 import { Fragment, useLayoutEffect, useState } from "react";
 import { jsx, jsxs } from "react/jsx-runtime";
 import { toJsxRuntime } from "hast-util-to-jsx-runtime";
@@ -29,9 +25,7 @@ const MermaidDiagram = dynamic(
         </div>
         <div className="relative overflow-x-auto px-6 pb-6">
           <div className="h-20 w-full flex items-center justify-center">
-            <span className="text-muted-foreground">
-              Loading Mermaid renderer...
-            </span>
+            <span className="text-muted-foreground">Loading Mermaid renderer...</span>
           </div>
         </div>
       </div>
@@ -98,6 +92,26 @@ export async function highlight(
     );
   }
 
+  if (lang === "map") {
+    const MapDiagram = dynamic(
+      () => import("./map-diagram").then((mod) => mod.MapDiagram),
+      {
+        loading: () => (
+          <div className="text-sm flex bg-accent/30 flex-col rounded-2xl relative my-4 overflow-hidden border">
+            <PurePre className="animate-pulse" code={code} lang={lang}>
+              <div className="h-20 w-full flex items-center justify-center">
+                <span className="text-muted-foreground">Loading map...</span>
+              </div>
+            </PurePre>
+          </div>
+        ),
+        ssr: false,
+      },
+    );
+
+    return <MapDiagram content={code} />;
+  }
+
   const out = await codeToHast(code, {
     lang: parsed,
     theme,
@@ -127,11 +141,7 @@ export function PreBlock({ children }: { children: any }) {
   useLayoutEffect(() => {
     safe()
       .map(() =>
-        highlight(
-          code,
-          language,
-          theme === "dark" ? "dark-plus" : "github-light",
-        ),
+        highlight(code, language, theme === "dark" ? "dark-plus" : "github-light"),
       )
       .ifOk(setComponent)
       .watch(() => setLoading(false));

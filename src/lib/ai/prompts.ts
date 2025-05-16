@@ -57,6 +57,17 @@ ${
     : ""
 }
 - If a diagram or chart is requested or would be helpful to express your thoughts, use mermaid code blocks.
+- You can embed interactive maps using the map language specifier:
+  \`\`\`map
+  center: [51.505, -0.09]
+  zoom: 13
+  markers:
+    - position: [51.505, -0.09]
+      popup: "London"
+    - position: [51.51, -0.08]
+      popup: "Another Location"
+  \`\`\`
+
 </response_style>`.trim();
 
   return prompt.trim();
