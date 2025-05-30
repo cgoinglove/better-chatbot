@@ -9,7 +9,11 @@ import {
   Message,
 } from "ai";
 
+import { Tool } from "lib/ai/tool";
+
 import { customModelProvider, isToolCallUnsupportedModel } from "lib/ai/models";
+import { createDocument } from "lib/ai/tools/create-document";
+import { updateDocument } from "lib/ai/tools/update-document";
 
 import { mcpClientsManager } from "lib/ai/mcp/mcp-manager";
 
@@ -101,44 +105,77 @@ export async function POST(request: Request) {
       .flatMap((annotation) => annotation.requiredTools)
       .filter(Boolean) as string[];
 
+    const artifactTools = [
+      'createDocument',
+      'updateDocument',
+    ];
+
+    const defaultToolkit = getAllowedDefaultToolkit();
+    const filteredDefaultToolkit = filterToolsByAllowedMCPServers(
+      defaultToolkit,
+      allowedMcpServers,
+    );
+
+    const filteredToolkit = filterToolsByMentions(
+      [...filteredDefaultToolkit, ...artifactTools],
+      requiredToolsAnnotations,
+      toolChoice,
+    );
+
+    const allowedToolkit = json.toolChoice === "none"
+      ? []
+      : filteredToolkit;
+
+    const toolsForModel = isToolCallUnsupportedModel(json.model)
+      ? []
+      : allowedToolkit;
+
     const tools = safe(mcpTools)
       .map(errorIf(() => !isToolCallAllowed && "Not allowed"))
-      .map((tools) => {
-        // filter tools by mentions
-        if (requiredToolsAnnotations.length) {
-          return filterToolsByMentions(tools, requiredToolsAnnotations);
-        }
-        // filter tools by allowed mcp servers
-        return filterToolsByAllowedMCPServers(tools, allowedMcpServers);
-      })
-      // filter tools by tool choice
-      .map((tools) => {
-        if (toolChoice == "manual") {
-          return excludeToolExecution(tools);
-        }
-        return tools;
-      })
-      // add allowed default toolkit
-      .map((tools) => ({
-        ...getAllowedDefaultToolkit(allowedAppDefaultToolkit),
-        ...tools,
-      }))
-      .orElse(undefined);
+      .map((mcpTools) => {
+        const filteredTools = filterToolsByMentions(
+          mcpTools,
+          json.messages,
+        );
 
-    const messages: Message[] = isLastMessageUserMessage
+        const filteredToolsByAllowedMCPServers = filterToolsByAllowedMCPServers(
+          filteredTools,
+          allowedMcpServers,
+        );
+
+        const toolSet: Record<string, Tool> = {
+          ...filteredToolsByAllowedMCPServers,
+        };
+
+        if (json.toolChoice !== "none") {
+          toolSet.createDocument = createDocument({ session: json.session, dataStream: json.dataStream });
+          toolSet.updateDocument = updateDocument({ session: json.session, dataStream: json.dataStream });
+        }
+
+        return toolSet;
+      })
+      .map((toolSet) => {
+        if (toolChoice === "manual") {
+          return excludeToolExecution(toolSet);
+        }
+        return {
+          ...toolsForModel,
+          ...toolSet,
+        };
+      })
+      .orElse({}) as Record<string, Tool>;
+
+    const updatedMessages = isLastMessageUserMessage
       ? appendClientMessage({
           messages: previousMessages,
           message,
         })
       : previousMessages;
 
-    return createDataStreamResponse({
-      execute: async (dataStream) => {
-        const inProgressToolStep = extractInProgressToolPart(
-          messages.slice(-2),
-        );
-
-        if (inProgressToolStep) {
+    return new Response(JSON.stringify({
+      messages: updatedMessages,
+      tools,
+    }));
           const toolResult = await manualToolExecuteByLastMessage(
             inProgressToolStep,
             message,

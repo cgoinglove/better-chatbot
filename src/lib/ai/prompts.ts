@@ -1,4 +1,5 @@
 import { MCPToolInfo } from "app-types/mcp";
+import { getArtifactEnabledPrompt } from "./prompts/artifacts";
 
 import type { ArtifactKind } from "@/components/artifact";
 import { Project } from "app-types/chat";
@@ -160,11 +161,8 @@ export const systemPrompt = ({
 }: {
   selectedChatModel: string;
 }) => {
-  if (selectedChatModel === "chat-model-reasoning") {
-    return regularPrompt;
-  } else {
-    return `${regularPrompt}\n\n${artifactsPrompt}`;
-  }
+  const basePrompt = selectedChatModel === "chat-model-reasoning" ? regularPrompt : getArtifactEnabledPrompt(regularPrompt);
+  return basePrompt;
 };
 
 export const codePrompt = `

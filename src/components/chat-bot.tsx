@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import useSWR from "swr";
 import { Artifact } from "./artifact";
 import { ErrorMessage, PreviewMessage } from "./message";
+import { DataStreamHandler } from "./data-stream-handler";
 import { Greeting } from "./greeting";
 import { MultimodalInput } from "./multimodal-input";
 import { UIMessage } from "ai";
@@ -43,19 +44,19 @@ import {
   DialogTitle,
 } from "ui/dialog";
 
-type Props = {
+interface Props {
   threadId: string;
   initialMessages: Array<UIMessage>;
   selectedModel: string;
   selectedToolChoice: "auto" | "none" | "manual";
   slots?: {
-    emptySlot?: ReactNode;
-    inputBottomSlot?: ReactNode;
-  };
   isReadonly?: boolean;
-};
+  slots?: {
+    emptySlot?: React.ReactNode;
+  };
+}
 
-export default function ChatBot({
+export function ChatBot({
   threadId,
   initialMessages,
   selectedModel,
@@ -289,6 +290,7 @@ export default function ChatBot({
           )
         ) : (
           <div className="flex flex-col gap-2 py-6">
+            <DataStreamHandler id={threadId} />
             {error && <ErrorMessage error={error} />}
             {messages.map((m, i) => (
               <PreviewMessage
@@ -315,10 +317,39 @@ export default function ChatBot({
               />
             ))}
             {isLoading && <PreviewMessage.Skeleton />}
+            {isArtifactVisible && (
+              <Artifact
+                chatId={threadId}
+                input={input}
+                setInput={setInput}
+                handleSubmit={handleFormSubmit}
+                status={status}
+                stop={stop}
+                attachments={attachments}
+                setAttachments={setAttachments}
+                messages={messages}
+                setMessages={setMessages}
+                append={append}
+                reload={reload}
+                votes={votes}
+                isReadonly={isReadonly}
+              />
+            )}
           </div>
         )}
       </div>
-
+      {!emptyMessage && !isReadonly && (
+        <MultimodalInput
+          input={input}
+          setInput={setInput}
+          handleSubmit={handleFormSubmit}
+          status={status}
+          stop={stop}
+          attachments={attachments}
+          setAttachments={setAttachments}
+          className="sticky bottom-0 z-10"
+        />
+      )}
       <form
         onSubmit={handleFormSubmit}
         className="flex mx-auto px-4 bg-background pb-4 md:pb-6 gap-2 w-full md:max-w-3xl"
