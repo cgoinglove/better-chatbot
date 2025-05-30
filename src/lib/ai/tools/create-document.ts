@@ -9,8 +9,25 @@ import {
 
 interface CreateDocumentProps {
   session: Session;
-  dataStream: DataStreamWriter;
+  dataStream: DataStreamWriter | null;
 }
+
+// Helper function to safely write data to the stream
+const safeWriteData = (
+  dataStream: DataStreamWriter | null,
+  type: string,
+  content: any
+) => {
+  if (!dataStream) {
+    console.warn(`Skipping writeData for ${type} - dataStream is null`);
+    return;
+  }
+  try {
+    dataStream.writeData({ type, content });
+  } catch (error) {
+    console.error(`Error writing data for ${type}:`, error);
+  }
+};
 
 export const createDocument = ({ session, dataStream }: CreateDocumentProps) =>
   tool({
@@ -23,25 +40,11 @@ export const createDocument = ({ session, dataStream }: CreateDocumentProps) =>
     execute: async ({ title, kind }) => {
       const id = generateUUID();
 
-      dataStream.writeData({
-        type: "kind",
-        content: kind,
-      });
-
-      dataStream.writeData({
-        type: "id",
-        content: id,
-      });
-
-      dataStream.writeData({
-        type: "title",
-        content: title,
-      });
-
-      dataStream.writeData({
-        type: "clear",
-        content: "",
-      });
+      // Safely write document metadata to the stream
+      safeWriteData(dataStream, "kind", kind);
+      safeWriteData(dataStream, "id", id);
+      safeWriteData(dataStream, "title", title);
+      safeWriteData(dataStream, "clear", "");
 
       const documentHandler = documentHandlersByArtifactKind.find(
         (documentHandlerByArtifactKind) =>
@@ -52,14 +55,20 @@ export const createDocument = ({ session, dataStream }: CreateDocumentProps) =>
         throw new Error(`No document handler found for kind: ${kind}`);
       }
 
-      await documentHandler.onCreateDocument({
-        id,
-        title,
-        dataStream,
-        session,
-      });
-
-      dataStream.writeData({ type: "finish", content: "" });
+      try {
+        await documentHandler.onCreateDocument({
+          id,
+          title,
+          dataStream: dataStream as DataStreamWriter,
+          session,
+        });
+        
+        safeWriteData(dataStream, "finish", "");
+      } catch (error) {
+        console.error("Error in document handler:", error);
+        safeWriteData(dataStream, "error", "Failed to create document");
+        throw error;
+      }
 
       return {
         id,

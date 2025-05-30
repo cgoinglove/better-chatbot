@@ -8,6 +8,7 @@ import {
   appendClientMessage,
   Message,
   Tool,
+  type DataStreamWriter,
 } from "ai";
 
 import { customModelProvider, isToolCallUnsupportedModel } from "lib/ai/models";
@@ -106,20 +107,30 @@ export async function POST(request: Request) {
 
     // Define artifact tools that should be included when allowed
     const artifactTools: Record<string, Tool> = {};
+    let dataStreamRef: DataStreamWriter | null = null;
     
     // Only add artifact tools when tool calls are allowed
     if (isToolCallAllowed && toolChoice !== "none" as any) {
       // Create a session object structure that matches what the tools expect
       const sessionForTools = session as any;
       
-      artifactTools.createDocument = createDocument({ 
-        session: sessionForTools, 
-        dataStream: null as any // Will be initialized during stream execution
-      });
-      artifactTools.updateDocument = updateDocument({ 
-        session: sessionForTools, 
-        dataStream: null as any // Will be initialized during stream execution
-      });
+      // Create the tools with a proxy for the data stream
+      const createToolWithDataStream = (toolFn: any) => {
+        return toolFn({
+          session: sessionForTools,
+          dataStream: {
+            writeData: (data: any) => {
+              if (dataStreamRef) {
+                return dataStreamRef.writeData(data);
+              }
+              console.warn('Data stream not yet available');
+            }
+          }
+        });
+      };
+      
+      artifactTools.createDocument = createToolWithDataStream(createDocument);
+      artifactTools.updateDocument = createToolWithDataStream(updateDocument);
     }
 
     const tools = safe(mcpTools)
@@ -154,15 +165,11 @@ export async function POST(request: Request) {
         })
       : previousMessages;
 
+// Create the response
     return createDataStreamResponse({
       execute: async (dataStream) => {
-        // Update dataStream for artifact tools if they exist
-        if (artifactTools.createDocument) {
-          (artifactTools.createDocument as any).dataStream = dataStream;
-        }
-        if (artifactTools.updateDocument) {
-          (artifactTools.updateDocument as any).dataStream = dataStream;
-        }
+        // Update the data stream reference for the tools
+        dataStreamRef = dataStream;
         const inProgressToolStep = extractInProgressToolPart(
           messages.slice(-2),
         );
