@@ -18,6 +18,7 @@ export interface SaveDocumentProps {
 }
 
 export interface CreateDocumentCallbackProps {
+  id?: string;
   title: string;
   kind?: ArtifactKind;
   dataStream: DataStreamWriter;
@@ -48,15 +49,15 @@ export function createDocumentHandler<T extends ArtifactKind>(config: {
       console.log('Starting onCreateDocument...');
       console.log('Session:', args.session);
       const draftContent = await config.onCreateDocument({
+        id: args.id,
         title: args.title,
         dataStream: args.dataStream,
         session: args.session,
       });
 
-      console.log('Got draft content:', draftContent);
       if (args.session?.session?.userId) {
-        console.log('Saving document with userId:', args.session.session.userId);
         const [doc] = await saveDocument({
+          id: args.id,
           title: args.title,
           content: draftContent,
           kind: args.kind || config.kind,

@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/server";
-import { artifactKinds, documentHandlersByArtifactKind } from "@/lib/artifacts/server";
-import { getDocumentById } from "@/lib/db/queries";
+import { getDocumentById, saveDocument } from "@/lib/db/queries";
 import { DocumentRepository } from "@/lib/db/pg/repositories/document-repository.pg";
 import type { Session } from "better-auth";
 type BetterAuthSession = { session: Session; user: any };
@@ -34,70 +33,34 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  try {
-    console.log("Starting document creation...");
-    const session = await getSession();
-    console.log("Session:", session);
-    if (!session?.session?.userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get("id");
 
-    const body = await request.json();
-    console.log("Request body:", body);
-    const { title, kind = 'text' } = body;
-
-    console.log("Title:", title);
-    console.log("Kind:", kind);
-
-    if (!artifactKinds.includes(kind as any)) {
-      return NextResponse.json(
-        { error: `Document kind must be one of: ${artifactKinds.join(', ')}` },
-        { status: 400 },
-      );
-    }
-
-    console.log("documentHandlersByArtifactKind:", documentHandlersByArtifactKind);
-    console.log("Artifact kinds:", artifactKinds);
-    console.log("Requested kind:", kind);
-    const handler = documentHandlersByArtifactKind.find((h) => {
-      console.log("Checking handler:", h?.kind, "against:", kind);
-      return h?.kind === kind;
-    });
-    console.log("Found handler:", handler?.kind);
-
-    if (!handler) {
-      return NextResponse.json(
-        { error: `No document handler found for kind: ${kind}` },
-        { status: 400 },
-      );
-    }
-
-    console.log("Calling onCreateDocument...");
-    const document = await handler.onCreateDocument({
-      title,
-      dataStream: {
-        write: async (data: any) => {
-          return new Response(JSON.stringify(data));
-        },
-        writeData: async (data: any) => {
-          return new Response(JSON.stringify(data));
-        },
-        writeMessageAnnotation: async () => {},
-        writeSource: async () => {},
-        merge: async () => {},
-        onError: (error) => error?.toString() || 'Unknown error',
-      },
-      session: session as BetterAuthSession,
-    });
-    console.log("Retrieved document:", document);
-    return NextResponse.json(document);
-  } catch (error) {
-    console.error("Error creating document:", error);
-    return NextResponse.json(
-      { error: "Failed to create document" },
-      { status: 500 },
-    );
+  if (!id) {
+    return new Response("Missing id", { status: 400 });
   }
+
+  const session = await getSession();
+
+  if (!session?.session?.userId) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+
+  const { content, title, kind } = await request.json();
+
+  if (session.session?.userId) {
+    const [document] = await saveDocument({
+      id,
+      content,
+      title,
+      kind,
+      userId: session.session.userId,
+    });
+
+    return Response.json(document, { status: 200 });
+  }
+
+  return new Response("Unauthorized", { status: 401 });
 }
 
 export async function PUT(request: Request) {
