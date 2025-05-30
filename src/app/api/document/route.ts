@@ -1,29 +1,45 @@
 import { NextResponse } from 'next/server';
-import { DocumentRepository } from '@/lib/db/pg/repositories/document-repository.pg';
+import { randomUUID } from 'crypto';
+import { getSession } from '@/lib/auth/server';
+import { getDocumentById } from '@/lib/db/queries';
+import { documentHandlersByArtifactKind } from '@/lib/artifacts/server';
+import type { DataStreamWriter } from 'ai';
+import type { Session } from 'better-auth';
+type BetterAuthSession = { session: Session; user: any };
 
-const documentRepository = new DocumentRepository();
-
-export async function GET(request: Request): Promise<NextResponse> {
+export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
-    if (id) {
-      const document = await documentRepository.getDocumentById(id);
-
-      if (!document) {
-        return NextResponse.json({ error: 'Document not found' }, { status: 404 });
-      }
-
-      return NextResponse.json(document);
+    if (!id) {
+      return NextResponse.json({ error: 'Missing id' }, { status: 400 });
     }
 
-    const documents = await documentRepository.listDocuments(''); // TODO: Get actual user ID from auth
-    return NextResponse.json(documents);
+    const session = await getSession();
+    console.log('Session in GET /api/document:', session);
+
+    if (!session?.session?.userId) {
+      return NextResponse.json({ error: 'Unauthorized - No session' }, { status: 401 });
+    }
+
+    const [document] = await getDocumentById({ id });
+    console.log('Document found:', document);
+
+    if (!document) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    }
+
+    if (document.userId !== session.session.userId) {
+      console.log('User ID mismatch:', { docUserId: document.userId, sessionUserId: session.session.userId });
+      return NextResponse.json({ error: 'Unauthorized - Wrong user' }, { status: 401 });
+    }
+
+    return NextResponse.json([document]);
   } catch (error) {
-    console.error('Error fetching document:', error);
+    console.error('Error getting document:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch document' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
@@ -31,17 +47,61 @@ export async function GET(request: Request): Promise<NextResponse> {
 
 export async function POST(request: Request) {
   try {
-    const { userId, title, kind, content } = await request.json();
+    console.log('Starting document creation...');
+    const session = await getSession();
+    console.log('Session:', session);
+    if (!session?.session?.userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
-    const document = await documentRepository.createDocument(
-      userId,
+    const body = await request.json();
+    console.log('Request body:', body);
+    const { title, kind } = body;
+    
+    console.log('Title:', title);
+    console.log('Kind:', kind);
+    
+    if (!kind) {
+      return NextResponse.json(
+        { error: 'Document kind is required' },
+        { status: 400 }
+      );
+    }
+
+    const id = randomUUID();
+    console.log('Generated ID:', id);
+    
+    console.log('Available handlers:', documentHandlersByArtifactKind.map(h => h.kind));
+    const handler = documentHandlersByArtifactKind.find(h => h.kind === kind);
+    console.log('Found handler:', handler?.kind);
+    
+    if (!handler) {
+      return NextResponse.json(
+        { error: `No document handler found for kind: ${kind}` },
+        { status: 400 }
+      );
+    }
+
+    console.log('Calling onCreateDocument...');
+    await handler.onCreateDocument({
+      id,
       title,
-      kind,
-      content
-    );
+      session: session as BetterAuthSession,
+      dataStream: {
+        writeData: async (data: any) => {
+          console.log('DataStream write:', data);
+        },
+        write: async () => {},
+        writeMessageAnnotation: async () => {},
+        writeSource: async () => {},
+        merge: async () => {},
+        onError: () => {}
+      }
+    });
 
-    return NextResponse.json(document);
-
+    console.log('Getting created document...');
+    const [document] = await getDocumentById({ id });
+    console.log('Retrieved document:', document);
     return NextResponse.json(document);
   } catch (error) {
     console.error('Error creating document:', error);
@@ -55,24 +115,11 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const { id, content } = await request.json();
-
-    const document = await documentRepository.updateDocument(id, content);
-
-    if (!document) {
-      return NextResponse.json({ error: 'Document not found' }, { status: 404 });
-    }
-
-    return NextResponse.json(document);
-
-    if (!document) {
-      return NextResponse.json({ error: 'Document not found' }, { status: 404 });
-    }
-
-    return NextResponse.json(document);
+    return NextResponse.json({ id });
   } catch (error) {
     console.error('Error updating document:', error);
     return NextResponse.json(
-      { error: 'Failed to update document' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

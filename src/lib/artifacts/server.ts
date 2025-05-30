@@ -7,6 +7,7 @@ import type { DataStreamWriter } from "ai";
 import type { Document } from "../db/schema";
 import { saveDocument } from "../db/queries";
 import type { Session } from "better-auth";
+type BetterAuthSession = { session: Session; user: any };
 
 export interface SaveDocumentProps {
   id: string;
@@ -20,20 +21,20 @@ export interface CreateDocumentCallbackProps {
   id: string;
   title: string;
   dataStream: DataStreamWriter;
-  session: Session;
+  session: BetterAuthSession;
 }
 
 export interface UpdateDocumentCallbackProps {
   document: Document;
   description: string;
   dataStream: DataStreamWriter;
-  session: Session;
+  session: BetterAuthSession;
 }
 
 export interface DocumentHandler<T = ArtifactKind> {
   kind: T;
-  onCreateDocument: (args: CreateDocumentCallbackProps) => Promise<void>;
-  onUpdateDocument: (args: UpdateDocumentCallbackProps) => Promise<void>;
+  onCreateDocument: (args: CreateDocumentCallbackProps) => Promise<string>;
+  onUpdateDocument: (args: UpdateDocumentCallbackProps) => Promise<string>;
 }
 
 export function createDocumentHandler<T extends ArtifactKind>(config: {
@@ -44,6 +45,8 @@ export function createDocumentHandler<T extends ArtifactKind>(config: {
   return {
     kind: config.kind,
     onCreateDocument: async (args: CreateDocumentCallbackProps) => {
+      console.log('Starting onCreateDocument...');
+      console.log('Session:', args.session);
       const draftContent = await config.onCreateDocument({
         id: args.id,
         title: args.title,
@@ -51,19 +54,23 @@ export function createDocumentHandler<T extends ArtifactKind>(config: {
         session: args.session,
       });
 
-      if (args.session?.userId) {
+      console.log('Got draft content:', draftContent);
+      if (args.session?.session?.userId) {
+        console.log('Saving document with userId:', args.session.session.userId);
         await saveDocument({
           id: args.id,
           title: args.title,
           content: draftContent,
           kind: config.kind,
-          userId: args.session.userId,
+          userId: args.session.session.userId,
         });
       }
 
-      return;
+      return draftContent;
     },
     onUpdateDocument: async (args: UpdateDocumentCallbackProps) => {
+      console.log('Starting onUpdateDocument...');
+      console.log('Session:', args.session);
       const draftContent = await config.onUpdateDocument({
         document: args.document,
         description: args.description,
@@ -71,17 +78,19 @@ export function createDocumentHandler<T extends ArtifactKind>(config: {
         session: args.session,
       });
 
-      if (args.session?.userId) {
+      console.log('Got draft content:', draftContent);
+      if (args.session?.session?.userId) {
+        console.log('Saving document with userId:', args.session.session.userId);
         await saveDocument({
           id: args.document.id,
           title: args.document.title,
           content: draftContent,
           kind: config.kind,
-          userId: args.session.userId,
+          userId: args.session.session.userId,
         });
       }
 
-      return;
+      return draftContent;
     },
   };
 }

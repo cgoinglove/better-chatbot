@@ -235,6 +235,8 @@ export async function saveDocument({
         title,
         content,
         kind,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       })
       .returning();
   } catch (error) {
