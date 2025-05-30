@@ -2,12 +2,17 @@ import { z } from "zod";
 import type { Session } from "better-auth";
 import { type DataStreamWriter, streamObject, tool } from "ai";
 import { getDocumentById, saveSuggestions } from "@/lib/db/queries";
-import type { Suggestion } from "@/lib/db/schema";
 import { generateUUID } from "@/lib/utils";
 import { myProvider } from "../providers";
+import type { InferSelectModel } from "drizzle-orm";
+import { SuggestionSchema } from "@/lib/db/pg/schema.pg";
+
+type Suggestion = InferSelectModel<typeof SuggestionSchema>;
+
+type BetterAuthSession = { session: Session; user: any };
 
 interface RequestSuggestionsProps {
-  session: Session;
+  session: BetterAuthSession;
   dataStream: DataStreamWriter;
 }
 
@@ -25,21 +30,26 @@ export const requestSuggestions = ({
     execute: async ({ documentId }) => {
       const document = await getDocumentById({ id: documentId });
 
-      if (!document || !document.content) {
-        return {
-          error: "Document not found",
-        };
+      if (!document || !document.length) {
+        throw new Error("Document not found");
       }
 
-      const suggestions: Array<
-        Omit<Suggestion, "userId" | "createdAt" | "documentCreatedAt">
-      > = [];
+      const doc = document[0];
+      if (!doc || !doc.content) {
+        throw new Error("Document content not found");
+      }
 
-      const { elementStream } = streamObject({
+      const suggestions: Array<Suggestion> = [];
+
+      const { elementStream } = streamObject<{
+        originalSentence: string;
+        suggestedSentence: string;
+        description: string;
+      }>({
         model: myProvider.languageModel("artifact-model"),
         system:
           "You are a help writing assistant. Given a piece of writing, please offer suggestions to improve the piece of writing and describe the change. It is very important for the edits to contain full sentences instead of just words. Max 5 suggestions.",
-        prompt: document.content,
+        prompt: doc.content,
         output: "array",
         schema: z.object({
           originalSentence: z.string().describe("The original sentence"),
@@ -50,39 +60,61 @@ export const requestSuggestions = ({
 
       for await (const element of elementStream) {
         const suggestion = {
-          originalText: element.originalSentence,
-          suggestedText: element.suggestedSentence,
-          description: element.description,
           id: generateUUID(),
-          documentId: documentId,
-          isResolved: false,
+          documentId,
+          content: JSON.stringify({
+            originalText: element.originalSentence,
+            suggestedSentence: element.suggestedSentence,
+            description: element.description,
+          }),
+          kind: "text" as const,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          documentCreatedAt: doc.createdAt,
         };
 
+        // Send individual suggestion
         dataStream.writeData({
           type: "suggestion",
-          content: suggestion,
+          content: {
+            ...suggestion,
+            createdAt: suggestion.createdAt.toISOString(),
+            updatedAt: suggestion.updatedAt.toISOString(),
+            documentCreatedAt: suggestion.documentCreatedAt.toISOString(),
+          },
         });
 
         suggestions.push(suggestion);
       }
 
-      if (session.userId) {
-        const userId = session.userId;
-
+      if (session.user?.id) {
         await saveSuggestions({
           suggestions: suggestions.map((suggestion) => ({
             ...suggestion,
-            userId,
-            createdAt: new Date(),
-            documentCreatedAt: document.createdAt,
+            userId: session.user.id,
           })),
+        });
+
+        // Send final summary
+        dataStream.writeData({
+          type: "suggestions",
+          content: {
+            title: doc.title,
+            kind: doc.kind,
+            suggestions: suggestions.map(s => ({
+              ...s,
+              createdAt: s.createdAt.toISOString(),
+              updatedAt: s.updatedAt.toISOString(),
+              documentCreatedAt: s.documentCreatedAt.toISOString(),
+            })),
+          }
         });
       }
 
       return {
         id: documentId,
-        title: document.title,
-        kind: document.kind,
+        title: doc.title,
+        kind: doc.kind,
         message: "Suggestions have been added to the document",
       };
     },
