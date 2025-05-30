@@ -49,10 +49,11 @@ interface Props {
   initialMessages: Array<UIMessage>;
   selectedModel: string;
   selectedToolChoice: "auto" | "none" | "manual";
+  isReadonly?: boolean;
   slots?: {
     emptySlot?: React.ReactNode;
+    inputBottomSlot?: React.ReactNode;
   };
-  isReadonly?: boolean;
 }
 
 export default function ChatBot({
