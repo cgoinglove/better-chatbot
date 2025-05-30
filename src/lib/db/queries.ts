@@ -1,47 +1,65 @@
-import 'server-only';
+import "server-only";
 
-import { genSaltSync, hashSync } from 'bcrypt-ts';
-import { and, asc, desc, eq, gt, gte, inArray } from 'drizzle-orm';
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
+import { genSaltSync, hashSync } from "bcrypt-ts";
+import { and, asc, desc, eq, gt, sql } from 'drizzle-orm';
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 
 import {
-  user,
-  chat,
-  type User,
-  document,
-  type Suggestion,
-  suggestion,
-  message,
-  vote,
-  type DBMessage,
-} from './schema';
-import type { ArtifactKind } from '@/components/artifact';
+  UserSchema,
+  ChatThreadSchema,
+  ChatMessageSchema,
+  DocumentSchema,
+  VoteSchema,
+  SuggestionSchema,
+  type UserEntity,
+  type ChatThreadEntity,
+  type ChatMessageEntity,
+  type Document,
+
+} from "./pg/schema.pg";
+import type { ArtifactKind } from "@/components/artifact";
+
+const client = postgres(process.env.POSTGRES_URL!);
+const db = drizzle(client);
 
 // Optionally, if not using email/pass login, you can
 // use the Drizzle adapter for Auth.js / NextAuth
 // https://authjs.dev/reference/adapter/drizzle
 
-const client = postgres(process.env.POSTGRES_URL!);
-const db = drizzle(client);
-
-export async function getUser(email: string): Promise<Array<User>> {
+export async function getUser(email: string): Promise<Array<UserEntity>> {
   try {
-    return await db.select().from(user).where(eq(user.email, email));
+    return await db
+      .select()
+      .from(UserSchema)
+      .where(eq(UserSchema.email, email));
   } catch (error) {
-    console.error('Failed to get user from database');
+    console.error("Failed to get user from database");
     throw error;
   }
 }
 
-export async function createUser(email: string, password: string) {
+export async function createUser(
+  email: string,
+  password: string,
+  name?: string,
+): Promise<Array<UserEntity>> {
   const salt = genSaltSync(10);
   const hash = hashSync(password, salt);
 
   try {
-    return await db.insert(user).values({ email, password: hash });
+    return await db
+      .insert(UserSchema)
+      .values({
+        email,
+        password: hash,
+        name: name || email.split("@")[0],
+        emailVerified: false,
+        preferences: {},
+      })
+      .returning();
   } catch (error) {
-    console.error('Failed to create user in database');
+    console.error("Failed to create user in database");
     throw error;
   }
 }
@@ -50,81 +68,100 @@ export async function saveChat({
   id,
   userId,
   title,
+  projectId,
 }: {
   id: string;
   userId: string;
   title: string;
-}) {
+  projectId?: string;
+}): Promise<Array<ChatThreadEntity>> {
   try {
-    return await db.insert(chat).values({
-      id,
-      createdAt: new Date(),
-      userId,
-      title,
-    });
+    return await db
+      .insert(ChatThreadSchema)
+      .values({
+        id,
+        userId,
+        title,
+        projectId,
+      })
+      .returning();
   } catch (error) {
-    console.error('Failed to save chat in database');
+    console.error("Failed to save chat in database");
     throw error;
   }
 }
 
-export async function deleteChatById({ id }: { id: string }) {
+export async function deleteChatById({
+  id,
+}: { id: string }): Promise<Array<ChatThreadEntity>> {
   try {
-    await db.delete(vote).where(eq(vote.chatId, id));
-    await db.delete(message).where(eq(message.chatId, id));
+    // First delete related messages
+    await db
+      .delete(ChatMessageSchema)
+      .where(eq(ChatMessageSchema.threadId, id));
 
-    return await db.delete(chat).where(eq(chat.id, id));
+    // Then delete the thread
+    return await db.delete(ChatThreadSchema).where(eq(ChatThreadSchema.id, id));
   } catch (error) {
-    console.error('Failed to delete chat by id from database');
+    console.error("Failed to delete chat by id from database");
     throw error;
   }
 }
 
-export async function getChatsByUserId({ id }: { id: string }) {
+export async function getChatsByUserId({
+  id,
+}: { id: string }): Promise<Array<ChatThreadEntity>> {
   try {
     return await db
       .select()
-      .from(chat)
-      .where(eq(chat.userId, id))
-      .orderBy(desc(chat.createdAt));
+      .from(ChatThreadSchema)
+      .where(eq(ChatThreadSchema.userId, id))
+      .orderBy(desc(ChatThreadSchema.createdAt));
   } catch (error) {
-    console.error('Failed to get chats by user from database');
+    console.error("Failed to get chats by user id from database");
     throw error;
   }
 }
 
-export async function getChatById({ id }: { id: string }) {
-  try {
-    const [selectedChat] = await db.select().from(chat).where(eq(chat.id, id));
-    return selectedChat;
-  } catch (error) {
-    console.error('Failed to get chat by id from database');
-    throw error;
-  }
-}
-
-export async function saveMessages({
-  messages,
-}: {
-  messages: Array<DBMessage>;
-}) {
-  try {
-    return await db.insert(message).values(messages);
-  } catch (error) {
-    console.error('Failed to save messages in database', error);
-    throw error;
-  }
-}
-
-export async function getMessagesByChatId({ id }: { id: string }) {
+export async function getChatById({
+  id,
+}: { id: string }): Promise<Array<ChatThreadEntity>> {
   try {
     return await db
       .select()
-      .from(message)
-      .where(eq(message.chatId, id))
-      .orderBy(asc(message.createdAt));
+      .from(ChatThreadSchema)
+      .where(eq(ChatThreadSchema.id, id));
   } catch (error) {
-    console.error('Failed to get messages by chat id from database', error);
+    console.error("Failed to get chat by id from database");
+    throw error;
+  }
+}
+
+export async function saveMessages(
+  messages: ChatMessageEntity[],
+): Promise<Array<ChatMessageEntity>> {
+  try {
+    return await db
+      .insert(ChatMessageSchema)
+      .values(messages)
+      .returning();
+  } catch (error) {
+    console.error("Failed to save messages in database");
+    throw error;
+  }
+}
+
+export async function getMessagesByChatId({
+  chatId,
+}: { chatId: string }): Promise<Array<ChatMessageEntity>> {
+  try {
+    return await db
+      .select()
+      .from(ChatMessageSchema)
+      .where(eq(ChatMessageSchema.threadId, chatId))
+      .orderBy(asc(ChatMessageSchema.createdAt));
+  } catch (error) {
+    console.error("Failed to get messages by chat id from database");
     throw error;
   }
 }
@@ -136,94 +173,97 @@ export async function voteMessage({
 }: {
   chatId: string;
   messageId: string;
-  type: 'up' | 'down';
-}) {
+  type: "up" | "down";
+}): Promise<Array<Vote>> {
   try {
-    const [existingVote] = await db
-      .select()
-      .from(vote)
-      .where(and(eq(vote.messageId, messageId)));
+    await db
+      .insert(VoteSchema)
+      .values({
+        chatId,
+        messageId,
+        isUpvoted: type === "up",
+      })
+      .onConflictDoUpdate({
+        target: [VoteSchema.chatId, VoteSchema.messageId],
+        set: {
+          isUpvoted: type === "up",
+        },
+      });
 
-    if (existingVote) {
-      return await db
-        .update(vote)
-        .set({ isUpvoted: type === 'up' })
-        .where(and(eq(vote.messageId, messageId), eq(vote.chatId, chatId)));
-    }
-    return await db.insert(vote).values({
-      chatId,
-      messageId,
-      isUpvoted: type === 'up',
-    });
+    return await db
+      .select()
+      .from(VoteSchema)
+      .where(
+        and(eq(VoteSchema.chatId, chatId), eq(VoteSchema.messageId, messageId)),
+      );
   } catch (error) {
-    console.error('Failed to upvote message in database', error);
+    console.error('Failed to vote message in database');
     throw error;
   }
 }
 
-export async function getVotesByChatId({ id }: { id: string }) {
+export async function getVotesByChatId({
+  id,
+}: { id: string }): Promise<Array<Vote>> {
   try {
-    return await db.select().from(vote).where(eq(vote.chatId, id));
+    return await db.select().from(VoteSchema).where(eq(VoteSchema.chatId, id));
   } catch (error) {
-    console.error('Failed to get votes by chat id from database', error);
+    console.error("Failed to get votes by chat id from database");
     throw error;
   }
 }
 
 export async function saveDocument({
   id,
-  title,
-  kind,
-  content,
   userId,
+  title,
+  content,
+  kind,
 }: {
   id: string;
-  title: string;
-  kind: ArtifactKind;
-  content: string;
   userId: string;
-}) {
+  title: string;
+  content: string;
+  kind: ArtifactKind;
+}): Promise<Array<Document>> {
   try {
-    return await db.insert(document).values({
-      id,
-      title,
-      kind,
-      content,
-      userId,
-      createdAt: new Date(),
-    });
+    return await db
+      .insert(DocumentSchema)
+      .values({
+        id,
+        userId,
+        title,
+        content,
+        kind,
+      })
+      .returning();
   } catch (error) {
-    console.error('Failed to save document in database');
+    console.error("Failed to save document in database");
     throw error;
   }
 }
 
-export async function getDocumentsById({ id }: { id: string }) {
+export async function getDocumentsByUserId({ id }: { id: string }): Promise<Array<Document>> {
   try {
-    const documents = await db
+    return await db
       .select()
-      .from(document)
-      .where(eq(document.id, id))
-      .orderBy(asc(document.createdAt));
-
-    return documents;
+      .from(DocumentSchema)
+      .where(eq(DocumentSchema.userId, id))
+      .orderBy(desc(DocumentSchema.createdAt));
   } catch (error) {
-    console.error('Failed to get document by id from database');
+    console.error("Failed to get documents by user id from database");
     throw error;
   }
 }
 
-export async function getDocumentById({ id }: { id: string }) {
+export async function getDocumentById({ id }: { id: string }): Promise<Array<Document>> {
   try {
-    const [selectedDocument] = await db
+    return await db
       .select()
-      .from(document)
-      .where(eq(document.id, id))
-      .orderBy(desc(document.createdAt));
-
-    return selectedDocument;
+      .from(DocumentSchema)
+      .where(eq(DocumentSchema.id, id));
   } catch (error) {
-    console.error('Failed to get document by id from database');
+    console.error("Failed to get document by id from database");
     throw error;
   }
 }
@@ -234,23 +274,25 @@ export async function deleteDocumentsByIdAfterTimestamp({
 }: {
   id: string;
   timestamp: Date;
-}) {
+}): Promise<Array<DocumentEntity>> {
   try {
     await db
-      .delete(suggestion)
+      .delete(SuggestionSchema)
       .where(
         and(
-          eq(suggestion.documentId, id),
-          gt(suggestion.documentCreatedAt, timestamp),
+          eq(SuggestionSchema.documentId, id),
+          gt(SuggestionSchema.documentCreatedAt, timestamp),
         ),
       );
 
     return await db
-      .delete(document)
-      .where(and(eq(document.id, id), gt(document.createdAt, timestamp)));
+      .delete(DocumentSchema)
+      .where(
+        and(eq(DocumentSchema.id, id), gt(DocumentSchema.createdAt, timestamp)),
+      );
   } catch (error) {
     console.error(
-      'Failed to delete documents by id after timestamp from database',
+      "Failed to delete documents by id after timestamp from database",
     );
     throw error;
   }
@@ -260,11 +302,11 @@ export async function saveSuggestions({
   suggestions,
 }: {
   suggestions: Array<Suggestion>;
-}) {
+}): Promise<Array<Suggestion>> {
   try {
-    return await db.insert(suggestion).values(suggestions);
+    return await db.insert(SuggestionSchema).values(suggestions);
   } catch (error) {
-    console.error('Failed to save suggestions in database');
+    console.error("Failed to save suggestions in database");
     throw error;
   }
 }
@@ -273,25 +315,30 @@ export async function getSuggestionsByDocumentId({
   documentId,
 }: {
   documentId: string;
-}) {
+}): Promise<Array<Suggestion>> {
   try {
     return await db
       .select()
-      .from(suggestion)
-      .where(and(eq(suggestion.documentId, documentId)));
+      .from(SuggestionSchema)
+      .where(and(eq(SuggestionSchema.documentId, documentId)));
   } catch (error) {
     console.error(
-      'Failed to get suggestions by document version from database',
+      "Failed to get suggestions by document version from database",
     );
     throw error;
   }
 }
 
-export async function getMessageById({ id }: { id: string }) {
+export async function getMessageById({
+  id,
+}: { id: string }): Promise<Array<ChatMessageEntity>> {
   try {
-    return await db.select().from(message).where(eq(message.id, id));
+    return await db
+      .select()
+      .from(ChatMessageSchema)
+      .where(eq(ChatMessageSchema.id, id));
   } catch (error) {
-    console.error('Failed to get message by id from database');
+    console.error("Failed to get message by id from database");
     throw error;
   }
 }
@@ -302,33 +349,20 @@ export async function deleteMessagesByChatIdAfterTimestamp({
 }: {
   chatId: string;
   timestamp: Date;
-}) {
+}): Promise<Array<ChatMessageEntity>> {
   try {
-    const messagesToDelete = await db
-      .select({ id: message.id })
-      .from(message)
+    return await db
+      .delete(ChatMessageSchema)
       .where(
-        and(eq(message.chatId, chatId), gte(message.createdAt, timestamp)),
-      );
-
-    const messageIds = messagesToDelete.map((message) => message.id);
-
-    if (messageIds.length > 0) {
-      await db
-        .delete(vote)
-        .where(
-          and(eq(vote.chatId, chatId), inArray(vote.messageId, messageIds)),
-        );
-
-      return await db
-        .delete(message)
-        .where(
-          and(eq(message.chatId, chatId), inArray(message.id, messageIds)),
-        );
-    }
+        and(
+          eq(ChatMessageSchema.threadId, chatId),
+          gt(ChatMessageSchema.createdAt, timestamp),
+        ),
+      )
+      .returning();
   } catch (error) {
     console.error(
-      'Failed to delete messages by id after timestamp from database',
+      'Failed to delete messages by chat id after timestamp from database',
     );
     throw error;
   }
@@ -340,11 +374,15 @@ export async function updateChatVisiblityById({
 }: {
   chatId: string;
   visibility: 'private' | 'public';
-}) {
+}): Promise<Array<ChatThreadEntity>> {
   try {
-    return await db.update(chat).set({ visibility }).where(eq(chat.id, chatId));
+    return await db
+      .update(ChatThreadSchema)
+      .set({ visibility })
+      .where(eq(ChatThreadSchema.id, chatId))
+      .returning();
   } catch (error) {
-    console.error('Failed to update chat visibility in database');
+    console.error('Failed to update chat visibility by id in database');
     throw error;
   }
 }

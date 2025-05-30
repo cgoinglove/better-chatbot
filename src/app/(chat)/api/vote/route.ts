@@ -24,7 +24,7 @@ export async function GET(request: Request) {
     return new Response('Chat not found', { status: 404 });
   }
 
-  if (chat.userId !== session.user.id) {
+  if (chat[0].userId !== session.user.id) {
     return new Response('Unauthorized', { status: 401 });
   }
 
@@ -59,7 +59,7 @@ export async function PATCH(request: Request) {
     return new Response('Chat not found', { status: 404 });
   }
 
-  if (chat.userId !== session.user.id) {
+  if (chat[0].userId !== session.user.id) {
     return new Response('Unauthorized', { status: 401 });
   }
 

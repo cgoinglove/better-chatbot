@@ -8,6 +8,9 @@ export default () => {
     experimental: {
       useCache: true,
     },
+    images: {
+      domains: ["avatar.vercel.sh"],
+    },
     env: {
       NO_HTTPS: process.env.NO_HTTPS,
       NEXT_PUBLIC_GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,

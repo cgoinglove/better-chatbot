@@ -21,6 +21,9 @@ export const ChatThreadSchema = pgTable("chat_thread", {
     .notNull()
     .references(() => UserSchema.id),
   projectId: uuid("project_id"),
+  visibility: varchar("visibility", { enum: ["public", "private"] })
+    .notNull()
+    .default("private"),
   createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
@@ -146,4 +149,46 @@ export type McpServerEntity = typeof McpServerSchema.$inferSelect;
 export type ChatThreadEntity = typeof ChatThreadSchema.$inferSelect;
 export type ChatMessageEntity = typeof ChatMessageSchema.$inferSelect;
 export type ProjectEntity = typeof ProjectSchema.$inferSelect;
+export const VoteSchema = pgTable(
+  'vote',
+  {
+    chatId: uuid('chat_id')
+      .notNull()
+      .references(() => ChatThreadSchema.id),
+    messageId: uuid('message_id')
+      .notNull()
+      .references(() => ChatMessageSchema.id),
+    isUpvoted: boolean('is_upvoted').notNull(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.chatId, table.messageId] }),
+  }),
+);
+
+export const SuggestionSchema = pgTable(
+  'suggestion',
+  {
+    id: uuid('id').notNull().defaultRandom(),
+    createdAt: timestamp('created_at')
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: timestamp('updated_at')
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    documentId: uuid('document_id')
+      .notNull()
+      .references(() => DocumentSchema.id),
+    documentCreatedAt: timestamp('document_created_at').notNull(),
+    content: text('content').notNull(),
+    kind: varchar('kind', { enum: ['text', 'code', 'image', 'sheet'] })
+      .notNull()
+      .default('text'),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.id] }),
+  }),
+);
+
 export type UserEntity = typeof UserSchema.$inferSelect;
+export type VoteEntity = typeof VoteSchema.$inferSelect;
+export type SuggestionEntity = typeof SuggestionSchema.$inferSelect;
