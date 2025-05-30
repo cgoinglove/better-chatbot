@@ -257,10 +257,7 @@ export function VoiceChatBot() {
                   >
                     <DropdownMenuGroup className="cursor-pointer">
                       <DropdownMenuSub>
-                        <DropdownMenuSubTrigger
-                          className="flex items-center gap-2 cursor-pointer"
-                          icon=""
-                        >
+                        <DropdownMenuSubTrigger className="flex items-center gap-2 cursor-pointer">
                           <OpenAIIcon className="size-3.5 stroke-none fill-foreground" />
                           Open AI
                         </DropdownMenuSubTrigger>
@@ -300,10 +297,7 @@ export function VoiceChatBot() {
                       </DropdownMenuSub>
                       <DropdownMenuSub>
                         <DropdownMenuSub>
-                          <DropdownMenuSubTrigger
-                            className="flex items-center gap-2 text-muted-foreground"
-                            icon=""
-                          >
+                          <DropdownMenuSubTrigger className="flex items-center gap-2 text-muted-foreground">
                             <GeminiIcon className="size-3.5" />
                             Gemini
                           </DropdownMenuSubTrigger>

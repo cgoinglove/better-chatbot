@@ -1,62 +1,42 @@
 "use client";
 
-import type { Vote } from "@/lib/db/schema";
-import { cn, truncateString } from "@/lib/utils";
-import type { UseChatHelpers } from "@ai-sdk/react";
 import type { UIMessage } from "ai";
 import cx from "classnames";
-import equal from "fast-deep-equal";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronDown, ChevronUp, Terminal } from "lucide-react";
 import { memo, useState } from "react";
+import type { Vote } from "@/lib/db/schema";
 import { DocumentToolCall, DocumentToolResult } from "./document";
-import { DocumentPreview } from "./document-preview";
 import { PencilEditIcon, SparklesIcon } from "./icons";
 import { Markdown } from "./markdown";
 import { MessageActions } from "./message-actions";
-import { MessageEditor } from "./message-editor";
-import { MessageReasoning } from "./message-reasoning";
 import { PreviewAttachment } from "./preview-attachment";
-import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
+import { Weather } from "./weather";
+import equal from "fast-deep-equal";
+import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
-import { Weather } from "./weather";
-
-// Combine Props from message.original.tsx and message.inbound.tsx
-interface Props {
-  message: UIMessage;
-  chatId?: string; // From inbound (replaces threadId)
-  threadId?: string; // From original
-  isLoading: boolean;
-  isLastMessage?: boolean; // From original
-  setMessages: UseChatHelpers["setMessages"];
-  reload: UseChatHelpers["reload"];
-  className?: string;
-  onProxyToolCall?: (answer: boolean) => void; // Updated from onPoxyToolCall
-  status?: UseChatHelpers["status"];
-  messageIndex?: number;
-  isError?: boolean;
-  vote?: Vote; // From inbound
-  isReadonly?: boolean; // From inbound
-}
+import { MessageEditor } from "./message-editor";
+import { DocumentPreview } from "./document-preview";
+import { MessageReasoning } from "./message-reasoning";
+import type { UseChatHelpers } from "@ai-sdk/react";
 
 const PurePreviewMessage = ({
-  message,
   chatId,
-  // threadId,
-  setMessages,
-  isLoading,
-  // isLastMessage,
-  reload,
-  // status,
-  // className,
-  // onProxyToolCall,
-  // messageIndex,
-  // isError,
+  message,
   vote,
-  isReadonly = false, // Default to false if not provided
-}: Props) => {
-  // const isUserMessage = useMemo(() => message.role === "user", [message.role]);
+  isLoading,
+  setMessages,
+  reload,
+  isReadonly,
+}: {
+  chatId: string;
+  message: UIMessage;
+  vote: Vote | undefined;
+  isLoading: boolean;
+  setMessages: UseChatHelpers["setMessages"];
+  reload: UseChatHelpers["reload"];
+  isReadonly: boolean;
+}) => {
   const [mode, setMode] = useState<"view" | "edit">("view");
 
   return (
@@ -237,7 +217,7 @@ const PurePreviewMessage = ({
             {!isReadonly && (
               <MessageActions
                 key={`action-${message.id}`}
-                chatId={chatId!}
+                chatId={chatId}
                 message={message}
                 vote={vote}
                 isLoading={isLoading}
@@ -253,16 +233,8 @@ const PurePreviewMessage = ({
 export const PreviewMessage = memo(
   PurePreviewMessage,
   (prevProps, nextProps) => {
-    // Combined equality checks from both implementations
-    if (prevProps.message.id !== nextProps.message.id) return false;
     if (prevProps.isLoading !== nextProps.isLoading) return false;
-    if (prevProps.isLastMessage !== nextProps.isLastMessage) return false;
-    if (prevProps.className !== nextProps.className) return false;
-    if (prevProps.status !== nextProps.status) return false;
-    if (prevProps.message.annotations !== nextProps.message.annotations)
-      return false;
-    if (prevProps.isError !== nextProps.isError) return false;
-    if (prevProps.onProxyToolCall !== nextProps.onProxyToolCall) return false;
+    if (prevProps.message.id !== nextProps.message.id) return false;
     if (!equal(prevProps.message.parts, nextProps.message.parts)) return false;
     if (!equal(prevProps.vote, nextProps.vote)) return false;
 
@@ -300,59 +272,5 @@ export const ThinkingMessage = () => {
         </div>
       </div>
     </motion.div>
-  );
-};
-
-/**
- * Error message component to display errors in a consistent format
- */
-export const ErrorMessage = ({
-  error,
-}: {
-  error: Error;
-  message?: UIMessage;
-}) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const maxLength = 200;
-
-  return (
-    <div className="w-full mx-auto max-w-3xl px-6 animate-in fade-in mt-4">
-      <Alert variant="destructive" className="border-destructive">
-        <Terminal className="h-4 w-4" />
-        <AlertTitle className="mb-2">Chat Error</AlertTitle>
-        <AlertDescription className="text-sm">
-          <div className="whitespace-pre-wrap">
-            {isExpanded
-              ? error.message
-              : truncateString(error.message, maxLength)}
-          </div>
-          {error.message.length > maxLength && (
-            <Button
-              onClick={() => setIsExpanded(!isExpanded)}
-              variant={"ghost"}
-              className="ml-auto"
-              size={"sm"}
-            >
-              {isExpanded ? (
-                <>
-                  <ChevronUp className="h-3 w-3" />
-                  Show less
-                </>
-              ) : (
-                <>
-                  <ChevronDown className="h-3 w-3" />
-                  Show more
-                </>
-              )}
-            </Button>
-          )}
-        </AlertDescription>
-        <AlertDescription>
-          <p className="text-sm text-muted-foreground my-2">
-            This message was not saved. Please try the chat again.
-          </p>
-        </AlertDescription>
-      </Alert>
-    </div>
   );
 };

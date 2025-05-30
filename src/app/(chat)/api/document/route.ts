@@ -1,23 +1,40 @@
-import { auth } from '@/app/(auth)/auth';
-import type { ArtifactKind } from '@/components/artifact';
+import { auth } from "@/app/(auth)/auth";
+import { headers } from "next/headers";
+import type { ArtifactKind } from "@/components/artifact";
 import {
   deleteDocumentsByIdAfterTimestamp,
   getDocumentsById,
   saveDocument,
-} from '@/lib/db/queries';
+} from "@/lib/db/queries";
+
+// Helper function to extract userId from Better Auth session
+const getUserIdFromSession = async () => {
+  const sessionData = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  if (!sessionData) {
+    return null;
+  }
+
+  // Extract user ID from Better Auth session structure
+  const userId = sessionData.session.userId;
+
+  return userId || null;
+};
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const id = searchParams.get('id');
+  const id = searchParams.get("id");
 
   if (!id) {
-    return new Response('Missing id', { status: 400 });
+    return new Response("Missing id", { status: 400 });
   }
 
-  const session = await auth();
+  const userId = await getUserIdFromSession();
 
-  if (!session || !session.user) {
-    return new Response('Unauthorized', { status: 401 });
+  if (!userId) {
+    return new Response("Unauthorized", { status: 401 });
   }
 
   const documents = await getDocumentsById({ id });
@@ -25,11 +42,11 @@ export async function GET(request: Request) {
   const [document] = documents;
 
   if (!document) {
-    return new Response('Not Found', { status: 404 });
+    return new Response("Not Found", { status: 404 });
   }
 
-  if (document.userId !== session.user.id) {
-    return new Response('Unauthorized', { status: 401 });
+  if (document.userId !== userId) {
+    return new Response("Unauthorized", { status: 401 });
   }
 
   return Response.json(documents, { status: 200 });
@@ -37,16 +54,16 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const { searchParams } = new URL(request.url);
-  const id = searchParams.get('id');
+  const id = searchParams.get("id");
 
   if (!id) {
-    return new Response('Missing id', { status: 400 });
+    return new Response("Missing id", { status: 400 });
   }
 
-  const session = await auth();
+  const userId = await getUserIdFromSession();
 
-  if (!session) {
-    return new Response('Unauthorized', { status: 401 });
+  if (!userId) {
+    return new Response("Unauthorized", { status: 401 });
   }
 
   const {
@@ -56,43 +73,39 @@ export async function POST(request: Request) {
   }: { content: string; title: string; kind: ArtifactKind } =
     await request.json();
 
-  if (session.user?.id) {
-    const document = await saveDocument({
-      id,
-      content,
-      title,
-      kind,
-      userId: session.user.id,
-    });
+  const document = await saveDocument({
+    id,
+    content,
+    title,
+    kind,
+    userId,
+  });
 
-    return Response.json(document, { status: 200 });
-  }
-
-  return new Response('Unauthorized', { status: 401 });
+  return Response.json(document, { status: 200 });
 }
 
 export async function PATCH(request: Request) {
   const { searchParams } = new URL(request.url);
-  const id = searchParams.get('id');
+  const id = searchParams.get("id");
 
   const { timestamp }: { timestamp: string } = await request.json();
 
   if (!id) {
-    return new Response('Missing id', { status: 400 });
+    return new Response("Missing id", { status: 400 });
   }
 
-  const session = await auth();
+  const userId = await getUserIdFromSession();
 
-  if (!session || !session.user) {
-    return new Response('Unauthorized', { status: 401 });
+  if (!userId) {
+    return new Response("Unauthorized", { status: 401 });
   }
 
   const documents = await getDocumentsById({ id });
 
   const [document] = documents;
 
-  if (document.userId !== session.user.id) {
-    return new Response('Unauthorized', { status: 401 });
+  if (document.userId !== userId) {
+    return new Response("Unauthorized", { status: 401 });
   }
 
   await deleteDocumentsByIdAfterTimestamp({
@@ -100,5 +113,5 @@ export async function PATCH(request: Request) {
     timestamp: new Date(timestamp),
   });
 
-  return new Response('Deleted', { status: 200 });
+  return new Response("Deleted", { status: 200 });
 }

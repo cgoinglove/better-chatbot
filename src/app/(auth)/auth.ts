@@ -1,55 +1,41 @@
-import { compare } from 'bcrypt-ts';
-import NextAuth, { type User, type Session } from 'next-auth';
-import Credentials from 'next-auth/providers/credentials';
+/**
+ * Direct exports from Better Auth - no compatibility layers
+ */
 
-import { getUser } from '@/lib/db/queries';
+import { auth as betterAuthInstance, getSession } from 'lib/auth/server';
+import { NextRequest } from 'next/server';
 
-import { authConfig } from './auth.config';
+// Export Better Auth instance
+export const auth = betterAuthInstance;
 
-interface ExtendedSession extends Session {
-  user: User;
+// Use the Better Auth API directly
+export const signIn = async (provider: string, options: any = {}) => {
+  // Type assertion is needed because TypeScript doesn't know about these methods
+  return (auth.api as any).signIn({
+    provider,
+    ...options,
+  });
+};
+
+export const signOut = async () => {
+  // Type assertion is needed because TypeScript doesn't know about these methods
+  return (auth.api as any).signOut();
+};
+
+// Auth handlers for API routes
+export async function GET(request: NextRequest) {
+  return auth.handler(request);
 }
 
-export const {
-  handlers: { GET, POST },
-  auth,
-  signIn,
-  signOut,
-} = NextAuth({
-  ...authConfig,
-  providers: [
-    Credentials({
-      credentials: {},
-      async authorize({ email, password }: any) {
-        const users = await getUser(email);
-        if (users.length === 0) return null;
-        // biome-ignore lint: Forbidden non-null assertion.
-        const passwordsMatch = await compare(password, users[0].password!);
-        if (!passwordsMatch) return null;
-        return users[0] as any;
-      },
-    }),
-  ],
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-      }
+export async function POST(request: NextRequest) {
+  return auth.handler(request);
+}
 
-      return token;
-    },
-    async session({
-      session,
-      token,
-    }: {
-      session: ExtendedSession;
-      token: any;
-    }) {
-      if (session.user) {
-        session.user.id = token.id as string;
-      }
+// Default export for auth function that returns the session
+export default async function getAuthSession() {
+  return await getSession();
+}
 
-      return session;
-    },
-  },
-});
+// Export getSession
+export { getSession };
+

@@ -89,7 +89,7 @@ export function AppSidebarThreads() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
                   <DropdownMenuItem
-                    variant="destructive"
+                    // variant="destructive"
                     onClick={handleDeleteAllThreads}
                   >
                     <Trash />

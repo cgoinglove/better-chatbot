@@ -1,16 +1,18 @@
-import type { InferSelectModel } from 'drizzle-orm';
-import { sql } from 'drizzle-orm';
+import { ChatMessage, Project } from "app-types/chat";
+import { MCPServerConfig } from "app-types/mcp";
+import { UserPreferences } from "app-types/user";
+import type { InferSelectModel } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import {
-  pgTable,
-  varchar,
-  timestamp,
-  json,
-  uuid,
-  text,
-  primaryKey,
-  foreignKey,
   boolean,
-} from 'drizzle-orm/pg-core';
+  json,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+  uuid,
+  varchar,
+} from "drizzle-orm/pg-core";
 
 export const ChatThreadSchema = pgTable("chat_thread", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
@@ -57,17 +59,21 @@ export const McpServerSchema = pgTable("mcp_server", {
 });
 
 export const DocumentSchema = pgTable(
-  'document',
+  "document",
   {
-    id: uuid('id').notNull().defaultRandom(),
-    createdAt: timestamp('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
-    updatedAt: timestamp('updated_at').notNull().default(sql`CURRENT_TIMESTAMP`),
-    title: text('title').notNull(),
-    content: text('content'),
-    kind: varchar('kind', { enum: ['text', 'code', 'image', 'sheet'] })
+    id: uuid("id").notNull().defaultRandom(),
+    createdAt: timestamp("created_at")
       .notNull()
-      .default('text'),
-    userId: uuid('user_id')
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: timestamp("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    title: text("title").notNull(),
+    content: text("content"),
+    kind: varchar("kind", { enum: ["text", "code", "image", "sheet"] })
+      .notNull()
+      .default("text"),
+    userId: uuid("user_id")
       .notNull()
       .references(() => UserSchema.id),
   },

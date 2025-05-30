@@ -1,11 +1,11 @@
 "use client";
 
-import { ChatRequestOptions, Message } from "ai";
-import { Button } from "./ui/button";
-import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
-import { Textarea } from "./ui/textarea";
 import { deleteTrailingMessages } from "@/app/(chat)/actions";
 import { UseChatHelpers } from "@ai-sdk/react";
+import { Message } from "ai";
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
+import { Button } from "./ui/button";
+import { Textarea } from "./ui/textarea";
 
 export type MessageEditorProps = {
   message: Message;
