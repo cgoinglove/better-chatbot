@@ -20,7 +20,7 @@ export default async function Layout({
     }),
     cookies(),
   ]);
-  const isCollapsed = cookieStore.get("sidebar:state")?.value !== "true";
+  const isCollapsed = cookieStore.get("sidebar:state")?.value === "false";
 
   return (
     <>
