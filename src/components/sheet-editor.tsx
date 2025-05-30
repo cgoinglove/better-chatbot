@@ -21,10 +21,7 @@ const MIN_COLS = 26;
 
 const PureSpreadsheetEditor = ({
   content,
-  saveContent,
-  status,
-  isCurrentVersion,
-  currentVersionIndex,
+  saveContent
 }: SheetEditorProps) => {
   console.log("=== CONTENT ===");
   console.log(content);
@@ -58,7 +55,7 @@ const PureSpreadsheetEditor = ({
   const columns = useMemo(() => {
     const rowNumberColumn = {
       key: "rowNumber",
-      name: "#",
+      name: "",
       frozen: true,
       width: 50,
       renderCell: ({ rowIdx }: { rowIdx: number }) => rowIdx + 1,
@@ -66,45 +63,18 @@ const PureSpreadsheetEditor = ({
       headerCellClass: "border-t border-r dark:bg-zinc-900 dark:text-zinc-50",
     };
 
-    const dataColumns = [
-      {
-        key: "A",
-        name: "Category",
-        renderEditCell: textEditor,
-        width: 120,
-      },
-      {
-        key: "B",
-        name: "Description",
-        renderEditCell: textEditor,
-        width: 150,
-      },
-      {
-        key: "C",
-        name: "Budgeted Amount",
-        renderEditCell: textEditor,
-        width: 120,
-      },
-      {
-        key: "D",
-        name: "Actual Amount",
-        renderEditCell: textEditor,
-        width: 120,
-      },
-      {
-        key: "E",
-        name: "Difference",
-        renderEditCell: textEditor,
-        width: 120,
-      },
-      // Add remaining columns
-      ...Array.from({ length: MIN_COLS - 5 }, (_, i) => ({
-        key: String.fromCharCode(70 + i),
-        name: String.fromCharCode(70 + i),
-        renderEditCell: textEditor,
-        width: 120,
-      })),
-    ];
+    const dataColumns = Array.from({ length: MIN_COLS }, (_, i) => ({
+      key: i.toString(),
+      name: String.fromCharCode(65 + i),
+      renderEditCell: textEditor,
+      width: 120,
+      cellClass: cn(`border-t dark:bg-zinc-950 dark:text-zinc-50`, {
+        "border-l": i !== 0,
+      }),
+      headerCellClass: cn(`border-t dark:bg-zinc-900 dark:text-zinc-50`, {
+        "border-l": i !== 0,
+      }),
+    }));
 
     return [rowNumberColumn, ...dataColumns];
   }, []);
@@ -116,8 +86,8 @@ const PureSpreadsheetEditor = ({
         rowNumber: rowIndex + 1,
       };
 
-      row.forEach((value, colIndex) => {
-        rowData[String.fromCharCode(65 + colIndex)] = value || "";
+      columns.slice(1).forEach((col, colIndex) => {
+        rowData[col.key] = row[colIndex] || "";
       });
 
       return rowData;
@@ -152,20 +122,19 @@ const PureSpreadsheetEditor = ({
   // return <pre>{JSON.stringify(localRows, null, 2)}</pre>;
   return (
     <DataGrid
-      className={theme === "dark" ? "rdg-dark" : "rdg-light"}
-      columns={columns}
       rows={localRows}
-      enableVirtualization
+      columns={columns}
+      rowHeight={35}
+      headerRowHeight={35}
       onRowsChange={handleRowsChange}
-      onCellClick={(args) => {
-        if (args.column.key !== "rowNumber") {
-          args.selectCell(true);
-        }
-      }}
-      style={{ height: "100%" }}
-      defaultColumnOptions={{
-        resizable: true,
-        sortable: true,
+      className={cn("border-none", {
+        "rdg-light": theme === "light",
+        "rdg-dark": theme === "dark"
+      })}
+      style={{
+        height: "100%",
+        border: "none",
+        backgroundColor: theme === "dark" ? "rgb(24 24 27)" : "white"
       }}
     />
   );
