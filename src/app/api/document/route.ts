@@ -7,50 +7,30 @@ import type { Session } from "better-auth";
 type BetterAuthSession = { session: Session; user: any };
 
 export async function GET(request: Request) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get("id");
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get("id");
 
-    if (!id) {
-      return NextResponse.json({ error: "Missing id" }, { status: 400 });
-    }
-
-    const session = await getSession();
-    console.log("Session in GET /api/document:", session);
-
-    if (!session?.session?.userId) {
-      return NextResponse.json(
-        { error: "Unauthorized - No session" },
-        { status: 401 },
-      );
-    }
-
-    const [document] = await getDocumentById({ id });
-    console.log("Document found:", document);
-
-    if (!document) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
-    }
-
-    if (document.userId !== session.session.userId) {
-      console.log("User ID mismatch:", {
-        docUserId: document.userId,
-        sessionUserId: session.session.userId,
-      });
-      return NextResponse.json(
-        { error: "Unauthorized - Wrong user" },
-        { status: 401 },
-      );
-    }
-
-    return NextResponse.json([document]);
-  } catch (error) {
-    console.error("Error getting document:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+  if (!id) {
+    return new Response("Missing id", { status: 400 });
   }
+
+  const session = await getSession();
+
+  if (!session?.session?.userId) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+
+  const [document] = await getDocumentById({ id });
+
+  if (!document) {
+    return new Response("Not Found", { status: 404 });
+  }
+
+  if (document.userId !== session.session.userId) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+
+  return Response.json([document], { status: 200 });
 }
 
 export async function POST(request: Request) {
