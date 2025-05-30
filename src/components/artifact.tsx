@@ -91,7 +91,7 @@ function PureArtifact({
     isLoading: isDocumentsFetching,
     mutate: mutateDocuments,
   } = useSWR<Array<Document>>(
-    artifact.documentId !== 'init' && artifact.status !== 'streaming'
+    artifact.documentId !== 'init'
       ? `/api/document?id=${artifact.documentId}`
       : null,
     fetcher,
@@ -143,11 +143,11 @@ function PureArtifact({
 
           if (currentDocument.content !== updatedContent) {
             await fetch(`/api/document?id=${artifact.documentId}`, {
-              method: 'POST',
+              method: 'PUT',
               body: JSON.stringify({
-                title: artifact.title,
+                title: currentDocument.title,
                 content: updatedContent,
-                kind: artifact.kind,
+                kind: currentDocument.kind,
               }),
             });
 

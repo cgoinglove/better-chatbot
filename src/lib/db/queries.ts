@@ -1,27 +1,17 @@
 import "server-only";
 
 import { genSaltSync, hashSync } from "bcrypt-ts";
-import { and, asc, desc, eq, gt, sql } from 'drizzle-orm';
-import { drizzle } from "drizzle-orm/postgres-js";
-import postgres from "postgres";
+import { and, asc, desc, eq, gt } from 'drizzle-orm';
 
 import {
   UserSchema,
   ChatThreadSchema,
   ChatMessageSchema,
   DocumentSchema,
-  VoteSchema,
-  SuggestionSchema,
-  type UserEntity,
-  type ChatThreadEntity,
-  type ChatMessageEntity,
   type Document,
-
 } from "./pg/schema.pg";
 import type { ArtifactKind } from "@/components/artifact";
-
-const client = postgres(process.env.POSTGRES_URL!);
-const db = drizzle(client);
+import { pgDb as db } from './pg/db.pg';
 
 // Optionally, if not using email/pass login, you can
 // use the Drizzle adapter for Auth.js / NextAuth
@@ -231,12 +221,12 @@ export async function saveDocument({
       .insert(DocumentSchema)
       .values({
         id,
-        userId,
+        user_id: userId,
         title,
         content,
         kind,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        created_at: new Date(),
+        updated_at: new Date(),
       })
       .returning();
   } catch (error) {
@@ -250,7 +240,7 @@ export async function getDocumentsByUserId({ id }: { id: string }): Promise<Arra
     return await db
       .select()
       .from(DocumentSchema)
-      .where(eq(DocumentSchema.userId, id))
+      .where(eq(DocumentSchema.user_id, id))
       .orderBy(desc(DocumentSchema.createdAt));
   } catch (error) {
     console.error("Failed to get documents by user id from database");
