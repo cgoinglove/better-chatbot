@@ -1,15 +1,16 @@
-import { ChatMessage, Project } from "app-types/chat";
-import { UserPreferences } from "app-types/user";
-import { MCPServerConfig } from "app-types/mcp";
-import { sql } from "drizzle-orm";
+import type { InferSelectModel } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
 import {
   pgTable,
-  text,
+  varchar,
   timestamp,
   json,
   uuid,
+  text,
+  primaryKey,
+  foreignKey,
   boolean,
-} from "drizzle-orm/pg-core";
+} from 'drizzle-orm/pg-core';
 
 export const ChatThreadSchema = pgTable("chat_thread", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
@@ -17,8 +18,9 @@ export const ChatThreadSchema = pgTable("chat_thread", {
   userId: uuid("user_id")
     .notNull()
     .references(() => UserSchema.id),
-  createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   projectId: uuid("project_id"),
+  createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
 export const ChatMessageSchema = pgTable("chat_message", {
@@ -53,6 +55,30 @@ export const McpServerSchema = pgTable("mcp_server", {
   createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
+
+export const DocumentSchema = pgTable(
+  'document',
+  {
+    id: uuid('id').notNull().defaultRandom(),
+    createdAt: timestamp('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: timestamp('updated_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+    title: text('title').notNull(),
+    content: text('content'),
+    kind: varchar('kind', { enum: ['text', 'code', 'image', 'sheet'] })
+      .notNull()
+      .default('text'),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => UserSchema.id),
+  },
+  (table) => {
+    return {
+      pk: primaryKey(table.id),
+    };
+  },
+);
+
+export type Document = InferSelectModel<typeof DocumentSchema>;
 
 export const UserSchema = pgTable("user", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
@@ -109,6 +135,7 @@ export const VerificationSchema = pgTable("verification", {
     () => /* @__PURE__ */ new Date(),
   ),
 });
+
 export type McpServerEntity = typeof McpServerSchema.$inferSelect;
 export type ChatThreadEntity = typeof ChatThreadSchema.$inferSelect;
 export type ChatMessageEntity = typeof ChatMessageSchema.$inferSelect;
