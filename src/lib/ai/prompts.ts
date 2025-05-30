@@ -1,4 +1,125 @@
-import type { ArtifactKind } from '@/components/artifact';
+import { MCPToolInfo } from "app-types/mcp";
+
+import type { ArtifactKind } from "@/components/artifact";
+import { Project } from "app-types/chat";
+import { UserPreferences } from "app-types/user";
+import { User } from "better-auth";
+
+export const CREATE_THREAD_TITLE_PROMPT = `\n
+      - you will generate a short title based on the first message a user begins a conversation with
+      - ensure it is not more than 80 characters long
+      - the title should be a summary of the user's message
+      - do not use quotes or colons`;
+
+export const buildUserSystemPrompt = (
+  user?: User,
+  userPreferences?: UserPreferences,
+) => {
+  let prompt = `
+### User Context ###
+<user_information>
+- **System time:** ${new Date().toLocaleString()}
+${user?.name ? `- **User Name:** ${user?.name}` : ""}
+${user?.email ? `- **User Email:** ${user?.email}` : ""}
+${userPreferences?.profession ? `- **User Profession:** ${userPreferences?.profession}` : ""}
+</user_information>`.trim();
+
+  // Enhanced addressing preferences
+  if (userPreferences?.displayName) {
+    prompt += `
+### Addressing Preferences ###
+<addressing>
+  * Use the following name: ${userPreferences.displayName || user?.name}
+  * Use their name at appropriate moments to personalize the interaction
+</addressing>`.trim();
+  }
+
+  // Enhanced response style guidance with more specific instructions
+  prompt += `
+### Communication Style ###
+
+${
+  userPreferences?.responseStyleExample
+    ? `
+<response_style>
+- **Match your response style to this example**:
+  """
+  ${userPreferences.responseStyleExample}
+- Replicate its tone, complexity, and approach to explanation.
+- Adapt this style naturally to different topics and query complexities.
+  """
+</response_style>`.trim()
+    : ""
+}
+${
+  userPreferences?.profession
+    ? `
+- This user works as a **${userPreferences.profession}**.
+`.trim()
+    : ""
+}
+- If a diagram or chart is requested or would be helpful to express your thoughts, use mermaid code blocks.
+</response_style>`.trim();
+
+  return prompt.trim();
+};
+
+export const buildProjectInstructionsSystemPrompt = (
+  instructions?: Project["instructions"] | null,
+) => {
+  if (!instructions?.systemPrompt?.trim()) return undefined;
+
+  return `
+### Project Context ###
+<project_instructions>
+- The assistant is supporting a project with the following background and goals.
+- Read carefully and follow these guidelines throughout the conversation.
+
+${instructions.systemPrompt.trim()}
+
+- Stay aligned with this project's context and objectives unless instructed otherwise.
+</project_instructions>`.trim();
+};
+
+export const SUMMARIZE_PROMPT = `\n
+You are an expert AI assistant specialized in summarizing and extracting project requirements. 
+Read the following chat history and generate a concise, professional system instruction for a new AI assistant continuing this project. 
+This system message should clearly describe the project's context, goals, and any decisions or requirements discussed, in a way that guides future conversation. 
+Focus on actionable directives and critical details only, omitting any irrelevant dialogue or filler. 
+Ensure the tone is formal and precise. Base your summary strictly on the chat content provided, without adding new information.
+
+(Paste the chat transcript below.)
+`.trim();
+
+export const generateExampleToolSchemaPrompt = (options: {
+  toolInfo: MCPToolInfo;
+  prompt?: string;
+}) => `\n
+You are given a tool with the following details:
+- Tool Name: ${options.toolInfo.name}
+- Tool Description: ${options.toolInfo.description}
+
+${
+  options.prompt ||
+  `
+Step 1: Create a realistic example question or scenario that a user might ask to use this tool.
+Step 2: Based on that question, generate a valid JSON input object that matches the input schema of the tool.
+`.trim()
+}
+`;
+
+export const MANUAL_REJECT_RESPONSE_PROMPT = `\n
+The user has declined to run the tool. Please respond with the following three approaches:
+
+1. Ask 1-2 specific questions to clarify the user's goal.
+
+2. Suggest the following three alternatives:
+   - A method to solve the problem without using tools
+   - A method utilizing a different type of tool
+   - A method using the same tool but with different parameters or input values
+
+3. Guide the user to choose their preferred direction with a friendly and clear tone.
+`.trim();
 
 export const artifactsPrompt = `
 Artifacts is a special user interface mode that helps users with writing, editing, and other content creation tasks. When artifact is open, it is on the right side of the screen, while the conversation is on the left side. When creating or updating documents, changes are reflected in real-time on the artifacts and visible to the user.
@@ -32,14 +153,14 @@ Do not update document right after creating it. Wait for user feedback or reques
 `;
 
 export const regularPrompt =
-  'You are a friendly assistant! Keep your responses concise and helpful.';
+  "You are a friendly assistant! Keep your responses concise and helpful.";
 
 export const systemPrompt = ({
   selectedChatModel,
 }: {
   selectedChatModel: string;
 }) => {
-  if (selectedChatModel === 'chat-model-reasoning') {
+  if (selectedChatModel === "chat-model-reasoning") {
     return regularPrompt;
   } else {
     return `${regularPrompt}\n\n${artifactsPrompt}`;
@@ -82,22 +203,22 @@ export const updateDocumentPrompt = (
   currentContent: string | null,
   type: ArtifactKind,
 ) =>
-  type === 'text'
+  type === "text"
     ? `\
 Improve the following contents of the document based on the given prompt.
 
 ${currentContent}
 `
-    : type === 'code'
+    : type === "code"
       ? `\
 Improve the following code snippet based on the given prompt.
 
 ${currentContent}
 `
-      : type === 'sheet'
+      : type === "sheet"
         ? `\
 Improve the following spreadsheet based on the given prompt.
 
 ${currentContent}
 `
-        : '';
+        : "";

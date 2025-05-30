@@ -1,170 +1,99 @@
-import { z } from 'zod';
-import { streamObject, streamText, smoothStream } from 'ai';
-import { myProvider } from '@/lib/ai/providers';
-import { updateDocumentPrompt } from '@/lib/ai/prompts';
+import { codeDocumentHandler } from "@/artifacts/code/server";
+import { imageDocumentHandler } from "@/artifacts/image/server";
+import { sheetDocumentHandler } from "@/artifacts/sheet/server";
+import { textDocumentHandler } from "@/artifacts/text/server";
+import type { ArtifactKind } from "@/components/artifact";
+import type { DataStreamWriter } from "ai";
+import type { Document } from "../db/schema";
+import { saveDocument } from "../db/queries";
+import type { Session } from "next-auth";
 
-export type ArtifactKind = 'text' | 'code' | 'image' | 'sheet';
-
-export interface DocumentHandler {
+export interface SaveDocumentProps {
+  id: string;
+  title: string;
   kind: ArtifactKind;
-  onCreateDocument: (
-    params: {
-      id: string;
-      title: string;
-      session: any; // better-auth's session type is not exported directly
-      dataStream: {
-        writeData: (data: { type: string; content: string }) => void;
-      };
-    }
-  ) => Promise<string>;
-  onUpdateDocument: (
-    params: {
-      id: string;
-      document: { content: string };
-      description: string;
-      session: any; // better-auth's session type is not exported directly
-      dataStream: {
-        writeData: (data: { type: string; content: string }) => void;
-      };
-    }
-  ) => Promise<string>;
+  content: string;
+  userId: string;
 }
 
-export const createDocumentHandler = <T extends string>(
-  handler: DocumentHandler & { kind: T }
-) => handler;
+export interface CreateDocumentCallbackProps {
+  id: string;
+  title: string;
+  dataStream: DataStreamWriter;
+  session: Session;
+}
 
-export const textDocumentHandler = createDocumentHandler<'text'>({
-  kind: 'text',
-  onCreateDocument: async ({ title, dataStream }) => {
-    let draftContent = '';
+export interface UpdateDocumentCallbackProps {
+  document: Document;
+  description: string;
+  dataStream: DataStreamWriter;
+  session: Session;
+}
 
-    const { fullStream } = streamText({
-      model: myProvider.languageModel('artifact-model'),
-      system:
-        'Write about the given topic. Markdown is supported. Use headings wherever appropriate.',
-      experimental_transform: smoothStream({ chunking: 'word' }),
-      prompt: title,
-    });
+export interface DocumentHandler<T = ArtifactKind> {
+  kind: T;
+  onCreateDocument: (args: CreateDocumentCallbackProps) => Promise<void>;
+  onUpdateDocument: (args: UpdateDocumentCallbackProps) => Promise<void>;
+}
 
-    for await (const delta of fullStream) {
-      const { type } = delta;
+export function createDocumentHandler<T extends ArtifactKind>(config: {
+  kind: T;
+  onCreateDocument: (params: CreateDocumentCallbackProps) => Promise<string>;
+  onUpdateDocument: (params: UpdateDocumentCallbackProps) => Promise<string>;
+}): DocumentHandler<T> {
+  return {
+    kind: config.kind,
+    onCreateDocument: async (args: CreateDocumentCallbackProps) => {
+      const draftContent = await config.onCreateDocument({
+        id: args.id,
+        title: args.title,
+        dataStream: args.dataStream,
+        session: args.session,
+      });
 
-      if (type === 'text-delta') {
-        const { textDelta } = delta;
-
-        draftContent += textDelta;
-
-        dataStream.writeData({
-          type: 'text-delta',
-          content: textDelta,
+      if (args.session?.user?.id) {
+        await saveDocument({
+          id: args.id,
+          title: args.title,
+          content: draftContent,
+          kind: config.kind,
+          userId: args.session.user.id,
         });
       }
-    }
 
-    return draftContent;
-  },
-  onUpdateDocument: async ({ document, description, dataStream }) => {
-    let draftContent = '';
+      return;
+    },
+    onUpdateDocument: async (args: UpdateDocumentCallbackProps) => {
+      const draftContent = await config.onUpdateDocument({
+        document: args.document,
+        description: args.description,
+        dataStream: args.dataStream,
+        session: args.session,
+      });
 
-    const { fullStream } = streamText({
-      model: myProvider.languageModel('artifact-model'),
-      system: updateDocumentPrompt(document.content, 'text'),
-      experimental_transform: smoothStream({ chunking: 'word' }),
-      prompt: description,
-      experimental_providerMetadata: {
-        openai: {
-          prediction: {
-            type: 'content',
-            content: document.content,
-          },
-        },
-      },
-    });
-
-    for await (const delta of fullStream) {
-      const { type } = delta;
-
-      if (type === 'text-delta') {
-        const { textDelta } = delta;
-
-        draftContent += textDelta;
-
-        dataStream.writeData({
-          type: 'text-delta',
-          content: textDelta,
+      if (args.session?.user?.id) {
+        await saveDocument({
+          id: args.document.id,
+          title: args.document.title,
+          content: draftContent,
+          kind: config.kind,
+          userId: args.session.user.id,
         });
       }
-    }
 
-    return draftContent;
-  },
-});
+      return;
+    },
+  };
+}
 
-export const codeDocumentHandler = createDocumentHandler<'code'>({
-  kind: 'code',
-  onCreateDocument: async ({ title, dataStream }) => {
-    let draftContent = '';
+/*
+ * Use this array to define the document handlers for each artifact kind.
+ */
+export const documentHandlersByArtifactKind: Array<DocumentHandler> = [
+  textDocumentHandler,
+  codeDocumentHandler,
+  imageDocumentHandler,
+  sheetDocumentHandler,
+];
 
-    const { fullStream } = streamObject({
-      model: myProvider.languageModel('artifact-model'),
-      system: 'Write code that implements the given functionality.',
-      prompt: title,
-      schema: z.object({
-        code: z.string(),
-      }),
-    });
-
-    for await (const delta of fullStream) {
-      const { type } = delta;
-
-      if (type === 'object') {
-        const { object } = delta;
-        const { code } = object;
-
-        if (code) {
-          dataStream.writeData({
-            type: 'code-delta',
-            content: code ?? '',
-          });
-
-          draftContent = code;
-        }
-      }
-    }
-
-    return draftContent;
-  },
-  onUpdateDocument: async ({ document, description, dataStream }) => {
-    let draftContent = '';
-
-    const { fullStream } = streamObject({
-      model: myProvider.languageModel('artifact-model'),
-      system: updateDocumentPrompt(document.content, 'code'),
-      prompt: description,
-      schema: z.object({
-        code: z.string(),
-      }),
-    });
-
-    for await (const delta of fullStream) {
-      const { type } = delta;
-
-      if (type === 'object') {
-        const { object } = delta;
-        const { code } = object;
-
-        if (code) {
-          dataStream.writeData({
-            type: 'code-delta',
-            content: code ?? '',
-          });
-
-          draftContent = code;
-        }
-      }
-    }
-
-    return draftContent;
-  },
-});
+export const artifactKinds = ["text", "code", "image", "sheet"] as const;
