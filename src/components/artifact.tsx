@@ -113,6 +113,8 @@ function PureArtifact({
         setArtifact((currentArtifact) => ({
           ...currentArtifact,
           content: mostRecentDocument.content ?? '',
+          isVisible: true,
+          status: 'idle',
         }));
       }
     }

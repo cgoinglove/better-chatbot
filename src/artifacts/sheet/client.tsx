@@ -33,6 +33,7 @@ export const sheetArtifact = new Artifact<'sheet', Metadata>({
     onSaveContent,
     status,
   }) => {
+
     return (
       <SpreadsheetEditor
         content={content}
