@@ -50,13 +50,12 @@ interface Props {
   selectedModel: string;
   selectedToolChoice: "auto" | "none" | "manual";
   slots?: {
-  isReadonly?: boolean;
-  slots?: {
     emptySlot?: React.ReactNode;
   };
+  isReadonly?: boolean;
 }
 
-export function ChatBot({
+export default function ChatBot({
   threadId,
   initialMessages,
   selectedModel,
@@ -161,22 +160,25 @@ export function ChatBot({
     [messages.length, error],
   );
 
-  const handleFormSubmit = useCallback(async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (isLoading) {
-      stop();
-      return;
-    }
-    if (input.trim()) {
-      await append({
-        id: generateUUID(),
-        role: "user",
-        content: "",
-        parts: [{ type: "text", text: input }],
-      });
-      setInput("");
-    }
-  }, [append, input, isLoading, stop, setInput]);
+  const handleFormSubmit = useCallback(
+    async (e?: React.FormEvent) => {
+      if (e) e.preventDefault();
+      if (isLoading) {
+        stop();
+        return;
+      }
+      if (input.trim()) {
+        await append({
+          id: generateUUID(),
+          role: "user",
+          content: "",
+          parts: [{ type: "text", text: input }],
+        });
+        setInput("");
+      }
+    },
+    [append, input, isLoading, stop, setInput],
+  );
 
   const isInitialThreadEntry = useMemo(
     () =>
