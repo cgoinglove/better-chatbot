@@ -22,8 +22,6 @@ const MIN_COLS = 26;
 const PureSpreadsheetEditor = ({
   content,
   saveContent,
-  status,
-  isCurrentVersion,
 }: SheetEditorProps) => {
   const { theme } = useTheme();
 

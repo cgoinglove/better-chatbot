@@ -227,9 +227,7 @@ export async function DELETE(request: Request) {
   }
 
   // Extract user ID from the session structure
-  let userId: string | undefined;
-
-  userId = sessionData.session.userId;
+  const userId = sessionData.session.userId;
 
   if (!userId) {
     return new Response("Unauthorized", { status: 401 });

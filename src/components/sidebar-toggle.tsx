@@ -10,9 +10,7 @@ import {
 import { SidebarLeftIcon } from './icons';
 import { Button } from './ui/button';
 
-export function SidebarToggle({
-  className,
-}: ComponentProps<typeof SidebarTrigger>) {
+export function SidebarToggle(_props: ComponentProps<typeof SidebarTrigger>) {
   const { toggleSidebar } = useSidebar();
 
   return (
