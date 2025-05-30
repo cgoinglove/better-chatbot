@@ -35,8 +35,8 @@ export default async function Layout({
             {children}
           </div>
         </SidebarInset>
+        <ArtifactWrapper />
       </SidebarProvider>
-      <ArtifactWrapper />
     </>
   );
 }
