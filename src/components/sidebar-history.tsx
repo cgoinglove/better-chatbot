@@ -73,11 +73,14 @@ const PureChatItem = ({
     initialVisibility: chat.visibility,
   });
 
+  // Simple truncation for long titles to prevent layout issues
+  const displayTitle = chat.title.length > 30 ? chat.title.substring(0, 30) + '...' : chat.title;
+  
   return (
     <SidebarMenuItem>
       <SidebarMenuButton asChild isActive={isActive}>
         <Link href={`/chat/${chat.id}`} onClick={() => setOpenMobile(false)}>
-          <span>{chat.title}</span>
+          <span className="truncate">{displayTitle}</span>
         </Link>
       </SidebarMenuButton>
 

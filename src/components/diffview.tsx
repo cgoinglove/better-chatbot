@@ -1,3 +1,5 @@
+'use client';
+
 import OrderedMap from 'orderedmap';
 import {
   Schema,
@@ -10,8 +12,6 @@ import { addListNodes } from 'prosemirror-schema-list';
 import { EditorState } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import React, { useEffect, useRef } from 'react';
-import { renderToString } from 'react-dom/server';
-import ReactMarkdown from 'react-markdown';
 
 import { diffEditor, DiffType } from '@/lib/editor/diff';
 
@@ -58,19 +58,36 @@ export const DiffView = ({ oldContent, newContent }: DiffEditorProps) => {
   useEffect(() => {
     if (editorRef.current && !viewRef.current) {
       const parser = DOMParser.fromSchema(diffSchema);
-
-      const oldHtmlContent = renderToString(
-        <ReactMarkdown>{oldContent}</ReactMarkdown>,
-      );
-      const newHtmlContent = renderToString(
-        <ReactMarkdown>{newContent}</ReactMarkdown>,
-      );
-
+      
+      // Create temporary containers for the markdown content
       const oldContainer = document.createElement('div');
-      oldContainer.innerHTML = oldHtmlContent;
-
       const newContainer = document.createElement('div');
-      newContainer.innerHTML = newHtmlContent;
+      
+      // Create temporary ReactMarkdown elements in the DOM
+      const tempOldDiv = document.createElement('div');
+      const tempNewDiv = document.createElement('div');
+      editorRef.current.appendChild(tempOldDiv);
+      editorRef.current.appendChild(tempNewDiv);
+      
+      // Render the markdown content to the temporary divs
+      const reactRoot1 = document.createRange().createContextualFragment('<div class="markdown"></div>');
+      const reactRoot2 = document.createRange().createContextualFragment('<div class="markdown"></div>');
+      tempOldDiv.appendChild(reactRoot1);
+      tempNewDiv.appendChild(reactRoot2);
+      
+      // Get the HTML content
+      tempOldDiv.querySelector('.markdown')!.innerHTML = oldContent;
+      tempNewDiv.querySelector('.markdown')!.innerHTML = newContent;
+      
+      // Copy the HTML content to our containers
+      oldContainer.innerHTML = tempOldDiv.innerHTML;
+      newContainer.innerHTML = tempNewDiv.innerHTML;
+      
+      // Clean up temporary elements
+      editorRef.current.removeChild(tempOldDiv);
+      editorRef.current.removeChild(tempNewDiv);
+
+      // newContainer was already created above
 
       const oldDoc = parser.parse(oldContainer);
       const newDoc = parser.parse(newContainer);

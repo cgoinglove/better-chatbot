@@ -1,3 +1,5 @@
+'use client';
+
 import { Button } from './ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { artifactDefinitions, UIArtifact } from './artifact';

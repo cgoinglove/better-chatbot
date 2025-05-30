@@ -1,3 +1,5 @@
+'use client';
+
 import { PreviewMessage } from './message';
 import { useScrollToBottom } from './use-scroll-to-bottom';
 import { Vote } from '@/lib/db/schema';

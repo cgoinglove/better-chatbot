@@ -7,13 +7,10 @@ import {
   formatDataStreamPart,
   appendClientMessage,
   Message,
+  Tool,
 } from "ai";
 
-import { Tool } from "lib/ai/tool";
-
 import { customModelProvider, isToolCallUnsupportedModel } from "lib/ai/models";
-import { createDocument } from "lib/ai/tools/create-document";
-import { updateDocument } from "lib/ai/tools/update-document";
 
 import { mcpClientsManager } from "lib/ai/mcp/mcp-manager";
 
@@ -46,6 +43,8 @@ import {
 } from "./helper";
 import { generateTitleFromUserMessageAction } from "./actions";
 import { getSession } from "auth/server";
+import { createDocument } from "lib/ai/tools/create-document";
+import { updateDocument } from "lib/ai/tools/update-document";
 
 export async function POST(request: Request) {
   try {
@@ -105,77 +104,70 @@ export async function POST(request: Request) {
       .flatMap((annotation) => annotation.requiredTools)
       .filter(Boolean) as string[];
 
-    const artifactTools = [
-      'createDocument',
-      'updateDocument',
-    ];
-
-    const defaultToolkit = getAllowedDefaultToolkit();
-    const filteredDefaultToolkit = filterToolsByAllowedMCPServers(
-      defaultToolkit,
-      allowedMcpServers,
-    );
-
-    const filteredToolkit = filterToolsByMentions(
-      [...filteredDefaultToolkit, ...artifactTools],
-      requiredToolsAnnotations,
-      toolChoice,
-    );
-
-    const allowedToolkit = json.toolChoice === "none"
-      ? []
-      : filteredToolkit;
-
-    const toolsForModel = isToolCallUnsupportedModel(json.model)
-      ? []
-      : allowedToolkit;
+    // Define artifact tools that should be included when allowed
+    const artifactTools: Record<string, Tool> = {};
+    
+    // Only add artifact tools when tool calls are allowed
+    if (isToolCallAllowed && toolChoice !== "none" as any) {
+      // Create a session object structure that matches what the tools expect
+      const sessionForTools = session as any;
+      
+      artifactTools.createDocument = createDocument({ 
+        session: sessionForTools, 
+        dataStream: null as any // Will be initialized during stream execution
+      });
+      artifactTools.updateDocument = updateDocument({ 
+        session: sessionForTools, 
+        dataStream: null as any // Will be initialized during stream execution
+      });
+    }
 
     const tools = safe(mcpTools)
       .map(errorIf(() => !isToolCallAllowed && "Not allowed"))
-      .map((mcpTools) => {
-        const filteredTools = filterToolsByMentions(
-          mcpTools,
-          json.messages,
-        );
-
-        const filteredToolsByAllowedMCPServers = filterToolsByAllowedMCPServers(
-          filteredTools,
-          allowedMcpServers,
-        );
-
-        const toolSet: Record<string, Tool> = {
-          ...filteredToolsByAllowedMCPServers,
-        };
-
-        if (json.toolChoice !== "none") {
-          toolSet.createDocument = createDocument({ session: json.session, dataStream: json.dataStream });
-          toolSet.updateDocument = updateDocument({ session: json.session, dataStream: json.dataStream });
+      .map((tools) => {
+        // filter tools by mentions
+        if (requiredToolsAnnotations.length) {
+          return filterToolsByMentions(tools, requiredToolsAnnotations);
         }
-
-        return toolSet;
+        // filter tools by allowed mcp servers
+        return filterToolsByAllowedMCPServers(tools, allowedMcpServers);
       })
-      .map((toolSet) => {
-        if (toolChoice === "manual") {
-          return excludeToolExecution(toolSet);
+      // filter tools by tool choice
+      .map((tools) => {
+        if (toolChoice == "manual") {
+          return excludeToolExecution(tools);
         }
-        return {
-          ...toolsForModel,
-          ...toolSet,
-        };
+        return tools;
       })
-      .orElse({}) as Record<string, Tool>;
+      // add allowed default toolkit and artifact tools
+      .map((tools) => ({
+        ...getAllowedDefaultToolkit(allowedAppDefaultToolkit),
+        ...artifactTools,
+        ...tools,
+      }))
+      .orElse(undefined);
 
-    const updatedMessages = isLastMessageUserMessage
+    const messages: Message[] = isLastMessageUserMessage
       ? appendClientMessage({
           messages: previousMessages,
           message,
         })
       : previousMessages;
 
-    return new Response(JSON.stringify({
-      messages: updatedMessages,
-      tools,
-    }));
+    return createDataStreamResponse({
+      execute: async (dataStream) => {
+        // Update dataStream for artifact tools if they exist
+        if (artifactTools.createDocument) {
+          (artifactTools.createDocument as any).dataStream = dataStream;
+        }
+        if (artifactTools.updateDocument) {
+          (artifactTools.updateDocument as any).dataStream = dataStream;
+        }
+        const inProgressToolStep = extractInProgressToolPart(
+          messages.slice(-2),
+        );
+
+        if (inProgressToolStep) {
           const toolResult = await manualToolExecuteByLastMessage(
             inProgressToolStep,
             message,

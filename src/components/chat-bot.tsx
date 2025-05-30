@@ -1,11 +1,7 @@
 "use client";
 
-import { appStore } from "@/app/store";
-import { useArtifactSelector } from "@/hooks/use-artifact";
-import type { Vote } from "@/lib/db/schema";
 import { useChat } from "@ai-sdk/react";
-import type { Attachment } from "ai";
-import { cn, fetcher, generateUUID, truncateString } from "lib/utils";
+import { toast } from "sonner";
 import {
   ReactNode,
   useCallback,
@@ -14,27 +10,27 @@ import {
   useRef,
   useState,
 } from "react";
-import { toast } from "sonner";
-import useSWR from "swr";
-import { Artifact } from "./artifact";
+// We're using MultimodalInput instead of PromptInput
+import { appStore } from "@/app/store";
+import { cn, generateUUID, truncateString } from "lib/utils";
 import { ErrorMessage, PreviewMessage } from "./message";
-import { DataStreamHandler } from "./data-stream-handler";
 import { Greeting } from "./greeting";
-import { MultimodalInput } from "./multimodal-input";
-import { UIMessage } from "ai";
+
 import { useShallow } from "zustand/shallow";
-import { deleteThreadAction } from "@/app/api/chat/actions";
-import { useLatest } from "@/hooks/use-latest";
+import { Attachment, UIMessage } from "ai";
+
+import { safe } from "ts-safe";
+import { mutate } from "swr";
 import {
   ChatApiSchemaRequestBody,
   ChatMessageAnnotation,
 } from "app-types/chat";
-import { Shortcuts, isShortcutEvent } from "lib/keyboard-shortcuts";
-import { Loader } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { mutate } from "swr";
-import { safe } from "ts-safe";
+import { useLatest } from "@/hooks/use-latest";
+import { isShortcutEvent, Shortcuts } from "lib/keyboard-shortcuts";
 import { Button } from "ui/button";
+import { deleteThreadAction } from "@/app/api/chat/actions";
+import { useRouter } from "next/navigation";
+import { Loader } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -43,63 +39,43 @@ import {
   DialogHeader,
   DialogTitle,
 } from "ui/dialog";
+import { MultimodalInput } from "./multimodal-input";
+import { useArtifactSelector } from "@/hooks/use-artifact";
+import { Artifact } from "./artifact";
 
-interface Props {
+type Props = {
   threadId: string;
   initialMessages: Array<UIMessage>;
-  selectedModel: string;
-  selectedToolChoice: "auto" | "none" | "manual";
-  isReadonly?: boolean;
+  selectedChatModel?: string;
   slots?: {
-    emptySlot?: React.ReactNode;
-    inputBottomSlot?: React.ReactNode;
+    emptySlot?: ReactNode;
+    inputBottomSlot?: ReactNode;
   };
-}
+};
 
-export default function ChatBot({
-  threadId,
-  initialMessages,
-  selectedModel,
-  selectedToolChoice,
-  slots,
-  isReadonly = false,
-}: Props) {
+export default function ChatBot({ threadId, initialMessages, slots }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   const [
     appStoreMutate,
+    model,
+    toolChoice,
     allowedAppDefaultToolkit,
     allowedMcpServers,
     threadList,
   ] = appStore(
     useShallow((state) => [
       state.mutate,
+      state.model,
+      state.toolChoice,
       state.allowedAppDefaultToolkit,
       state.allowedMcpServers,
       state.threadList,
     ]),
   );
 
-  // Temporary mapping until we reconcile the two model systems
-  const modelMap: Record<string, string> = {
-    "chat-model-small": "4o-mini",
-    "chat-model-large": "4o",
-    "chat-model-reasoning": "gpt-4.1",
-  };
-
-  const actualModel = modelMap[selectedModel] || selectedModel;
-
   const [attachments, setAttachments] = useState<Array<Attachment>>([]);
   const isArtifactVisible = useArtifactSelector((state) => state.isVisible);
-
-  const latestRef = useLatest({
-    toolChoice: selectedToolChoice,
-    model: actualModel,
-    allowedAppDefaultToolkit,
-    allowedMcpServers,
-    messages: initialMessages,
-    threadId,
-  });
 
   const {
     messages,
@@ -121,9 +97,11 @@ export default function ChatBot({
       const lastMessage = messages.at(-1)!;
       vercelAISdkV4ToolInvocationIssueCatcher(lastMessage);
       const request: ChatApiSchemaRequestBody = {
-        id: threadId,
-        model: selectedModel,
-        toolChoice: selectedToolChoice,
+        id: latestRef.current.threadId,
+        model: latestRef.current.model,
+        toolChoice: latestRef.current.toolChoice,
+        allowedAppDefaultToolkit: latestRef.current.allowedAppDefaultToolkit,
+        allowedMcpServers: latestRef.current.allowedMcpServers,
         message: lastMessage,
       };
       return request;
@@ -144,12 +122,16 @@ export default function ChatBot({
     },
   });
 
-  const { data: votes } = useSWR<Array<Vote>>(
-    messages.length >= 2 ? `/api/vote?chatId=${threadId}` : null,
-    fetcher,
-  );
-
   const [isDeleteThreadPopupOpen, setIsDeleteThreadPopupOpen] = useState(false);
+
+  const latestRef = useLatest({
+    toolChoice,
+    model,
+    allowedAppDefaultToolkit,
+    allowedMcpServers,
+    messages,
+    threadId,
+  });
 
   const isLoading = useMemo(
     () => status === "streaming" || status === "submitted",
@@ -159,26 +141,6 @@ export default function ChatBot({
   const emptyMessage = useMemo(
     () => messages.length === 0 && !error,
     [messages.length, error],
-  );
-
-  const handleFormSubmit = useCallback(
-    async (e?: React.FormEvent) => {
-      if (e) e.preventDefault();
-      if (isLoading) {
-        stop();
-        return;
-      }
-      if (input.trim()) {
-        await append({
-          id: generateUUID(),
-          role: "user",
-          content: "",
-          parts: [{ type: "text", text: input }],
-        });
-        setInput("");
-      }
-    },
-    [append, input, isLoading, stop, setInput],
   );
 
   const isInitialThreadEntry = useMemo(
@@ -277,14 +239,33 @@ export default function ChatBot({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
+  const handleFormSubmit = useCallback(
+    async (e?: React.FormEvent) => {
+      if (e) e.preventDefault();
+      if (isLoading) {
+        stop();
+        return;
+      }
+      if (input.trim()) {
+        await append({
+          id: generateUUID(),
+          role: "user",
+          content: "",
+          parts: [{ type: "text", text: input }],
+        });
+        setInput("");
+      }
+    },
+    [append, input, isLoading, stop, setInput],
+  );
+
   return (
-    <div
-      className={cn(
-        emptyMessage && "justify-center pb-24",
-        "flex flex-col min-w-0 relative h-full",
-      )}
-    >
-      <div className="flex-1 overflow-y-auto">
+    <>
+      <div
+        className={cn(
+          "flex flex-col min-w-0 relative h-full",
+        )}
+      >
         {emptyMessage ? (
           slots?.emptySlot ? (
             slots.emptySlot
@@ -292,89 +273,72 @@ export default function ChatBot({
             <Greeting />
           )
         ) : (
-          <div className="flex flex-col gap-2 py-6">
-            <DataStreamHandler id={threadId} />
-            {error && <ErrorMessage error={error} />}
-            {messages.map((m, i) => (
-              <PreviewMessage
-                key={m.id}
-                message={m}
-                threadId={threadId}
-                messageIndex={i}
-                status={status}
-                onProxyToolCall={
-                  i === messages.length - 1 &&
-                  isPendingToolCall &&
-                  !isExecutingProxyToolCall
-                    ? proxyToolCall
-                    : undefined
-                }
-                isLoading={isLoading || isPendingToolCall}
-                isError={!!error && i === messages.length - 1}
-                isLastMessage={i === messages.length - 1}
-                setMessages={setMessages}
-                reload={reload}
-                vote={votes?.find((v) => v.messageId === m.id)}
-                isReadonly={isReadonly}
-                className={needSpaceClass(i) ? "min-h-[55dvh]" : ""}
-              />
-            ))}
-            {isLoading && <PreviewMessage.Skeleton />}
-            {isArtifactVisible && (
-              <Artifact
-                chatId={threadId}
-                input={input}
-                setInput={setInput}
-                handleSubmit={handleFormSubmit}
-                status={status}
-                stop={stop}
-                attachments={attachments}
-                setAttachments={setAttachments}
-                messages={messages}
-                setMessages={setMessages}
-                append={append}
-                reload={reload}
-                votes={votes}
-                isReadonly={isReadonly}
-              />
-            )}
-          </div>
+          <>
+            <div
+              className={"flex flex-col gap-2 overflow-y-auto py-6"}
+              ref={containerRef}
+            >
+              {messages.map((message, index) => {
+                const isLastMessage = messages.length - 1 === index;
+                return (
+                  <PreviewMessage
+                    threadId={threadId}
+                    messageIndex={index}
+                    key={index}
+                    message={message}
+                    status={status}
+                    onProxyToolCall={
+                      isLastMessage &&
+                      isPendingToolCall &&
+                      !isExecutingProxyToolCall
+                        ? proxyToolCall
+                        : undefined
+                    }
+                    isLoading={isLoading || isPendingToolCall}
+                    isError={!!error && isLastMessage}
+                    isLastMessage={isLastMessage}
+                    setMessages={setMessages}
+                    reload={reload}
+                    className={needSpaceClass(index) ? "min-h-[55dvh]" : ""}
+                    isArtifactVisible={isArtifactVisible}
+                  />
+                );
+              })}
+              {status === "submitted" && messages.at(-1)?.role === "user" && (
+                <div className="min-h-[calc(55dvh-56px)]" />
+              )}
+              {error && <ErrorMessage error={error} />}
+              <div className="min-w-0 min-h-52" />
+            </div>
+          </>
         )}
-      </div>
-      {!emptyMessage && !isReadonly && (
-        <MultimodalInput
-          input={input}
-          setInput={setInput}
-          handleSubmit={handleFormSubmit}
-          status={status}
-          stop={stop}
-          attachments={attachments}
-          setAttachments={setAttachments}
-          className="sticky bottom-0 z-10"
+        
+        <form className="flex mx-auto px-4 bg-background pb-4 md:pb-6 gap-2 w-full md:max-w-3xl">
+          {(
+            <MultimodalInput
+              chatId={threadId}
+              input={input}
+              setInput={setInput}
+              handleSubmit={handleFormSubmit}
+              status={status}
+              stop={stop}
+              attachments={attachments}
+              setAttachments={setAttachments}
+              messages={messages}
+              setMessages={setMessages}
+              append={append}
+            />
+          )}
+          {slots?.inputBottomSlot}
+        </form>
+        
+        <DeleteThreadPopup
+          threadId={threadId}
+          onClose={() => setIsDeleteThreadPopupOpen(false)}
+          open={isDeleteThreadPopupOpen}
         />
-      )}
-      <form
-        onSubmit={handleFormSubmit}
-        className="flex mx-auto px-4 bg-background pb-4 md:pb-6 gap-2 w-full md:max-w-3xl"
-      >
-        {!isReadonly && (
-          <MultimodalInput
-            chatId={threadId}
-            input={input}
-            setInput={setInput}
-            handleSubmit={handleFormSubmit}
-            status={status}
-            stop={stop}
-            attachments={attachments}
-            setAttachments={setAttachments}
-            messages={messages}
-            setMessages={setMessages}
-            append={append}
-          />
-        )}
-        {slots?.inputBottomSlot}
-      </form>
-
+      </div>
+      
       <Artifact
         chatId={threadId}
         input={input}
@@ -384,20 +348,14 @@ export default function ChatBot({
         stop={stop}
         attachments={attachments}
         setAttachments={setAttachments}
+        append={append}
         messages={messages}
         setMessages={setMessages}
-        append={append}
         reload={reload}
-        votes={votes}
-        isReadonly={isReadonly}
+        votes={undefined}
+        isReadonly={false}
       />
-
-      <DeleteThreadPopup
-        threadId={threadId}
-        open={isDeleteThreadPopupOpen}
-        onClose={() => setIsDeleteThreadPopupOpen(false)}
-      />
-    </div>
+    </>
   );
 }
 

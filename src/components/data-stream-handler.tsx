@@ -33,10 +33,38 @@ export function DataStreamHandler({ id }: { id: string }) {
     lastProcessedIndex.current = dataStream.length - 1;
 
     (newDeltas as DataStreamDelta[]).forEach((delta: DataStreamDelta) => {
+      // Handle kind changes first to ensure the correct artifact definition is used
+      if (delta.type === 'kind') {
+        const newKind = delta.content as ArtifactKind;
+        const newArtifactDefinition = artifactDefinitions.find(
+          (definition) => definition.kind === newKind
+        );
+        
+        // Initialize the artifact with the new kind
+        if (newArtifactDefinition) {
+          setArtifact((draftArtifact) => ({
+            ...draftArtifact,
+            kind: newKind,
+            isVisible: true,
+            status: 'streaming',
+          }));
+          
+          // Initialize metadata if needed
+          if (newArtifactDefinition.initialize) {
+            newArtifactDefinition.initialize({
+              documentId: artifact.documentId !== 'init' ? artifact.documentId : 'temp-init',
+              setMetadata
+            });
+          }
+        }
+      }
+      
+      // Find the current artifact definition
       const artifactDefinition = artifactDefinitions.find(
         (artifactDefinition) => artifactDefinition.kind === artifact.kind,
       );
 
+      // Process the delta with the artifact's onStreamPart handler
       if (artifactDefinition?.onStreamPart) {
         artifactDefinition.onStreamPart({
           streamPart: delta,

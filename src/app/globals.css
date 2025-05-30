@@ -1455,6 +1455,26 @@
   * {
     @apply border-border outline-ring/50;
   }
+  
+  /* CodeMirror styling for artifacts */
+  .cm-editor {
+    height: 100%;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+  }
+  
+  .cm-scroller {
+    overflow: auto;
+    font-family: var(--font-mono);
+  }
+  
+  .cm-line {
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+    max-width: 100%;
+  }
+  
   body {
     @apply bg-background text-foreground;
   }

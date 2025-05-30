@@ -5,6 +5,7 @@ import { ChatMessage, ChatThread } from "app-types/chat";
 import { convertToUIMessage } from "lib/utils";
 import { redirect } from "next/navigation";
 import { DEFAULT_MODEL } from "lib/ai/models";
+import { DataStreamHandler } from "@/components/data-stream-handler";
 
 const fetchThread = async (
   threadId: string,
@@ -25,17 +26,19 @@ export default async function Page({
 
   const cookieStore = await cookies();
   const modelFromCookie = cookieStore.get("chat-model");
-  const toolChoiceFromCookie = cookieStore.get("tool-choice");
 
   const initialMessages = thread.messages.map(convertToUIMessage);
 
   return (
-    <ChatBot
-      threadId={threadId}
-      key={threadId}
-      initialMessages={initialMessages}
-      selectedModel={modelFromCookie?.value || DEFAULT_MODEL}
-      selectedToolChoice={(toolChoiceFromCookie?.value as "auto" | "none" | "manual") || "auto"}
-    />
+    <>
+      <ChatBot
+        threadId={threadId}
+        key={threadId}
+        initialMessages={initialMessages}
+        selectedChatModel={modelFromCookie?.value || DEFAULT_MODEL}
+        slots={{}}
+      />
+      <DataStreamHandler id={threadId} />
+    </>
   );
 }

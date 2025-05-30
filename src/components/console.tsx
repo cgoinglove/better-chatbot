@@ -1,3 +1,5 @@
+'use client';
+
 import { TerminalWindowIcon, LoaderIcon, CrossSmallIcon } from './icons';
 import { Button } from './ui/button';
 import {

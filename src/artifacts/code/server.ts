@@ -4,10 +4,23 @@ import { myProvider } from '@/lib/ai/providers';
 import { codePrompt, updateDocumentPrompt } from '@/lib/ai/prompts';
 import { createDocumentHandler } from '@/lib/artifacts/server';
 
+// Improved code document handler with better streaming support
 export const codeDocumentHandler = createDocumentHandler<'code'>({
   kind: 'code',
   onCreateDocument: async ({ title, dataStream }) => {
     let draftContent = '';
+    
+    // Make artifact visible immediately
+    dataStream.writeData({
+      type: 'kind',
+      content: 'code',
+    });
+    
+    // Set a loading message while generating code
+    dataStream.writeData({
+      type: 'code-delta',
+      content: '// Generating code based on: ' + title + '\n// Please wait...',
+    });
 
     const { fullStream } = streamObject({
       model: myProvider.languageModel('artifact-model'),
@@ -16,6 +29,12 @@ export const codeDocumentHandler = createDocumentHandler<'code'>({
       schema: z.object({
         code: z.string(),
       }),
+    });
+    
+    // Clear the loading message before streaming actual content
+    dataStream.writeData({
+      type: 'clear',
+      content: '',
     });
 
     for await (const delta of fullStream) {
@@ -26,12 +45,15 @@ export const codeDocumentHandler = createDocumentHandler<'code'>({
         const { code } = object;
 
         if (code) {
+          // Format code to ensure proper display
+          const formattedCode = code.trim();
+          
           dataStream.writeData({
             type: 'code-delta',
-            content: code ?? '',
+            content: formattedCode,
           });
 
-          draftContent = code;
+          draftContent = formattedCode;
         }
       }
     }

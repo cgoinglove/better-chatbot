@@ -25,7 +25,7 @@ function PureCodeEditor({ content, onSaveContent, status }: EditorProps) {
     if (containerRef.current && !editorRef.current) {
       const startState = EditorState.create({
         doc: content,
-        extensions: [basicSetup, python(), oneDark],
+        extensions: [basicSetup, python(), oneDark, EditorView.lineWrapping],
       });
 
       editorRef.current = new EditorView({
@@ -63,7 +63,7 @@ function PureCodeEditor({ content, onSaveContent, status }: EditorProps) {
 
       const newState = EditorState.create({
         doc: editorRef.current.state.doc,
-        extensions: [basicSetup, python(), oneDark, updateListener],
+        extensions: [basicSetup, python(), oneDark, EditorView.lineWrapping, updateListener],
         selection: currentSelection,
       });
 
@@ -92,7 +92,7 @@ function PureCodeEditor({ content, onSaveContent, status }: EditorProps) {
 
   return (
     <div
-      className="relative not-prose w-full pb-[calc(80dvh)] text-sm"
+      className="relative not-prose w-full pb-[calc(80dvh)] text-sm overflow-x-auto max-w-full"
       ref={containerRef}
     />
   );

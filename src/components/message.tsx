@@ -38,6 +38,7 @@ interface Props {
   isError?: boolean;
   vote?: Vote; // From inbound
   isReadonly?: boolean; // From inbound
+  isArtifactVisible?: boolean; // Added for artifact integration
 }
 
 const Skeleton = () => (
@@ -274,7 +275,7 @@ export const PreviewMessage = Object.assign(
         prevProps.isLoading === nextProps.isLoading &&
         prevProps.isLastMessage === nextProps.isLastMessage &&
         prevProps.isError === nextProps.isError &&
-        prevProps.vote?.value === nextProps.vote?.value &&
+        prevProps.vote?.isUpvoted === nextProps.vote?.isUpvoted &&
         prevProps.isReadonly === nextProps.isReadonly &&
         prevProps.onProxyToolCall === nextProps.onProxyToolCall &&
         prevProps.status === nextProps.status &&

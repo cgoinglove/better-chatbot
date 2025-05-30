@@ -1,3 +1,5 @@
+'use client';
+
 import type { Attachment, UIMessage } from 'ai';
 import { formatDistance } from 'date-fns';
 import { AnimatePresence, motion } from 'framer-motion';

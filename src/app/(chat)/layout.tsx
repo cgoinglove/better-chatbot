@@ -2,6 +2,7 @@ import { cookies, headers } from "next/headers";
 
 import { AppSidebar } from "@/components/app-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { ArtifactWrapper } from "@/components/artifact-wrapper";
 
 import { auth } from "../(auth)/auth";
 import Script from "next/script";
@@ -29,8 +30,13 @@ export default async function Layout({
       />
       <SidebarProvider defaultOpen={!isCollapsed}>
         <AppSidebar user={session?.user} />
-        <SidebarInset>{children}</SidebarInset>
+        <SidebarInset>
+          <div className="flex flex-col h-full w-full relative">
+            {children}
+          </div>
+        </SidebarInset>
       </SidebarProvider>
+      <ArtifactWrapper />
     </>
   );
 }

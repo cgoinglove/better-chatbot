@@ -1,3 +1,5 @@
+'use client';
+
 import { Suggestion } from '@/lib/db/schema';
 import { UseChatHelpers } from '@ai-sdk/react';
 import { ComponentType, Dispatch, ReactNode, SetStateAction } from 'react';
