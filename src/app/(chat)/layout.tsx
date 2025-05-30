@@ -4,7 +4,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { ArtifactWrapper } from "@/components/artifact-wrapper";
 
-import { auth } from "../(auth)/auth";
+import { auth } from "@/lib/auth/server";
 import Script from "next/script";
 
 export const experimental_ppr = true;
