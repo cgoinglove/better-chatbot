@@ -1,4 +1,3 @@
-import { randomUUID } from "crypto";
 import { type DataStreamWriter, tool } from "ai";
 import { z } from "zod";
 import type { Session } from "better-auth";
@@ -22,16 +21,9 @@ export const createDocument = ({ session, dataStream }: CreateDocumentProps) =>
       kind: z.enum(artifactKinds),
     }),
     execute: async ({ title, kind }) => {
-      const id = randomUUID();
-
       dataStream.writeData({
         type: 'kind',
         content: kind,
-      });
-
-      dataStream.writeData({
-        type: 'id',
-        content: id,
       });
 
       dataStream.writeData({
@@ -44,35 +36,34 @@ export const createDocument = ({ session, dataStream }: CreateDocumentProps) =>
         content: '',
       });
 
-      const documentHandler = documentHandlersByArtifactKind.find(
-        (documentHandlerByArtifactKind) =>
-          documentHandlerByArtifactKind.kind === kind,
-      );
+      const documentHandler = documentHandlersByArtifactKind.find(h => h.kind === kind);
 
       if (!documentHandler) {
         throw new Error(`Invalid document kind: ${kind}. Must be one of: ${artifactKinds.join(', ')}`);
       }
 
       try {
-        await documentHandler.onCreateDocument({
-          id,
+        const result = await documentHandler.onCreateDocument({
           title,
+          kind,
           dataStream,
           session,
         });
         
         dataStream.writeData({ type: 'finish', content: '' });
+
+        const documentId = typeof result === 'string' ? undefined : result.id;
+        
+        return {
+          title,
+          kind,
+          content: "A document was created and is now visible to the user.",
+          id: documentId,
+        };
       } catch (error) {
         console.error("Error in document handler:", error);
         dataStream.writeData({ type: 'error', content: 'Failed to create document' });
         throw error;
       }
-
-      return {
-        id,
-        title,
-        kind,
-        content: "A document was created and is now visible to the user.",
-      };
     },
   });

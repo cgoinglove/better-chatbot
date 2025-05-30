@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
-import { randomUUID } from "crypto";
 import { getSession } from "@/lib/auth/server";
+import { artifactKinds, documentHandlersByArtifactKind } from "@/lib/artifacts/server";
 import { getDocumentById } from "@/lib/db/queries";
-import { documentHandlersByArtifactKind } from "@/lib/artifacts/server";
-import type { DataStreamWriter } from "ai";
+import { DocumentRepository } from "@/lib/db/pg/repositories/document-repository.pg";
 import type { Session } from "better-auth";
 type BetterAuthSession = { session: Session; user: any };
 
@@ -65,26 +64,25 @@ export async function POST(request: Request) {
 
     const body = await request.json();
     console.log("Request body:", body);
-    const { title, kind } = body;
+    const { title, kind = 'text' } = body;
 
     console.log("Title:", title);
     console.log("Kind:", kind);
 
-    if (!kind) {
+    if (!artifactKinds.includes(kind as any)) {
       return NextResponse.json(
-        { error: "Document kind is required" },
+        { error: `Document kind must be one of: ${artifactKinds.join(', ')}` },
         { status: 400 },
       );
     }
 
-    const id = randomUUID();
-    console.log("Generated ID:", id);
-
-    console.log(
-      "Available handlers:",
-      documentHandlersByArtifactKind.map((h) => h.kind),
-    );
-    const handler = documentHandlersByArtifactKind.find((h) => h.kind === kind);
+    console.log("documentHandlersByArtifactKind:", documentHandlersByArtifactKind);
+    console.log("Artifact kinds:", artifactKinds);
+    console.log("Requested kind:", kind);
+    const handler = documentHandlersByArtifactKind.find((h) => {
+      console.log("Checking handler:", h?.kind, "against:", kind);
+      return h?.kind === kind;
+    });
     console.log("Found handler:", handler?.kind);
 
     if (!handler) {
@@ -95,24 +93,22 @@ export async function POST(request: Request) {
     }
 
     console.log("Calling onCreateDocument...");
-    await handler.onCreateDocument({
-      id,
+    const document = await handler.onCreateDocument({
       title,
-      session: session as BetterAuthSession,
       dataStream: {
-        writeData: async (data: any) => {
-          console.log("DataStream write:", data);
+        write: async (data: any) => {
+          return new Response(JSON.stringify(data));
         },
-        write: async () => {},
+        writeData: async (data: any) => {
+          return new Response(JSON.stringify(data));
+        },
         writeMessageAnnotation: async () => {},
         writeSource: async () => {},
         merge: async () => {},
         onError: (error) => error?.toString() || 'Unknown error',
       },
+      session: session as BetterAuthSession,
     });
-
-    console.log("Getting created document...");
-    const [document] = await getDocumentById({ id });
     console.log("Retrieved document:", document);
     return NextResponse.json(document);
   } catch (error) {
@@ -207,6 +203,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "ID is required" }, { status: 400 });
     }
 
+    const documentRepository = new DocumentRepository();
     await documentRepository.deleteDocument(id);
 
     return NextResponse.json({ message: "Document deleted successfully" });

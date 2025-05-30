@@ -4,8 +4,10 @@ import { z } from "zod";
 import { getDocumentById } from "@/lib/db/queries";
 import { documentHandlersByArtifactKind } from "@/lib/artifacts/server";
 
+type BetterAuthSession = { session: Session; user: any };
+
 interface UpdateDocumentProps {
-  session: Session;
+  session: BetterAuthSession;
   dataStream: DataStreamWriter;
 }
 
@@ -19,7 +21,8 @@ export const updateDocument = ({ session, dataStream }: UpdateDocumentProps) =>
         .describe("The description of changes that need to be made"),
     }),
     execute: async ({ id, description }) => {
-      const document = await getDocumentById({ id });
+      const documents = await getDocumentById({ id });
+      const document = documents[0];
 
       if (!document) {
         return {

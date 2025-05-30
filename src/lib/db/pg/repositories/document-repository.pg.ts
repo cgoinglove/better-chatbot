@@ -1,7 +1,6 @@
 import { pgDb as db } from '../db.pg';
 import { DocumentSchema } from '../schema.pg';
 import { eq, desc } from 'drizzle-orm';
-import { randomUUID } from 'crypto';
 import type { InferSelectModel } from 'drizzle-orm';
 
 type Document = InferSelectModel<typeof DocumentSchema>;
@@ -11,13 +10,10 @@ export class DocumentRepository {
     const documents = await db
       .insert(DocumentSchema)
       .values({
-        id: randomUUID(),
         title,
         content,
         kind: kind as 'text' | 'code' | 'image' | 'sheet',
-        userId,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        userId
       })
       .returning();
 

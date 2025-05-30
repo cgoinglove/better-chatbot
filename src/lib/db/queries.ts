@@ -8,7 +8,14 @@ import {
   ChatThreadSchema,
   ChatMessageSchema,
   DocumentSchema,
+  SuggestionSchema,
+  VoteSchema,
   type Document,
+  type UserEntity,
+  type ChatThreadEntity,
+  type ChatMessageEntity,
+  type VoteEntity,
+  type SuggestionEntity,
 } from "./pg/schema.pg";
 import type { ArtifactKind } from "@/components/artifact";
 import { pgDb as db } from './pg/db.pg';
@@ -210,25 +217,39 @@ export async function saveDocument({
   content,
   kind,
 }: {
-  id: string;
+  id?: string;
   userId: string;
   title: string;
   content: string;
   kind: ArtifactKind;
 }): Promise<Array<Document>> {
   try {
-    return await db
-      .insert(DocumentSchema)
-      .values({
-        id,
-        user_id: userId,
-        title,
-        content,
-        kind,
-        created_at: new Date(),
-        updated_at: new Date(),
-      })
-      .returning();
+    if (id) {
+      // Update existing document
+      return await db
+        .update(DocumentSchema)
+        .set({
+          title,
+          content,
+          kind,
+          updatedAt: new Date()
+        })
+        .where(eq(DocumentSchema.id, id))
+        .returning();
+    } else {
+      // Insert new document
+      return await db
+        .insert(DocumentSchema)
+        .values({
+          userId,
+          title,
+          content,
+          kind,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        })
+        .returning();
+    }
   } catch (error) {
     console.error("Failed to save document in database");
     throw error;
@@ -240,7 +261,7 @@ export async function getDocumentsByUserId({ id }: { id: string }): Promise<Arra
     return await db
       .select()
       .from(DocumentSchema)
-      .where(eq(DocumentSchema.user_id, id))
+      .where(eq(DocumentSchema.userId, id))
       .orderBy(desc(DocumentSchema.createdAt));
   } catch (error) {
     console.error("Failed to get documents by user id from database");

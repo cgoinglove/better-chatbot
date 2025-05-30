@@ -4,7 +4,7 @@ import { sheetDocumentHandler } from "@/artifacts/sheet/server";
 import { textDocumentHandler } from "@/artifacts/text/server";
 import type { ArtifactKind } from "@/components/artifact";
 import type { DataStreamWriter } from "ai";
-import type { Document } from "../db/schema";
+import type { Document } from "../db/pg/schema.pg";
 import { saveDocument } from "../db/queries";
 import type { Session } from "better-auth";
 type BetterAuthSession = { session: Session; user: any };
@@ -18,8 +18,8 @@ export interface SaveDocumentProps {
 }
 
 export interface CreateDocumentCallbackProps {
-  id: string;
   title: string;
+  kind?: ArtifactKind;
   dataStream: DataStreamWriter;
   session: BetterAuthSession;
 }
@@ -33,7 +33,7 @@ export interface UpdateDocumentCallbackProps {
 
 export interface DocumentHandler<T = ArtifactKind> {
   kind: T;
-  onCreateDocument: (args: CreateDocumentCallbackProps) => Promise<string>;
+  onCreateDocument: (args: CreateDocumentCallbackProps) => Promise<string | Document>;
   onUpdateDocument: (args: UpdateDocumentCallbackProps) => Promise<string>;
 }
 
@@ -48,7 +48,6 @@ export function createDocumentHandler<T extends ArtifactKind>(config: {
       console.log('Starting onCreateDocument...');
       console.log('Session:', args.session);
       const draftContent = await config.onCreateDocument({
-        id: args.id,
         title: args.title,
         dataStream: args.dataStream,
         session: args.session,
@@ -57,13 +56,17 @@ export function createDocumentHandler<T extends ArtifactKind>(config: {
       console.log('Got draft content:', draftContent);
       if (args.session?.session?.userId) {
         console.log('Saving document with userId:', args.session.session.userId);
-        await saveDocument({
-          id: args.id,
+        const [doc] = await saveDocument({
           title: args.title,
           content: draftContent,
-          kind: config.kind,
+          kind: args.kind || config.kind,
           userId: args.session.session.userId,
         });
+        args.dataStream.writeData({
+          type: 'id',
+          content: doc.id,
+        });
+        return doc;
       }
 
       return draftContent;
@@ -102,7 +105,7 @@ export const documentHandlersByArtifactKind: Array<DocumentHandler> = [
   textDocumentHandler,
   codeDocumentHandler,
   imageDocumentHandler,
-  sheetDocumentHandler,
+  sheetDocumentHandler
 ];
 
 export const artifactKinds = ["text", "code", "image", "sheet"] as const;
