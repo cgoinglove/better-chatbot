@@ -1,9 +1,10 @@
 import { selectThreadWithMessagesAction } from "@/app/api/chat/actions";
 import ChatBot from "@/components/chat-bot";
-
+import { cookies } from "next/headers";
 import { ChatMessage, ChatThread } from "app-types/chat";
 import { convertToUIMessage } from "lib/utils";
 import { redirect } from "next/navigation";
+import { DEFAULT_MODEL } from "lib/ai/models";
 
 const fetchThread = async (
   threadId: string,
@@ -22,6 +23,10 @@ export default async function Page({
 
   if (!thread) redirect("/");
 
+  const cookieStore = await cookies();
+  const modelFromCookie = cookieStore.get("chat-model");
+  const toolChoiceFromCookie = cookieStore.get("tool-choice");
+
   const initialMessages = thread.messages.map(convertToUIMessage);
 
   return (
@@ -29,6 +34,8 @@ export default async function Page({
       threadId={threadId}
       key={threadId}
       initialMessages={initialMessages}
+      selectedModel={modelFromCookie?.value || DEFAULT_MODEL}
+      selectedToolChoice={(toolChoiceFromCookie?.value as "auto" | "none" | "manual") || "auto"}
     />
   );
 }

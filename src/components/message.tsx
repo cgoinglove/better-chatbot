@@ -40,6 +40,20 @@ interface Props {
   isReadonly?: boolean; // From inbound
 }
 
+const Skeleton = () => (
+  <div className="flex gap-3 items-start">
+    <div className="h-10 w-10 rounded-full bg-muted animate-pulse" />
+    <div className="space-y-2.5 flex-1">
+      <div className="h-4 w-24 rounded bg-muted animate-pulse" />
+      <div className="space-y-2">
+        <div className="h-4 w-[60%] rounded bg-muted animate-pulse" />
+        <div className="h-4 w-[80%] rounded bg-muted animate-pulse" />
+        <div className="h-4 w-[40%] rounded bg-muted animate-pulse" />
+      </div>
+    </div>
+  </div>
+);
+
 const PurePreviewMessage = ({
   message,
   chatId,
@@ -250,29 +264,30 @@ const PurePreviewMessage = ({
   );
 };
 
-export const PreviewMessage = memo(
-  PurePreviewMessage,
-  (prevProps, nextProps) => {
-    // Combined equality checks from both implementations
-    if (prevProps.message.id !== nextProps.message.id) return false;
-    if (prevProps.isLoading !== nextProps.isLoading) return false;
-    if (prevProps.isLastMessage !== nextProps.isLastMessage) return false;
-    if (prevProps.className !== nextProps.className) return false;
-    if (prevProps.status !== nextProps.status) return false;
-    if (prevProps.message.annotations !== nextProps.message.annotations)
-      return false;
-    if (prevProps.isError !== nextProps.isError) return false;
-    if (prevProps.onProxyToolCall !== nextProps.onProxyToolCall) return false;
-    if (!equal(prevProps.message.parts, nextProps.message.parts)) return false;
-    if (!equal(prevProps.vote, nextProps.vote)) return false;
-
-    return true;
-  },
+export const PreviewMessage = Object.assign(
+  memo(
+    PurePreviewMessage,
+    (prevProps, nextProps) => {
+      // Combined equality checks from both implementations
+      return (
+        equal(prevProps.message, nextProps.message) &&
+        prevProps.isLoading === nextProps.isLoading &&
+        prevProps.isLastMessage === nextProps.isLastMessage &&
+        prevProps.isError === nextProps.isError &&
+        prevProps.vote?.value === nextProps.vote?.value &&
+        prevProps.isReadonly === nextProps.isReadonly &&
+        prevProps.onProxyToolCall === nextProps.onProxyToolCall &&
+        prevProps.status === nextProps.status &&
+        prevProps.messageIndex === nextProps.messageIndex
+      );
+    },
+  ),
+  { Skeleton }
 );
 
-export const ThinkingMessage = () => {
-  const role = "assistant";
+const role = "assistant";
 
+export const ThinkingMessage = () => {
   return (
     <motion.div
       data-testid="message-assistant-loading"

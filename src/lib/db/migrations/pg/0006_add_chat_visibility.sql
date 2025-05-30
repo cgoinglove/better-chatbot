@@ -1,0 +1,3 @@
+ALTER TABLE "chat_thread" 
+ADD COLUMN IF NOT EXISTS "visibility" varchar DEFAULT 'private' NOT NULL,
+ADD COLUMN IF NOT EXISTS "updated_at" timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL;

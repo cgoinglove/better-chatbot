@@ -11,12 +11,25 @@ export async function middleware(request: NextRequest) {
   if (pathname.startsWith("/ping")) {
     return new Response("pong", { status: 200 });
   }
-  const sessionCookie = getSessionCookie(request);
 
+  const sessionCookie = getSessionCookie(request);
   if (!sessionCookie) {
     return NextResponse.redirect(new URL("/sign-in", request.url));
   }
-  return NextResponse.next();
+
+  // Set default cookies if they don't exist
+  const response = NextResponse.next();
+  const modelCookie = request.cookies.get("chat-model");
+  const toolChoiceCookie = request.cookies.get("tool-choice");
+
+  if (!modelCookie) {
+    response.cookies.set("chat-model", "4o");
+  }
+  if (!toolChoiceCookie) {
+    response.cookies.set("tool-choice", "auto");
+  }
+
+  return response;
 }
 
 export const config = {
