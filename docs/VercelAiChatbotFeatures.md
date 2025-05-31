@@ -30,78 +30,73 @@ This document tracks the features being ported from Vercel's AI Chatbot referenc
 - ⚠️ Review model selection in artifact generation
 - ✅ Basic model selection working
 
-## Open Issues
+## Feature Status and Migration Plan
 
-### Weather Widget
+### Phase 0 – Pre-Merge Essentials (THIS branch)
 
-✅ Feature complete:
+#### Projects UI
+- [ ] Projects UI components
+- [ ] MCP Configuration (admin-only access)
+- [ ] Temporary chat functionality
+- [ ] Command menu
+- [ ] Sharing features (public/anonymous access)
+- [ ] Guest access functionality
 
-1. Weather API integration working
-2. Weather component UI ported
-3. Added to default toolkit
-4. Properly integrated with chat interface
+#### Artifacts System
+- [x] Basic artifact support implemented
+- [x] Text artifacts working
+- [x] Code artifacts working
+- [ ] Sheet artifact improvements (validation, UI/UX, parity)
+- [ ] Fix suggestion generation
+- [ ] Add proper error handling
+- [ ] Improve artifact detection for code and rich text
+- [ ] Test artifact actions
+- [ ] Image artifacts implementation
 
-### Artifacts System
+#### Tool Call UI
+- [ ] Better tool call UI implementation
+- [ ] Enhanced error handling
+- [ ] Improved user feedback
 
-1. Sheet artifacts need improvements:
-   - Better data validation
-   - Enhanced UI/UX
-   - Full feature parity with reference
-2. Image artifacts missing entirely
-3. Suggestion generation needs optimization
+#### Menu Features (ai-chatbot parity/must-have)
+- [ ] Complete voting system
+- [ ] Chat preferences dialog
+- [ ] Keyboard shortcuts dialog
+- [ ] Auto guest avatar
 
-### Model Registry
+#### Model Registry
+- [ ] Ensure all ported features use our model registry
+- [ ] Review model selection in artifact generation
+- [x] Basic model selection working
+- [ ] Ensure model configuration system is preserved
 
-1. Need to verify all ported features use our model registry
-2. Ensure model configuration system is preserved
-3. Review model selection in new components
+---
 
-## Migration Plan
+### Phase 1 – Post-Merge Core Features
 
-### Phase 1 - Immediate Tasks
+#### Document Processing
+- [ ] File upload functionality (hide until ready)
+- [ ] PDF processing
+- [ ] Document chunking
+- [ ] RAG implementation
 
-1. Complete Weather Widget
+#### UX Improvements
+- [ ] Resizable sidebar
+- [ ] Better tooling for voice interactions
+- [ ] Enhanced code editor
 
-   - [x] Port weather API integration
-   - [x] Update Weather component UI
-   - [x] Fix get-weather tool implementation
+#### Search and Research
+- [ ] Advanced search UI
+- [ ] Deep research capabilities
+- [ ] Context-aware suggestions
 
-2. Fix Remaining Artifacts Issues
-   - [x] Complete sheet artifact improvements
-   - [ ] Fix suggestion generation
-   - [ ] Add proper error handling
+### Completed Features
 
-### Phase 2 - Core Features
-
-1. Document Processing
-
-   - [ ] PDF processing
-   - [ ] Document chunking
-   - [ ] Document search
-
-2. Enhanced UI Components
-   - [ ] Improved command palette
-   - [ ] Enhanced code editor
-   - [ ] Better error handling UI
-
-### Phase 3 - Advanced Features
-
-1. Sheet Improvements
-
-   - [ ] Advanced data validation
-   - [ ] Enhanced UI/UX
-   - [ ] Formula support
-
-2. Image Artifacts
-
-   - [x] Basic image support
-   - [x] Image generation
-   - [ ] Image editing
-
-3. Command Palette Enhancements
-   - [ ] Advanced command suggestions
-   - [ ] Custom command support
-   - [ ] Keyboard shortcuts
+#### Weather Widget
+- [x] Weather API integration working
+- [x] Weather component UI ported
+- [x] Added to default toolkit
+- [x] Properly integrated with chat interface
 
 ## Notes
 
