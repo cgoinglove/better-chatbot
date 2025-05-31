@@ -19,3 +19,6 @@
 [submodule "inspiration/llmchat"]
 	path = inspiration/llmchat
 	url = https://github.com/trendy-design/llmchat
+[submodule "inspiration/copilotkit"]
+	path = inspiration/copilotkit
+	url = https://github.com/CopilotKit/CopilotKit
