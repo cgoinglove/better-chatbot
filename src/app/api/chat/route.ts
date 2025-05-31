@@ -231,10 +231,9 @@ export async function POST(request: Request) {
           maxRetries: 0,
           tools,
           toolChoice: computedToolChoice,
-          experimental_activeTools:
-            toolChoice === "none"
-              ? []
-              : ["getWeather", "createDocument", "updateDocument"],
+          // Don't restrict active tools - allow all tools to be used
+          // This ensures MCP tools like tavily and sonos are available
+          experimental_activeTools: toolChoice === "none" ? [] : undefined,
           onFinish: async ({ response, usage }) => {
             const appendMessages = appendResponseMessages({
               messages: messages.slice(-1),

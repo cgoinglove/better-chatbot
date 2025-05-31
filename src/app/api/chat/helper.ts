@@ -35,14 +35,22 @@ export function filterToolsByAllowedMCPServers(
   tools: Record<string, Tool>,
   allowedMcpServers?: Record<string, AllowedMCPServer>,
 ): Record<string, Tool> {
+  // If allowedMcpServers is undefined, return all tools
+  // This ensures MCP tools are included when no specific filtering is requested
   if (!allowedMcpServers) {
     return tools;
   }
-  return objectFlow(tools).filter((_tool, key) => {
+  
+  // Otherwise, filter tools based on allowedMcpServers
+  const filteredTools = objectFlow(tools).filter((_tool, key) => {
     const { serverName, toolName } = extractMCPToolId(key);
-    if (!allowedMcpServers[serverName]?.tools) return true;
+    // If this isn't an MCP tool or the server has no tool restrictions, include it
+    if (!serverName || !allowedMcpServers[serverName]?.tools) return true;
+    // Otherwise, only include if the tool is in the allowed list
     return allowedMcpServers[serverName].tools.includes(toolName);
   });
+  
+  return filteredTools;
 }
 export function getAllowedDefaultToolkit(
   allowedAppDefaultToolkit?: string[],
