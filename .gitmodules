@@ -1,3 +1,21 @@
 [submodule "inspiration/ai-chatbot"]
 	path = inspiration/ai-chatbot
 	url = /Users/winston/dev/personal/try/ai-chatbot
+[submodule "inspiration/scira"]
+	path = inspiration/scira
+	url = https://github.com/zaidmukaddam/scira
+[submodule "inspiration/zola"]
+	path = inspiration/zola
+	url = https://github.com/ibelick/zola
+[submodule "inspiration/morphic"]
+	path = inspiration/morphic
+	url = https://github.com/miurla/morphic
+[submodule "inspiration/aiaw"]
+	path = inspiration/aiaw
+	url = https://github.com/NitroRCr/AIaW
+[submodule "inspiration/dify-conversation"]
+	path = inspiration/dify-conversation
+	url = https://github.com/langgenius/dify-conversation
+[submodule "inspiration/llmchat"]
+	path = inspiration/llmchat
+	url = https://github.com/trendy-design/llmchat
