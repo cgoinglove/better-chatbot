@@ -27,7 +27,10 @@ export default async function Page({
   const cookieStore = await cookies();
   const modelFromCookie = cookieStore.get("chat-model");
 
-  const initialMessages = thread.messages.map(convertToUIMessage);
+  const initialMessages = thread.messages.map(m => ({
+  ...convertToUIMessage(m),
+  threadId: thread.id,
+}));
 
   return (
     <>

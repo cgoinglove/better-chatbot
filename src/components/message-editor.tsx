@@ -6,9 +6,21 @@ import { Message } from "ai";
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
+import { toast } from "sonner";
+
+// Type for message parts
+type TextPart = {
+  type: 'text';
+  text: string;
+};
+
+type UIMessage = Message & {
+  parts?: Array<TextPart | { type: string }>;
+  threadId: string;
+};
 
 export type MessageEditorProps = {
-  message: Message;
+  message: UIMessage;
   setMode: Dispatch<SetStateAction<"view" | "edit">>;
   setMessages?: UseChatHelpers["setMessages"];
   reload?: UseChatHelpers["reload"];
@@ -20,9 +32,14 @@ export function MessageEditor({
   setMessages,
   reload,
 }: MessageEditorProps) {
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [draftContent, setDraftContent] = useState<string>(message.content);
+  const [draftContent, setDraftContent] = useState(
+    message.content ||
+      (message.parts?.find((p) => p.type === "text") as { text: string })
+        ?.text ||
+      "",
+  );
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -41,6 +58,43 @@ export function MessageEditor({
   const handleInput = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setDraftContent(event.target.value);
     adjustHeight();
+  };
+
+  const handleSave = async () => {
+    setIsSubmitting(true);
+
+    try {
+      await deleteTrailingMessages({
+        id: message.id,
+      });
+
+      if (setMessages) {
+        // @ts-expect-error todo: support UIMessage in setMessages
+        setMessages((messages) => {
+          const index = messages.findIndex((m) => m.id === message.id);
+
+          if (index !== -1) {
+            const updatedMessage = {
+              ...message,
+              content: draftContent,
+              parts: [{ type: "text", text: draftContent }],
+            };
+
+            return [...messages.slice(0, index), updatedMessage];
+          }
+
+          return messages;
+        });
+      }
+
+      setMode("view");
+      if (reload) reload();
+    } catch (error) {
+      console.error('Error updating message:', error);
+      toast.error('Failed to update message');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -68,35 +122,7 @@ export function MessageEditor({
           variant="default"
           className="h-fit py-2 px-3"
           disabled={isSubmitting}
-          onClick={async () => {
-            setIsSubmitting(true);
-
-            await deleteTrailingMessages({
-              id: message.id,
-            });
-
-            if (setMessages) {
-              // @ts-expect-error todo: support UIMessage in setMessages
-              setMessages((messages) => {
-              const index = messages.findIndex((m) => m.id === message.id);
-
-              if (index !== -1) {
-                const updatedMessage = {
-                  ...message,
-                  content: draftContent,
-                  parts: [{ type: "text", text: draftContent }],
-                };
-
-                return [...messages.slice(0, index), updatedMessage];
-              }
-
-              return messages;
-            });
-            }
-
-            setMode("view");
-            if (reload) reload();
-          }}
+          onClick={handleSave}
         >
           {isSubmitting ? "Sending..." : "Send"}
         </Button>

@@ -1,9 +1,9 @@
 import { chatRepository } from "lib/db/repository";
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { generateTitleFromUserMessageAction } from "../actions";
-
 import { myProvider } from "lib/ai/models";
 import { getSession } from "auth/server";
+import { revalidatePath } from "next/cache";
 
 export async function POST(
   request: NextRequest,
@@ -44,4 +44,58 @@ export async function POST(
       status: 200,
     },
   );
+}
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ threadId: string }> },
+) {
+  try {
+    const session = await getSession();
+    if (!session) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    const { threadId } = await params;
+    
+    if (!threadId) {
+      return new NextResponse("Thread ID is required", { status: 400 });
+    }
+
+    const { messageId, content, role } = await request.json();
+
+    if (!messageId || !content) {
+      return new NextResponse("Missing required fields: messageId and content are required", { status: 400 });
+    }
+
+    // Get all messages in the thread and find the one to update
+    const messages = await chatRepository.selectMessagesByThreadId(threadId);
+    const message = messages.find(m => m.id === messageId);
+    
+    if (!message) {
+      return new NextResponse("Message not found in the specified thread", { status: 404 });
+    }
+
+    // Update the message
+    const updatedMessage = {
+      ...message,
+      content,
+      role: role || message.role,
+      parts: [{ type: 'text', text: content }],
+    };
+
+    await chatRepository.upsertMessage(updatedMessage);
+    
+    // Revalidate the chat page
+    revalidatePath(`/chat/${threadId}`);
+
+
+    return NextResponse.json({ success: true, message: "Message updated successfully" });
+  } catch (error) {
+    console.error('Error updating message:', error);
+    if (error instanceof Error) {
+      return new NextResponse(`Internal Server Error: ${error.message}`, { status: 500 });
+    }
+    return new NextResponse("Internal Server Error", { status: 500 });
+  }
 }
