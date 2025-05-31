@@ -1,19 +1,17 @@
 "use client";
 
-import type { Attachment, UIMessage } from "ai";
-import { formatDistance } from "date-fns";
-import { AnimatePresence, motion } from "framer-motion";
+import type { UIMessage } from 'ai';
+import { formatDistance } from 'date-fns';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
-  type Dispatch,
   memo,
-  type SetStateAction,
   useCallback,
   useEffect,
   useState,
-} from "react";
+} from 'react';
 import useSWR, { useSWRConfig } from "swr";
 import { useDebounceCallback, useWindowSize } from "usehooks-ts";
-import type { Document, Vote } from "@/lib/db/pg/schema.pg";
+import type { Document, VoteEntity } from '@/lib/db/pg/schema.pg';
 import { fetcher } from "@/lib/utils";
 import PromptInput from "./prompt-input";
 import { Toolbar } from "./toolbar";
@@ -53,13 +51,17 @@ export interface UIArtifact {
   };
 }
 
-function PureArtifact({
+export function PureArtifact({
   chatId,
   input,
   setInput,
+  status,
   stop,
   append,
   messages,
+  setMessages,
+  reload,
+  votes,
   isReadonly,
 }: {
   chatId: string;
@@ -67,17 +69,16 @@ function PureArtifact({
   setInput: UseChatHelpers["setInput"];
   status: UseChatHelpers["status"];
   stop: UseChatHelpers["stop"];
-  attachments: Array<Attachment>;
-  setAttachments: Dispatch<SetStateAction<Array<Attachment>>>;
+  append: UseChatHelpers["append"];
   messages: Array<UIMessage>;
   setMessages: UseChatHelpers["setMessages"];
-  votes: Array<Vote> | undefined;
-  append: UseChatHelpers["append"];
-  handleSubmit: UseChatHelpers["handleSubmit"];
   reload: UseChatHelpers["reload"];
+  votes?: VoteEntity[];
   isReadonly: boolean;
 }) {
   const { artifact, setArtifact, metadata, setMetadata } = useArtifact();
+  
+
 
   const {
     data: documents,
@@ -258,6 +259,7 @@ function PureArtifact({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0, transition: { delay: 0.4 } }}
         >
+
           {!isMobile && (
             <motion.div
               className="fixed bg-background h-dvh"
@@ -272,7 +274,6 @@ function PureArtifact({
               }}
             />
           )}
-
           {!isMobile && (
             <motion.div
               className="relative w-[400px] bg-muted dark:bg-background h-dvh shrink-0"
@@ -295,6 +296,7 @@ function PureArtifact({
                 transition: { duration: 0 },
               }}
             >
+
               <AnimatePresence>
                 {!isCurrentVersion && (
                   <motion.div
@@ -305,15 +307,16 @@ function PureArtifact({
                   />
                 )}
               </AnimatePresence>
-
               <div className="flex flex-col h-full justify-between items-center gap-4">
+
                 <ArtifactMessages
                   chatId={chatId}
                   messages={messages}
                   isReadonly={isReadonly}
-                  artifactStatus={artifact.status === "streaming" ? "streaming" : "idle"}
+                  artifactStatus={
+                    artifact.status === "streaming" ? "streaming" : "idle"
+                  }
                 />
-
                 <form className="flex flex-row gap-2 relative items-end w-full px-4 pb-4">
                   <PromptInput
                     chatId={chatId}
@@ -328,7 +331,6 @@ function PureArtifact({
               </div>
             </motion.div>
           )}
-
           <motion.div
             className="fixed dark:bg-muted bg-background h-dvh flex flex-col overflow-y-scroll md:border-l dark:border-zinc-700 border-zinc-200"
             initial={
@@ -461,7 +463,9 @@ function PureArtifact({
                     isToolbarVisible={isToolbarVisible}
                     setIsToolbarVisible={setIsToolbarVisible}
                     append={append}
-                    status={status as "streaming" | "submitted" | "ready" | "error"}
+                    status={
+                      status as "streaming" | "submitted" | "ready" | "error"
+                    }
                     stop={stop}
                     artifactKind={artifact.kind}
                   />
@@ -489,7 +493,8 @@ export const Artifact = memo(PureArtifact, (prevProps, nextProps) => {
   if (prevProps.status !== nextProps.status) return false;
   if (!equal(prevProps.votes, nextProps.votes)) return false;
   if (prevProps.input !== nextProps.input) return false;
-  if (!equal(prevProps.messages.length, nextProps.messages.length)) return false;
+  if (!equal(prevProps.messages.length, nextProps.messages.length))
+    return false;
 
   return true;
 });

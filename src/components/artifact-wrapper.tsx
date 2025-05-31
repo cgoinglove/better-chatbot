@@ -15,11 +15,8 @@ export function ArtifactWrapper() {
           chatId=""
           input=""
           setInput={(value) => {}}
-          handleSubmit={() => Promise.resolve()}
           status="ready"
           stop={() => Promise.resolve()}
-          attachments={[]}
-          setAttachments={() => {}}
           append={() => Promise.resolve('')}
           messages={[]}
           setMessages={() => {}}

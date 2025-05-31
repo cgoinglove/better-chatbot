@@ -3,7 +3,7 @@ import { cookies, headers } from "next/headers";
 import { AppSidebar } from "@/components/app-sidebar";
 import { VoiceChatBot } from "@/components/voice-chat-bot";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { ArtifactWrapper } from "@/components/artifact-wrapper";
+
 
 import { auth } from "@/lib/auth/server";
 import Script from "next/script";
@@ -36,7 +36,7 @@ export default async function Layout({
             {children}
           </div>
         </SidebarInset>
-        <ArtifactWrapper />
+
         <VoiceChatBot />
       </SidebarProvider>
     </>
