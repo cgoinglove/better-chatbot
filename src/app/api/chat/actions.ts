@@ -16,7 +16,7 @@ import {
 import type { ChatThread, Project } from "app-types/chat";
 
 import { chatRepository } from "lib/db/repository";
-import { myProvider } from "lib/ai/providers";
+import { myProvider } from "lib/ai/models";
 import { toAny } from "lib/utils";
 import { MCPToolInfo } from "app-types/mcp";
 import { serverCache } from "lib/cache";

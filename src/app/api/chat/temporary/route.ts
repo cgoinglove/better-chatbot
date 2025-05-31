@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { getSession } from "auth/server";
 import { Message, smoothStream, streamText } from "ai";
-import { myProvider } from "lib/ai/providers";
+import { myProvider } from "lib/ai/models";
 import logger from "logger";
 import { buildUserSystemPrompt } from "lib/ai/prompts";
 import { userRepository } from "lib/db/repository";

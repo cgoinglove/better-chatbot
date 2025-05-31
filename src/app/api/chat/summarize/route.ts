@@ -1,6 +1,6 @@
 import { convertToCoreMessages, smoothStream, streamText } from "ai";
 import { selectThreadWithMessagesAction } from "../actions";
-import { myProvider } from "lib/ai/providers";
+import { myProvider } from "lib/ai/models";
 import { SUMMARIZE_PROMPT } from "lib/ai/prompts";
 import logger from "logger";
 

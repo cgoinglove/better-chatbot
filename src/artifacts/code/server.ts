@@ -1,55 +1,55 @@
-import { z } from 'zod';
-import { streamObject } from 'ai';
-import { myProvider } from '@/lib/ai/providers';
-import { codePrompt, updateDocumentPrompt } from '@/lib/ai/prompts';
-import { createDocumentHandler } from '@/lib/artifacts/server';
+import { z } from "zod";
+import { streamObject } from "ai";
+import { myProvider } from "@/lib/ai/models";
+import { codePrompt, updateDocumentPrompt } from "@/lib/ai/prompts";
+import { createDocumentHandler } from "@/lib/artifacts/server";
 
 // Improved code document handler with better streaming support
-export const codeDocumentHandler = createDocumentHandler<'code'>({
-  kind: 'code',
+export const codeDocumentHandler = createDocumentHandler<"code">({
+  kind: "code",
   onCreateDocument: async ({ title, dataStream }) => {
-    let draftContent = '';
-    
+    let draftContent = "";
+
     // Make artifact visible immediately
     dataStream.writeData({
-      type: 'kind',
-      content: 'code',
+      type: "kind",
+      content: "code",
     });
-    
+
     // Set a loading message while generating code
     dataStream.writeData({
-      type: 'code-delta',
-      content: '// Generating code based on: ' + title + '\n// Please wait...',
+      type: "code-delta",
+      content: "// Generating code based on: " + title + "\n// Please wait...",
     });
 
     const { fullStream } = streamObject({
-      model: myProvider.languageModel('artifact-model'),
+      model: myProvider.languageModel("artifact-model"),
       system: codePrompt,
       prompt: title,
       schema: z.object({
         code: z.string(),
       }),
     });
-    
+
     // Clear the loading message before streaming actual content
     dataStream.writeData({
-      type: 'clear',
-      content: '',
+      type: "clear",
+      content: "",
     });
 
     for await (const delta of fullStream) {
       const { type } = delta;
 
-      if (type === 'object') {
+      if (type === "object") {
         const { object } = delta;
         const { code } = object;
 
         if (code) {
           // Format code to ensure proper display
           const formattedCode = code.trim();
-          
+
           dataStream.writeData({
-            type: 'code-delta',
+            type: "code-delta",
             content: formattedCode,
           });
 
@@ -61,11 +61,11 @@ export const codeDocumentHandler = createDocumentHandler<'code'>({
     return draftContent;
   },
   onUpdateDocument: async ({ document, description, dataStream }) => {
-    let draftContent = '';
+    let draftContent = "";
 
     const { fullStream } = streamObject({
-      model: myProvider.languageModel('artifact-model'),
-      system: updateDocumentPrompt(document.content, 'code'),
+      model: myProvider.languageModel("artifact-model"),
+      system: updateDocumentPrompt(document.content, "code"),
       prompt: description,
       schema: z.object({
         code: z.string(),
@@ -75,14 +75,14 @@ export const codeDocumentHandler = createDocumentHandler<'code'>({
     for await (const delta of fullStream) {
       const { type } = delta;
 
-      if (type === 'object') {
+      if (type === "object") {
         const { object } = delta;
         const { code } = object;
 
         if (code) {
           dataStream.writeData({
-            type: 'code-delta',
-            content: code ?? '',
+            type: "code-delta",
+            content: code ?? "",
           });
 
           draftContent = code;

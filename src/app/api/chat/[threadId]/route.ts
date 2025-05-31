@@ -2,7 +2,7 @@ import { chatRepository } from "lib/db/repository";
 import { NextRequest } from "next/server";
 import { generateTitleFromUserMessageAction } from "../actions";
 
-import { myProvider } from "lib/ai/providers";
+import { myProvider } from "lib/ai/models";
 import { getSession } from "auth/server";
 
 export async function POST(

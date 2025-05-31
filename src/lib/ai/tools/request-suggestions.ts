@@ -3,7 +3,7 @@ import type { Session } from "better-auth";
 import { type DataStreamWriter, streamObject, tool } from "ai";
 import { getDocumentById, saveSuggestions } from "@/lib/db/queries";
 import { generateUUID } from "@/lib/utils";
-import { myProvider } from "../providers";
+import { myProvider } from "../models";
 import type { InferSelectModel } from "drizzle-orm";
 import { SuggestionSchema } from "@/lib/db/pg/schema.pg";
 

@@ -59,7 +59,7 @@ import {
   SelectValue,
 } from "ui/select";
 import { chatModels } from "lib/ai/models";
-import { myProvider } from "lib/ai/providers";
+import { myProvider } from "lib/ai/models";
 import { MCPToolInfo } from "app-types/mcp";
 import { Label } from "ui/label";
 import { safe } from "ts-safe";
@@ -273,7 +273,7 @@ const GenerateExampleInputJsonDialog = ({
     loading: false,
   });
   const modelList = useMemo(() => {
-    return chatModels.map(model => model.id);
+    return chatModels.map((model) => model.id);
   }, []);
 
   const generateExampleSchema = useCallback(() => {

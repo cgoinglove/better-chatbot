@@ -11,7 +11,7 @@ import {
   type DataStreamWriter,
 } from "ai";
 
-import { myProvider } from "lib/ai/providers";
+import { myProvider } from "lib/ai/models";
 
 import { mcpClientsManager } from "lib/ai/mcp/mcp-manager";
 
@@ -145,18 +145,19 @@ export async function POST(request: Request) {
     // Get weather tools directly
     const weatherTools = defaultTools[AppDefaultToolkit.Weather] ?? {};
     console.log("[DEBUG] Weather tools:", Object.keys(weatherTools));
-    
+
     // Get all available tools
     const availableTools: Record<string, Tool> = {
       ...weatherTools,
       ...artifactTools,
-      ...(isToolCallAllowed ? mcpTools : {})
+      ...(isToolCallAllowed ? mcpTools : {}),
     };
 
     // Filter tools based on mentions if needed
-    const filteredTools = requiredToolsAnnotations.length > 0
-      ? filterToolsByMentions(availableTools, requiredToolsAnnotations)
-      : availableTools;
+    const filteredTools =
+      requiredToolsAnnotations.length > 0
+        ? filterToolsByMentions(availableTools, requiredToolsAnnotations)
+        : availableTools;
 
     // Filter by MCP servers if needed
     const mcpFilteredTools = allowedMcpServers
@@ -164,9 +165,10 @@ export async function POST(request: Request) {
       : filteredTools;
 
     // Apply manual mode filtering if needed
-    const tools = toolChoice === "manual"
-      ? excludeToolExecution(mcpFilteredTools)
-      : mcpFilteredTools;
+    const tools =
+      toolChoice === "manual"
+        ? excludeToolExecution(mcpFilteredTools)
+        : mcpFilteredTools;
 
     console.log("[DEBUG] Final tools:", Object.keys(tools));
 
@@ -229,7 +231,10 @@ export async function POST(request: Request) {
           maxRetries: 0,
           tools,
           toolChoice: computedToolChoice,
-          experimental_activeTools: toolChoice === 'none' ? [] : ['getWeather', 'createDocument', 'updateDocument'],
+          experimental_activeTools:
+            toolChoice === "none"
+              ? []
+              : ["getWeather", "createDocument", "updateDocument"],
           onFinish: async ({ response, usage }) => {
             const appendMessages = appendResponseMessages({
               messages: messages.slice(-1),
