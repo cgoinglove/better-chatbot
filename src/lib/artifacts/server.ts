@@ -34,7 +34,9 @@ export interface UpdateDocumentCallbackProps {
 
 export interface DocumentHandler<T = ArtifactKind> {
   kind: T;
-  onCreateDocument: (args: CreateDocumentCallbackProps) => Promise<string | Document>;
+  onCreateDocument: (
+    args: CreateDocumentCallbackProps,
+  ) => Promise<string | Document>;
   onUpdateDocument: (args: UpdateDocumentCallbackProps) => Promise<string>;
 }
 
@@ -46,8 +48,6 @@ export function createDocumentHandler<T extends ArtifactKind>(config: {
   return {
     kind: config.kind,
     onCreateDocument: async (args: CreateDocumentCallbackProps) => {
-      console.log('Starting onCreateDocument...');
-      console.log('Session:', args.session);
       const draftContent = await config.onCreateDocument({
         id: args.id,
         title: args.title,
@@ -64,7 +64,7 @@ export function createDocumentHandler<T extends ArtifactKind>(config: {
           userId: args.session.session.userId,
         });
         args.dataStream.writeData({
-          type: 'id',
+          type: "id",
           content: doc.id,
         });
         return doc;
@@ -73,8 +73,6 @@ export function createDocumentHandler<T extends ArtifactKind>(config: {
       return draftContent;
     },
     onUpdateDocument: async (args: UpdateDocumentCallbackProps) => {
-      console.log('Starting onUpdateDocument...');
-      console.log('Session:', args.session);
       const draftContent = await config.onUpdateDocument({
         document: args.document,
         description: args.description,
@@ -82,9 +80,7 @@ export function createDocumentHandler<T extends ArtifactKind>(config: {
         session: args.session,
       });
 
-      console.log('Got draft content:', draftContent);
       if (args.session?.session?.userId) {
-        console.log('Saving document with userId:', args.session.session.userId);
         await saveDocument({
           id: args.document.id,
           title: args.document.title,
@@ -106,7 +102,7 @@ export const documentHandlersByArtifactKind: Array<DocumentHandler> = [
   textDocumentHandler,
   codeDocumentHandler,
   imageDocumentHandler,
-  sheetDocumentHandler
+  sheetDocumentHandler,
 ];
 
 export const artifactKinds = ["text", "code", "image", "sheet"] as const;

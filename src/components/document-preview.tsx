@@ -34,7 +34,7 @@ export function DocumentPreview({
   args,
 }: DocumentPreviewProps) {
   const { artifact, setArtifact } = useArtifact();
-  console.log("Artifact", artifact);
+
   const { data: documents, isLoading: isDocumentsFetching } = useSWR<
     Array<Document>
   >(result ? `/api/document?id=${result.id}` : null, fetcher);
@@ -240,9 +240,9 @@ const DocumentContent = ({ document }: { document: Document }) => {
 
   useEffect(() => {
     if (document?.content) {
-      setArtifact(draft => ({
+      setArtifact((draft) => ({
         ...draft,
-        content: document.content
+        content: document.content,
       }));
     }
   }, [document?.content, setArtifact]);

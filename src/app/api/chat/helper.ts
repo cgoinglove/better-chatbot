@@ -40,7 +40,7 @@ export function filterToolsByAllowedMCPServers(
   if (!allowedMcpServers) {
     return tools;
   }
-  
+
   // Otherwise, filter tools based on allowedMcpServers
   const filteredTools = objectFlow(tools).filter((_tool, key) => {
     const { serverName, toolName } = extractMCPToolId(key);
@@ -49,30 +49,25 @@ export function filterToolsByAllowedMCPServers(
     // Otherwise, only include if the tool is in the allowed list
     return allowedMcpServers[serverName].tools.includes(toolName);
   });
-  
+
   return filteredTools;
 }
 export function getAllowedDefaultToolkit(
   allowedAppDefaultToolkit?: string[],
 ): Record<string, Tool> {
-  console.log('[DEBUG] getAllowedDefaultToolkit called with:', allowedAppDefaultToolkit);
-  console.log('[DEBUG] Available defaultTools:', Object.keys(defaultTools));
 
   if (!allowedAppDefaultToolkit) {
     const allTools = Object.values(defaultTools).reduce((acc, toolkit) => {
       return { ...acc, ...toolkit };
     }, {});
-    console.log('[DEBUG] No filter, returning all tools:', Object.keys(allTools));
     return allTools;
   }
 
   const filteredTools = allowedAppDefaultToolkit.reduce((acc, toolkit) => {
     const toolsForKit = defaultTools[toolkit] ?? {};
-    console.log('[DEBUG] Tools for', toolkit, ':', Object.keys(toolsForKit));
     return { ...acc, ...toolsForKit };
   }, {});
 
-  console.log('[DEBUG] Filtered tools:', Object.keys(filteredTools));
   return filteredTools;
 }
 

@@ -73,24 +73,18 @@ export async function PUT(request: Request) {
     }
 
     const session = await getSession();
-    console.log("Session in PUT /api/document:", session);
 
     if (!session?.session?.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const [document] = await getDocumentById({ id });
-    console.log("Document found:", document);
 
     if (!document) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
     if (document.userId !== session.session.userId) {
-      console.log("User ID mismatch:", {
-        docUserId: document.userId,
-        sessionUserId: session.session.userId,
-      });
       return NextResponse.json(
         { error: "Unauthorized - Wrong user" },
         { status: 401 },
@@ -98,10 +92,8 @@ export async function PUT(request: Request) {
     }
 
     const { title, content, kind } = await request.json();
-    console.log("Update payload:", { title, content, kind });
 
     const handler = documentHandlersByArtifactKind.find((h) => h.kind === kind);
-    console.log("Found handler:", handler?.kind);
 
     if (!handler) {
       return NextResponse.json(
@@ -110,20 +102,18 @@ export async function PUT(request: Request) {
       );
     }
 
-    console.log("Calling onUpdateDocument...");
     await handler.onUpdateDocument({
       document,
       description: content,
       session: session as BetterAuthSession,
       dataStream: {
         writeData: async (data: any) => {
-          console.log("DataStream write:", data);
         },
         write: async () => {},
         writeMessageAnnotation: async () => {},
         writeSource: async () => {},
         merge: async () => {},
-        onError: (error) => error?.toString() || 'Unknown error',
+        onError: (error) => error?.toString() || "Unknown error",
       },
     });
 
