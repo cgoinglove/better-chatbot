@@ -10,8 +10,8 @@ import { Textarea } from "./ui/textarea";
 export type MessageEditorProps = {
   message: Message;
   setMode: Dispatch<SetStateAction<"view" | "edit">>;
-  setMessages: UseChatHelpers["setMessages"];
-  reload: UseChatHelpers["reload"];
+  setMessages?: UseChatHelpers["setMessages"];
+  reload?: UseChatHelpers["reload"];
 };
 
 export function MessageEditor({
@@ -75,8 +75,9 @@ export function MessageEditor({
               id: message.id,
             });
 
-            // @ts-expect-error todo: support UIMessage in setMessages
-            setMessages((messages) => {
+            if (setMessages) {
+              // @ts-expect-error todo: support UIMessage in setMessages
+              setMessages((messages) => {
               const index = messages.findIndex((m) => m.id === message.id);
 
               if (index !== -1) {
@@ -91,9 +92,10 @@ export function MessageEditor({
 
               return messages;
             });
+            }
 
             setMode("view");
-            reload();
+            if (reload) reload();
           }}
         >
           {isSubmitting ? "Sending..." : "Send"}

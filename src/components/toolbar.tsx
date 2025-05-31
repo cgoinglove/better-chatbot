@@ -319,7 +319,7 @@ const PureToolbar = ({
   status: UseChatHelpers["status"];
   append: UseChatHelpers["append"];
   stop: UseChatHelpers["stop"];
-  setMessages: Dispatch<SetStateAction<Message[]>>;
+  setMessages?: Dispatch<SetStateAction<Message[]>>;
   artifactKind: ArtifactKind;
 }) => {
   // Use HTMLDivElement since the ref is attached to a div element
@@ -434,7 +434,7 @@ const PureToolbar = ({
             className="p-3"
             onClick={() => {
               stop();
-              setMessages((messages) => messages);
+              if (setMessages) setMessages([]);
             }}
           >
             <StopIcon />

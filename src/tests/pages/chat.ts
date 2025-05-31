@@ -14,8 +14,8 @@ export class ChatPage {
     return this.page.getByTestId('stop-button');
   }
 
-  public get multimodalInput() {
-    return this.page.getByTestId('multimodal-input');
+  public get promptInput() {
+    return this.page.getByTestId('prompt-input');
   }
 
   async createNewChat() {
@@ -27,8 +27,8 @@ export class ChatPage {
   }
 
   async sendUserMessage(message: string) {
-    await this.multimodalInput.click();
-    await this.multimodalInput.fill(message);
+    await this.promptInput.click();
+    await this.promptInput.fill(message);
     await this.sendButton.click();
   }
 

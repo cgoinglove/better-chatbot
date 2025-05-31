@@ -383,6 +383,8 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
               onStop={stop}
               append={append}
               isLoading={isLoading}
+              chatId={threadId}
+              messages={messages}
             />
           }
           {slots?.inputBottomSlot}

@@ -15,8 +15,8 @@ export class ArtifactPage {
     return this.page.getByTestId('stop-button');
   }
 
-  public get multimodalInput() {
-    return this.page.getByTestId('multimodal-input');
+  public get promptInput() {
+    return this.page.getByTestId('prompt-input');
   }
 
   async isGenerationComplete() {
@@ -28,8 +28,8 @@ export class ArtifactPage {
   }
 
   async sendUserMessage(message: string) {
-    await this.artifact.getByTestId('multimodal-input').click();
-    await this.artifact.getByTestId('multimodal-input').fill(message);
+    await this.artifact.getByTestId('prompt-input').click();
+    await this.artifact.getByTestId('prompt-input').fill(message);
     await this.artifact.getByTestId('send-button').click();
   }
 

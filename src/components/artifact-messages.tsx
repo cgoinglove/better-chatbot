@@ -11,11 +11,11 @@ import { UseChatHelpers } from '@ai-sdk/react';
 
 interface ArtifactMessagesProps {
   chatId: string;
-  status: UseChatHelpers['status'];
-  votes: Array<Vote> | undefined;
+  status?: UseChatHelpers['status'];
+  votes?: Array<Vote> | undefined;
   messages: Array<UIMessage>;
-  setMessages: UseChatHelpers['setMessages'];
-  reload: UseChatHelpers['reload'];
+  setMessages?: UseChatHelpers['setMessages'];
+  reload?: UseChatHelpers['reload'];
   isReadonly: boolean;
   artifactStatus: UIArtifact['status'];
 }
@@ -42,7 +42,7 @@ function PureArtifactMessages({
           chatId={chatId}
           key={message.id}
           message={message}
-          isLoading={status === 'streaming' && index === messages.length - 1}
+          isLoading={status === 'streaming' && index === messages.length - 1 || false}
           vote={
             votes
               ? votes.find((vote) => vote.messageId === message.id)

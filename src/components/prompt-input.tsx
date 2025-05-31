@@ -7,6 +7,7 @@ import {
   Paperclip,
   Pause,
 } from "lucide-react";
+import { SuggestedActions } from "./suggested-actions";
 import { ReactNode, useCallback, useMemo, useState } from "react";
 import { Button } from "ui/button";
 import { notImplementedToast } from "ui/shared-toast";
@@ -25,6 +26,8 @@ import { ToolSelector } from "./tool-selector";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 
 interface PromptInputProps {
+  chatId: string;
+  messages?: Array<any>;
   placeholder?: string;
   setInput: (value: string) => void;
   input: string;
@@ -55,6 +58,8 @@ export default function PromptInput({
   isLoading,
   toolDisabled,
   voiceDisabled,
+  chatId,
+  messages = [],
 }: PromptInputProps) {
   const [mcpList, globalModel, appStoreMutate] = appStore(
     useShallow((state) => [state.mcpList, state.model, state.mutate]),
@@ -152,7 +157,10 @@ export default function PromptInput({
   };
 
   return (
-    <div className="w-full fade-in animate-in">
+    <div className="w-full fade-in animate-in flex flex-col gap-4">
+      {messages.length === 0 && pastedContents.length === 0 && (
+        <SuggestedActions append={append} chatId={chatId} />
+      )}
       <div className="z-10 mx-auto w-full relative">
         <fieldset className="flex w-full min-w-0 max-w-full flex-col px-2">
           <div className="rounded-4xl backdrop-blur-sm transition-all duration-200 bg-muted/80 relative flex w-full flex-col cursor-text z-10 border items-stretch focus-within:border-muted-foreground hover:border-muted-foreground p-3">

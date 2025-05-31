@@ -15,7 +15,7 @@ import useSWR, { useSWRConfig } from "swr";
 import { useDebounceCallback, useWindowSize } from "usehooks-ts";
 import type { Document, Vote } from "@/lib/db/pg/schema.pg";
 import { fetcher } from "@/lib/utils";
-import { MultimodalInput } from "./multimodal-input";
+import PromptInput from "./prompt-input";
 import { Toolbar } from "./toolbar";
 import { VersionFooter } from "./version-footer";
 import { ArtifactActions } from "./artifact-actions";
@@ -57,16 +57,9 @@ function PureArtifact({
   chatId,
   input,
   setInput,
-  handleSubmit,
-  status,
   stop,
-  attachments,
-  setAttachments,
   append,
   messages,
-  setMessages,
-  reload,
-  votes,
   isReadonly,
 }: {
   chatId: string;
@@ -316,29 +309,20 @@ function PureArtifact({
               <div className="flex flex-col h-full justify-between items-center gap-4">
                 <ArtifactMessages
                   chatId={chatId}
-                  status={status}
-                  votes={votes}
                   messages={messages}
-                  setMessages={setMessages}
-                  reload={reload}
                   isReadonly={isReadonly}
-                  artifactStatus={artifact.status}
+                  artifactStatus={artifact.status === "streaming" ? "streaming" : "idle"}
                 />
 
                 <form className="flex flex-row gap-2 relative items-end w-full px-4 pb-4">
-                  <MultimodalInput
+                  <PromptInput
                     chatId={chatId}
                     input={input}
                     setInput={setInput}
-                    handleSubmit={handleSubmit}
-                    status={status}
-                    stop={stop}
-                    attachments={attachments}
-                    setAttachments={setAttachments}
-                    messages={messages}
+                    onStop={stop}
+                    isLoading={false}
                     append={append}
-                    className="bg-background dark:bg-muted"
-                    setMessages={setMessages}
+                    messages={messages}
                   />
                 </form>
               </div>
@@ -477,9 +461,8 @@ function PureArtifact({
                     isToolbarVisible={isToolbarVisible}
                     setIsToolbarVisible={setIsToolbarVisible}
                     append={append}
-                    status={status}
+                    status={status as "streaming" | "submitted" | "ready" | "error"}
                     stop={stop}
-                    setMessages={setMessages}
                     artifactKind={artifact.kind}
                   />
                 )}

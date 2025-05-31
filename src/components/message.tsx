@@ -1,6 +1,6 @@
 "use client";
 
-import type { Vote } from "@/lib/db/schema";
+import type { VoteEntity as Vote } from "@/lib/db/pg/schema.pg";
 import { cn, truncateString } from "@/lib/utils";
 import type { UseChatHelpers } from "@ai-sdk/react";
 import type { UIMessage } from "ai";
@@ -29,8 +29,8 @@ interface Props {
   threadId?: string; // From original
   isLoading: boolean;
   isLastMessage?: boolean; // From original
-  setMessages: UseChatHelpers["setMessages"];
-  reload: UseChatHelpers["reload"];
+  setMessages?: UseChatHelpers["setMessages"];
+  reload?: UseChatHelpers["reload"];
   className?: string;
   onProxyToolCall?: (answer: boolean) => void; // Updated from onPoxyToolCall
   status?: UseChatHelpers["status"];
