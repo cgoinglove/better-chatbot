@@ -134,17 +134,9 @@ export async function POST(request: Request) {
       artifactTools.updateDocument = createToolWithDataStream(updateDocument);
     }
 
-    console.log("[DEBUG] Route handler setup:", {
-      toolChoice,
-      isToolCallAllowed,
-      allowedAppDefaultToolkit,
-      allowedMcpServers,
-      requiredToolsAnnotations,
-    });
 
     // Get weather tools directly
     const weatherTools = defaultTools[AppDefaultToolkit.Weather] ?? {};
-    console.log("[DEBUG] Weather tools:", Object.keys(weatherTools));
 
     // Get all available tools
     const availableTools: Record<string, Tool> = {
@@ -170,7 +162,6 @@ export async function POST(request: Request) {
         ? excludeToolExecution(mcpFilteredTools)
         : mcpFilteredTools;
 
-    console.log("[DEBUG] Final tools:", Object.keys(tools));
 
     if (!tools) {
       console.log("[DEBUG] No tools available");
