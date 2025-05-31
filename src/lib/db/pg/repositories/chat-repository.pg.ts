@@ -28,6 +28,7 @@ export const pgChatRepository: ChatRepository = {
         userId: thread.userId,
         projectId: thread.projectId,
         id: thread.id,
+        visibility: thread.visibility || 'private',
       })
       .returning();
     return result;
@@ -39,7 +40,14 @@ export const pgChatRepository: ChatRepository = {
 
   selectThread: async (id: string): Promise<ChatThread | null> => {
     const [result] = await db
-      .select()
+      .select({
+        id: ChatThreadSchema.id,
+        title: ChatThreadSchema.title,
+        userId: ChatThreadSchema.userId,
+        projectId: ChatThreadSchema.projectId,
+        visibility: ChatThreadSchema.visibility,
+        createdAt: ChatThreadSchema.createdAt,
+      })
       .from(ChatThreadSchema)
       .where(eq(ChatThreadSchema.id, id));
     return result;
@@ -67,6 +75,7 @@ export const pgChatRepository: ChatRepository = {
       userId: thread.chat_thread.userId,
       createdAt: thread.chat_thread.createdAt,
       projectId: thread.chat_thread.projectId,
+      visibility: thread.chat_thread.visibility,
       instructions: thread.project?.instructions ?? null,
       userPreferences: thread.user?.preferences ?? undefined,
       messages,
@@ -128,6 +137,7 @@ export const pgChatRepository: ChatRepository = {
         createdAt: ChatThreadSchema.createdAt,
         userId: ChatThreadSchema.userId,
         projectId: ChatThreadSchema.projectId,
+        visibility: ChatThreadSchema.visibility,
         lastMessageAt: sql<string>`MAX(${ChatMessageSchema.createdAt})`.as(
           "last_message_at",
         ),
@@ -142,18 +152,20 @@ export const pgChatRepository: ChatRepository = {
         ChatThreadSchema.id,
         ChatThreadSchema.title,
         ChatThreadSchema.createdAt,
+        ChatThreadSchema.visibility,
+        ChatThreadSchema.userId,
+        ChatThreadSchema.projectId
       )
       .orderBy(desc(sql`last_message_at`));
 
-    return threadWithLatestMessage.map((row) => {
-      return {
-        id: row.threadId,
-        title: row.title,
-        userId: row.userId,
-        projectId: row.projectId,
-        createdAt: row.createdAt,
-      };
-    });
+    return threadWithLatestMessage.map((row) => ({
+      id: row.threadId,
+      title: row.title,
+      userId: row.userId,
+      projectId: row.projectId,
+      visibility: row.visibility,
+      createdAt: row.createdAt,
+    }));
   },
 
   updateThread: async (
@@ -165,6 +177,7 @@ export const pgChatRepository: ChatRepository = {
       .set({
         projectId: thread.projectId,
         title: thread.title,
+        visibility: thread.visibility,
       })
       .where(eq(ChatThreadSchema.id, id))
       .returning();

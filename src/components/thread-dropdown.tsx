@@ -2,9 +2,10 @@
 import { deleteThreadAction, updateThreadAction } from "@/app/api/chat/actions";
 import { appStore } from "@/app/store";
 import { useLatest } from "@/hooks/use-latest";
-import { Loader, PencilLine, Trash, WandSparkles } from "lucide-react";
+import { Loader, PencilLine, Trash, WandSparkles, Share2, CheckCircle, Lock, Globe, ChevronDown, MoreHorizontal } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { type PropsWithChildren, useState } from "react";
+import { useChatVisibility } from "@/hooks/use-chat-visibility";
 import { toast } from "sonner";
 import { mutate } from "swr";
 import { safe } from "ts-safe";
@@ -29,6 +30,19 @@ import {
   CommandList,
   CommandSeparator,
 } from "ui/command";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuPortal,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "ui/dropdown-menu";
+import { CheckCircleFillIcon, GlobeIcon, LockIcon, ShareIcon, TrashIcon } from "@/components/icons";
+
 
 type Props = PropsWithChildren<{
   threadId: string;
@@ -51,10 +65,17 @@ export function ThreadDropdown({
   const push = useLatest(router.push);
 
   const currentThreadId = appStore((state) => state.currentThreadId);
+  const currentThread = appStore((state) => 
+    state.threadList.find(t => t.id === threadId)
+  );
 
   const [open, setOpen] = useState(false);
-
   const [isDeleting, setIsDeleting] = useState(false);
+  
+  const { visibilityType, setVisibilityType } = useChatVisibility({
+    chatId: threadId,
+    initialVisibility: currentThread?.visibility || 'private',
+  });
 
   const handleUpdate = async (title: string) => {
     safe()
@@ -98,58 +119,85 @@ export function ThreadDropdown({
   };
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>{children}</PopoverTrigger>
-      <PopoverContent className=" p-0 w-[220px]" side={side} align={align}>
-        <Command>
-          <div className="flex items-center gap-2 px-2 py-1 text-sm pt-2 font-semibold">
-            Chat
-          </div>
-          <CommandSeparator />
-          <CommandList>
-            <CommandGroup>
-              <CommandItem className="cursor-pointer">
-                <CreateProjectWithThreadPopup
-                  threadId={threadId}
-                  onClose={() => setOpen(false)}
-                >
-                  <div className="flex items-center gap-2 w-full">
-                    <WandSparkles className="text-foreground" />
-                    <span className="mr-4">Summarize as Project</span>
-                  </div>
-                </CreateProjectWithThreadPopup>
-              </CommandItem>
-              <CommandItem className="cursor-pointer p-0">
-                <UpdateThreadNameDialog
-                  initialTitle={beforeTitle ?? ""}
-                  onUpdated={(title) => handleUpdate(title)}
-                >
-                  <div className="flex items-center gap-2 w-full px-2 py-1 rounded">
-                    <PencilLine className="text-foreground" />
-                    <span className="mr-4">Re Name</span>
-                  </div>
-                </UpdateThreadNameDialog>
-              </CommandItem>
-            </CommandGroup>
-            <CommandSeparator />
-            <CommandGroup>
-              <CommandItem disabled={isDeleting} className="cursor-pointer p-0">
-                <div
-                  className="flex items-center gap-2 w-full px-2 py-1 rounded"
-                  onClick={handleDelete}
-                >
-                  <Trash className="text-destructive" />
-                  <span className="text-destructive">Delete Chat</span>
-                  {isDeleting && (
-                    <Loader className="ml-auto h-4 w-4 animate-spin" />
-                  )}
+    <DropdownMenu open={open} onOpenChange={setOpen}>
+      <DropdownMenuTrigger asChild>
+        {children}
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="w-[220px]" align={align} side={side}>
+        <DropdownMenuItem asChild>
+          <CreateProjectWithThreadPopup
+            threadId={threadId}
+            onClose={() => setOpen(false)}
+          >
+            <div className="flex items-center gap-2 w-full cursor-pointer">
+              <WandSparkles className="h-4 w-4" />
+              <span>Summarize as Project</span>
+            </div>
+          </CreateProjectWithThreadPopup>
+        </DropdownMenuItem>
+        
+        <DropdownMenuItem asChild>
+          <UpdateThreadNameDialog
+            initialTitle={beforeTitle ?? ""}
+            onUpdated={(title) => handleUpdate(title)}
+          >
+            <div className="flex items-center gap-2 w-full cursor-pointer">
+              <PencilLine className="h-4 w-4" />
+              <span>Rename</span>
+            </div>
+          </UpdateThreadNameDialog>
+        </DropdownMenuItem>
+
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger className="cursor-pointer">
+            <Share2 className="h-4 w-4" />
+            <span>Share</span>
+          </DropdownMenuSubTrigger>
+          <DropdownMenuPortal>
+            <DropdownMenuSubContent>
+              <DropdownMenuItem
+                className="cursor-pointer flex-row justify-between"
+                onClick={() => {
+                  setVisibilityType('private');
+                }}
+              >
+                <div className="flex items-center gap-2">
+                  <Lock className="h-4 w-4" />
+                  <span>Private</span>
                 </div>
-              </CommandItem>
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
+                {visibilityType === 'private' && <CheckCircle className="h-4 w-4" />}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="cursor-pointer flex-row justify-between"
+                onClick={() => {
+                  setVisibilityType('public');
+                }}
+              >
+                <div className="flex items-center gap-2">
+                  <Globe className="h-4 w-4" />
+                  <span>Public</span>
+                </div>
+                {visibilityType === 'public' && <CheckCircle className="h-4 w-4" />}
+              </DropdownMenuItem>
+            </DropdownMenuSubContent>
+          </DropdownMenuPortal>
+        </DropdownMenuSub>
+
+        <DropdownMenuSeparator />
+        
+        <DropdownMenuItem
+          className="cursor-pointer text-destructive focus:bg-destructive/15 focus:text-destructive dark:text-red-500"
+          onSelect={handleDelete}
+          disabled={isDeleting}
+        >
+          <Trash className="h-4 w-4 mr-2" />
+          <span>Delete Chat</span>
+          {isDeleting && (
+            <Loader className="ml-auto h-4 w-4 animate-spin" />
+          )}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 

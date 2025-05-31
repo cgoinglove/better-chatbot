@@ -9,6 +9,7 @@ export type ChatThread = {
   userId: string;
   createdAt: Date;
   projectId: string | null;
+  visibility: 'private' | 'public';
 };
 
 export type Project = {

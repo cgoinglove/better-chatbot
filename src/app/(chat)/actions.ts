@@ -8,7 +8,6 @@ import {
   getMessageById,
   updateChatVisiblityById,
 } from "@/lib/db/queries";
-import type { VisibilityType } from "@/components/visibility-selector";
 import { myProvider } from "@/lib/ai/models";
 
 export async function saveChatModelAsCookie(model: string) {
@@ -55,7 +54,16 @@ export async function updateChatVisibility({
   visibility,
 }: {
   chatId: string;
-  visibility: VisibilityType;
+  visibility: 'private' | 'public';
 }) {
-  await updateChatVisiblityById({ chatId, visibility });
+  try {
+    const result = await updateChatVisiblityById({
+      chatId,
+      visibility,
+    });
+    return result;
+  } catch (error) {
+    console.error('Failed to update chat visibility:', error);
+    throw error;
+  }
 }

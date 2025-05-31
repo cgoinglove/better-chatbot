@@ -2,6 +2,13 @@
 
 This document tracks the features being ported from Vercel's AI Chatbot reference implementation to MCP Client Chatbot.
 
+## Inbox Notes to be incorporated into this doc in this commit and then removed:
+
+- the artifact port is nice but in the Artifact view, the chat to the side is overflowing width and looks bad.
+- the input does not really fit. the voice button overlays the
+
+
+
 ## Current State
 
 ### Authentication
