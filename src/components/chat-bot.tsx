@@ -53,7 +53,6 @@ type Props = {
 };
 
 export default function ChatBot({ threadId, initialMessages, slots }: Props) {
-  // console.log('[ChatBot] Initializing with:', { threadId, initialMessagesCount: initialMessages.length });
   const containerRef = useRef<HTMLDivElement>(null);
 
   const [
@@ -74,7 +73,6 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
     ]),
   );
 
-
   const isArtifactVisible = useArtifactSelector((state) => state.isVisible);
 
   const {
@@ -93,26 +91,12 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
     api: "/api/chat",
     initialMessages,
     experimental_prepareRequestBody: ({ messages }) => {
-      // console.log('[ChatBot] experimental_prepareRequestBody called:', {
-      //   threadId,
-      //   latestRefClone: JSON.parse(JSON.stringify(latestRef.current)), // Deep clone to avoid circular refs
-      //   storeValues: { toolChoice, model, allowedAppDefaultToolkit, allowedMcpServers },
-      //   messages: messages.length,
-      //   lastMessage: messages.at(-1),
-      // });
-
       window.history.replaceState({}, "", `/chat/${threadId}`);
       const lastMessage = messages.at(-1)!;
       vercelAISdkV4ToolInvocationIssueCatcher(lastMessage);
 
       // Ensure latestRef is synced
       if (!latestRef.current || !latestRef.current.threadId) {
-        // console.warn('latestRef.current is missing or has no threadId, re-syncing...', {
-        //   current: latestRef.current,
-        //   threadId,
-        //   model,
-        //   toolChoice,
-        // });
         latestRef.current = {
           toolChoice,
           model,
@@ -132,21 +116,17 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
         message: lastMessage,
       };
 
-      // console.log('Prepared request:', request);
       return request;
     },
     sendExtraMessageFields: true,
     generateId: generateUUID,
     experimental_throttle: 100,
     onFinish() {
-      // console.log('[ChatBot] onFinish called:', { threadId, threadList });
-      // Only mutate if we have a threadList and the first thread id doesn't match
       if (threadList?.length > 0 && threadList[0].id !== threadId) {
         mutate("threads");
       }
     },
     onError: (error) => {
-      // console.error('[ChatBot] Error occurred:', { error, latestRef: latestRef.current });
       toast.error(
         truncateString(error.message, 100) ||
           "An error occured, please try again!",
@@ -156,8 +136,6 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
 
   const [isDeleteThreadPopupOpen, setIsDeleteThreadPopupOpen] = useState(false);
 
-  // console.log('[ChatBot] Store values:', { toolChoice, model, allowedAppDefaultToolkit, allowedMcpServers, threadId });
-
   const latestRef = useLatest({
     toolChoice,
     model,
@@ -166,8 +144,6 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
     messages,
     threadId,
   });
-
-  // console.log('[ChatBot] latestRef initialized:', latestRef.current);
 
   const isLoading = useMemo(
     () => status === "streaming" || status === "submitted",
@@ -280,7 +256,6 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
       event?: { preventDefault?: () => void },
       chatRequestOptions?: ChatRequestOptions,
     ) => {
-      // console.log('[ChatBot] handleFormSubmit called:', { input, latestRef: latestRef.current });
       if (event?.preventDefault) event.preventDefault();
       if (isLoading) {
         stop();
