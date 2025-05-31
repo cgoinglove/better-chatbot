@@ -53,3 +53,5 @@ local-data
 .cursor
 *.ignore
 .mcp-config.json
+
+data/
