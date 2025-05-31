@@ -10,6 +10,8 @@ Be concise not flowery. This is our retro. This is how we learn and improve.
 
 Consider the session, how things began, what went wrong until it was right, and add prompting to instruct future AI tools how to skip the pain.
 
+Pay SPECIAL attention to any explicit corrections the user had to make in your session and prioritize based on how many times they corrected you. Include that quantitative info and ordering and be sure to effectively capture the users corrections nearly verbatim, if fragments, in order to preserve the spirit and intensity of the corrections.
+
 # Session 1
 
 ## Task: Restore Projects UI in Sidebar

@@ -37,11 +37,11 @@ This document tracks the features being ported from Vercel's AI Chatbot referenc
 #### Projects UI
 
 - [x] Projects UI components
-- [ ] MCP Configuration (admin-only access)
+- [x] MCP Configuration (admin-only access)
 - [ ] Temporary chat functionality
 - [ ] Command menu
 - [ ] Sharing features (public/anonymous access)
-- [ ] Guest access functionality
+- ~~Guest access functionality~~
 
 #### Artifacts System
 
