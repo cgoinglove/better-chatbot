@@ -38,7 +38,7 @@ export async function POST(request: Request) {
     );
 
     const result = streamText({
-      model: myProvider.languageModel(modelName),
+      model: myProvider.getModel(modelName),
       system: SUMMARIZE_PROMPT,
       experimental_transform: smoothStream({ chunking: "word" }),
       messages,

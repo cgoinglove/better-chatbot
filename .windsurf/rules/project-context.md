@@ -29,8 +29,6 @@ Our approach to porting this feature has been:
 
 Remember that this project is backed by git and git has answers to questions about what works on main and what we changed and broke since.
 
-Your code seems to lead you to do things in small increments but sometimes a file has TONS of TS issues and you just need to use a larger window for reading/writing fixes otherwise you will be fixing/breaking/fixing forever. Be intelligent about when and how to fix TS issues. Not tiny incrementalist. Find themes of breakage and root causes.
-
 I will run the dev server, not you.
 
 db is under lib/db/pg/db.pg.ts rather than where you would ordinarily look.

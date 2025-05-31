@@ -46,7 +46,7 @@ export const requestSuggestions = ({
         suggestedSentence: string;
         description: string;
       }>({
-        model: myProvider.languageModel("artifact-model"),
+        model: myProvider.getModel("artifact-model"),
         system:
           "You are a help writing assistant. Given a piece of writing, please offer suggestions to improve the piece of writing and describe the change. It is very important for the edits to contain full sentences instead of just words. Max 5 suggestions.",
         prompt: doc.content,

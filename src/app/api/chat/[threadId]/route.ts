@@ -20,7 +20,7 @@ export async function POST(
   if (!thread) {
     const title = await generateTitleFromUserMessageAction({
       message: messages[0],
-      model: myProvider.languageModel("chat-model-small"),
+      model: myProvider.getModel("chat-model-small"),
     });
     thread = await chatRepository.insertThread({
       id: threadId,

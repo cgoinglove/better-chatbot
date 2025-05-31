@@ -101,7 +101,7 @@ export async function generateExampleToolSchemaAction(options: {
   toolInfo: MCPToolInfo;
   prompt?: string;
 }) {
-  const model = myProvider.languageModel(options.modelName);
+  const model = myProvider.getModel(options.modelName);
 
   const schema = jsonSchema(
     toAny({

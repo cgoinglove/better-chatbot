@@ -69,7 +69,7 @@ export async function POST(request: Request) {
       projectId,
     } = chatApiSchemaRequestBodySchema.parse(json);
 
-    const model = myProvider.languageModel(modelName);
+    const model = myProvider.getModel(modelName);
 
     let thread = await chatRepository.selectThreadDetails(id);
 

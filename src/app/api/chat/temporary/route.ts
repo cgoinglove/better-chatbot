@@ -21,7 +21,7 @@ export async function POST(request: Request) {
       model: string;
     };
 
-    const model = myProvider.languageModel(modelName);
+    const model = myProvider.getModel(modelName);
 
     const userPreferences =
       (await userRepository.getPreferences(session.user.id)) || undefined;
