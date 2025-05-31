@@ -49,6 +49,49 @@ Pay SPECIAL attention to any explicit corrections the user had to make in your s
 
 ### For Future AI
 
+- When porting features, focus on preserving project-specific functionality
+- Look at git history if components appear to be missing or not working
+
+# Session 2
+
+## Task: Restore Command Menu and Temporary Chat
+
+### What Happened
+
+1. **Missing UI Components Identified**:
+
+   - Discovered that the chat layout was completely rewritten from a client component to a server component
+   - Multiple UI components were removed in the process:
+     - `KeyboardShortcutsPopup`
+     - `ChatPreferencesPopup`
+     - Event listeners for keyboard shortcuts
+     - `TemporaryChat` integration
+
+2. **Investigation Process**:
+
+   - Initially searched for component references in current branch (unproductive)
+   - User directed to check git diff against main branch, which revealed:
+     - Original client-side layout with all required components
+     - Event listeners for keyboard shortcuts
+     - Dialog components for shortcuts and preferences
+
+3. **Resolution**:
+   - Restored the client-side layout from main branch
+   - Confirmed that Cmd+K now opens the temporary chat
+   - Verified that keyboard shortcuts and preference dialogs are working
+   - Updated feature documentation to mark these items as completed
+
+### Lessons Learned
+
+- When features disappear during port/migration, check git history first
+- Look at main branch for working reference implementation
+- Focus on big structural changes (client → server component conversion)
+
+### For Future AI
+
+- To debug missing UI elements: "Check git diff against main. Look at things that were removed."
+- Don't get lost in component details - look for structural changes first
+
 - Start by searching for existing implementations before adding new code
 - Check both component locations (components/ and components/layouts/)
 - Look for TODO comments or disabled code that might be relevant

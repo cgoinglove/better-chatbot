@@ -34,12 +34,11 @@ This document tracks the features being ported from Vercel's AI Chatbot referenc
 
 ### Phase 0 – Pre-Merge Essentials (THIS branch)
 
-#### Projects UI
+#### App UI
 
 - [x] Projects UI components
 - [x] MCP Configuration (admin-only access)
-- [ ] Temporary chat functionality
-- [ ] Command menu
+- [x] Temporary chat functionality via cmd+k
 - [ ] Sharing features (public/anonymous access)
 - ~~Guest access functionality~~
 
@@ -64,8 +63,8 @@ This document tracks the features being ported from Vercel's AI Chatbot referenc
 #### Menu Features (ai-chatbot parity/must-have)
 
 - [ ] Complete voting system
-- [ ] Chat preferences dialog
-- [ ] Keyboard shortcuts dialog
+- [x] Chat preferences dialog
+- [x] Keyboard shortcuts dialog
 - [ ] Auto guest avatar
 
 #### Model Registry
