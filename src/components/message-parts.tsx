@@ -38,7 +38,7 @@ import { SelectModel } from "./select-model";
 import { chatModels } from "lib/ai/models";
 import {
   deleteMessageAction,
-  deleteMessagesByChatIdAfterTimestampAction,
+  deleteMessagesByThreadIdAfterTimestampAction,
 } from "@/app/api/chat/actions";
 
 import { toast } from "sonner";
@@ -262,12 +262,12 @@ export const UserMessagePart = ({
 
 const modelList = [
   {
-    provider: 'OpenAI',
-    models: chatModels.map(model => ({
+    provider: "OpenAI",
+    models: chatModels.map((model) => ({
       name: model.id,
-      isToolCallUnsupported: false
-    }))
-  }
+      isToolCallUnsupported: false,
+    })),
+  },
 ];
 
 export const AssistMessagePart = ({
@@ -304,7 +304,7 @@ export const AssistMessagePart = ({
     safe(() => setIsLoading(true))
       .ifOk(() =>
         threadId
-          ? deleteMessagesByChatIdAfterTimestampAction(message.id)
+          ? deleteMessagesByThreadIdAfterTimestampAction(message.id)
           : Promise.resolve(),
       )
       .ifOk(() =>

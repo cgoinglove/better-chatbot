@@ -1,7 +1,7 @@
 import "server-only";
 
 import { genSaltSync, hashSync } from "bcrypt-ts";
-import { and, asc, desc, eq, gt } from 'drizzle-orm';
+import { and, asc, desc, eq, gt } from "drizzle-orm";
 
 import {
   UserSchema,
@@ -18,7 +18,7 @@ import {
   type SuggestionEntity,
 } from "./pg/schema.pg";
 import type { ArtifactKind } from "@/components/artifact";
-import { pgDb as db } from './pg/db.pg';
+import { pgDb as db } from "./pg/db.pg";
 
 // Optionally, if not using email/pass login, you can
 // use the Drizzle adapter for Auth.js / NextAuth
@@ -138,24 +138,21 @@ export async function saveMessages(
   messages: ChatMessageEntity[],
 ): Promise<Array<ChatMessageEntity>> {
   try {
-    return await db
-      .insert(ChatMessageSchema)
-      .values(messages)
-      .returning();
+    return await db.insert(ChatMessageSchema).values(messages).returning();
   } catch (error) {
     console.error("Failed to save messages in database");
     throw error;
   }
 }
 
-export async function getMessagesByChatId({
-  chatId,
-}: { chatId: string }): Promise<Array<ChatMessageEntity>> {
+export async function getMessagesByThreadId({
+  threadId,
+}: { threadId: string }): Promise<Array<ChatMessageEntity>> {
   try {
     return await db
       .select()
       .from(ChatMessageSchema)
-      .where(eq(ChatMessageSchema.threadId, chatId))
+      .where(eq(ChatMessageSchema.threadId, threadId))
       .orderBy(asc(ChatMessageSchema.createdAt));
   } catch (error) {
     console.error("Failed to get messages by chat id from database");
@@ -164,11 +161,11 @@ export async function getMessagesByChatId({
 }
 
 export async function voteMessage({
-  chatId,
+  threadId,
   messageId,
   type,
 }: {
-  chatId: string;
+  threadId: string;
   messageId: string;
   type: "up" | "down";
 }): Promise<Array<Vote>> {
@@ -176,12 +173,12 @@ export async function voteMessage({
     await db
       .insert(VoteSchema)
       .values({
-        chatId,
+        threadId,
         messageId,
         isUpvoted: type === "up",
       })
       .onConflictDoUpdate({
-        target: [VoteSchema.chatId, VoteSchema.messageId],
+        target: [VoteSchema.threadId, VoteSchema.messageId],
         set: {
           isUpvoted: type === "up",
         },
@@ -191,19 +188,25 @@ export async function voteMessage({
       .select()
       .from(VoteSchema)
       .where(
-        and(eq(VoteSchema.chatId, chatId), eq(VoteSchema.messageId, messageId)),
+        and(
+          eq(VoteSchema.threadId, threadId),
+          eq(VoteSchema.messageId, messageId),
+        ),
       );
   } catch (error) {
-    console.error('Failed to vote message in database');
+    console.error("Failed to vote message in database");
     throw error;
   }
 }
 
-export async function getVotesByChatId({
+export async function getVotesByThreadId({
   id,
 }: { id: string }): Promise<Array<Vote>> {
   try {
-    return await db.select().from(VoteSchema).where(eq(VoteSchema.chatId, id));
+    return await db
+      .select()
+      .from(VoteSchema)
+      .where(eq(VoteSchema.threadId, id));
   } catch (error) {
     console.error("Failed to get votes by chat id from database");
     throw error;
@@ -232,7 +235,7 @@ export async function saveDocument({
           title,
           content,
           kind,
-          updatedAt: new Date()
+          updatedAt: new Date(),
         })
         .where(eq(DocumentSchema.id, id))
         .returning();
@@ -246,7 +249,7 @@ export async function saveDocument({
           content,
           kind,
           createdAt: new Date(),
-          updatedAt: new Date()
+          updatedAt: new Date(),
         })
         .returning();
     }
@@ -256,7 +259,9 @@ export async function saveDocument({
   }
 }
 
-export async function getDocumentsByUserId({ id }: { id: string }): Promise<Array<Document>> {
+export async function getDocumentsByUserId({
+  id,
+}: { id: string }): Promise<Array<Document>> {
   try {
     return await db
       .select()
@@ -269,7 +274,9 @@ export async function getDocumentsByUserId({ id }: { id: string }): Promise<Arra
   }
 }
 
-export async function getDocumentById({ id }: { id: string }): Promise<Array<Document>> {
+export async function getDocumentById({
+  id,
+}: { id: string }): Promise<Array<Document>> {
   try {
     return await db
       .select()
@@ -356,11 +363,11 @@ export async function getMessageById({
   }
 }
 
-export async function deleteMessagesByChatIdAfterTimestamp({
-  chatId,
+export async function deleteMessagesByThreadIdAfterTimestamp({
+  threadId,
   timestamp,
 }: {
-  chatId: string;
+  threadId: string;
   timestamp: Date;
 }): Promise<Array<ChatMessageEntity>> {
   try {
@@ -368,34 +375,34 @@ export async function deleteMessagesByChatIdAfterTimestamp({
       .delete(ChatMessageSchema)
       .where(
         and(
-          eq(ChatMessageSchema.threadId, chatId),
+          eq(ChatMessageSchema.threadId, threadId),
           gt(ChatMessageSchema.createdAt, timestamp),
         ),
       )
       .returning();
   } catch (error) {
     console.error(
-      'Failed to delete messages by chat id after timestamp from database',
+      "Failed to delete messages by chat id after timestamp from database",
     );
     throw error;
   }
 }
 
 export async function updateChatVisiblityById({
-  chatId,
+  threadId,
   visibility,
 }: {
-  chatId: string;
-  visibility: 'private' | 'public';
+  threadId: string;
+  visibility: "private" | "public";
 }): Promise<Array<ChatThreadEntity>> {
   try {
     return await db
       .update(ChatThreadSchema)
       .set({ visibility })
-      .where(eq(ChatThreadSchema.id, chatId))
+      .where(eq(ChatThreadSchema.id, threadId))
       .returning();
   } catch (error) {
-    console.error('Failed to update chat visibility by id in database');
+    console.error("Failed to update chat visibility by id in database");
     throw error;
   }
 }

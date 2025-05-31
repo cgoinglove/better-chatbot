@@ -1,22 +1,22 @@
-import { config } from 'dotenv';
-import postgres from 'postgres';
+import { config } from "dotenv";
+import postgres from "postgres";
 import {
   chat,
   message,
   messageDeprecated,
   vote,
   voteDeprecated,
-} from '../schema';
-import { drizzle } from 'drizzle-orm/postgres-js';
-import { inArray } from 'drizzle-orm';
-import { appendResponseMessages, type UIMessage } from 'ai';
+} from "../schema";
+import { drizzle } from "drizzle-orm/postgres-js";
+import { inArray } from "drizzle-orm";
+import { appendResponseMessages, type UIMessage } from "ai";
 
 config({
-  path: '.env.local',
+  path: ".env.local",
 });
 
 if (!process.env.POSTGRES_URL) {
-  throw new Error('POSTGRES_URL environment variable is not set');
+  throw new Error("POSTGRES_URL environment variable is not set");
 }
 
 const client = postgres(process.env.POSTGRES_URL);
@@ -27,7 +27,7 @@ const INSERT_BATCH_SIZE = 100; // Insert 100 messages at a time
 
 type NewMessageInsert = {
   id: string;
-  chatId: string;
+  threadId: string;
   parts: any[];
   role: string;
   attachments: any[];
@@ -36,7 +36,7 @@ type NewMessageInsert = {
 
 type NewVoteInsert = {
   messageId: string;
-  chatId: string;
+  threadId: string;
   isUpvoted: boolean;
 };
 
@@ -47,18 +47,18 @@ async function createNewTable() {
   // Process chats in batches
   for (let i = 0; i < chats.length; i += BATCH_SIZE) {
     const chatBatch = chats.slice(i, i + BATCH_SIZE);
-    const chatIds = chatBatch.map((chat) => chat.id);
+    const threadIds = chatBatch.map((chat) => chat.id);
 
     // Fetch all messages and votes for the current batch of chats in bulk
     const allMessages = await db
       .select()
       .from(messageDeprecated)
-      .where(inArray(messageDeprecated.chatId, chatIds));
+      .where(inArray(messageDeprecated.threadId, threadIds));
 
     const allVotes = await db
       .select()
       .from(voteDeprecated)
-      .where(inArray(voteDeprecated.chatId, chatIds));
+      .where(inArray(voteDeprecated.threadId, threadIds));
 
     // Prepare batches for insertion
     const newMessagesToInsert: NewMessageInsert[] = [];
@@ -70,8 +70,8 @@ async function createNewTable() {
       console.info(`Processed ${processedCount}/${chats.length} chats`);
 
       // Filter messages and votes for this specific chat
-      const messages = allMessages.filter((msg) => msg.chatId === chat.id);
-      const votes = allVotes.filter((v) => v.chatId === chat.id);
+      const messages = allMessages.filter((msg) => msg.threadId === chat.id);
+      const votes = allVotes.filter((v) => v.threadId === chat.id);
 
       // Group messages into sections
       const messageSection: Array<UIMessage> = [];
@@ -80,7 +80,7 @@ async function createNewTable() {
       for (const message of messages) {
         const { role } = message;
 
-        if (role === 'user' && messageSection.length > 0) {
+        if (role === "user" && messageSection.length > 0) {
           messageSections.push([...messageSection]);
           messageSection.length = 0;
         }
@@ -111,19 +111,19 @@ async function createNewTable() {
 
           const projectedUISection = uiSection
             .map((message) => {
-              if (message.role === 'user') {
+              if (message.role === "user") {
                 return {
                   id: message.id,
-                  chatId: chat.id,
-                  parts: [{ type: 'text', text: message.content }],
+                  threadId: chat.id,
+                  parts: [{ type: "text", text: message.content }],
                   role: message.role,
                   createdAt: message.createdAt,
                   attachments: [],
                 } as NewMessageInsert;
-              } else if (message.role === 'assistant') {
+              } else if (message.role === "assistant") {
                 return {
                   id: message.id,
-                  chatId: chat.id,
+                  threadId: chat.id,
                   parts: message.parts || [],
                   role: message.role,
                   createdAt: message.createdAt,
@@ -138,12 +138,12 @@ async function createNewTable() {
           for (const msg of projectedUISection) {
             newMessagesToInsert.push(msg);
 
-            if (msg.role === 'assistant') {
+            if (msg.role === "assistant") {
               const voteByMessage = votes.find((v) => v.messageId === msg.id);
               if (voteByMessage) {
                 newVotesToInsert.push({
                   messageId: msg.id,
-                  chatId: msg.chatId,
+                  threadId: msg.threadId,
                   isUpvoted: voteByMessage.isUpvoted,
                 });
               }
@@ -162,7 +162,7 @@ async function createNewTable() {
         // Ensure all required fields are present
         const validMessageBatch = messageBatch.map((msg) => ({
           id: msg.id,
-          chatId: msg.chatId,
+          threadId: msg.threadId,
           parts: msg.parts,
           role: msg.role,
           attachments: msg.attachments,
@@ -187,10 +187,10 @@ async function createNewTable() {
 
 createNewTable()
   .then(() => {
-    console.info('Script completed successfully');
+    console.info("Script completed successfully");
     process.exit(0);
   })
   .catch((error) => {
-    console.error('Script failed:', error);
+    console.error("Script failed:", error);
     process.exit(1);
   });

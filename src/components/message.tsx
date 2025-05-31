@@ -25,7 +25,7 @@ import { Weather } from "./weather";
 // Combine Props from message.original.tsx and message.inbound.tsx
 interface Props {
   message: UIMessage;
-  chatId?: string; // From inbound (replaces threadId)
+  threadId?: string; // From inbound (replaces threadId)
   threadId?: string; // From original
   isLoading: boolean;
   isLastMessage?: boolean; // From original
@@ -57,7 +57,7 @@ const Skeleton = () => (
 
 const PurePreviewMessage = ({
   message,
-  chatId,
+  threadId,
   // threadId,
   setMessages,
   isLoading,
@@ -252,7 +252,7 @@ const PurePreviewMessage = ({
             {!isReadonly && (
               <MessageActions
                 key={`action-${message.id}`}
-                chatId={chatId!}
+                threadId={threadId!}
                 message={message}
                 vote={vote}
                 isLoading={isLoading}
@@ -266,24 +266,21 @@ const PurePreviewMessage = ({
 };
 
 export const PreviewMessage = Object.assign(
-  memo(
-    PurePreviewMessage,
-    (prevProps, nextProps) => {
-      // Combined equality checks from both implementations
-      return (
-        equal(prevProps.message, nextProps.message) &&
-        prevProps.isLoading === nextProps.isLoading &&
-        prevProps.isLastMessage === nextProps.isLastMessage &&
-        prevProps.isError === nextProps.isError &&
-        prevProps.vote?.isUpvoted === nextProps.vote?.isUpvoted &&
-        prevProps.isReadonly === nextProps.isReadonly &&
-        prevProps.onProxyToolCall === nextProps.onProxyToolCall &&
-        prevProps.status === nextProps.status &&
-        prevProps.messageIndex === nextProps.messageIndex
-      );
-    },
-  ),
-  { Skeleton }
+  memo(PurePreviewMessage, (prevProps, nextProps) => {
+    // Combined equality checks from both implementations
+    return (
+      equal(prevProps.message, nextProps.message) &&
+      prevProps.isLoading === nextProps.isLoading &&
+      prevProps.isLastMessage === nextProps.isLastMessage &&
+      prevProps.isError === nextProps.isError &&
+      prevProps.vote?.isUpvoted === nextProps.vote?.isUpvoted &&
+      prevProps.isReadonly === nextProps.isReadonly &&
+      prevProps.onProxyToolCall === nextProps.onProxyToolCall &&
+      prevProps.status === nextProps.status &&
+      prevProps.messageIndex === nextProps.messageIndex
+    );
+  }),
+  { Skeleton },
 );
 
 const role = "assistant";

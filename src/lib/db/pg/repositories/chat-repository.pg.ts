@@ -28,7 +28,7 @@ export const pgChatRepository: ChatRepository = {
         userId: thread.userId,
         projectId: thread.projectId,
         id: thread.id,
-        visibility: thread.visibility || 'private',
+        visibility: thread.visibility || "private",
       })
       .returning();
     return result;
@@ -154,7 +154,7 @@ export const pgChatRepository: ChatRepository = {
         ChatThreadSchema.createdAt,
         ChatThreadSchema.visibility,
         ChatThreadSchema.userId,
-        ChatThreadSchema.projectId
+        ChatThreadSchema.projectId,
       )
       .orderBy(desc(sql`last_message_at`));
 
@@ -225,7 +225,7 @@ export const pgChatRepository: ChatRepository = {
     return result[0] as ChatMessage;
   },
 
-  deleteMessagesByChatIdAfterTimestamp: async (
+  deleteMessagesByThreadIdAfterTimestamp: async (
     messageId: string,
   ): Promise<void> => {
     const [message] = await db

@@ -358,7 +358,7 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
               onStop={stop}
               append={append}
               isLoading={isLoading}
-              chatId={threadId}
+              threadId={threadId}
               messages={messages}
             />
           }
@@ -373,7 +373,7 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
       </div>
 
       <Artifact
-        chatId={threadId}
+        threadId={threadId}
         input={input}
         setInput={setInput}
         status={status}

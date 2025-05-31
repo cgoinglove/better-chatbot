@@ -150,39 +150,37 @@ export type ChatThreadEntity = typeof ChatThreadSchema.$inferSelect;
 export type ChatMessageEntity = typeof ChatMessageSchema.$inferSelect;
 export type ProjectEntity = typeof ProjectSchema.$inferSelect;
 export const VoteSchema = pgTable(
-  'vote',
+  "vote",
   {
-    chatId: uuid('chat_id')
+    threadId: uuid("thread_id")
       .notNull()
       .references(() => ChatThreadSchema.id),
-    messageId: uuid('message_id')
-      .notNull()
-      .references(() => ChatMessageSchema.id),
-    isUpvoted: boolean('is_upvoted').notNull(),
+    messageId: text("message_id").notNull(),
+    isUpvoted: boolean("is_upvoted").notNull(),
   },
   (table) => ({
-    pk: primaryKey({ columns: [table.chatId, table.messageId] }),
+    pk: primaryKey({ columns: [table.threadId, table.messageId] }),
   }),
 );
 
 export const SuggestionSchema = pgTable(
-  'suggestion',
+  "suggestion",
   {
-    id: uuid('id').notNull().defaultRandom(),
-    createdAt: timestamp('created_at')
+    id: uuid("id").notNull().defaultRandom(),
+    createdAt: timestamp("created_at")
       .notNull()
       .default(sql`CURRENT_TIMESTAMP`),
-    updatedAt: timestamp('updated_at')
+    updatedAt: timestamp("updated_at")
       .notNull()
       .default(sql`CURRENT_TIMESTAMP`),
-    documentId: uuid('document_id')
+    documentId: uuid("document_id")
       .notNull()
       .references(() => DocumentSchema.id),
-    documentCreatedAt: timestamp('document_created_at').notNull(),
-    content: text('content').notNull(),
-    kind: varchar('kind', { enum: ['text', 'code', 'image', 'sheet'] })
+    documentCreatedAt: timestamp("document_created_at").notNull(),
+    content: text("content").notNull(),
+    kind: varchar("kind", { enum: ["text", "code", "image", "sheet"] })
       .notNull()
-      .default('text'),
+      .default("text"),
   },
   (table) => ({
     pk: primaryKey({ columns: [table.id] }),

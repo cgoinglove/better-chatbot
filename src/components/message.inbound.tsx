@@ -21,7 +21,7 @@ import { MessageReasoning } from "./message-reasoning";
 import type { UseChatHelpers } from "@ai-sdk/react";
 
 const PurePreviewMessage = ({
-  chatId,
+  threadId,
   message,
   vote,
   isLoading,
@@ -29,7 +29,7 @@ const PurePreviewMessage = ({
   reload,
   isReadonly,
 }: {
-  chatId: string;
+  threadId: string;
   message: UIMessage;
   vote: Vote | undefined;
   isLoading: boolean;
@@ -217,7 +217,7 @@ const PurePreviewMessage = ({
             {!isReadonly && (
               <MessageActions
                 key={`action-${message.id}`}
-                chatId={chatId}
+                threadId={threadId}
                 message={message}
                 vote={vote}
                 isLoading={isLoading}

@@ -6,14 +6,14 @@ import { ChatRequestOptions, CreateMessage, Message } from "ai";
 import { memo } from "react";
 
 interface SuggestedActionsProps {
-  chatId: string;
+  threadId: string;
   append: (
     message: Message | CreateMessage,
     chatRequestOptions?: ChatRequestOptions,
   ) => Promise<string | null | undefined>;
 }
 
-function PureSuggestedActions({ chatId, append }: SuggestedActionsProps) {
+function PureSuggestedActions({ threadId, append }: SuggestedActionsProps) {
   const suggestedActions = [
     {
       title: "Create a spreadsheet",
@@ -54,7 +54,7 @@ function PureSuggestedActions({ chatId, append }: SuggestedActionsProps) {
           <Button
             variant="ghost"
             onClick={async () => {
-              window.history.replaceState({}, "", `/chat/${chatId}`);
+              window.history.replaceState({}, "", `/chat/${threadId}`);
 
               append({
                 role: "user",

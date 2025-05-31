@@ -4,7 +4,7 @@ import { generateText, type Message } from "ai";
 import { cookies } from "next/headers";
 
 import {
-  deleteMessagesByChatIdAfterTimestamp,
+  deleteMessagesByThreadIdAfterTimestamp,
   getMessageById,
   updateChatVisiblityById,
 } from "@/lib/db/queries";
@@ -43,27 +43,27 @@ export async function generateTitleFromUserMessage({
 export async function deleteTrailingMessages({ id }: { id: string }) {
   const [message] = await getMessageById({ id });
 
-  await deleteMessagesByChatIdAfterTimestamp({
-    chatId: message.threadId, // Fixed: use threadId instead of chatId
+  await deleteMessagesByThreadIdAfterTimestamp({
+    threadId: message.threadId, // Fixed: use threadId instead of threadId
     timestamp: message.createdAt,
   });
 }
 
 export async function updateChatVisibility({
-  chatId,
+  threadId,
   visibility,
 }: {
-  chatId: string;
-  visibility: 'private' | 'public';
+  threadId: string;
+  visibility: "private" | "public";
 }) {
   try {
     const result = await updateChatVisiblityById({
-      chatId,
+      threadId,
       visibility,
     });
     return result;
   } catch (error) {
-    console.error('Failed to update chat visibility:', error);
+    console.error("Failed to update chat visibility:", error);
     throw error;
   }
 }

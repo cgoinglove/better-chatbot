@@ -1,26 +1,26 @@
-'use client';
+"use client";
 
-import { Artifact } from './artifact';
-import { useArtifactSelector } from '@/hooks/use-artifact';
+import { Artifact } from "./artifact";
+import { useArtifactSelector } from "@/hooks/use-artifact";
 
 export function ArtifactWrapper() {
   const isVisible = useArtifactSelector((state) => state.isVisible);
-  
+
   if (!isVisible) return null;
-  
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
       <div className="pointer-events-auto max-w-[90vw] max-h-[90vh] w-full h-full">
         <Artifact
-          chatId=""
+          threadId=""
           input=""
           setInput={(value) => {}}
           status="ready"
           stop={() => Promise.resolve()}
-          append={() => Promise.resolve('')}
+          append={() => Promise.resolve("")}
           messages={[]}
           setMessages={() => {}}
-          reload={() => Promise.resolve('')}
+          reload={() => Promise.resolve("")}
           votes={undefined}
           isReadonly={false}
         />

@@ -1,17 +1,12 @@
 "use client";
 
-import type { UIMessage } from 'ai';
-import { formatDistance } from 'date-fns';
-import { AnimatePresence, motion } from 'framer-motion';
-import {
-  memo,
-  useCallback,
-  useEffect,
-  useState,
-} from 'react';
+import type { UIMessage } from "ai";
+import { formatDistance } from "date-fns";
+import { AnimatePresence, motion } from "framer-motion";
+import { memo, useCallback, useEffect, useState } from "react";
 import useSWR, { useSWRConfig } from "swr";
 import { useDebounceCallback, useWindowSize } from "usehooks-ts";
-import type { Document, VoteEntity } from '@/lib/db/pg/schema.pg';
+import type { Document, VoteEntity } from "@/lib/db/pg/schema.pg";
 import { fetcher } from "@/lib/utils";
 import PromptInput from "./prompt-input";
 import { Toolbar } from "./toolbar";
@@ -52,7 +47,7 @@ export interface UIArtifact {
 }
 
 export function PureArtifact({
-  chatId,
+  threadId,
   input,
   setInput,
   status,
@@ -64,7 +59,7 @@ export function PureArtifact({
   votes,
   isReadonly,
 }: {
-  chatId: string;
+  threadId: string;
   input: string;
   setInput: UseChatHelpers["setInput"];
   status: UseChatHelpers["status"];
@@ -77,8 +72,6 @@ export function PureArtifact({
   isReadonly: boolean;
 }) {
   const { artifact, setArtifact, metadata, setMetadata } = useArtifact();
-  
-
 
   const {
     data: documents,
@@ -259,7 +252,6 @@ export function PureArtifact({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0, transition: { delay: 0.4 } }}
         >
-
           {!isMobile && (
             <motion.div
               className="fixed bg-background h-dvh"
@@ -296,7 +288,6 @@ export function PureArtifact({
                 transition: { duration: 0 },
               }}
             >
-
               <AnimatePresence>
                 {!isCurrentVersion && (
                   <motion.div
@@ -308,9 +299,8 @@ export function PureArtifact({
                 )}
               </AnimatePresence>
               <div className="flex flex-col h-full justify-between items-center gap-4">
-
                 <ArtifactMessages
-                  chatId={chatId}
+                  threadId={threadId}
                   messages={messages}
                   isReadonly={isReadonly}
                   artifactStatus={
@@ -319,7 +309,7 @@ export function PureArtifact({
                 />
                 <form className="flex flex-row gap-2 relative items-end w-full px-4 pb-4">
                   <PromptInput
-                    chatId={chatId}
+                    threadId={threadId}
                     input={input}
                     setInput={setInput}
                     onStop={stop}

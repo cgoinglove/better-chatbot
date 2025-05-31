@@ -26,7 +26,7 @@ import { ToolSelector } from "./tool-selector";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 
 interface PromptInputProps {
-  chatId: string;
+  threadId: string;
   messages?: Array<any>;
   placeholder?: string;
   setInput: (value: string) => void;
@@ -58,7 +58,7 @@ export default function PromptInput({
   isLoading,
   toolDisabled,
   voiceDisabled,
-  chatId,
+  threadId,
   messages = [],
 }: PromptInputProps) {
   const [mcpList, globalModel, appStoreMutate] = appStore(
@@ -159,7 +159,7 @@ export default function PromptInput({
   return (
     <div className="w-full fade-in animate-in flex flex-col gap-4">
       {messages.length === 0 && pastedContents.length === 0 && (
-        <SuggestedActions append={append} chatId={chatId} />
+        <SuggestedActions append={append} threadId={threadId} />
       )}
       <div className="z-10 mx-auto w-full relative">
         <fieldset className="flex w-full min-w-0 max-w-full flex-col px-2">

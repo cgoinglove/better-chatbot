@@ -65,17 +65,18 @@ const PureChatItem = ({
 }: {
   chat: Chat;
   isActive: boolean;
-  onDelete: (chatId: string) => void;
+  onDelete: (threadId: string) => void;
   setOpenMobile: (open: boolean) => void;
 }) => {
   const { visibilityType, setVisibilityType } = useChatVisibility({
-    chatId: chat.id,
+    threadId: chat.id,
     initialVisibility: chat.visibility,
   });
 
   // Simple truncation for long titles to prevent layout issues
-  const displayTitle = chat.title.length > 30 ? chat.title.substring(0, 30) + '...' : chat.title;
-  
+  const displayTitle =
+    chat.title.length > 30 ? chat.title.substring(0, 30) + "..." : chat.title;
+
   return (
     <SidebarMenuItem>
       <SidebarMenuButton asChild isActive={isActive}>
@@ -302,8 +303,8 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
                             key={chat.id}
                             chat={chat}
                             isActive={chat.id === id}
-                            onDelete={(chatId) => {
-                              setDeleteId(chatId);
+                            onDelete={(threadId) => {
+                              setDeleteId(threadId);
                               setShowDeleteDialog(true);
                             }}
                             setOpenMobile={setOpenMobile}
@@ -322,8 +323,8 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
                             key={chat.id}
                             chat={chat}
                             isActive={chat.id === id}
-                            onDelete={(chatId) => {
-                              setDeleteId(chatId);
+                            onDelete={(threadId) => {
+                              setDeleteId(threadId);
                               setShowDeleteDialog(true);
                             }}
                             setOpenMobile={setOpenMobile}
@@ -342,8 +343,8 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
                             key={chat.id}
                             chat={chat}
                             isActive={chat.id === id}
-                            onDelete={(chatId) => {
-                              setDeleteId(chatId);
+                            onDelete={(threadId) => {
+                              setDeleteId(threadId);
                               setShowDeleteDialog(true);
                             }}
                             setOpenMobile={setOpenMobile}
@@ -362,8 +363,8 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
                             key={chat.id}
                             chat={chat}
                             isActive={chat.id === id}
-                            onDelete={(chatId) => {
-                              setDeleteId(chatId);
+                            onDelete={(threadId) => {
+                              setDeleteId(threadId);
                               setShowDeleteDialog(true);
                             }}
                             setOpenMobile={setOpenMobile}
@@ -382,8 +383,8 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
                             key={chat.id}
                             chat={chat}
                             isActive={chat.id === id}
-                            onDelete={(chatId) => {
-                              setDeleteId(chatId);
+                            onDelete={(threadId) => {
+                              setDeleteId(threadId);
                               setShowDeleteDialog(true);
                             }}
                             setOpenMobile={setOpenMobile}

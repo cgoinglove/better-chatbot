@@ -2,7 +2,18 @@
 import { deleteThreadAction, updateThreadAction } from "@/app/api/chat/actions";
 import { appStore } from "@/app/store";
 import { useLatest } from "@/hooks/use-latest";
-import { Loader, PencilLine, Trash, WandSparkles, Share2, CheckCircle, Lock, Globe, ChevronDown, MoreHorizontal } from "lucide-react";
+import {
+  Loader,
+  PencilLine,
+  Trash,
+  WandSparkles,
+  Share2,
+  CheckCircle,
+  Lock,
+  Globe,
+  ChevronDown,
+  MoreHorizontal,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { type PropsWithChildren, useState } from "react";
 import { useChatVisibility } from "@/hooks/use-chat-visibility";
@@ -41,8 +52,13 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "ui/dropdown-menu";
-import { CheckCircleFillIcon, GlobeIcon, LockIcon, ShareIcon, TrashIcon } from "@/components/icons";
-
+import {
+  CheckCircleFillIcon,
+  GlobeIcon,
+  LockIcon,
+  ShareIcon,
+  TrashIcon,
+} from "@/components/icons";
 
 type Props = PropsWithChildren<{
   threadId: string;
@@ -65,16 +81,16 @@ export function ThreadDropdown({
   const push = useLatest(router.push);
 
   const currentThreadId = appStore((state) => state.currentThreadId);
-  const currentThread = appStore((state) => 
-    state.threadList.find(t => t.id === threadId)
+  const currentThread = appStore((state) =>
+    state.threadList.find((t) => t.id === threadId),
   );
 
   const [open, setOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  
+
   const { visibilityType, setVisibilityType } = useChatVisibility({
-    chatId: threadId,
-    initialVisibility: currentThread?.visibility || 'private',
+    threadId: threadId,
+    initialVisibility: currentThread?.visibility || "private",
   });
 
   const handleUpdate = async (title: string) => {
@@ -120,9 +136,7 @@ export function ThreadDropdown({
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
-      <DropdownMenuTrigger asChild>
-        {children}
-      </DropdownMenuTrigger>
+      <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
       <DropdownMenuContent className="w-[220px]" align={align} side={side}>
         <DropdownMenuItem asChild>
           <CreateProjectWithThreadPopup
@@ -135,7 +149,7 @@ export function ThreadDropdown({
             </div>
           </CreateProjectWithThreadPopup>
         </DropdownMenuItem>
-        
+
         <DropdownMenuItem asChild>
           <UpdateThreadNameDialog
             initialTitle={beforeTitle ?? ""}
@@ -158,33 +172,37 @@ export function ThreadDropdown({
               <DropdownMenuItem
                 className="cursor-pointer flex-row justify-between"
                 onClick={() => {
-                  setVisibilityType('private');
+                  setVisibilityType("private");
                 }}
               >
                 <div className="flex items-center gap-2">
                   <Lock className="h-4 w-4" />
                   <span>Private</span>
                 </div>
-                {visibilityType === 'private' && <CheckCircle className="h-4 w-4" />}
+                {visibilityType === "private" && (
+                  <CheckCircle className="h-4 w-4" />
+                )}
               </DropdownMenuItem>
               <DropdownMenuItem
                 className="cursor-pointer flex-row justify-between"
                 onClick={() => {
-                  setVisibilityType('public');
+                  setVisibilityType("public");
                 }}
               >
                 <div className="flex items-center gap-2">
                   <Globe className="h-4 w-4" />
                   <span>Public</span>
                 </div>
-                {visibilityType === 'public' && <CheckCircle className="h-4 w-4" />}
+                {visibilityType === "public" && (
+                  <CheckCircle className="h-4 w-4" />
+                )}
               </DropdownMenuItem>
             </DropdownMenuSubContent>
           </DropdownMenuPortal>
         </DropdownMenuSub>
 
         <DropdownMenuSeparator />
-        
+
         <DropdownMenuItem
           className="cursor-pointer text-destructive focus:bg-destructive/15 focus:text-destructive dark:text-red-500"
           onSelect={handleDelete}
@@ -192,9 +210,7 @@ export function ThreadDropdown({
         >
           <Trash className="h-4 w-4 mr-2" />
           <span>Delete Chat</span>
-          {isDeleting && (
-            <Loader className="ml-auto h-4 w-4 animate-spin" />
-          )}
+          {isDeleting && <Loader className="ml-auto h-4 w-4 animate-spin" />}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

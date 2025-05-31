@@ -10,7 +10,7 @@ import { UIArtifact } from "./artifact";
 import { UseChatHelpers } from "@ai-sdk/react";
 
 interface ArtifactMessagesProps {
-  chatId: string;
+  threadId: string;
   status?: UseChatHelpers["status"];
   votes?: Array<Vote> | undefined;
   messages: Array<UIMessage>;
@@ -21,7 +21,7 @@ interface ArtifactMessagesProps {
 }
 
 function PureArtifactMessages({
-  chatId,
+  threadId,
   status,
   votes,
   messages,
@@ -32,17 +32,14 @@ function PureArtifactMessages({
   const [messagesContainerRef, messagesEndRef] =
     useScrollToBottom<HTMLDivElement>();
 
-
-
   return (
     <div
       ref={messagesContainerRef}
       className="flex flex-col gap-4 h-full items-center overflow-y-scroll px-4 pt-20"
     >
-
       {messages.map((message, index) => (
         <PreviewMessage
-          chatId={chatId}
+          threadId={threadId}
           key={message.id}
           message={message}
           isLoading={

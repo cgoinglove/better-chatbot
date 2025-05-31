@@ -67,10 +67,10 @@ export async function deleteThreadAction(threadId: string) {
   await chatRepository.deleteThread(threadId);
 }
 
-export async function deleteMessagesByChatIdAfterTimestampAction(
+export async function deleteMessagesByThreadIdAfterTimestampAction(
   messageId: string,
 ) {
-  await chatRepository.deleteMessagesByChatIdAfterTimestamp(messageId);
+  await chatRepository.deleteMessagesByThreadIdAfterTimestamp(messageId);
 }
 
 export async function selectThreadListByUserIdAction() {

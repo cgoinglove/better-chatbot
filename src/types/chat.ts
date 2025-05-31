@@ -9,7 +9,7 @@ export type ChatThread = {
   userId: string;
   createdAt: Date;
   projectId: string | null;
-  visibility: 'private' | 'public';
+  visibility: "private" | "public";
 };
 
 export type Project = {
@@ -105,7 +105,7 @@ export type ChatRepository = {
   insertMessage(message: Omit<ChatMessage, "createdAt">): Promise<ChatMessage>;
   upsertMessage(message: Omit<ChatMessage, "createdAt">): Promise<ChatMessage>;
 
-  deleteMessagesByChatIdAfterTimestamp(messageId: string): Promise<void>;
+  deleteMessagesByThreadIdAfterTimestamp(messageId: string): Promise<void>;
 
   deleteNonProjectThreads(userId: string): Promise<void>;
   deleteAllThreads(userId: string): Promise<void>;
