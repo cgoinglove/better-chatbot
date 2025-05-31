@@ -1,6 +1,6 @@
 import { cookies, headers } from "next/headers";
 
-import { AppSidebar } from "@/components/app-sidebar";
+import { AppSidebar } from "@/components/layouts/app-sidebar";
 import { VoiceChatBot } from "@/components/voice-chat-bot";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
@@ -15,7 +15,7 @@ export default async function Layout({
 }: {
   children: React.ReactNode;
 }) {
-  const [session, cookieStore] = await Promise.all([
+  const [, cookieStore] = await Promise.all([
     auth.api.getSession({
       headers: await headers(),
     }),
@@ -30,7 +30,7 @@ export default async function Layout({
         strategy="beforeInteractive"
       />
       <SidebarProvider defaultOpen={!isCollapsed}>
-        <AppSidebar user={session?.user} />
+        <AppSidebar />
         <SidebarInset className="ml-64">
           <div className="flex flex-col h-full w-full relative overflow-hidden">
             {children}
