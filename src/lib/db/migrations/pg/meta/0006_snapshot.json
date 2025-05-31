@@ -1,6 +1,6 @@
 {
-  "id": "e32c4d7d-c587-425b-aec7-a07b2f6de620",
-  "prevId": "db438cdb-7031-4859-badc-0d04f2ef8d81",
+  "id": "cbbd9a65-429f-4217-ab03-8c042ff79403",
+  "prevId": "e32c4d7d-c587-425b-aec7-a07b2f6de620",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -752,19 +752,19 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.vote": {
-      "name": "vote",
+    "public.Vote_v2": {
+      "name": "Vote_v2",
       "schema": "",
       "columns": {
-        "chat_id": {
-          "name": "chat_id",
+        "thread_id": {
+          "name": "thread_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
         "message_id": {
           "name": "message_id",
-          "type": "uuid",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         },
@@ -777,12 +777,12 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "vote_chat_id_chat_thread_id_fk": {
-          "name": "vote_chat_id_chat_thread_id_fk",
-          "tableFrom": "vote",
+        "Vote_v2_thread_id_chat_thread_id_fk": {
+          "name": "Vote_v2_thread_id_chat_thread_id_fk",
+          "tableFrom": "Vote_v2",
           "tableTo": "chat_thread",
           "columnsFrom": [
-            "chat_id"
+            "thread_id"
           ],
           "columnsTo": [
             "id"
@@ -790,9 +790,9 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "vote_message_id_chat_message_id_fk": {
-          "name": "vote_message_id_chat_message_id_fk",
-          "tableFrom": "vote",
+        "Vote_v2_message_id_chat_message_id_fk": {
+          "name": "Vote_v2_message_id_chat_message_id_fk",
+          "tableFrom": "Vote_v2",
           "tableTo": "chat_message",
           "columnsFrom": [
             "message_id"
@@ -805,10 +805,10 @@
         }
       },
       "compositePrimaryKeys": {
-        "vote_chat_id_message_id_pk": {
-          "name": "vote_chat_id_message_id_pk",
+        "Vote_v2_thread_id_message_id_pk": {
+          "name": "Vote_v2_thread_id_message_id_pk",
           "columns": [
-            "chat_id",
+            "thread_id",
             "message_id"
           ]
         }
