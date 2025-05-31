@@ -96,3 +96,39 @@ Pay SPECIAL attention to any explicit corrections the user had to make in your s
 - Check both component locations (components/ and components/layouts/)
 - Look for TODO comments or disabled code that might be relevant
 - Ask clarifying questions about project structure early
+
+# Session 3
+
+## Task: Fix Sidebar Layout and Overflow Issues
+
+### What Happened
+
+1. **Attempted Fixes**:
+   - Tried to fix sidebar width and overflow issues with thread titles
+   - Made changes to multiple UI components (sidebar.tsx, app-sidebar.tsx, app-header.tsx)
+   - Attempted to add proper width constraints and text truncation
+
+2. **Issues Encountered**:
+   - Changes led to TypeScript compilation errors
+   - Multiple iterations failed to resolve the issues
+   - Ended up with broken exports and component references
+   - Session became mired in technical debt
+
+3. **Key Learnings**:
+   - Should have been more surgical with changes
+   - Needed to better understand the existing component architecture first
+   - Should have created a testable state earlier
+   - Changes were too broad and affected production components
+
+4. **User Feedback**:
+   - Changes were too sweeping and risky for production code
+   - Should have preserved existing functionality better
+   - Need to be more careful with core UI components
+   - Future changes should be more incremental and better tested
+
+5. **Action Items**:
+   - Revert all changes to UI components
+   - Start fresh with a more focused approach
+   - Review components in ai-chatbot for patterns to port over
+   - Make smaller, testable changes
+   - Verify functionality at each step
