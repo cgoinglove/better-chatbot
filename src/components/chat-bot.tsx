@@ -397,6 +397,19 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
 
       <Artifact
         chatId={threadId}
+        input=""
+        setInput={() => {}}
+        handleSubmit={() => Promise.resolve()}
+        status="ready"
+        stop={() => Promise.resolve()}
+        attachments={[]}
+        setAttachments={() => {}}
+        append={() => Promise.resolve('')}
+        messages={[]}
+        setMessages={() => {}}
+        reload={() => Promise.resolve('')}
+        votes={undefined}
+        isReadonly={false}
       />
     </>
   );

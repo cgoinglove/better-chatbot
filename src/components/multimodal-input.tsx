@@ -43,7 +43,7 @@ function PureMultimodalInput({
 }: {
   chatId: string;
   input: UseChatHelpers["input"];
-  setInput: UseChatHelpers["setInput"];
+  setInput: (value: string) => void;
   status: UseChatHelpers["status"];
   stop: () => void;
   attachments: Array<Attachment>;
@@ -199,7 +199,7 @@ function PureMultimodalInput({
         tabIndex={-1}
       />
 
-      {(attachments.length > 0 || uploadQueue.length > 0) && (
+      {((attachments?.length ?? 0) > 0 || uploadQueue.length > 0) && (
         <div
           data-testid="attachments-preview"
           className="flex flex-row gap-2 overflow-x-scroll items-end"
@@ -334,8 +334,8 @@ function PureSendButton({
   uploadQueue,
 }: {
   submitForm: () => void;
-  input: string;
-  uploadQueue: Array<string>;
+  input?: string;
+  uploadQueue?: Array<string>;
 }) {
   return (
     <Button
@@ -345,7 +345,7 @@ function PureSendButton({
         event.preventDefault();
         submitForm();
       }}
-      disabled={input.length === 0 || uploadQueue.length > 0}
+      disabled={(input?.length ?? 0) === 0 || (uploadQueue?.length ?? 0) > 0}
     >
       <ArrowUpIcon size={14} />
     </Button>
@@ -353,9 +353,9 @@ function PureSendButton({
 }
 
 const SendButton = memo(PureSendButton, (prevProps, nextProps) => {
-  if (prevProps.uploadQueue.length !== nextProps.uploadQueue.length)
+  if ((prevProps.uploadQueue?.length ?? 0) !== (nextProps.uploadQueue?.length ?? 0))
     return false;
-  if (prevProps.input !== nextProps.input) return false;
+  if ((prevProps.input ?? '') !== (nextProps.input ?? '')) return false;
   return true;
 });
 

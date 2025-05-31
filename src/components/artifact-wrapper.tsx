@@ -14,7 +14,7 @@ export function ArtifactWrapper() {
         <Artifact
           chatId=""
           input=""
-          setInput={() => Promise.resolve()}
+          setInput={(value) => {}}
           handleSubmit={() => Promise.resolve()}
           status="ready"
           stop={() => Promise.resolve()}
@@ -24,7 +24,7 @@ export function ArtifactWrapper() {
           messages={[]}
           setMessages={() => {}}
           reload={() => Promise.resolve('')}
-          votes={[]}
+          votes={undefined}
           isReadonly={false}
         />
       </div>
