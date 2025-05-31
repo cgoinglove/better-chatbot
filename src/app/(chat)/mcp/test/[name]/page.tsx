@@ -58,7 +58,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "ui/select";
-import { customModelProvider } from "lib/ai/models";
+import { chatModels } from "lib/ai/models";
+import { myProvider } from "lib/ai/providers";
 import { MCPToolInfo } from "app-types/mcp";
 import { Label } from "ui/label";
 import { safe } from "ts-safe";
@@ -272,9 +273,7 @@ const GenerateExampleInputJsonDialog = ({
     loading: false,
   });
   const modelList = useMemo(() => {
-    return customModelProvider.modelsInfo.flatMap((v) =>
-      v.models.map((v) => v.name),
-    );
+    return chatModels.map(model => model.id);
   }, []);
 
   const generateExampleSchema = useCallback(() => {

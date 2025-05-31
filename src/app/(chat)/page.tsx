@@ -10,7 +10,6 @@ export default async function Page() {
 
   const cookieStore = await cookies();
   const modelFromCookie = cookieStore.get('chat-model');
-  const toolChoiceFromCookie = cookieStore.get('tool-choice');
 
   return (
     <>
@@ -18,8 +17,7 @@ export default async function Page() {
         key={id}
         threadId={id}
         initialMessages={[]}
-        selectedModel={modelFromCookie?.value || DEFAULT_MODEL}
-        selectedToolChoice={(toolChoiceFromCookie?.value as "auto" | "none" | "manual") || 'auto'}
+        selectedChatModel={modelFromCookie?.value || DEFAULT_MODEL}
       />
       <DataStreamHandler id={id} />
     </>  

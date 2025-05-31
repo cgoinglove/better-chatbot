@@ -2,7 +2,7 @@ import { chatRepository } from "lib/db/repository";
 import { NextRequest } from "next/server";
 import { generateTitleFromUserMessageAction } from "../actions";
 
-import { customModelProvider } from "lib/ai/models";
+import { myProvider } from "lib/ai/providers";
 import { getSession } from "auth/server";
 
 export async function POST(
@@ -20,7 +20,7 @@ export async function POST(
   if (!thread) {
     const title = await generateTitleFromUserMessageAction({
       message: messages[0],
-      model: customModelProvider.getModel(model),
+      model: myProvider.languageModel("chat-model-small"),
     });
     thread = await chatRepository.insertThread({
       id: threadId,

@@ -19,6 +19,9 @@ import { useLocalStorage, useWindowSize } from "usehooks-ts";
 import { UseChatHelpers } from "@ai-sdk/react";
 import equal from "fast-deep-equal";
 import { ArrowUpIcon, PaperclipIcon, StopIcon } from "./icons";
+import { Mic as MicIcon } from "lucide-react";
+import { appStore } from "@/app/store";
+import { useShallow } from "zustand/shallow";
 import { PreviewAttachment } from "./preview-attachment";
 import { SuggestedActions } from "./suggested-actions";
 import { Button } from "./ui/button";
@@ -248,17 +251,15 @@ function PureMultimodalInput({
         }}
       />
 
-      <div className="absolute bottom-0 p-2 w-fit flex flex-row justify-start">
+      <div className="absolute bottom-1.5 right-1.5 flex items-center gap-1">
+        <VoiceChatButton />
         <AttachmentsButton fileInputRef={fileInputRef} status={status} />
-      </div>
-
-      <div className="absolute bottom-0 right-0 p-2 w-fit flex flex-row justify-end">
-        {status === "submitted" ? (
+        {status === "streaming" ? (
           <StopButton stop={stop} setMessages={setMessages} />
         ) : (
           <SendButton
-            input={input}
             submitForm={submitForm}
+            input={input}
             uploadQueue={uploadQueue}
           />
         )}
@@ -357,3 +358,33 @@ const SendButton = memo(PureSendButton, (prevProps, nextProps) => {
   if (prevProps.input !== nextProps.input) return false;
   return true;
 });
+
+function PureVoiceChatButton() {
+  const [appStoreMutate, voiceChat] = appStore(
+    useShallow((state) => [state.mutate, state.voiceChat]),
+  );
+
+  const handleClick = useCallback(() => {
+    appStoreMutate({
+      voiceChat: {
+        ...voiceChat,
+        isOpen: !voiceChat.isOpen,
+      },
+    });
+  }, [appStoreMutate, voiceChat]);
+
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={handleClick}
+      className={cx("size-8", {
+        "text-green-500": voiceChat.isOpen,
+      })}
+    >
+      <MicIcon className="size-4" />
+    </Button>
+  );
+}
+
+const VoiceChatButton = memo(PureVoiceChatButton);

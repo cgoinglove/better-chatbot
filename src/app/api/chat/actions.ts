@@ -16,7 +16,7 @@ import {
 import type { ChatThread, Project } from "app-types/chat";
 
 import { chatRepository } from "lib/db/repository";
-import { customModelProvider } from "lib/ai/models";
+import { myProvider } from "lib/ai/providers";
 import { toAny } from "lib/utils";
 import { MCPToolInfo } from "app-types/mcp";
 import { serverCache } from "lib/cache";
@@ -101,7 +101,7 @@ export async function generateExampleToolSchemaAction(options: {
   toolInfo: MCPToolInfo;
   prompt?: string;
 }) {
-  const model = customModelProvider.getModel(options.modelName);
+  const model = myProvider.languageModel(options.modelName);
 
   const schema = jsonSchema(
     toAny({

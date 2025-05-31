@@ -47,14 +47,25 @@ export function filterToolsByAllowedMCPServers(
 export function getAllowedDefaultToolkit(
   allowedAppDefaultToolkit?: string[],
 ): Record<string, Tool> {
+  console.log('[DEBUG] getAllowedDefaultToolkit called with:', allowedAppDefaultToolkit);
+  console.log('[DEBUG] Available defaultTools:', Object.keys(defaultTools));
+
   if (!allowedAppDefaultToolkit) {
-    return Object.values(defaultTools).reduce((acc, toolkit) => {
+    const allTools = Object.values(defaultTools).reduce((acc, toolkit) => {
       return { ...acc, ...toolkit };
     }, {});
+    console.log('[DEBUG] No filter, returning all tools:', Object.keys(allTools));
+    return allTools;
   }
-  return allowedAppDefaultToolkit.reduce((acc, toolkit) => {
-    return { ...acc, ...(defaultTools[toolkit] ?? {}) };
+
+  const filteredTools = allowedAppDefaultToolkit.reduce((acc, toolkit) => {
+    const toolsForKit = defaultTools[toolkit] ?? {};
+    console.log('[DEBUG] Tools for', toolkit, ':', Object.keys(toolsForKit));
+    return { ...acc, ...toolsForKit };
   }, {});
+
+  console.log('[DEBUG] Filtered tools:', Object.keys(filteredTools));
+  return filteredTools;
 }
 
 export function excludeToolExecution(

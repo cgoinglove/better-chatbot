@@ -15,7 +15,7 @@ import { UseChatHelpers } from "@ai-sdk/react";
 import { SelectModel } from "./select-model";
 import { appStore } from "@/app/store";
 import { useShallow } from "zustand/shallow";
-import { customModelProvider } from "lib/ai/models";
+import { myProvider } from "lib/ai/providers";
 import { createMCPToolId } from "lib/ai/mcp/mcp-tool-id";
 import { ChatMessageAnnotation } from "app-types/chat";
 import dynamic from "next/dynamic";
@@ -80,7 +80,7 @@ export default function PromptInput({
   >([]);
 
   const modelList = useMemo(() => {
-    return customModelProvider.modelsInfo;
+    return myProvider.modelsInfo;
   }, []);
 
   const [pastedContents, setPastedContents] = useState<string[]>([]);
@@ -152,8 +152,8 @@ export default function PromptInput({
   };
 
   return (
-    <div className="max-w-3xl mx-auto fade-in animate-in">
-      <div className="z-10 mx-auto w-full max-w-3xl relative">
+    <div className="w-full fade-in animate-in">
+      <div className="z-10 mx-auto w-full relative">
         <fieldset className="flex w-full min-w-0 max-w-full flex-col px-2">
           <div className="rounded-4xl backdrop-blur-sm transition-all duration-200 bg-muted/80 relative flex w-full flex-col cursor-text z-10 border items-stretch focus-within:border-muted-foreground hover:border-muted-foreground p-3">
             <div className="flex flex-col gap-3.5 px-1">

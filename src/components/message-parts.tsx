@@ -35,7 +35,7 @@ import { useCopy } from "@/hooks/use-copy";
 import { Card, CardContent } from "ui/card";
 import { AnimatePresence, motion } from "framer-motion";
 import { SelectModel } from "./select-model";
-import { customModelProvider } from "lib/ai/models";
+import { chatModels } from "lib/ai/models";
 import {
   deleteMessageAction,
   deleteMessagesByChatIdAfterTimestampAction,
@@ -260,7 +260,15 @@ export const UserMessagePart = ({
   );
 };
 
-const modelList = customModelProvider.modelsInfo;
+const modelList = [
+  {
+    provider: 'OpenAI',
+    models: chatModels.map(model => ({
+      name: model.id,
+      isToolCallUnsupported: false
+    }))
+  }
+];
 
 export const AssistMessagePart = ({
   part,

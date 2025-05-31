@@ -37,6 +37,14 @@ ${userPreferences?.profession ? `- **User Profession:** ${userPreferences?.profe
 
   // Enhanced response style guidance with more specific instructions
   prompt += `
+### Tool Usage ###
+
+**Weather Tool**
+When users ask about the weather:
+- Extract the latitude and longitude from the location name in their query
+- Use these coordinates with the getWeather tool
+- Example: "What's the weather in San Francisco?" -> getWeather({ latitude: 37.7749, longitude: -122.4194 })
+
 ### Communication Style ###
 
 ${

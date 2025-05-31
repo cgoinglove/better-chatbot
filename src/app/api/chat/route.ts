@@ -11,7 +11,7 @@ import {
   type DataStreamWriter,
 } from "ai";
 
-import { customModelProvider, isToolCallUnsupportedModel } from "lib/ai/models";
+import { myProvider } from "lib/ai/providers";
 
 import { mcpClientsManager } from "lib/ai/mcp/mcp-manager";
 
@@ -26,7 +26,10 @@ import {
   ChatMessageAnnotation,
 } from "app-types/chat";
 
+import { AppDefaultToolkit } from "app-types/chat";
+import { defaultTools } from "lib/ai/tools";
 import { errorIf, safe } from "ts-safe";
+import type { ChatRequestBody } from "./types";
 
 import {
   appendAnnotations,
@@ -39,7 +42,6 @@ import {
   extractInProgressToolPart,
   assignToolResult,
   isUserMessage,
-  getAllowedDefaultToolkit,
   filterToolsByAllowedMCPServers,
 } from "./helper";
 import { generateTitleFromUserMessageAction } from "./actions";
@@ -49,7 +51,7 @@ import { updateDocument } from "lib/ai/tools/update-document";
 
 export async function POST(request: Request) {
   try {
-    const json = await request.json();
+    const json = (await request.json()) as ChatRequestBody;
 
     const session = await getSession();
 
@@ -67,7 +69,7 @@ export async function POST(request: Request) {
       projectId,
     } = chatApiSchemaRequestBodySchema.parse(json);
 
-    const model = customModelProvider.getModel(modelName);
+    const model = myProvider.languageModel(modelName);
 
     let thread = await chatRepository.selectThreadDetails(id);
 
@@ -98,8 +100,7 @@ export async function POST(request: Request) {
 
     const mcpTools = mcpClientsManager.tools();
 
-    const isToolCallAllowed =
-      !isToolCallUnsupportedModel(model) && toolChoice != "none";
+    const isToolCallAllowed = toolChoice != "none";
 
     const requiredToolsAnnotations = annotations
       .flatMap((annotation) => annotation.requiredTools)
@@ -108,12 +109,12 @@ export async function POST(request: Request) {
     // Define artifact tools that should be included when allowed
     const artifactTools: Record<string, Tool> = {};
     let dataStreamRef: DataStreamWriter | null = null;
-    
+
     // Only add artifact tools when tool calls are allowed
-    if (isToolCallAllowed && toolChoice !== "none" as any) {
+    if (isToolCallAllowed && toolChoice !== ("none" as any)) {
       // Create a session object structure that matches what the tools expect
       const sessionForTools = session as any;
-      
+
       // Create the tools with a proxy for the data stream
       const createToolWithDataStream = (toolFn: any) => {
         return toolFn({
@@ -123,40 +124,55 @@ export async function POST(request: Request) {
               if (dataStreamRef) {
                 return dataStreamRef.writeData(data);
               }
-              console.warn('Data stream not yet available');
-            }
-          }
+              console.warn("Data stream not yet available");
+            },
+          },
         });
       };
-      
+
       artifactTools.createDocument = createToolWithDataStream(createDocument);
       artifactTools.updateDocument = createToolWithDataStream(updateDocument);
     }
 
-    const tools = safe(mcpTools)
-      .map(errorIf(() => !isToolCallAllowed && "Not allowed"))
-      .map((tools) => {
-        // filter tools by mentions
-        if (requiredToolsAnnotations.length) {
-          return filterToolsByMentions(tools, requiredToolsAnnotations);
-        }
-        // filter tools by allowed mcp servers
-        return filterToolsByAllowedMCPServers(tools, allowedMcpServers);
-      })
-      // filter tools by tool choice
-      .map((tools) => {
-        if (toolChoice == "manual") {
-          return excludeToolExecution(tools);
-        }
-        return tools;
-      })
-      // add allowed default toolkit and artifact tools
-      .map((tools) => ({
-        ...getAllowedDefaultToolkit(allowedAppDefaultToolkit),
-        ...artifactTools,
-        ...tools,
-      }))
-      .orElse(undefined);
+    console.log("[DEBUG] Route handler setup:", {
+      toolChoice,
+      isToolCallAllowed,
+      allowedAppDefaultToolkit,
+      allowedMcpServers,
+      requiredToolsAnnotations,
+    });
+
+    // Get weather tools directly
+    const weatherTools = defaultTools[AppDefaultToolkit.Weather] ?? {};
+    console.log("[DEBUG] Weather tools:", Object.keys(weatherTools));
+    
+    // Get all available tools
+    const availableTools: Record<string, Tool> = {
+      ...weatherTools,
+      ...artifactTools,
+      ...(isToolCallAllowed ? mcpTools : {})
+    };
+
+    // Filter tools based on mentions if needed
+    const filteredTools = requiredToolsAnnotations.length > 0
+      ? filterToolsByMentions(availableTools, requiredToolsAnnotations)
+      : availableTools;
+
+    // Filter by MCP servers if needed
+    const mcpFilteredTools = allowedMcpServers
+      ? filterToolsByAllowedMCPServers(filteredTools, allowedMcpServers)
+      : filteredTools;
+
+    // Apply manual mode filtering if needed
+    const tools = toolChoice === "manual"
+      ? excludeToolExecution(mcpFilteredTools)
+      : mcpFilteredTools;
+
+    console.log("[DEBUG] Final tools:", Object.keys(tools));
+
+    if (!tools) {
+      console.log("[DEBUG] No tools available");
+    }
 
     const messages: Message[] = isLastMessageUserMessage
       ? appendClientMessage({
@@ -165,7 +181,7 @@ export async function POST(request: Request) {
         })
       : previousMessages;
 
-// Create the response
+    // Create the response
     return createDataStreamResponse({
       execute: async (dataStream) => {
         // Update the data stream reference for the tools
@@ -213,6 +229,7 @@ export async function POST(request: Request) {
           maxRetries: 0,
           tools,
           toolChoice: computedToolChoice,
+          experimental_activeTools: toolChoice === 'none' ? [] : ['getWeather', 'createDocument', 'updateDocument'],
           onFinish: async ({ response, usage }) => {
             const appendMessages = appendResponseMessages({
               messages: messages.slice(-1),

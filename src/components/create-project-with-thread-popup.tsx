@@ -23,7 +23,7 @@ import { Input } from "ui/input";
 import { Label } from "ui/label";
 import { Textarea } from "ui/textarea";
 import { SelectModel } from "./select-model";
-import { customModelProvider } from "lib/ai/models";
+import { myProvider } from "lib/ai/providers";
 import { cn } from "lib/utils";
 import { appStore } from "@/app/store";
 import { useObjectState } from "@/hooks/use-object-state";
@@ -98,7 +98,7 @@ function InstructionsStep({
   const [isLoading, setIsLoading] = useState(false);
   const currentModelName = appStore((state) => state.model);
   const [model, setModel] = useState(currentModelName);
-  const modelList = useMemo(() => customModelProvider.modelsInfo, []);
+  const modelList = useMemo(() => myProvider.modelsInfo, []);
 
   const { complete, completion } = useCompletion({
     api: "/api/chat/summarize",

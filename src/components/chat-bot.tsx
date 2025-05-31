@@ -10,14 +10,13 @@ import {
   useRef,
   useState,
 } from "react";
-// We're using MultimodalInput instead of PromptInput
 import { appStore } from "@/app/store";
 import { cn, generateUUID, truncateString } from "lib/utils";
 import { ErrorMessage, PreviewMessage } from "./message";
 import { Greeting } from "./greeting";
 
 import { useShallow } from "zustand/shallow";
-import { Attachment, ChatRequestOptions, UIMessage } from "ai";
+import { ChatRequestOptions, UIMessage } from "ai";
 
 import { safe } from "ts-safe";
 import { mutate } from "swr";
@@ -39,7 +38,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "ui/dialog";
-import { MultimodalInput } from "./multimodal-input";
+import PromptInput from "./prompt-input";
 import { useArtifactSelector } from "@/hooks/use-artifact";
 import { Artifact } from "./artifact";
 
@@ -75,7 +74,7 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
     ]),
   );
 
-  const [attachments, setAttachments] = useState<Array<Attachment>>([]);
+
   const isArtifactVisible = useArtifactSelector((state) => state.isVisible);
 
   const {
@@ -378,18 +377,12 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
 
         <form className="flex mx-auto px-4 bg-background pb-4 md:pb-6 gap-2 w-full md:max-w-3xl">
           {
-            <MultimodalInput
-              chatId={threadId}
+            <PromptInput
               input={input}
               setInput={setInput}
-              handleSubmit={handleFormSubmit}
-              status={status}
-              stop={stop}
-              attachments={attachments}
-              setAttachments={setAttachments}
-              messages={messages}
-              setMessages={setMessages}
+              onStop={stop}
               append={append}
+              isLoading={isLoading}
             />
           }
           {slots?.inputBottomSlot}
@@ -404,19 +397,6 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
 
       <Artifact
         chatId={threadId}
-        input={input}
-        setInput={setInput}
-        handleSubmit={handleFormSubmit}
-        status={status}
-        stop={stop}
-        attachments={attachments}
-        setAttachments={setAttachments}
-        append={append}
-        messages={messages}
-        setMessages={setMessages}
-        reload={reload}
-        votes={undefined}
-        isReadonly={false}
       />
     </>
   );
