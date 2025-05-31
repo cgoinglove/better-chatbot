@@ -70,7 +70,7 @@ This document tracks the features being ported from Vercel's AI Chatbot referenc
 - [ ] Complete voting system
 - [x] Chat preferences dialog
 - [x] Keyboard shortcuts dialog
-- [ ] Auto guest avatar
+- ~~Auto guest avatar~~
 
 #### Model Registry
 

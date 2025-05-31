@@ -34,15 +34,29 @@ export async function GET(request: Request) {
 }
 
 export async function PATCH(request: Request) {
-  const {
-    chatId,
-    messageId,
-    type,
-  }: { chatId: string; messageId: string; type: 'up' | 'down' } =
-    await request.json();
+  // Ensure content type is application/json
+  const contentType = request.headers.get('content-type');
+  if (!contentType?.includes('application/json')) {
+    return new Response('Content-Type must be application/json', { status: 400 });
+  }
+
+  let body;
+  try {
+    body = await request.json();
+  } catch (error) {
+    console.error('Failed to parse request body:', error);
+    return new Response('Invalid JSON in request body', { status: 400 });
+  }
+
+  const { chatId, messageId, type } = body as {
+    chatId: string;
+    messageId: string;
+    type: 'up' | 'down';
+  };
 
   if (!chatId || !messageId || !type) {
-    return new Response('messageId and type are required', { status: 400 });
+    console.error('Missing required fields:', { chatId, messageId, type });
+    return new Response('chatId, messageId, and type are required', { status: 400 });
   }
 
   const session = await auth.api.getSession({

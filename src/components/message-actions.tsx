@@ -17,16 +17,20 @@ import equal from 'fast-deep-equal';
 import { toast } from 'sonner';
 
 export function PureMessageActions({
-  chatId,
+  threadId,
   message,
   vote,
   isLoading,
 }: {
-  chatId: string;
+  threadId: string;
   message: Message;
   vote: Vote | undefined;
   isLoading: boolean;
 }) {
+  if (!threadId) {
+    console.error('threadId must be provided to MessageActions');
+    return null;
+  }
   const { mutate } = useSWRConfig();
   const [_, copyToClipboard] = useCopyToClipboard();
 
@@ -73,8 +77,11 @@ export function PureMessageActions({
               onClick={async () => {
                 const upvote = fetch('/api/vote', {
                   method: 'PATCH',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
                   body: JSON.stringify({
-                    chatId,
+                    chatId: threadId,
                     messageId: message.id,
                     type: 'up',
                   }),
@@ -84,7 +91,7 @@ export function PureMessageActions({
                   loading: 'Upvoting Response...',
                   success: () => {
                     mutate<Array<Vote>>(
-                      `/api/vote?chatId=${chatId}`,
+                      `/api/vote?chatId=${threadId}`,
                       (currentVotes) => {
                         if (!currentVotes) return [];
 
@@ -95,7 +102,7 @@ export function PureMessageActions({
                         return [
                           ...votesWithoutCurrent,
                           {
-                            chatId,
+                            chatId: threadId,
                             messageId: message.id,
                             isUpvoted: true,
                           },
@@ -126,8 +133,11 @@ export function PureMessageActions({
               onClick={async () => {
                 const downvote = fetch('/api/vote', {
                   method: 'PATCH',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
                   body: JSON.stringify({
-                    chatId,
+                    chatId: threadId,
                     messageId: message.id,
                     type: 'down',
                   }),
@@ -137,7 +147,7 @@ export function PureMessageActions({
                   loading: 'Downvoting Response...',
                   success: () => {
                     mutate<Array<Vote>>(
-                      `/api/vote?chatId=${chatId}`,
+                      `/api/vote?chatId=${threadId}`,
                       (currentVotes) => {
                         if (!currentVotes) return [];
 
@@ -148,7 +158,7 @@ export function PureMessageActions({
                         return [
                           ...votesWithoutCurrent,
                           {
-                            chatId,
+                            chatId: threadId,
                             messageId: message.id,
                             isUpvoted: false,
                           },
