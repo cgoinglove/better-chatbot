@@ -7,8 +7,6 @@ This document tracks the features being ported from Vercel's AI Chatbot referenc
 - the artifact port is nice but in the Artifact view, the chat to the side is overflowing width and looks bad.
 - the input does not really fit. the voice button overlays the
 
-
-
 ## Current State
 
 ### Authentication
@@ -46,7 +44,7 @@ This document tracks the features being ported from Vercel's AI Chatbot referenc
 - [x] Projects UI components
 - [x] MCP Configuration (admin-only access)
 - [x] Temporary chat functionality via cmd+k
-- [ ] Sharing features (public/anonymous access)
+- [x] Sharing features (public/anonymous access)
 - ~~Guest access functionality~~
 
 #### Artifacts System
