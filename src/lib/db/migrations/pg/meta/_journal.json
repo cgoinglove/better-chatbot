@@ -43,6 +43,27 @@
       "when": 1748344985313,
       "tag": "0005_mushy_harpoon",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1748723888000,
+      "tag": "0006_add_chat_visibility",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1748723948000,
+      "tag": "0007_create_vote_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1748724008000,
+      "tag": "0008_gifted_mach_iv",
+      "breakpoints": true
     }
   ]
 }

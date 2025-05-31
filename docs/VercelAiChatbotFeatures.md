@@ -67,7 +67,7 @@ This document tracks the features being ported from Vercel's AI Chatbot referenc
 
 #### Menu Features (ai-chatbot parity/must-have)
 
-- [ ] Complete voting system
+- [x] Complete voting system
 - [x] Chat preferences dialog
 - [x] Keyboard shortcuts dialog
 - ~~Auto guest avatar~~
