@@ -206,17 +206,25 @@ export function Weather({
 }: {
   weatherAtLocation?: WeatherAtLocation;
 }) {
-  const currentHigh = Math.max(
-    ...weatherAtLocation.hourly.temperature_2m.slice(0, 24),
-  );
-  const currentLow = Math.min(
-    ...weatherAtLocation.hourly.temperature_2m.slice(0, 24),
-  );
+  // Ensure hourly data exists before accessing it
+  const hourlyTemperatures = weatherAtLocation?.hourly?.temperature_2m || [];
+  
+  const currentHigh = hourlyTemperatures.length > 0 
+    ? Math.max(...hourlyTemperatures.slice(0, 24))
+    : 0;
+    
+  const currentLow = hourlyTemperatures.length > 0 
+    ? Math.min(...hourlyTemperatures.slice(0, 24))
+    : 0;
 
-  const isDay = isWithinInterval(new Date(weatherAtLocation.current.time), {
-    start: new Date(weatherAtLocation.daily.sunrise[0]),
-    end: new Date(weatherAtLocation.daily.sunset[0]),
-  });
+  // Safely check if it's day or night
+  const isDay = weatherAtLocation?.current?.time && 
+    weatherAtLocation?.daily?.sunrise?.[0] && 
+    weatherAtLocation?.daily?.sunset?.[0] ? 
+    isWithinInterval(new Date(weatherAtLocation.current.time), {
+      start: new Date(weatherAtLocation.daily.sunrise[0]),
+      end: new Date(weatherAtLocation.daily.sunset[0]),
+    }) : true; // Default to day if data is missing
 
   const [isMobile, setIsMobile] = useState(false);
 
@@ -233,19 +241,24 @@ export function Weather({
 
   const hoursToShow = isMobile ? 5 : 6;
 
-  // Find the index of the current time or the next closest time
-  const currentTimeIndex = weatherAtLocation.hourly.time.findIndex(
-    (time) => new Date(time) >= new Date(weatherAtLocation.current.time),
+  // Safely find the index of the current time or the next closest time
+  const hourlyTimes = weatherAtLocation?.hourly?.time || [];
+  const currentTime = weatherAtLocation?.current?.time || new Date().toISOString();
+  
+  const currentTimeIndex = hourlyTimes.findIndex(
+    (time) => new Date(time) >= new Date(currentTime),
   );
+  
+  const validTimeIndex = currentTimeIndex >= 0 ? currentTimeIndex : 0;
 
   // Slice the arrays to get the desired number of items
-  const displayTimes = weatherAtLocation.hourly.time.slice(
-    currentTimeIndex,
-    currentTimeIndex + hoursToShow,
+  const displayTimes = hourlyTimes.slice(
+    validTimeIndex,
+    validTimeIndex + hoursToShow,
   );
-  const displayTemperatures = weatherAtLocation.hourly.temperature_2m.slice(
-    currentTimeIndex,
-    currentTimeIndex + hoursToShow,
+  const displayTemperatures = hourlyTemperatures.slice(
+    validTimeIndex,
+    validTimeIndex + hoursToShow,
   );
 
   return (
@@ -274,8 +287,8 @@ export function Weather({
             )}
           />
           <div className="text-4xl font-medium text-blue-50">
-            {n(weatherAtLocation.current.temperature_2m)}
-            {weatherAtLocation.current_units.temperature_2m}
+            {n(weatherAtLocation?.current?.temperature_2m || 0)}
+            {weatherAtLocation?.current_units?.temperature_2m || '°'}
           </div>
         </div>
 
@@ -300,8 +313,8 @@ export function Weather({
               )}
             />
             <div className="text-blue-50 text-sm">
-              {n(displayTemperatures[index])}
-              {weatherAtLocation.hourly_units.temperature_2m}
+              {displayTemperatures[index] !== undefined ? n(displayTemperatures[index]) : '-'}
+              {weatherAtLocation?.hourly_units?.temperature_2m || '°'}
             </div>
           </div>
         ))}
