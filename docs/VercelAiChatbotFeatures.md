@@ -35,7 +35,8 @@ This document tracks the features being ported from Vercel's AI Chatbot referenc
 ### Phase 0 – Pre-Merge Essentials (THIS branch)
 
 #### Projects UI
-- [ ] Projects UI components
+
+- [x] Projects UI components
 - [ ] MCP Configuration (admin-only access)
 - [ ] Temporary chat functionality
 - [ ] Command menu
@@ -43,6 +44,7 @@ This document tracks the features being ported from Vercel's AI Chatbot referenc
 - [ ] Guest access functionality
 
 #### Artifacts System
+
 - [x] Basic artifact support implemented
 - [x] Text artifacts working
 - [x] Code artifacts working
@@ -54,17 +56,20 @@ This document tracks the features being ported from Vercel's AI Chatbot referenc
 - [ ] Image artifacts implementation
 
 #### Tool Call UI
+
 - [ ] Better tool call UI implementation
 - [ ] Enhanced error handling
 - [ ] Improved user feedback
 
 #### Menu Features (ai-chatbot parity/must-have)
+
 - [ ] Complete voting system
 - [ ] Chat preferences dialog
 - [ ] Keyboard shortcuts dialog
 - [ ] Auto guest avatar
 
 #### Model Registry
+
 - [ ] Ensure all ported features use our model registry
 - [ ] Review model selection in artifact generation
 - [x] Basic model selection working
@@ -75,17 +80,20 @@ This document tracks the features being ported from Vercel's AI Chatbot referenc
 ### Phase 1 – Post-Merge Core Features
 
 #### Document Processing
+
 - [ ] File upload functionality (hide until ready)
 - [ ] PDF processing
 - [ ] Document chunking
 - [ ] RAG implementation
 
 #### UX Improvements
+
 - [ ] Resizable sidebar
 - [ ] Better tooling for voice interactions
 - [ ] Enhanced code editor
 
 #### Search and Research
+
 - [ ] Advanced search UI
 - [ ] Deep research capabilities
 - [ ] Context-aware suggestions
@@ -93,6 +101,7 @@ This document tracks the features being ported from Vercel's AI Chatbot referenc
 ### Completed Features
 
 #### Weather Widget
+
 - [x] Weather API integration working
 - [x] Weather component UI ported
 - [x] Added to default toolkit
