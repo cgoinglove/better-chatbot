@@ -11,7 +11,7 @@ import {
   type DataStreamWriter,
 } from "ai";
 
-import { myProvider } from "lib/ai/models";
+import { myProvider } from "@/lib/ai/models";
 
 import { mcpClientsManager } from "lib/ai/mcp/mcp-manager";
 

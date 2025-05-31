@@ -98,6 +98,12 @@ export const chatModels: Array<ChatModel> = [
   },
 ];
 
+// Define image models for DALL-E
+const imageModels = {
+  "small-model": openai.image('dall-e-2'),
+  "large-model": openai.image('dall-e-3')
+};
+
 export const myProvider = {
   modelsInfo: Object.keys(allModels).map((provider) => {
     return {
@@ -120,4 +126,8 @@ export const myProvider = {
       return models[model!];
     })?.[model!] ?? fallbackModel) as LanguageModel;
   },
+  // Add imageModel function to support image generation
+  imageModel: (model: string) => {
+    return imageModels[model] || imageModels["small-model"];
+  }
 };
