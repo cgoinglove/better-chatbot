@@ -203,7 +203,7 @@ export function AppSidebarThreads() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="opacity-0 group-hover/threads:opacity-100 transition-opacity"
+                            className="data-[state=open]:bg-input data-[state=open]:opacity-100 opacity-0 group-hover/threads:opacity-100 transition-opacity"
                           >
                             <MoreHorizontal />
                           </Button>
@@ -227,26 +227,30 @@ export function AppSidebarThreads() {
                       className={"group/thread mr-0"}
                     >
                       <SidebarMenuSubItem>
-                        <SidebarMenuButton
-                          asChild
-                          isActive={currentThreadId === thread.id}
+                        <ThreadDropdown
+                          side="right"
+                          threadId={thread.id}
+                          beforeTitle={thread.title}
                         >
-                          <Link
-                            href={`/chat/${thread.id}`}
-                            className="flex items-center"
-                          >
-                            <p className="truncate ">{thread.title}</p>
-                          </Link>
-                        </SidebarMenuButton>
-                        <SidebarMenuAction className="opacity-0 group-hover/thread:opacity-100">
-                          <ThreadDropdown
-                            side="right"
-                            threadId={thread.id}
-                            beforeTitle={thread.title}
-                          >
-                            <MoreHorizontal />
-                          </ThreadDropdown>
-                        </SidebarMenuAction>
+                          <div className="flex items-center data-[state=open]:bg-input! group-hover/thread:bg-input! rounded-lg">
+                            <SidebarMenuButton
+                              asChild
+                              className="group-hover/thread:bg-transparent!"
+                              isActive={currentThreadId === thread.id}
+                            >
+                              <Link
+                                href={`/chat/${thread.id}`}
+                                className="flex items-center"
+                              >
+                                <p className="truncate ">{thread.title}</p>
+                              </Link>
+                            </SidebarMenuButton>
+
+                            <SidebarMenuAction className="data-[state=open]:bg-input data-[state=open]:opacity-100 opacity-0 group-hover/thread:opacity-100">
+                              <MoreHorizontal />
+                            </SidebarMenuAction>
+                          </div>
+                        </ThreadDropdown>
                       </SidebarMenuSubItem>
                     </SidebarMenuSub>
                   ))}

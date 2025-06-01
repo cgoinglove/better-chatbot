@@ -157,7 +157,11 @@ export default function ProjectPage() {
               <ProjectDropdown
                 project={project ?? { id: id as string, name: "" }}
               >
-                <Button variant="ghost" size="icon">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="data-[state=open]:bg-secondary!"
+                >
                   <MoreHorizontal />
                 </Button>
               </ProjectDropdown>

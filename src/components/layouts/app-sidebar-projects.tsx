@@ -57,7 +57,7 @@ export function AppSidebarProjects() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarGroupLabel className="">
-              <h4 className="text-xs text-muted-foreground flex items-center gap-1 group-hover/projects:text-foreground">
+              <h4 className="text-xs text-muted-foreground flex items-center gap-1 group-hover/projects:text-foreground transition-colors">
                 {t("projects")}
               </h4>
               <div className="flex-1" />
@@ -108,25 +108,29 @@ export function AppSidebarProjects() {
                       className={"group/project mr-0"}
                     >
                       <SidebarMenuItem className="px-2 cursor-pointer">
-                        <SidebarMenuButton asChild isActive={isSelected}>
-                          <div className="flex gap-1">
-                            <div className="p-1 rounded-md hover:bg-foreground/40">
-                              <FolderOpen className="size-4" />
-                            </div>
+                        <ProjectDropdown project={project} side="right">
+                          <SidebarMenuButton
+                            asChild
+                            isActive={isSelected}
+                            className="data-[state=open]:bg-input!"
+                          >
+                            <div className="flex gap-1">
+                              <div className="p-1 rounded-md hover:bg-foreground/40">
+                                <FolderOpen className="size-4" />
+                              </div>
 
-                            <Link
-                              href={`/project/${project.id}`}
-                              className="flex items-center min-w-0 w-full"
-                            >
-                              <p className="truncate">{project.name}</p>
-                            </Link>
-                            <SidebarMenuAction className="opacity-0 group-hover/project:opacity-100 mr-2">
-                              <ProjectDropdown project={project} side="right">
+                              <Link
+                                href={`/project/${project.id}`}
+                                className="flex items-center min-w-0 w-full"
+                              >
+                                <p className="truncate">{project.name}</p>
+                              </Link>
+                              <SidebarMenuAction className="opacity-0 group-hover/project:opacity-100 mr-2">
                                 <MoreHorizontal className="size-4" />
-                              </ProjectDropdown>
-                            </SidebarMenuAction>
-                          </div>
-                        </SidebarMenuButton>
+                              </SidebarMenuAction>
+                            </div>
+                          </SidebarMenuButton>
+                        </ProjectDropdown>
                       </SidebarMenuItem>
                     </SidebarMenu>
                   );
