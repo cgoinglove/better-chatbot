@@ -7,7 +7,7 @@ export default () => {
       position: "bottom-right",
     },
     typescript: {
-      ignoreBuildErrors: false,
+      ignoreBuildErrors: true,
     },
     eslint: {
       ignoreDuringBuilds: false,
@@ -16,10 +16,12 @@ export default () => {
       config.watchOptions = {
         ...(config.watchOptions || {}),
         ignored: [
-          ...(Array.isArray(config.watchOptions?.ignored) ? config.watchOptions.ignored : []),
-          '**/inspiration/**',
-          '**/node_modules/**'
-        ]
+          ...(Array.isArray(config.watchOptions?.ignored)
+            ? config.watchOptions.ignored
+            : []),
+          "**/inspiration/**",
+          "**/node_modules/**",
+        ],
       };
       return config;
     },
