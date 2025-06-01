@@ -10,13 +10,12 @@ import { toast } from "sonner";
 
 // Type for message parts
 type TextPart = {
-  type: 'text';
+  type: "text";
   text: string;
 };
 
 type UIMessage = Message & {
   parts?: Array<TextPart | { type: string }>;
-  threadId: string;
 };
 
 export type MessageEditorProps = {
@@ -90,8 +89,8 @@ export function MessageEditor({
       setMode("view");
       if (reload) reload();
     } catch (error) {
-      console.error('Error updating message:', error);
-      toast.error('Failed to update message');
+      console.error("Error updating message:", error);
+      toast.error("Failed to update message");
     } finally {
       setIsSubmitting(false);
     }

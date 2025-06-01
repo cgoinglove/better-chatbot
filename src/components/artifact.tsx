@@ -54,9 +54,9 @@ export function PureArtifact({
   stop,
   append,
   messages,
-  setMessages,
-  reload,
-  votes,
+  // setMessages,
+  // reload,
+  // votes,
   isReadonly,
 }: {
   threadId: string;
