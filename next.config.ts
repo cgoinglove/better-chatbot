@@ -7,7 +7,7 @@ export default () => {
       position: "bottom-right",
     },
     typescript: {
-      ignoreBuildErrors: true,
+      ignoreBuildErrors: false,
     },
     eslint: {
       ignoreDuringBuilds: false,
