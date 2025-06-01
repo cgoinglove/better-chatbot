@@ -5,6 +5,7 @@ import type { InferSelectModel } from "drizzle-orm";
 import { sql } from "drizzle-orm";
 import {
   boolean,
+  foreignKey,
   json,
   pgTable,
   primaryKey,
@@ -82,7 +83,7 @@ export const DocumentSchema = pgTable(
   },
   (table) => {
     return {
-      pk: primaryKey(table.id),
+      pk: primaryKey({ columns: [table.id, table.createdAt] }),
     };
   },
 );
@@ -177,13 +178,20 @@ export const SuggestionSchema = pgTable(
       .notNull()
       .references(() => DocumentSchema.id),
     documentCreatedAt: timestamp("document_created_at").notNull(),
-    content: text("content").notNull(),
-    kind: varchar("kind", { enum: ["text", "code", "image", "sheet"] })
+    originalText: text("original_text").notNull(),
+    suggestedText: text("suggested_text").notNull(),
+    description: text("description"),
+    isResolved: boolean("is_resolved").notNull().default(false),
+    userId: uuid("user_id")
       .notNull()
-      .default("text"),
+      .references(() => UserSchema.id),
   },
   (table) => ({
     pk: primaryKey({ columns: [table.id] }),
+    documentRef: foreignKey({
+      columns: [table.documentId, table.documentCreatedAt],
+      foreignColumns: [DocumentSchema.id, DocumentSchema.createdAt],
+    }),
   }),
 );
 

@@ -1,5 +1,5 @@
 {
-  "id": "4ba328a8-7d8f-447a-8ed5-8f0f7f1e5603",
+  "id": "d83525ca-b19b-4736-a52b-9441d3869324",
   "prevId": "e32c4d7d-c587-425b-aec7-a07b2f6de620",
   "version": "7",
   "dialect": "postgresql",
@@ -327,10 +327,11 @@
         }
       },
       "compositePrimaryKeys": {
-        "document_id_pk": {
-          "name": "document_id_pk",
+        "document_id_created_at_pk": {
+          "name": "document_id_created_at_pk",
           "columns": [
-            "id"
+            "id",
+            "created_at"
           ]
         }
       },
@@ -579,18 +580,36 @@
           "primaryKey": false,
           "notNull": true
         },
-        "content": {
-          "name": "content",
+        "original_text": {
+          "name": "original_text",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "kind": {
-          "name": "kind",
-          "type": "varchar",
+        "suggested_text": {
+          "name": "suggested_text",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_resolved": {
+          "name": "is_resolved",
+          "type": "boolean",
           "primaryKey": false,
           "notNull": true,
-          "default": "'text'"
+          "default": false
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
         }
       },
       "indexes": {},
@@ -604,6 +623,34 @@
           ],
           "columnsTo": [
             "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "suggestion_user_id_user_id_fk": {
+          "name": "suggestion_user_id_user_id_fk",
+          "tableFrom": "suggestion",
+          "tableTo": "user",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "suggestion_document_id_document_created_at_document_id_created_at_fk": {
+          "name": "suggestion_document_id_document_created_at_document_id_created_at_fk",
+          "tableFrom": "suggestion",
+          "tableTo": "document",
+          "columnsFrom": [
+            "document_id",
+            "document_created_at"
+          ],
+          "columnsTo": [
+            "id",
+            "created_at"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
