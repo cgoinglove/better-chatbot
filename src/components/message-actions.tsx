@@ -27,12 +27,13 @@ export function PureMessageActions({
   vote: Vote | undefined;
   isLoading: boolean;
 }) {
+  const { mutate } = useSWRConfig();
+  const [_, copyToClipboard] = useCopyToClipboard();
+
   if (!threadId) {
     console.error("threadId must be provided to MessageActions");
     return null;
   }
-  const { mutate } = useSWRConfig();
-  const [_, copyToClipboard] = useCopyToClipboard();
 
   if (isLoading) return null;
   if (message.role === "user") return null;

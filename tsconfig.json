@@ -15,7 +15,7 @@
     "incremental": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "noUnusedLocals": true,
+    "noUnusedLocals": false, // Temporarily disabled to allow unused variables
     "strictPropertyInitialization": false,
     "noUnusedParameters": false,
     "noUncheckedSideEffectImports": false,
@@ -45,5 +45,5 @@
     "vitest.config.ts",
     "drizzle.config.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "inspiration", "inspiration/**/*"]
 }

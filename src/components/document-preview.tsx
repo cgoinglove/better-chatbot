@@ -235,7 +235,6 @@ const DocumentHeader = memo(PureDocumentHeader, (prevProps, nextProps) => {
 });
 
 const DocumentContent = ({ document }: { document: Document }) => {
-  if (!document) return null;
   const { artifact, setArtifact } = useArtifact();
 
   useEffect(() => {
@@ -246,6 +245,8 @@ const DocumentContent = ({ document }: { document: Document }) => {
       }));
     }
   }, [document?.content, setArtifact]);
+
+  if (!document) return null;
 
   const containerClassName = cn(
     "h-[257px] overflow-y-scroll border rounded-b-2xl dark:bg-muted border-t-0 dark:border-zinc-700",

@@ -1,9 +1,27 @@
 import type { NextConfig } from "next";
+
 export default () => {
   const nextConfig: NextConfig = {
     cleanDistDir: true,
     devIndicators: {
       position: "bottom-right",
+    },
+    typescript: {
+      ignoreBuildErrors: false,
+    },
+    eslint: {
+      ignoreDuringBuilds: false,
+    },
+    webpack: (config) => {
+      config.watchOptions = {
+        ...(config.watchOptions || {}),
+        ignored: [
+          ...(Array.isArray(config.watchOptions?.ignored) ? config.watchOptions.ignored : []),
+          '**/inspiration/**',
+          '**/node_modules/**'
+        ]
+      };
+      return config;
     },
     experimental: {
       useCache: true,
