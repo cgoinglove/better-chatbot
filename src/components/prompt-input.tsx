@@ -1,6 +1,13 @@
 "use client";
 
-import { AudioWaveformIcon, ChevronDown, CornerRightUp, Paperclip, Pause, X } from "lucide-react";
+import {
+  AudioWaveformIcon,
+  ChevronDown,
+  CornerRightUp,
+  Paperclip,
+  Pause,
+  X,
+} from "lucide-react";
 import { SuggestedActions } from "./suggested-actions";
 import { ReactNode, useCallback, useMemo, useRef, useState } from "react";
 import { Button } from "ui/button";
@@ -18,10 +25,10 @@ import { PROMPT_PASTE_MAX_LENGTH } from "lib/const";
 import { ToolSelector } from "./tool-selector";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { toast } from "sonner";
-import { generateUUID } from 'lib/utils';
+import { generateUUID } from "lib/utils";
 
 interface PromptInputProps {
-  threadId: string;
+  threadId?: string;
   messages?: Array<any>;
   placeholder?: string;
   setInput: (value: string) => void;
@@ -84,8 +91,18 @@ export default function PromptInput({
   }, []);
 
   const [pastedContents, setPastedContents] = useState<string[]>([]);
-  const [attachments, setAttachments] = useState<Array<{ id: string; url: string; name: string; mimeType: string; data: string }>>([]);
-  const [uploadQueue, setUploadQueue] = useState<Array<{ id: string; name: string }>>([]);
+  const [attachments, setAttachments] = useState<
+    Array<{
+      id: string;
+      url: string;
+      name: string;
+      mimeType: string;
+      data: string;
+    }>
+  >([]);
+  const [uploadQueue, setUploadQueue] = useState<
+    Array<{ id: string; name: string }>
+  >([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const toolList = useMemo(() => {
@@ -120,11 +137,11 @@ export default function PromptInput({
 
   const uploadFile = async (file: File) => {
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append("file", file);
 
     try {
-      const response = await fetch('/api/files/upload', {
-        method: 'POST',
+      const response = await fetch("/api/files/upload", {
+        method: "POST",
         body: formData,
       });
 
@@ -135,46 +152,46 @@ export default function PromptInput({
         return {
           id: generateUUID(),
           url,
-          name: pathname.split('/').pop() || file.name,
+          name: pathname.split("/").pop() || file.name,
           mimeType: contentType,
-          data: '', // We don't have the file data here, it's stored in the blob storage
+          data: "", // We don't have the file data here, it's stored in the blob storage
         };
       }
       const { error } = await response.json();
-      throw new Error(error || 'Upload failed');
+      throw new Error(error || "Upload failed");
     } catch (error) {
-      console.error('Error uploading file:', error);
+      console.error("Error uploading file:", error);
       throw error;
     }
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    
+
     // Add files to upload queue
-    const newUploads = files.map(file => ({
+    const newUploads = files.map((file) => ({
       id: generateUUID(),
-      name: file.name
+      name: file.name,
     }));
-    setUploadQueue(prev => [...prev, ...newUploads]);
+    setUploadQueue((prev) => [...prev, ...newUploads]);
 
     try {
-      const uploadPromises = files.map(file => uploadFile(file));
+      const uploadPromises = files.map((file) => uploadFile(file));
       const uploadedAttachments = await Promise.all(uploadPromises);
-      
-      setAttachments(prev => [...prev, ...uploadedAttachments]);
+
+      setAttachments((prev) => [...prev, ...uploadedAttachments]);
     } catch (error) {
-      toast.error('Failed to upload one or more files');
+      toast.error("Failed to upload one or more files");
     } finally {
       // Remove completed uploads from queue
-      setUploadQueue(prev => 
-        prev.filter(upload => !newUploads.some(u => u.id === upload.id))
+      setUploadQueue((prev) =>
+        prev.filter((upload) => !newUploads.some((u) => u.id === upload.id)),
       );
     }
   };
 
   const removeAttachment = (id: string) => {
-    setAttachments(prev => prev.filter(attachment => attachment.id !== id));
+    setAttachments((prev) => prev.filter((attachment) => attachment.id !== id));
   };
 
   const submit = () => {
@@ -186,15 +203,19 @@ export default function PromptInput({
       text: content,
     }));
 
-    const attachmentParts = attachments.map(attachment => ({
-      type: 'file' as const,
+    const attachmentParts = attachments.map((attachment) => ({
+      type: "file" as const,
       url: attachment.url,
       name: attachment.name,
       mimeType: attachment.mimeType,
       data: attachment.data,
     }));
 
-    if (userMessage.length === 0 && pastedContentsParsed.length === 0 && attachmentParts.length === 0) {
+    if (
+      userMessage.length === 0 &&
+      pastedContentsParsed.length === 0 &&
+      attachmentParts.length === 0
+    ) {
       return;
     }
 
@@ -209,7 +230,7 @@ export default function PromptInput({
     setToolMentionItems([]);
     setAttachments([]);
     setInput("");
-    
+
     append!({
       role: "user",
       content: "",
@@ -228,7 +249,7 @@ export default function PromptInput({
   return (
     <div className="w-full fade-in animate-in flex flex-col gap-4">
       {messages.length === 0 && pastedContents.length === 0 && (
-        <SuggestedActions append={append} threadId={threadId} />
+        <SuggestedActions append={append} threadId={threadId!} />
       )}
       <div className="z-10 mx-auto w-full relative">
         <fieldset className="flex w-full min-w-0 max-w-full flex-col px-2">
@@ -267,7 +288,10 @@ export default function PromptInput({
                       </div>
                     ))}
                     {uploadQueue.map((upload) => (
-                      <div key={upload.id} className="bg-muted rounded-md p-2 text-xs flex items-center gap-2 max-w-xs opacity-70">
+                      <div
+                        key={upload.id}
+                        className="bg-muted rounded-md p-2 text-xs flex items-center gap-2 max-w-xs opacity-70"
+                      >
                         <div className="animate-pulse flex items-center gap-2">
                           <Paperclip className="size-3 flex-shrink-0" />
                           <span className="truncate">{upload.name}</span>
@@ -298,14 +322,14 @@ export default function PromptInput({
                 ))}
               </div>
               <div className="flex w-full items-center z-30 gap-1.5">
-<>
+                <>
                   <input
                     type="file"
                     ref={fileInputRef}
                     className="hidden"
                     multiple
                     onChange={handleFileChange}
-                    onClick={(e) => (e.currentTarget.value = '')} // Allow re-uploading the same file
+                    onClick={(e) => (e.currentTarget.value = "")} // Allow re-uploading the same file
                   />
                   <button
                     type="button"

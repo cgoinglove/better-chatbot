@@ -6,7 +6,7 @@ import { ChatRequestOptions, CreateMessage, Message } from "ai";
 import { memo } from "react";
 
 interface SuggestedActionsProps {
-  threadId: string;
+  threadId?: string;
   append: (
     message: Message | CreateMessage,
     chatRequestOptions?: ChatRequestOptions,
@@ -54,7 +54,7 @@ function PureSuggestedActions({ threadId, append }: SuggestedActionsProps) {
           <Button
             variant="ghost"
             onClick={async () => {
-              window.history.replaceState({}, "", `/chat/${threadId}`);
+              window.history.replaceState({}, "", `/chat/${threadId ?? ""}`);
 
               append({
                 role: "user",
