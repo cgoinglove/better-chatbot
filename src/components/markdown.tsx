@@ -3,11 +3,12 @@ import React, { memo } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { CodeBlock } from "./code-block";
+import { PreBlock } from "./pre-block";
 
 const components: Partial<Components> = {
   // @ts-expect-error - CodeBlock component doesn't match ReactMarkdown types exactly
   code: CodeBlock,
-  pre: ({ children }) => <>{children}</>,
+  pre: (props) => <PreBlock {...props}>{props.children}</PreBlock>,
   ol: ({ node, children, ...props }) => {
     return (
       <ol className="list-decimal list-outside ml-4" {...props}>
