@@ -188,5 +188,5 @@ export const SuggestionSchema = pgTable(
 );
 
 export type UserEntity = typeof UserSchema.$inferSelect;
-export type VoteEntity = typeof VoteSchema.$inferSelect;
-export type SuggestionEntity = typeof SuggestionSchema.$inferSelect;
+export type Vote = typeof VoteSchema.$inferSelect;
+export type Suggestion = typeof SuggestionSchema.$inferSelect;

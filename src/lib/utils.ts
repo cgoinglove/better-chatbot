@@ -9,7 +9,7 @@ import { type ClassValue, clsx } from "clsx";
 
 import { twMerge } from "tailwind-merge";
 
-import type { Document } from "@/lib/db/schema";
+import type { Document } from "@/lib/db/pg/schema.pg";
 
 interface ApplicationError extends Error {
   info: string;

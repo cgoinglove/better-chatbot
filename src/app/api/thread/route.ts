@@ -23,6 +23,7 @@ export async function POST(request: Request) {
     projectId,
     title,
     userId: session.user.id,
+    visibility: "private",
   });
 
   return Response.json({

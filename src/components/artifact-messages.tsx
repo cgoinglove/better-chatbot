@@ -2,7 +2,7 @@
 
 import { PreviewMessage } from "./message";
 import { useScrollToBottom } from "./use-scroll-to-bottom";
-import { Vote } from "@/lib/db/schema";
+import { type Vote as Vote } from "@/lib/db/pg/schema.pg";
 import { UIMessage } from "ai";
 import { memo } from "react";
 import equal from "fast-deep-equal";

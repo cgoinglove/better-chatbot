@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth/server";
 import { getDocumentById, saveDocument } from "@/lib/db/queries";
 import { DocumentRepository } from "@/lib/db/pg/repositories/document-repository.pg";
 import type { Session } from "better-auth";
+import { documentHandlersByArtifactKind } from "lib/artifacts/server";
 type BetterAuthSession = { session: Session; user: any };
 
 export async function GET(request: Request) {
@@ -91,7 +92,7 @@ export async function PUT(request: Request) {
       );
     }
 
-    const { title, content, kind } = await request.json();
+    const { content, kind } = await request.json();
 
     const handler = documentHandlersByArtifactKind.find((h) => h.kind === kind);
 
@@ -107,8 +108,7 @@ export async function PUT(request: Request) {
       description: content,
       session: session as BetterAuthSession,
       dataStream: {
-        writeData: async (data: any) => {
-        },
+        writeData: async (data: any) => {},
         write: async () => {},
         writeMessageAnnotation: async () => {},
         writeSource: async () => {},

@@ -14,8 +14,8 @@ import {
   type UserEntity,
   type ChatThreadEntity,
   type ChatMessageEntity,
-  type VoteEntity,
-  type SuggestionEntity,
+  type Vote,
+  type Suggestion,
 } from "./pg/schema.pg";
 import type { ArtifactKind } from "@/components/artifact";
 import { pgDb as db } from "./pg/db.pg";

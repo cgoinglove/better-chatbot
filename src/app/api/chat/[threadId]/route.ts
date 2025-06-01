@@ -27,6 +27,7 @@ export async function POST(
       projectId: projectId ?? null,
       title,
       userId: session.user.id,
+      visibility: "private",
     });
   }
   await chatRepository.insertMessages(
@@ -57,7 +58,7 @@ export async function PATCH(
     }
 
     const { threadId } = await params;
-    
+
     if (!threadId) {
       return new NextResponse("Thread ID is required", { status: 400 });
     }
@@ -65,15 +66,20 @@ export async function PATCH(
     const { messageId, content, role } = await request.json();
 
     if (!messageId || !content) {
-      return new NextResponse("Missing required fields: messageId and content are required", { status: 400 });
+      return new NextResponse(
+        "Missing required fields: messageId and content are required",
+        { status: 400 },
+      );
     }
 
     // Get all messages in the thread and find the one to update
     const messages = await chatRepository.selectMessagesByThreadId(threadId);
-    const message = messages.find(m => m.id === messageId);
-    
+    const message = messages.find((m) => m.id === messageId);
+
     if (!message) {
-      return new NextResponse("Message not found in the specified thread", { status: 404 });
+      return new NextResponse("Message not found in the specified thread", {
+        status: 404,
+      });
     }
 
     // Update the message
@@ -81,20 +87,24 @@ export async function PATCH(
       ...message,
       content,
       role: role || message.role,
-      parts: [{ type: 'text', text: content }],
+      parts: [{ type: "text" as const, text: content }],
     };
 
     await chatRepository.upsertMessage(updatedMessage);
-    
+
     // Revalidate the chat page
     revalidatePath(`/chat/${threadId}`);
 
-
-    return NextResponse.json({ success: true, message: "Message updated successfully" });
+    return NextResponse.json({
+      success: true,
+      message: "Message updated successfully",
+    });
   } catch (error) {
-    console.error('Error updating message:', error);
+    console.error("Error updating message:", error);
     if (error instanceof Error) {
-      return new NextResponse(`Internal Server Error: ${error.message}`, { status: 500 });
+      return new NextResponse(`Internal Server Error: ${error.message}`, {
+        status: 500,
+      });
     }
     return new NextResponse("Internal Server Error", { status: 500 });
   }

@@ -83,6 +83,7 @@ export async function POST(request: Request) {
         projectId: projectId ?? null,
         title,
         userId: session.user.id,
+        visibility: "private",
       });
       thread = await chatRepository.selectThreadDetails(newThread.id);
     }
@@ -134,7 +135,6 @@ export async function POST(request: Request) {
       artifactTools.updateDocument = createToolWithDataStream(updateDocument);
     }
 
-
     // Get weather tools directly
     const weatherTools = defaultTools[AppDefaultToolkit.Weather] ?? {};
 
@@ -161,7 +161,6 @@ export async function POST(request: Request) {
       toolChoice === "manual"
         ? excludeToolExecution(mcpFilteredTools)
         : mcpFilteredTools;
-
 
     if (!tools) {
       console.log("[DEBUG] No tools available");

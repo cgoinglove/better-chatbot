@@ -1,6 +1,6 @@
 "use client";
 
-import type { VoteEntity as Vote } from "@/lib/db/pg/schema.pg";
+import type { Vote as Vote } from "@/lib/db/pg/schema.pg";
 import { cn, truncateString } from "@/lib/utils";
 import type { UseChatHelpers } from "@ai-sdk/react";
 import type { UIMessage } from "ai";

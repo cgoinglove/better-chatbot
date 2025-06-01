@@ -3,7 +3,7 @@ import { PreviewMessage, ThinkingMessage } from "./message";
 import { useScrollToBottom } from "./use-scroll-to-bottom";
 import { Overview } from "./overview";
 import { memo } from "react";
-import { Vote } from "@/lib/db/schema";
+import { Vote } from "@/lib/db/pg/schema.pg";
 import equal from "fast-deep-equal";
 import { UseChatHelpers } from "@ai-sdk/react";
 

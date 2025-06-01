@@ -6,7 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { memo, useCallback, useEffect, useState } from "react";
 import useSWR, { useSWRConfig } from "swr";
 import { useDebounceCallback, useWindowSize } from "usehooks-ts";
-import type { Document, VoteEntity } from "@/lib/db/pg/schema.pg";
+import type { Document, Vote } from "@/lib/db/pg/schema.pg";
 import { fetcher } from "@/lib/utils";
 import PromptInput from "./prompt-input";
 import { Toolbar } from "./toolbar";
@@ -68,7 +68,7 @@ export function PureArtifact({
   messages: Array<UIMessage>;
   setMessages: UseChatHelpers["setMessages"];
   reload: UseChatHelpers["reload"];
-  votes?: VoteEntity[];
+  votes?: Vote[];
   isReadonly: boolean;
 }) {
   const { artifact, setArtifact, metadata, setMetadata } = useArtifact();
