@@ -328,7 +328,7 @@ export async function saveSuggestions({
   suggestions: Array<Suggestion>;
 }): Promise<Array<Suggestion>> {
   try {
-    return await db.insert(SuggestionSchema).values(suggestions);
+    return await db.insert(SuggestionSchema).values(suggestions).returning();
   } catch (error) {
     console.error("Failed to save suggestions in database");
     throw error;
