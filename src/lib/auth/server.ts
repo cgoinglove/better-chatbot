@@ -33,10 +33,11 @@ export const auth = betterAuth({
   }),
   baseURL:
     process.env.BETTER_AUTH_URL ??
-    process.env.COOLIFY_FQDN ??
-    (IS_VERCEL_ENV
-      ? `https://${process.env.VERCEL_URL}`
-      : `http://localhost:${process.env.PORT ?? 3000}`),
+    (process.env.COOLIFY_FQDN
+      ? `https://${process.env.COOLIFY_FQDN}`
+      : IS_VERCEL_ENV
+        ? `https://${process.env.VERCEL_URL}`
+        : `http://localhost:${process.env.PORT ?? 3000}`),
   emailAndPassword: {
     enabled: true,
     disableSignUp: process.env.DISABLE_SIGN_UP == "true" ? true : false,
