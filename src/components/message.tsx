@@ -25,8 +25,7 @@ import { Weather } from "./weather";
 // Combine Props from message.original.tsx and message.inbound.tsx
 interface Props {
   message: UIMessage;
-  threadId?: string; // From inbound (replaces threadId)
-  threadId?: string; // From original
+  threadId?: string;
   isLoading: boolean;
   isLastMessage?: boolean; // From original
   setMessages?: UseChatHelpers["setMessages"];
