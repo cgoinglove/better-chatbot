@@ -253,11 +253,31 @@ export class MCPClient {
   }
 }
 
+import { createSimpleHttpClient, type SimpleHttpClient } from "./simple-http-client";
+import type { SimpleHttpMCPConfig } from "app-types/mcp";
+
 /**
  * Factory function to create a new MCP client
  */
 export const createMCPClient = (
   name: string,
-  serverConfig: MCPServerConfig,
+  serverConfig: MCPServerConfig, // This is now a discriminated union
   options: ClientOptions = {},
-): MCPClient => new MCPClient(name, serverConfig, options);
+): MCPClient | SimpleHttpClient => { // Return type is now a union
+  if (serverConfig.protocol === 'simple-http') {
+    // serverConfig is already validated by Zod at the point of loading configurations,
+    // so direct casting should be safe here if the discriminated union is set up correctly.
+    return createSimpleHttpClient(name, serverConfig as SimpleHttpMCPConfig);
+    // Note: 'options' (like autoDisconnectSeconds) is not passed to createSimpleHttpClient
+    // as it doesn't currently use them.
+  } else if (serverConfig.protocol === 'sse' || serverConfig.protocol === 'stdio') {
+    // Existing logic to create and return the standard MCPClient
+    return new MCPClient(name, serverConfig, options);
+  } else {
+    // This case should ideally not be reached if MCPServerConfig is correctly parsed
+    // by a Zod schema that only allows known protocols.
+    const unknownProtocol = (serverConfig as any)?.protocol;
+    logger.error(`Unsupported MCP protocol: ${unknownProtocol} for MCP: ${name}`);
+    throw new Error(`Unsupported MCP protocol: ${unknownProtocol}`);
+  }
+};

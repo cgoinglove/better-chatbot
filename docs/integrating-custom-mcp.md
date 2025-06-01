@@ -14,21 +14,28 @@ The application supports two primary methods for configuring MCP servers:
 2.  **Database-Based Configuration:**
     *   If `FILE_BASED_MCP_CONFIG` is explicitly set to `false`, the application attempts to load MCP configurations from a database table (managed via `src/lib/ai/mcp/db-mcp-config-storage.ts`).
 
-Regardless of the source, each MCP server configuration should conform to the `MCPServerConfig` TypeScript type. This type has variants for different communication protocols:
-*   `MCPSseConfig`: For MCPs that communicate over HTTP/HTTPS, potentially using Server-Sent Events (SSE) for streaming. This is the most common type for custom HTTP-based tools.
-*   `MCPStdioConfig`: For MCPs that are local command-line tools and communicate over standard input/output (stdio).
+Regardless of the source, each MCP server configuration should conform to the `MCPServerConfig` TypeScript type. This type is a discriminated union based on the `protocol` field and includes:
+*   `MCPSseConfig` (using `protocol: 'sse'`): For MCPs that communicate over HTTP/HTTPS, potentially using Server-Sent Events (SSE) for streaming. These are expected to be compliant with the Model Context Protocol.
+*   `MCPStdioConfig` (using `protocol: 'stdio'`): For MCPs that are local command-line tools and communicate over standard input/output (stdio). These are also expected to be compliant with the Model Context Protocol.
+*   `SimpleHttpMCPConfig` (using `protocol: 'simple-http'`): For simpler HTTP-based MCPs that might not be fully Model Context Protocol compliant, allowing for static tool definition and direct HTTP calls.
 
-## Configuring a Custom HTTP-based MCP (Example: AWS Jira MCP)
+## Configuring a Custom HTTP-based MCP
 
-Let's consider an example of integrating an MCP hosted on AWS Lambda (for Jira operations), configured via the file-based method. The following JSON snippet would be part of your `.mcp-config.json` file:
+There are two main approaches depending on the MCP server's capabilities:
+
+### 1. Using `protocol: 'simple-http'` for Basic Endpoints (Example: AWS Jira MCP)
+
+This approach is suitable for simple HTTP endpoints that may not implement the full Model Context Protocol (e.g., dynamic tool discovery). The `SimpleHttpClient` is used for these.
+
+The following JSON snippet would be part of your `.mcp-config.json` file:
 
 ```json
 {
   "jira-aws-mcp": {
-    "name": "Jira AWS MCP",
-    "description": "Handles Jira operations via an AWS Lambda endpoint.",
-    "type": "sse",
-    "url": "https://<your-api-gateway-id>.execute-api.<your-region>.amazonaws.com/prod",
+    "protocol": "simple-http",
+    "name": "Jira AWS MCP (Simple)",
+    "description": "Handles Jira operations via a simple AWS Lambda endpoint.",
+    "url": "https://<your-api-gateway-id>.execute-api.<your-region>.amazonaws.com/prod/mcp/execute",
     "headers": {
       "X-API-Key": "YOUR_JIRA_MCP_LAMBDA_API_KEY"
     },
@@ -73,45 +80,82 @@ Let's consider an example of integrating an MCP hosted on AWS Lambda (for Jira o
 }
 ```
 
-**Explanation of the example:**
-*   `"jira-aws-mcp"`: A unique key for this MCP server.
-*   `"type": "sse"`: Indicates this MCP uses HTTP-based communication, potentially with SSE. The `MCPClient` will use an HTTP transport from the `@modelcontextprotocol/sdk`.
-*   `"url"`: This is the **base URL** for your API Gateway endpoint (e.g., `https://<your-api-gateway-id>.execute-api.<your-region>.amazonaws.com/prod`). The MCP client will append specific paths like `/tools` (for listing tools) or `/execute` (for calling tools) as per the Model Context Protocol.
-*   `"headers"`: Allows specifying custom headers, such as `X-API-Key` for API Gateway authentication.
-*   `"tools": [...]`: This array statically defines the tools offered by the MCP. **Crucially, the current `MCPClient` primarily relies on dynamic discovery of tools from the MCP server itself (via a `/tools` endpoint as per the Model Context Protocol).** This static `tools` array in the configuration is a proposed mechanism for scenarios where an MCP server might not support dynamic discovery. However, the existing client would need modification to use this static list directly if dynamic discovery fails or is not supported by the endpoint.
+**Explanation of this `simple-http` example:**
+*   `"protocol": "simple-http"`: This crucial field tells the application to use the `SimpleHttpClient` for this MCP.
+*   `"url"`: This must be the **exact and full URL** where the `SimpleHttpClient` will send its POST requests (e.g., your API Gateway endpoint for the Lambda function that executes the tool).
+*   `"headers"`: Allows specifying custom headers, such as `X-API-Key`.
+*   `"tools": [...]`: This array **statically defines the tools** offered by this MCP. The `SimpleHttpClient` reads tools directly from this array, bypassing any dynamic discovery. This is ideal for endpoints that don't support the Model Context Protocol's `/tools` discovery mechanism.
 
-## How the `MCPClient` Works
+### 2. Using `protocol: 'sse'` for Model Context Protocol Compliant Endpoints
 
-The `MCPClient` (instantiated in `src/lib/ai/mcp/create-mcp-client.ts`) is responsible for managing communication with an MCP server.
-*   For configurations with `type: "sse"` (like our Jira example), it utilizes transports from the `@modelcontextprotocol/sdk`, such as `StreamableHTTPClientTransport` or `SSEClientTransport`.
-*   **A fundamental expectation is that the remote MCP server (the AWS Lambda in our example) is compliant with the Model Context Protocol.** This protocol defines how clients should interact with MCP servers, including how they discover available tools and how they request tool execution. Ideally, the remote server should implement:
-    *   A `GET /tools` endpoint (or similar) to list available tools.
-    *   A `POST /execute` endpoint (or similar) to call a specific tool.
+If you have an MCP server that is fully compliant with the Model Context Protocol (supports `/tools` for discovery and `/execute` for tool calls, potentially using SSE), you would use `protocol: 'sse'`.
+
+```json
+{
+  "compliant-mcp-server": {
+    "protocol": "sse",
+    "name": "SDK Compliant MCP",
+    "description": "An MCP server that adheres to the Model Context Protocol.",
+    "url": "https://<your-compliant-mcp-base-url>", // Base URL for the MCP SDK
+    "headers": {
+      "Authorization": "Bearer <your-auth-token>"
+    }
+    // No 'tools' array here, as tools are discovered dynamically
+  }
+}
+```
+In this case, the `url` is the base URL for the SDK, and the `MCPClient` will append paths like `/tools` or `/execute`.
+
+## MCP Client Implementations
+
+The application now utilizes different client implementations based on the `protocol` specified in the MCP configuration:
+
+1.  **`MCPClient` (for `protocol: 'sse'` or `protocol: 'stdio'`)**
+    *   This is the standard client that uses the `@modelcontextprotocol/sdk`.
+    *   It expects the remote MCP server to be compliant with the Model Context Protocol.
+    *   **Tool Discovery:** It dynamically discovers tools by calling a `/tools` endpoint (or equivalent) on the remote server.
+    *   **Communication:** It uses `StreamableHTTPClientTransport` or `SSEClientTransport` for `sse` protocols, and `StdioClientTransport` for `stdio`.
+
+2.  **`SimpleHttpClient` (for `protocol: 'simple-http'`)**
+    *   This client is designed for simpler HTTP endpoints that may not implement the full Model Context Protocol (especially dynamic tool discovery).
+    *   It does **not** use the `@modelcontextprotocol/sdk` for communication.
+    *   **Tool Definition:** It reads tool definitions directly from the `tools` array provided in its static configuration (e.g., in `.mcp-config.json`).
+    *   **Communication:** It makes a direct HTTP POST request to the configured `url`. The request body is typically ` { "toolName": "<tool_name>", "parameters": { ... } } `.
+    *   This client is suitable for integrating webhook-style MCP servers or simple AWS Lambda functions fronted by API Gateway, where you define the tools statically in the configuration.
 
 ## Tool Registration and LLM Availability
 
-1.  **Discovery:** When an `MCPClient` is initialized, it typically attempts to discover the tools available on the remote MCP server by calling its equivalent of a `listTools()` method (e.g., by making a GET request to a `/tools` endpoint on the configured `url`).
-2.  **Wrapping:** The discovered tools (which should conform to the `MCPToolDefinition` from the SDK) are then wrapped into AI SDK `Tool` objects. This makes them compatible with the LLM interaction library used by the application.
-3.  **Aggregation:** The `MCPClientsManager` (from `src/lib/ai/mcp/mcp-manager.ts`) iterates through all configured and initialized MCP clients and calls their `tools()` method (which internally performs the discovery).
-4.  **Prefixing:** To avoid naming conflicts if multiple MCPs offer tools with the same name, tool names are prefixed with the MCP's configuration key. For example, `jira_create_ticket` from the `jira-aws-mcp` becomes `jira-aws-mcp_jira_create_ticket`. This is handled by the `createMCPToolId` utility.
+Regardless of the client type (`MCPClient` or `SimpleHttpClient`):
+
+1.  **Tool Collection:** Each client instance makes its tools available (either through dynamic discovery for `MCPClient` or from static configuration for `SimpleHttpClient`).
+2.  **Wrapping:** These tools (defined as `MCPToolInfo`) are then wrapped into AI SDK `Tool` objects. This makes them compatible with the LLM interaction library.
+3.  **Aggregation:** The `MCPClientsManager` (from `src/lib/ai/mcp/mcp-manager.ts`) iterates through all configured and initialized MCP clients and collects their tools.
+4.  **Prefixing:** To avoid naming conflicts if multiple MCPs offer tools with the same name, tool names are prefixed with the MCP's configuration key (e.g., `jira-aws-mcp_jira_create_ticket`). This is handled by the `createMCPToolId` utility.
 5.  **LLM Availability:** This aggregated and prefixed list of tools is then passed to the LLM during chat interactions, allowing it to request their execution.
 
 ## Integrating "Simple" HTTP Endpoints (like the Jira Lambda)
 
-The AWS Jira Lambda example, as previously discussed, might have a single endpoint like `/mcp/execute` that expects a `toolName` and `parameters` in the request body. This is a "simple" HTTP tool provider and is **not fully compliant** with the Model Context Protocol's dynamic tool discovery mechanism out-of-the-box.
+With the introduction of `SimpleHttpMCPConfig` and `SimpleHttpClient`, integrating simple HTTP endpoints (like the AWS Jira Lambda example) is now straightforward:
 
-For seamless integration with the *current* `MCPClient` and `@modelcontextprotocol/sdk` which expect protocol compliance:
+1.  **Configure with `protocol: 'simple-http'`**:
+    *   Set the `protocol` field to `"simple-http"` in your `.mcp-config.json` for that MCP.
+    *   Provide the exact `url` for the POST request (e.g., your Lambda's API Gateway execution URL).
+    *   Define all tools the endpoint can handle within the `tools` array in the configuration, including their `name`, `description`, and `inputSchema`.
 
-1.  **Required Adaptation (Server-Side):** The AWS Lambda (or any similar custom HTTP MCP) would ideally need to be modified to:
-    *   Expose a `GET /tools` (or equivalent) endpoint that returns a list of its available tools in a format compatible with the `MCPToolDefinition` of the SDK.
-    *   Structure its tool execution endpoint (e.g., `POST /execute`) to align with the protocol's expectations for tool calls.
+2.  **Endpoint Requirements**:
+    *   The HTTP endpoint must accept a `POST` request.
+    *   It should expect a JSON body containing `toolName` (the name of the tool to execute) and `parameters` (an object of arguments for the tool).
+    *   It should return a JSON response. For best results with `SimpleHttpClient`'s default parsing, the response should ideally be:
+        *   The direct output of the tool if successful.
+        *   Or, an object like `{ "success": true, "result": <actual_tool_output> }`.
+        *   If an error occurs, it can return `{ "success": false, "error": "Error message", "details": { ... } }`. `SimpleHttpClient` will attempt to parse this and throw an error.
 
-2.  **Alternative (Client-Side Modification):** If modifying the remote MCP server is not feasible, the `MCPClient` within this application (or a new, specialized client type) could be extended to support such simple HTTP endpoints. This would involve:
-    *   Reading the tool definitions directly from the static `tools` array provided in the `.mcp-config.json` (as shown in the Jira example). This would bypass the dynamic `listTools` call.
-    *   Implementing a custom `callTool` method within this specialized client that constructs the request body (e.g., `{ "toolName": "jira_create_ticket", "parameters": { ... } }`) and POSTs it directly to the configured `url` (which might be the full path to the execution endpoint like `/mcp/execute`, or the client would append a fixed path).
-
-Without these server-side adaptations or client-side modifications, integrating a simple HTTP endpoint that doesn't adhere to the Model Context Protocol's discovery and execution patterns will likely require custom code changes to ensure proper tool listing and invocation.
+Using this approach, the need for the simple HTTP endpoint to be fully Model Context Protocol compliant (especially regarding dynamic tool discovery) is bypassed. The `SimpleHttpClient` handles the direct interaction based on the static configuration.
 
 ## Conclusion
 
-Integrating custom MCPs extends the chat application's power. While the system is designed around the Model Context Protocol for robust and standardized communication (especially for tool discovery), understanding its current mechanisms and potential adaptations is key. For simple HTTP endpoints, developers should be prepared to either make their endpoints protocol-compliant or consider extending the client-side MCP handling logic to accommodate direct tool definitions and custom invocation methods.
+Integrating custom MCPs significantly enhances the chat application's capabilities. The system now offers two main pathways for integration:
+*   For **Model Context Protocol compliant servers**, use `protocol: 'sse'` (or `protocol: 'stdio'`) which leverages the `MCPClient` and its dynamic tool discovery.
+*   For **simple HTTP endpoints**, use `protocol: 'simple-http'` with the `SimpleHttpClient`, providing static tool definitions in the configuration for direct invocation.
+
+This dual approach provides flexibility, allowing developers to integrate a wider range of external tools and services with varying levels of protocol complexity.
