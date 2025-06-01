@@ -35,12 +35,16 @@ export default function Page() {
           <div className="flex-1" />
 
           <div className="flex gap-2">
-            <Link href="https://smithery.ai/" target="_blank" className="hidden sm:block">
+            <Link
+              href="https://smithery.ai/"
+              target="_blank"
+              className="hidden sm:block"
+            >
               <Button className="font-semibold" variant={"ghost"}>
                 {t("marketplace")}
               </Button>
             </Link>
-            <Link href="/mcp/create" >
+            <Link href="/mcp/create">
               <Button className="font-semibold bg-input/20" variant="outline">
                 <MCPIcon className="fill-foreground size-3.5" />
                 {t("addMcpServer")}

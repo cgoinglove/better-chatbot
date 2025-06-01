@@ -23,7 +23,7 @@ import { PanelLeft } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 export function AppSidebar() {
-  const { toggleSidebar,setOpenMobile } = useSidebar();
+  const { toggleSidebar, setOpenMobile } = useSidebar();
   const router = useRouter();
   const isMobile = useIsMobile();
 
@@ -48,7 +48,7 @@ export function AppSidebar() {
 
   useEffect(() => {
     if (isMobile) {
-      setOpenMobile(false)
+      setOpenMobile(false);
     }
   }, [currentPath, isMobile]);
 
@@ -71,8 +71,8 @@ export function AppSidebar() {
                   className="ml-auto block sm:hidden"
                   onClick={(e) => {
                     e.preventDefault();
-                    e.stopPropagation();  
-                    setOpenMobile(false)
+                    e.stopPropagation();
+                    setOpenMobile(false);
                   }}
                 >
                   <PanelLeft className="size-4" />

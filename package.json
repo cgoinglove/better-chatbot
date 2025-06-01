@@ -32,7 +32,8 @@
     "docker-compose:ps": "docker-compose -f docker/compose.yml ps",
     "docker-compose:update": "git pull && docker-compose -f docker/compose.yml up -d --build",
     "docker:pg": "docker run --name mcp-pg -e POSTGRES_PASSWORD=your_password -e POSTGRES_USER=your_username -e POSTGRES_DB=your_database_name -p 5432:5432 -d postgres",
-    "docker:app": "docker build -f docker/Dockerfile -t mcp-client-chatbot . && docker run -p 3000:3000 -e NO_HTTPS=1 mcp-client-chatbot"
+    "docker:app": "docker build -f docker/Dockerfile -t mcp-client-chatbot . && docker run -p 3000:3000 -e NO_HTTPS=1 mcp-client-chatbot",
+    "prepare": "husky"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^1.2.11",
@@ -115,6 +116,8 @@
     "drizzle-kit": "^0.30.6",
     "eslint": "^9.27.0",
     "eslint-config-next": "15.3.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.1.0",
     "rimraf": "^6.0.1",
     "tailwindcss": "^4.1.7",
     "tsx": "^4.19.4",
@@ -122,6 +125,10 @@
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.1.4"
   },
+  "lint-staged": {
+    "*.{js,json,md,mjs,ts,yaml}": ["pnpm format", "pnpm lint:fix"]
+  },
+
   "packageManager": "pnpm@10.2.1",
   "engines": {
     "node": ">=18"

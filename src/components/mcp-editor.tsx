@@ -183,7 +183,7 @@ export default function MCPEditor({
         </div>
 
         {/* Split view for config editor */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4" >
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Left side: Textarea for editing */}
           <div className="space-y-2">
             <Textarea
