@@ -297,7 +297,7 @@ export async function deleteDocumentsByIdAfterTimestamp({
 }: {
   id: string;
   timestamp: Date;
-}): Promise<Array<DocumentEntity>> {
+}): Promise<Array<Document>> {
   try {
     await db
       .delete(SuggestionSchema)
