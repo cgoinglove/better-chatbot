@@ -312,7 +312,8 @@ export async function deleteDocumentsByIdAfterTimestamp({
       .delete(DocumentSchema)
       .where(
         and(eq(DocumentSchema.id, id), gt(DocumentSchema.createdAt, timestamp)),
-      );
+      )
+      .returning();
   } catch (error) {
     console.error(
       "Failed to delete documents by id after timestamp from database",
