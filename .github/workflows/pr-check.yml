@@ -22,3 +22,4 @@ jobs:
         run: npx danger ci --dangerfile=./.github/.dangerfile.ts
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DANGER_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
