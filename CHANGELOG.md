@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.6.0](https://github.com/cgoinglove/mcp-client-chatbot/compare/v1.5.2...v1.6.0) (2025-06-01)
+
+
+### Features
+
+* add husky ([067d58d](https://github.com/cgoinglove/mcp-client-chatbot/commit/067d58dbbb58428bace3a71769c5a7dcea86bcd5))
+* add husky for formatting and checking commits  ([#71](https://github.com/cgoinglove/mcp-client-chatbot/issues/71)) ([a379cd3](https://github.com/cgoinglove/mcp-client-chatbot/commit/a379cd3e869b5caab5bcaf3b03f5607021f988ef))
+* add lint-staged and remove commitlint ([67988b8](https://github.com/cgoinglove/mcp-client-chatbot/commit/67988b8ad29fba4fc4bfee93bf9fe2e9d83b7dc0))
+* add Spanish, French, Japanese, and Chinese language support with UI improvements ([#74](https://github.com/cgoinglove/mcp-client-chatbot/issues/74)) ([e34d43d](https://github.com/cgoinglove/mcp-client-chatbot/commit/e34d43df78767518f0379a434f8ffb1808b17e17))
+* implement cold start-like auto connection for MCP server and simplify status ([#73](https://github.com/cgoinglove/mcp-client-chatbot/issues/73)) ([987c442](https://github.com/cgoinglove/mcp-client-chatbot/commit/987c4425504d6772e0aefe08b4e1911e4cb285c1))
+
+
+### Bug Fixes
+
+* hsuky ([3dcde85](https://github.com/cgoinglove/mcp-client-chatbot/commit/3dcde858a365ee57fb67c518e61855485c34c6e3))
+* remove file to get file types for lint-staged ([0c1e7eb](https://github.com/cgoinglove/mcp-client-chatbot/commit/0c1e7eb0ba74c8b9222f4981b7d38bae41df1a17))
+
 ## [1.5.2](https://github.com/cgoinglove/mcp-client-chatbot/compare/v1.5.1...v1.5.2) (2025-06-01)
 
 
