@@ -62,16 +62,15 @@ export const requestSuggestions = ({
         const suggestion = {
           id: generateUUID(),
           documentId,
-          content: JSON.stringify({
-            originalText: element.originalSentence,
-            suggestedSentence: element.suggestedSentence,
-            description: element.description,
-          }),
-          kind: "text" as const,
+          documentCreatedAt: doc.createdAt,
+          originalText: element.originalSentence,
+          suggestedText: element.suggestedSentence,
+          description: element.description ?? null,
+          isResolved: false,
           createdAt: new Date(),
           updatedAt: new Date(),
-          documentCreatedAt: doc.createdAt,
-        };
+          userId: session.user?.id ?? "", // Provide userId if available, else empty string
+        } as Suggestion;
 
         // Send individual suggestion
         dataStream.writeData({
@@ -101,13 +100,13 @@ export const requestSuggestions = ({
           content: {
             title: doc.title,
             kind: doc.kind,
-            suggestions: suggestions.map(s => ({
+            suggestions: suggestions.map((s) => ({
               ...s,
               createdAt: s.createdAt.toISOString(),
               updatedAt: s.updatedAt.toISOString(),
               documentCreatedAt: s.documentCreatedAt.toISOString(),
             })),
-          }
+          },
         });
       }
 
