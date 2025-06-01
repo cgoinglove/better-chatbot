@@ -98,7 +98,10 @@ export async function deleteChatById({
       .where(eq(ChatMessageSchema.threadId, id));
 
     // Then delete the thread
-    return await db.delete(ChatThreadSchema).where(eq(ChatThreadSchema.id, id));
+    return await db
+      .delete(ChatThreadSchema)
+      .where(eq(ChatThreadSchema.id, id))
+      .returning();
   } catch (error) {
     console.error("Failed to delete chat by id from database");
     throw error;
