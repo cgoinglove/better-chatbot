@@ -116,9 +116,6 @@ export const MCPCard = memo(function MCPCard({
 
         <h4 className="font-bold text-xs sm:text-lg">{name}</h4>
         <div className="flex-1" />
-        <div className="h-4 hidden sm:block">
-          <Separator orientation="vertical" />
-        </div>
         <Tooltip>
           <TooltipTrigger asChild>
             <Link

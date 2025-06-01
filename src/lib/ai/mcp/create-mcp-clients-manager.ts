@@ -80,7 +80,7 @@ export class MCPClientsManager {
     }
 
     const client = createMCPClient(name, serverConfig, {
-      autoDisconnectSeconds: 60 * 10, // 10 minutes
+      autoDisconnectSeconds: 60 * 20, // 20 minutes
     });
     this.clients.set(name, client);
     return client.connect();
