@@ -26,7 +26,7 @@ import {
   ChatApiSchemaRequestBody,
   ChatMessageAnnotation,
 } from "app-types/chat";
-import { useLatest } from "@/hooks/use-latest";
+import { useToRef } from "@/hooks/use-latest";
 import { isShortcutEvent, Shortcuts } from "lib/keyboard-shortcuts";
 import { Button } from "ui/button";
 import { deleteThreadAction } from "@/app/api/chat/actions";
@@ -126,7 +126,7 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
 
   const [isDeleteThreadPopupOpen, setIsDeleteThreadPopupOpen] = useState(false);
 
-  const latestRef = useLatest({
+  const latestRef = useToRef({
     toolChoice,
     model,
     allowedAppDefaultToolkit,

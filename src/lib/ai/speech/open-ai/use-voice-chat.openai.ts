@@ -109,6 +109,8 @@ export function useOpenAIVoiceChat(
     ]),
   );
 
+  const [isUserSpeaking, setIsUserSpeaking] = useState(false);
+  const [isAssistantSpeaking, setIsAssistantSpeaking] = useState(false);
   const [isActive, setIsActive] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -118,8 +120,8 @@ export function useOpenAIVoiceChat(
   const dataChannel = useRef<RTCDataChannel | null>(null);
   const audioElement = useRef<HTMLAudioElement | null>(null);
   const audioStream = useRef<MediaStream | null>(null);
-  const { setTheme, theme } = useTheme();
 
+  const { setTheme, theme } = useTheme();
   const tracks = useRef<RTCRtpSender[]>([]);
 
   const startListening = useCallback(async () => {
@@ -288,6 +290,7 @@ export function useOpenAIVoiceChat(
               text: "",
             },
           });
+          setIsUserSpeaking(true);
           setMessages((prev) => [...prev, message]);
           break;
         }
@@ -316,10 +319,24 @@ export function useOpenAIVoiceChat(
           break;
         }
         case "response.audio_transcript.delta": {
+          setIsAssistantSpeaking(true);
           setMessages((prev) => {
             const message = prev.findLast((m) => m.id == event.item_id)!;
             if (message) {
-              return prev;
+              return prev.map((m) =>
+                m.id == event.item_id
+                  ? {
+                      ...m,
+                      parts: [
+                        {
+                          type: "text",
+                          text:
+                            (message.parts[0] as TextPart).text! + event.delta,
+                        },
+                      ],
+                    }
+                  : m,
+              );
             }
             return [
               ...prev,
@@ -328,8 +345,9 @@ export function useOpenAIVoiceChat(
                 id: event.item_id,
                 content: {
                   type: "text",
-                  text: "",
+                  text: event.delta,
                 },
+                completed: true,
               }),
             ];
           });
@@ -367,6 +385,14 @@ export function useOpenAIVoiceChat(
             args: event.arguments,
             id: event.item_id,
           });
+          break;
+        }
+        case "input_audio_buffer.speech_stopped": {
+          setIsUserSpeaking(false);
+          break;
+        }
+        case "output_audio_buffer.stopped": {
+          setIsAssistantSpeaking(false);
           break;
         }
       }
@@ -490,6 +516,8 @@ export function useOpenAIVoiceChat(
 
   return {
     isActive,
+    isUserSpeaking,
+    isAssistantSpeaking,
     isListening,
     isLoading,
     error,

@@ -1,5 +1,5 @@
-@import "tailwindcss";
-@import "tw-animate-css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
 /* Individual theme variants - themes from  https://github.com/rawestmoreland/theme-generator/blob/main/src/app/globals.css */
 
 @theme inline {
@@ -78,7 +78,7 @@
   --sidebar-ring: oklch(0.705 0.015 286.067);
 }
 
-[data-theme="default-dark"] {
+[data-theme='default-dark'] {
   color-scheme: dark;
   --background: oklch(0.19 0.004 285.885);
   --foreground: oklch(0.985 0 0);
@@ -109,7 +109,7 @@
 }
 
 /* Zinc Light */
-[data-theme="zinc"] {
+[data-theme='zinc'] {
   --background: hsl(0 0% 100%);
   --foreground: hsl(240 10% 3.9%);
   --card: hsl(0 0% 100%);
@@ -146,7 +146,7 @@
 }
 
 /* Zinc Dark */
-[data-theme="zinc-dark"] {
+[data-theme='zinc-dark'] {
   color-scheme: dark;
   --background: hsl(240 10% 3.9%);
   --foreground: hsl(0 0% 98%);
@@ -183,7 +183,7 @@
 }
 
 /* Slate light */
-[data-theme="slate"] {
+[data-theme='slate'] {
   --background: hsl(0 0% 100%);
   --foreground: hsl(222.2 84% 4.9%);
   --card: hsl(0 0% 100%);
@@ -220,7 +220,7 @@
 }
 
 /* Slate Dark */
-[data-theme="slate-dark"] {
+[data-theme='slate-dark'] {
   color-scheme: dark;
   --background: hsl(222.2 84% 4.9%);
   --foreground: hsl(210 40% 98%);
@@ -257,7 +257,7 @@
 }
 
 /* Stone Light */
-[data-theme="stone"] {
+[data-theme='stone'] {
   --background: hsl(0 0% 100%);
   --foreground: hsl(28 25% 8%);
   --card: hsl(0 0% 100%);
@@ -294,7 +294,7 @@
 }
 
 /* Stone Dark */
-[data-theme="stone-dark"] {
+[data-theme='stone-dark'] {
   color-scheme: dark;
   --background: hsl(20 14.3% 4.1%);
   --foreground: hsl(60 9.1% 97.8%);
@@ -331,7 +331,7 @@
 }
 
 /* Gray Light */
-[data-theme="gray"] {
+[data-theme='gray'] {
   --background: hsl(0 0% 100%);
   --foreground: hsl(224 71.4% 4.1%);
   --card: hsl(0 0% 100%);
@@ -368,7 +368,7 @@
 }
 
 /* Gray Dark */
-[data-theme="gray-dark"] {
+[data-theme='gray-dark'] {
   color-scheme: dark;
   --background: hsl(224 71.4% 4.1%);
   --foreground: hsl(210 20% 98%);
@@ -405,7 +405,7 @@
 }
 
 /* Blue Light */
-[data-theme="blue"] {
+[data-theme='blue'] {
   --background: hsl(0 0% 100%);
   --foreground: hsl(222.2 84% 4.9%);
   --card: hsl(0 0% 100%);
@@ -442,7 +442,7 @@
 }
 
 /* Blue Dark */
-[data-theme="blue-dark"] {
+[data-theme='blue-dark'] {
   color-scheme: dark;
   --background: hsl(222.2 84% 4.9%);
   --foreground: hsl(210 40% 98%);
@@ -479,7 +479,7 @@
 }
 
 /* Orange Light */
-[data-theme="orange"] {
+[data-theme='orange'] {
   --background: hsl(0 0% 100%);
   --foreground: hsl(20 14.3% 4.1%);
   --card: hsl(0 0% 100%);
@@ -516,7 +516,7 @@
 }
 
 /* Orange Dark */
-[data-theme="orange-dark"] {
+[data-theme='orange-dark'] {
   color-scheme: dark;
   --background: hsl(20 14.3% 4.1%);
   --foreground: hsl(60 9.1% 97.8%);
@@ -553,7 +553,7 @@
 }
 
 /* Bubblegum Pop Light */
-[data-theme="bubblegum-pop"] {
+[data-theme='bubblegum-pop'] {
   --background: hsl(330 100% 99%);
   --foreground: hsl(330 10% 10%);
   --card: hsl(330 100% 98%);
@@ -590,7 +590,7 @@
 }
 
 /* Bubblegum Pop Dark */
-[data-theme="bubblegum-pop-dark"] {
+[data-theme='bubblegum-pop-dark'] {
   color-scheme: dark;
   --background: hsl(330 50% 10%);
   --foreground: hsl(330 10% 95%);
@@ -628,7 +628,7 @@
 }
 
 /* Cyberpunk Neon Light */
-[data-theme="cyberpunk-neon"] {
+[data-theme='cyberpunk-neon'] {
   --background: hsl(220 20% 97%);
   --foreground: hsl(220 80% 5%);
   --card: hsl(220 20% 98%);
@@ -665,7 +665,7 @@
 }
 
 /* Cyberpunk Neon Dark */
-[data-theme="cyberpunk-neon-dark"] {
+[data-theme='cyberpunk-neon-dark'] {
   color-scheme: dark;
   --background: hsl(220 80% 5%);
   --foreground: hsl(220 20% 98%);
@@ -703,7 +703,7 @@
 }
 
 /* Retro Arcade Light */
-[data-theme="retro-arcade"] {
+[data-theme='retro-arcade'] {
   --background: hsl(60 10% 95%);
   --foreground: hsl(60 10% 5%);
   --card: hsl(60 10% 97%);
@@ -740,7 +740,7 @@
 }
 
 /* Retro Arcade Dark */
-[data-theme="retro-arcade-dark"] {
+[data-theme='retro-arcade-dark'] {
   color-scheme: dark;
   --background: hsl(240 10% 5%);
   --foreground: hsl(60 10% 95%);
@@ -778,7 +778,7 @@
 }
 
 /* Tropical Paradise Light */
-[data-theme="tropical-paradise"] {
+[data-theme='tropical-paradise'] {
   --background: hsl(180 50% 97%);
   --foreground: hsl(180 50% 10%);
   --card: hsl(180 50% 98%);
@@ -814,7 +814,7 @@
   --sidebar-ring: hsl(150 80% 40%);
 }
 /* Tropical Paradise Dark */
-[data-theme="tropical-paradise-dark"] {
+[data-theme='tropical-paradise-dark'] {
   color-scheme: dark;
   --background: hsl(200 70% 10%);
   --foreground: hsl(180 50% 97%);
@@ -852,7 +852,7 @@
 }
 
 /* Steampunk Cogs Light */
-[data-theme="steampunk-cogs"] {
+[data-theme='steampunk-cogs'] {
   --background: hsl(30 20% 95%);
   --foreground: hsl(30 20% 10%);
   --card: hsl(30 20% 97%);
@@ -889,7 +889,7 @@
 }
 
 /* Steampunk Cogs Dark */
-[data-theme="steampunk-cogs-dark"] {
+[data-theme='steampunk-cogs-dark'] {
   color-scheme: dark;
   --background: hsl(30 30% 10%);
   --foreground: hsl(30 20% 95%);
@@ -927,7 +927,7 @@
 }
 
 /* Neon Synthwave Light */
-[data-theme="neon-synthwave"] {
+[data-theme='neon-synthwave'] {
   --background: hsl(280 30% 95%);
   --foreground: hsl(280 30% 10%);
   --card: hsl(280 30% 97%);
@@ -964,7 +964,7 @@
 }
 
 /* Neon Synthwave Dark */
-[data-theme="neon-synthwave-dark"] {
+[data-theme='neon-synthwave-dark'] {
   color-scheme: dark;
   --background: hsl(280 50% 5%);
   --foreground: hsl(280 30% 95%);
@@ -1002,7 +1002,7 @@
 }
 
 /* Pastel Kawaii Light */
-[data-theme="pastel-kawaii"] {
+[data-theme='pastel-kawaii'] {
   --background: hsl(60 30% 97%);
   --foreground: hsl(60 30% 10%);
   --card: hsl(60 30% 98%);
@@ -1039,7 +1039,7 @@
 }
 
 /* Pastel Kawaii Dark */
-[data-theme="pastel-kawaii-dark"] {
+[data-theme='pastel-kawaii-dark'] {
   color-scheme: dark;
   --background: hsl(270 30% 10%);
   --foreground: hsl(60 30% 97%);
@@ -1077,7 +1077,7 @@
 }
 
 /* Space Odyssey Light */
-[data-theme="space-odyssey"] {
+[data-theme='space-odyssey'] {
   --background: hsl(220 20% 97%);
   --foreground: hsl(220 20% 10%);
   --card: hsl(220 20% 98%);
@@ -1114,7 +1114,7 @@
 }
 
 /* Space Odyssey Dark */
-[data-theme="space-odyssey-dark"] {
+[data-theme='space-odyssey-dark'] {
   color-scheme: dark;
   --background: hsl(230 50% 3%);
   --foreground: hsl(220 20% 97%);
@@ -1152,7 +1152,7 @@
 }
 
 /* Vintage Vinyl Light */
-[data-theme="vintage-vinyl"] {
+[data-theme='vintage-vinyl'] {
   --background: hsl(30 10% 98%);
   --foreground: hsl(30 10% 10%);
   --card: hsl(30 10% 99%);
@@ -1189,7 +1189,7 @@
 }
 
 /* Vintage Vinyl Dark */
-[data-theme="vintage-vinyl-dark"] {
+[data-theme='vintage-vinyl-dark'] {
   color-scheme: dark;
   --background: hsl(30 15% 10%);
   --foreground: hsl(30 10% 98%);
@@ -1227,7 +1227,7 @@
 }
 
 /* Zen Garden Light */
-[data-theme="zen-garden"] {
+[data-theme='zen-garden'] {
   --background: hsl(90 10% 98%);
   --foreground: hsl(90 10% 10%);
   --card: hsl(90 10% 99%);
@@ -1264,7 +1264,7 @@
 }
 
 /* Zen Garden Dark */
-[data-theme="zen-garden-dark"] {
+[data-theme='zen-garden-dark'] {
   color-scheme: dark;
   --background: hsl(90 15% 10%);
   --foreground: hsl(90 10% 98%);
@@ -1302,7 +1302,7 @@
 }
 
 /* Misty Harbor Light */
-[data-theme="misty-harbor"] {
+[data-theme='misty-harbor'] {
   --background: hsl(210 15% 98%);
   --foreground: hsl(210 15% 10%);
   --card: hsl(210 15% 99%);
@@ -1339,7 +1339,7 @@
 }
 
 /* Misty Harbor Dark */
-[data-theme="misty-harbor-dark"] {
+[data-theme='misty-harbor-dark'] {
   color-scheme: dark;
   --background: hsl(210 20% 10%);
   --foreground: hsl(210 15% 98%);
@@ -1377,7 +1377,7 @@
 }
 
 /* Pink Light */
-[data-theme="pink"] {
+[data-theme='pink'] {
   --background: hsl(340 100% 99%);
   --foreground: hsl(340 10% 10%);
   --card: hsl(340 100% 98%);
@@ -1414,7 +1414,7 @@
 }
 
 /* Pink Dark */
-[data-theme="pink-dark"] {
+[data-theme='pink-dark'] {
   color-scheme: dark;
   --background: hsl(340 50% 8%);
   --foreground: hsl(340 10% 95%);
@@ -1475,5 +1475,30 @@
     border-radius: 12px;
     padding: 0.2rem 0.6rem;
     margin: 0 0.1rem;
+  }
+  .duration-3000 {
+    --tw-duration: 3000ms;
+    transition-duration: var(--tw-duration);
+  }
+  .duration-5000 {
+    --tw-duration: 5000ms;
+    transition-duration: var(--tw-duration);
+  }
+
+  .delayed-fade-in {
+    animation: delayedFadeIn 5s ease-in-out forwards;
+    opacity: 0;
+  }
+
+  @keyframes delayedFadeIn {
+    0% {
+      opacity: 0;
+    }
+    80% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
   }
 }

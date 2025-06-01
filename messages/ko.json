@@ -91,7 +91,11 @@
       "toggleVoiceChat": "음성 채팅 토글",
       "startConversation": "대화 시작",
       "closeMic": "마이크 닫기",
-      "openMic": "마이크 열기"
+      "openMic": "마이크 열기",
+      "readyWhenYouAreJustStartTalking": "준비됐어요. 언제든 이야기해 주세요",
+      "yourMicIsOff": "마이크를 꺼두셨어요.",
+      "preparing": "준비중이에요...",
+      "startVoiceChat": "대화를 시작해볼까요?"
     },
     "Thread": {
       "chat": "채팅",

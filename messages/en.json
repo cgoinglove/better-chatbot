@@ -91,7 +91,11 @@
       "closeMic": "Close Mic",
       "openMic": "Open Mic",
       "endConversation": "End conversation",
-      "toggleVoiceChat": "Toggle Voice Chat"
+      "toggleVoiceChat": "Toggle Voice Chat",
+      "readyWhenYouAreJustStartTalking": "Ready when you are—just start talking.",
+      "yourMicIsOff": "Your mic is off.",
+      "preparing": "Preparing...",
+      "startVoiceChat": "Start voice chat?"
     },
     "Thread": {
       "chat": "Chat",
