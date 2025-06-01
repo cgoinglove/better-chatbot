@@ -1,0 +1,1 @@
+ALTER TABLE "suggestion" ADD COLUMN "documentCreatedAt" timestamp NOT NULL;

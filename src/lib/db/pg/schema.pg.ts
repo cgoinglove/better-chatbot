@@ -62,26 +62,19 @@ export const McpServerSchema = pgTable("mcp_server", {
   updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
-export const DocumentSchema = pgTable(
-  "document",
-  {
-    id: uuid("id").primaryKey().notNull().defaultRandom(),
-    createdAt: timestamp("created_at")
-      .notNull()
-      .default(sql`CURRENT_TIMESTAMP`),
-    updatedAt: timestamp("updated_at")
-      .notNull()
-      .default(sql`CURRENT_TIMESTAMP`),
-    title: text("title").notNull(),
-    content: text("content"),
-    kind: varchar("kind", { enum: ["text", "code", "image", "sheet"] })
-      .notNull()
-      .default("text"),
-    userId: uuid("user_id")
-      .notNull()
-      .references(() => UserSchema.id),
-  }
-);
+export const DocumentSchema = pgTable("document", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  title: text("title").notNull(),
+  content: text("content"),
+  kind: varchar("kind", { enum: ["text", "code", "image", "sheet"] })
+    .notNull()
+    .default("text"),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => UserSchema.id),
+});
 
 export type Document = InferSelectModel<typeof DocumentSchema>;
 
@@ -172,6 +165,7 @@ export const SuggestionSchema = pgTable(
     documentId: uuid("document_id")
       .notNull()
       .references(() => DocumentSchema.id),
+    documentCreatedAt: timestamp("documentCreatedAt").notNull(),
     originalText: text("original_text").notNull(),
     suggestedText: text("suggested_text").notNull(),
     description: text("description"),
