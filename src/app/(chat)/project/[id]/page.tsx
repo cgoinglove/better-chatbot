@@ -181,12 +181,12 @@ export default function ProjectPage() {
           threadId={threadId}
         />
         <div className="flex my-4 mx-2 gap-4">
-          <FeatureCard
+          {/* <FeatureCard
             title="Add Files"
             onClick={notImplementedToast}
             description="Chat in this project can access file contents."
             icon={<FileUp size={18} className="text-muted-foreground" />}
-          />
+          /> */}
           <FeatureCard
             title="Add Instructions"
             description={
