@@ -22,3 +22,6 @@
 [submodule "inspiration/copilotkit"]
 	path = inspiration/copilotkit
 	url = https://github.com/CopilotKit/CopilotKit
+[submodule "inspiration/openchat"]
+	path = inspiration/openchat
+	url = https://github.com/murabcd/openchat
