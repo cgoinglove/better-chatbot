@@ -29,41 +29,6 @@ import type { MCPServerInfo, MCPToolInfo } from "app-types/mcp";
 import { ToolDetailPopup } from "./tool-detail-popup";
 import { useTranslations } from "next-intl";
 
-// Tools list component
-const ToolsList = memo(({ tools }: { tools: MCPToolInfo[] }) => (
-  <div className="space-y-2 pr-2">
-    {tools.map((tool) => (
-      <ToolDetailPopup key={tool.name} tool={tool}>
-        <div className="flex cursor-pointer bg-secondary rounded-md p-2 hover:bg-input transition-colors">
-          <div className="flex-1 w-full">
-            <p className="font-medium text-sm mb-1 truncate">{tool.name}</p>
-            <p className="text-xs text-muted-foreground line-clamp-1">
-              {tool.description}
-            </p>
-          </div>
-          <div className="flex items-center px-1 justify-center self-stretch">
-            <ChevronRight size={16} />
-          </div>
-        </div>
-      </ToolDetailPopup>
-    ))}
-  </div>
-));
-
-ToolsList.displayName = "ToolsList";
-
-// Error alert component
-const ErrorAlert = memo(({ error }: { error: string }) => (
-  <div className="px-6 pb-2">
-    <Alert variant="destructive" className="border-destructive">
-      <AlertTitle>Error</AlertTitle>
-      <AlertDescription>{error}</AlertDescription>
-    </Alert>
-  </div>
-));
-
-ErrorAlert.displayName = "ErrorAlert";
-
 // Main MCPCard component
 export const MCPCard = memo(function MCPCard({
   config,
@@ -204,3 +169,38 @@ export const MCPCard = memo(function MCPCard({
     </Card>
   );
 });
+
+// Tools list component
+const ToolsList = memo(({ tools }: { tools: MCPToolInfo[] }) => (
+  <div className="space-y-2 pr-2">
+    {tools.map((tool) => (
+      <ToolDetailPopup key={tool.name} tool={tool}>
+        <div className="flex cursor-pointer bg-secondary rounded-md p-2 hover:bg-input transition-colors">
+          <div className="flex-1 min-w-0">
+            <p className="font-medium text-sm mb-1 truncate">{tool.name}</p>
+            <p className="text-xs text-muted-foreground line-clamp-1">
+              {tool.description}
+            </p>
+          </div>
+          <div className="flex items-center px-1 justify-center self-stretch">
+            <ChevronRight size={16} />
+          </div>
+        </div>
+      </ToolDetailPopup>
+    ))}
+  </div>
+));
+
+ToolsList.displayName = "ToolsList";
+
+// Error alert component
+const ErrorAlert = memo(({ error }: { error: any }) => (
+  <div className="px-6 pb-2">
+    <Alert variant="destructive" className="border-destructive">
+      <AlertTitle>Error</AlertTitle>
+      <AlertDescription>{error?.message || error}</AlertDescription>
+    </Alert>
+  </div>
+));
+
+ErrorAlert.displayName = "ErrorAlert";

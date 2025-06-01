@@ -9,7 +9,8 @@
     "next": "Next",
     "create": "Create",
     "showLess": "Show less",
-    "showMore": "Show more"
+    "showMore": "Show more",
+    "generate": "Generate"
   },
   "Auth": {
     "SignIn": {
@@ -210,6 +211,13 @@
     "availableTools": "Available Tools",
     "noToolsAvailable": "No tools available",
     "overviewTitle": "Connect Your First Server",
-    "overviewDescription": "Add MCP servers to unlock powerful AI integrations"
+    "overviewDescription": "Add MCP servers to unlock powerful AI integrations",
+    "searchTools": "Search tools",
+    "detail": "Detail",
+    "noSchemaPropertiesAvailable": "No schema properties available",
+    "createInputWithAI": "Create Input with AI",
+    "generateExampleInputJSON": "Generate Example Input JSON",
+    "enterPromptToGenerateExampleInputJSON": "Enter a prompt to generate example input JSON for the selected tool.",
+    "callTool": "Call Tool"
   }
 }

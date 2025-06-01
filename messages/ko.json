@@ -9,7 +9,8 @@
     "next": "다음",
     "create": "생성",
     "showLess": "적게 보기",
-    "showMore": "더 보기"
+    "showMore": "더 보기",
+    "generate": "생성"
   },
   "Auth": {
     "SignIn": {
@@ -210,6 +211,13 @@
     "availableTools": "사용 가능한 도구",
     "noToolsAvailable": "사용 가능한 도구가 없습니다",
     "overviewTitle": "첫 번째 서버 연결",
-    "overviewDescription": "강력한 AI 통합을 위해 MCP 서버를 추가하세요."
+    "overviewDescription": "강력한 AI 통합을 위해 MCP 서버를 추가하세요.",
+    "searchTools": "도구 검색",
+    "detail": "상세 보기",
+    "noSchemaPropertiesAvailable": "속성이 없습니다",
+    "createInputWithAI": "AI로 입력 생성",
+    "generateExampleInputJSON": "예제 입력 JSON 생성",
+    "enterPromptToGenerateExampleInputJSON": "선택한 도구에 대한 예제 입력 JSON을 생성하기 위한 프롬프트를 입력하세요.",
+    "callTool": "도구 호출"
   }
 }

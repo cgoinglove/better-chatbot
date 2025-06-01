@@ -63,6 +63,7 @@ import { MCPToolInfo } from "app-types/mcp";
 import { Label } from "ui/label";
 import { safe } from "ts-safe";
 import { useObjectState } from "@/hooks/use-object-state";
+import { useTranslations } from "next-intl";
 
 // Type definitions
 type SchemaProperty = {
@@ -207,7 +208,7 @@ const ToolListItem = ({
     onClick={onClick}
   >
     <div className="flex-1 w-full">
-      <p className="font-medium text-sm mb-1">{tool.name}</p>
+      <p className="font-medium text-sm mb-1 truncate">{tool.name}</p>
       <p className="text-xs text-muted-foreground line-clamp-2">
         {tool.description}
       </p>
@@ -264,6 +265,7 @@ const GenerateExampleInputJsonDialog = ({
   onGenerated,
 }: PropsWithChildren<GenerateExampleInputJsonDialogProps>) => {
   const currentModelName = appStore((state) => state.model);
+  const t = useTranslations();
 
   const [option, setOption] = useObjectState({
     open: false,
@@ -306,10 +308,10 @@ const GenerateExampleInputJsonDialog = ({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            <p>Generate Example Input JSON</p>
+            <p>{t("MCP.generateExampleInputJSON")}</p>
           </DialogTitle>
           <DialogDescription className="text-xs">
-            Enter a prompt to generate example input JSON for the selected tool.
+            {t("MCP.enterPromptToGenerateExampleInputJSON")}
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-2 py-4 text-foreground">
@@ -342,19 +344,19 @@ const GenerateExampleInputJsonDialog = ({
             className="resize-none h-28 placeholder:text-xs"
             value={option.prompt}
             onChange={(e) => setOption({ prompt: e.target.value })}
-            placeholder="e.g. What's the weather like in New York today?"
+            placeholder={t("MCP.enterPromptToGenerateExampleInputJSON")}
           />
         </div>
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="ghost">Cancel</Button>
+            <Button variant="ghost">{t("Common.cancel")}</Button>
           </DialogClose>
 
           <Button variant="default" onClick={generateExampleSchema}>
             {option.loading ? (
               <Loader className="size-4 animate-spin" />
             ) : (
-              "Generate"
+              t("Common.generate")
             )}
           </Button>
         </DialogFooter>
@@ -365,6 +367,8 @@ const GenerateExampleInputJsonDialog = ({
 
 export default function Page() {
   const { name } = useParams();
+
+  const t = useTranslations();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedToolIndex, setSelectedToolIndex] = useState<number>(0);
@@ -490,7 +494,7 @@ export default function Page() {
           className="flex items-center gap-2 text-muted-foreground text-sm hover:text-foreground transition-colors pb-4"
         >
           <ArrowLeft className="size-3" />
-          Back
+          {t("Common.back")}
         </Link>
         <header>
           <h2 className="text-3xl font-semibold my-2">
@@ -508,7 +512,7 @@ export default function Page() {
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   type="search"
-                  placeholder="Search tools..."
+                  placeholder={t("MCP.searchTools")}
                   className="pl-8 bg-background"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -573,7 +577,8 @@ export default function Page() {
                                   size="sm"
                                   className="h-6 px-2 text-xs"
                                 >
-                                  Detail <ChevronDown className="ml-1 size-3" />
+                                  {t("MCP.detail")}
+                                  <ChevronDown className="ml-1 size-3" />
                                 </Button>
                               </DialogTrigger>
                               <DialogPortal>
@@ -596,7 +601,7 @@ export default function Page() {
                           </div>
 
                           <div
-                            className="border border-input rounded-md p-4 h-[200px] overflow-auto hover:bg-secondary cursor-pointer"
+                            className="border border-input rounded-md p-4 h-[200px] overflow-y-auto"
                             onClick={toggleInputSchema}
                           >
                             {simplifiedSchema &&
@@ -614,7 +619,7 @@ export default function Page() {
                               </div>
                             ) : (
                               <p className="text-xs text-muted-foreground italic">
-                                No schema properties available
+                                {t("MCP.noSchemaPropertiesAvailable")}
                               </p>
                             )}
                           </div>
@@ -635,7 +640,7 @@ export default function Page() {
                                 size="sm"
                                 className="h-6 px-2 text-xs"
                               >
-                                Create Input with AI
+                                {t("MCP.createInputWithAI")}
                                 <WandSparkles className="ml-1 size-3" />
                               </Button>
                             </GenerateExampleInputJsonDialog>
@@ -670,7 +675,7 @@ export default function Page() {
                           {isCallLoading && (
                             <Loader className="size-4 animate-spin mr-2" />
                           )}
-                          Call Tool
+                          {t("MCP.callTool")}
                         </Button>
                       </div>
 
