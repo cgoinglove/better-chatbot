@@ -46,7 +46,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useChatVisibility } from "@/hooks/use-chat-visibility";
-import type { Chat } from "@/lib/db/pg/schema.pg";
+import type { ChatThreadEntity as Chat } from "@/lib/db/pg/schema.pg";
 import { fetcher } from "@/lib/utils";
 
 type GroupedChats = {
