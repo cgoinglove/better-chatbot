@@ -126,7 +126,7 @@
     "vitest": "^3.1.4"
   },
   "lint-staged": {
-    "*.{js,json,md,mjs,ts,yaml}": [
+    "*.{js,json,md,mjs,ts,yaml,tsx,css}": [
       "pnpm format",
       "pnpm lint:fix"
     ]
