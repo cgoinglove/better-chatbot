@@ -1,5 +1,5 @@
 {
-  "id": "e32c4d7d-c587-425b-aec7-a07b2f6de620",
+  "id": "9f0940d6-83aa-40f4-9184-1cea46dce367",
   "prevId": "db438cdb-7031-4859-badc-0d04f2ef8d81",
   "version": "7",
   "dialect": "postgresql",
@@ -266,7 +266,7 @@
         "id": {
           "name": "id",
           "type": "uuid",
-          "primaryKey": false,
+          "primaryKey": true,
           "notNull": true,
           "default": "gen_random_uuid()"
         },
@@ -326,14 +326,7 @@
           "onUpdate": "no action"
         }
       },
-      "compositePrimaryKeys": {
-        "document_id_pk": {
-          "name": "document_id_pk",
-          "columns": [
-            "id"
-          ]
-        }
-      },
+      "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
@@ -573,24 +566,36 @@
           "primaryKey": false,
           "notNull": true
         },
-        "document_created_at": {
-          "name": "document_created_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "content": {
-          "name": "content",
+        "original_text": {
+          "name": "original_text",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "kind": {
-          "name": "kind",
-          "type": "varchar",
+        "suggested_text": {
+          "name": "suggested_text",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_resolved": {
+          "name": "is_resolved",
+          "type": "boolean",
           "primaryKey": false,
           "notNull": true,
-          "default": "'text'"
+          "default": false
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
         }
       },
       "indexes": {},
@@ -601,6 +606,19 @@
           "tableTo": "document",
           "columnsFrom": [
             "document_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "suggestion_user_id_user_id_fk": {
+          "name": "suggestion_user_id_user_id_fk",
+          "tableFrom": "suggestion",
+          "tableTo": "user",
+          "columnsFrom": [
+            "user_id"
           ],
           "columnsTo": [
             "id"
@@ -756,15 +774,15 @@
       "name": "vote",
       "schema": "",
       "columns": {
-        "chat_id": {
-          "name": "chat_id",
+        "thread_id": {
+          "name": "thread_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
         "message_id": {
           "name": "message_id",
-          "type": "uuid",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         },
@@ -777,25 +795,12 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "vote_chat_id_chat_thread_id_fk": {
-          "name": "vote_chat_id_chat_thread_id_fk",
+        "vote_thread_id_chat_thread_id_fk": {
+          "name": "vote_thread_id_chat_thread_id_fk",
           "tableFrom": "vote",
           "tableTo": "chat_thread",
           "columnsFrom": [
-            "chat_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "vote_message_id_chat_message_id_fk": {
-          "name": "vote_message_id_chat_message_id_fk",
-          "tableFrom": "vote",
-          "tableTo": "chat_message",
-          "columnsFrom": [
-            "message_id"
+            "thread_id"
           ],
           "columnsTo": [
             "id"
@@ -805,10 +810,10 @@
         }
       },
       "compositePrimaryKeys": {
-        "vote_chat_id_message_id_pk": {
-          "name": "vote_chat_id_message_id_pk",
+        "vote_thread_id_message_id_pk": {
+          "name": "vote_thread_id_message_id_pk",
           "columns": [
-            "chat_id",
+            "thread_id",
             "message_id"
           ]
         }

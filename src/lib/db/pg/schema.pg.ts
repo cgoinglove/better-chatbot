@@ -65,7 +65,7 @@ export const McpServerSchema = pgTable("mcp_server", {
 export const DocumentSchema = pgTable(
   "document",
   {
-    id: uuid("id").notNull().defaultRandom(),
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
     createdAt: timestamp("created_at")
       .notNull()
       .default(sql`CURRENT_TIMESTAMP`),
@@ -80,12 +80,7 @@ export const DocumentSchema = pgTable(
     userId: uuid("user_id")
       .notNull()
       .references(() => UserSchema.id),
-  },
-  (table) => {
-    return {
-      pk: primaryKey({ columns: [table.id, table.createdAt] }),
-    };
-  },
+  }
 );
 
 export type Document = InferSelectModel<typeof DocumentSchema>;
@@ -177,7 +172,6 @@ export const SuggestionSchema = pgTable(
     documentId: uuid("document_id")
       .notNull()
       .references(() => DocumentSchema.id),
-    documentCreatedAt: timestamp("document_created_at").notNull(),
     originalText: text("original_text").notNull(),
     suggestedText: text("suggested_text").notNull(),
     description: text("description"),
@@ -188,10 +182,6 @@ export const SuggestionSchema = pgTable(
   },
   (table) => ({
     pk: primaryKey({ columns: [table.id] }),
-    documentRef: foreignKey({
-      columns: [table.documentId, table.documentCreatedAt],
-      foreignColumns: [DocumentSchema.id, DocumentSchema.createdAt],
-    }),
   }),
 );
 
