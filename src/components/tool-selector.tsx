@@ -359,10 +359,7 @@ function McpServerSelector() {
         selectedMcpServerList.map((server) => (
           <DropdownMenuSub key={server.id}>
             <DropdownMenuSubTrigger
-              className={cn(
-                server.status === "disconnected" && "opacity-40",
-                "flex items-center gap-2 font-semibold cursor-pointer",
-              )}
+              className="flex items-center gap-2 font-semibold cursor-pointer"
               icon={
                 <div className="flex items-center gap-2 ml-auto">
                   {server.tools.filter((t) => t.checked).length > 0 ? (
@@ -394,14 +391,6 @@ function McpServerSelector() {
                   className={cn("text-xs text-destructive ml-1 p-1 rounded")}
                 >
                   error
-                </span>
-              ) : server.status === "disconnected" ? (
-                <span
-                  className={cn(
-                    "text-xs text-muted-foreground ml-1 p-1 rounded",
-                  )}
-                >
-                  disabled
                 </span>
               ) : null}
             </DropdownMenuSubTrigger>

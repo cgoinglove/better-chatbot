@@ -43,7 +43,6 @@ export function EnabledMcpTools({
 
   const enabledMcpTools = useMemo(() => {
     const mcpTools = mcpList
-      .filter((mcp) => mcp.status == "connected")
       .map((mcp) => {
         const serverName = mcp.name;
         const allowedMcpServerTools = allowedMcpServers?.[serverName]?.tools;

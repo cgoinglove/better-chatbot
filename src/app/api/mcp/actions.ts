@@ -84,30 +84,6 @@ export async function removeMcpClientAction(name: string) {
   await mcpClientsManager.removeClient(name);
 }
 
-export async function connectMcpClientAction(name: string) {
-  const client = await mcpClientsManager
-    .getClients()
-    .then((clients) =>
-      clients.find((client) => client.getInfo().name === name),
-    );
-  if (client?.getInfo().status === "connected") {
-    return;
-  }
-  await client?.connect();
-}
-
-export async function disconnectMcpClientAction(name: string) {
-  const client = await mcpClientsManager
-    .getClients()
-    .then((clients) =>
-      clients.find((client) => client.getInfo().name === name),
-    );
-  if (client?.getInfo().status === "disconnected") {
-    return;
-  }
-  await client?.disconnect();
-}
-
 export async function refreshMcpClientAction(name: string) {
   await mcpClientsManager.refreshClient(name);
 }

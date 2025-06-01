@@ -203,6 +203,15 @@ export class MCPClient {
   }
   async callTool(toolName: string, input?: unknown) {
     return safe(() => this.log.info("tool call", toolName))
+
+      .ifOk(() => {
+        if (this.error) {
+          throw new Error(
+            "MCP Server is currently in an error state. Please check the configuration and try refreshing the server.",
+          );
+        }
+      })
+      .ifOk(() => this.scheduleAutoDisconnect()) // disconnect if autoDisconnectSeconds is set
       .map(async () => {
         const client = await this.connect();
         return client?.callTool({
