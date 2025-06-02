@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.1](https://github.com/cgoinglove/mcp-client-chatbot/compare/v1.6.0...v1.6.1) (2025-06-02)
+
+
+### Bug Fixes
+
+* speech ux ([baa849f](https://github.com/cgoinglove/mcp-client-chatbot/commit/baa849ff2b6b147ec685c6847834385652fc3191))
+
 ## [1.6.0](https://github.com/cgoinglove/mcp-client-chatbot/compare/v1.5.2...v1.6.0) (2025-06-01)
 
 
