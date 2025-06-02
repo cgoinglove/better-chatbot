@@ -68,12 +68,13 @@ export function AppHeader() {
       {componentByPage}
       <div className="flex-1" />
 
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-2">
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
               size={"icon"}
               variant={"ghost"}
+              className="bg-secondary/40"
               onClick={() => {
                 appStoreMutate((state) => ({
                   voiceChat: {
@@ -103,14 +104,13 @@ export function AppHeader() {
             </div>
           </TooltipContent>
         </Tooltip>
-        <div className="h-4">
-          <Separator orientation="vertical" />
-        </div>
+
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
               size={"icon"}
-              variant={"ghost"}
+              variant={"secondary"}
+              className="bg-secondary/40"
               onClick={() => {
                 appStoreMutate((state) => ({
                   temporaryChat: {
