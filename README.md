@@ -6,34 +6,24 @@
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/cgoinglove/mcp-client-chatbot&env=BETTER_AUTH_SECRET&env=OPENAI_API_KEY&env=GOOGLE_GENERATIVE_AI_API_KEY&env=ANTHROPIC_API_KEY&envDescription=Learn+more+about+how+to+get+the+API+Keys+for+the+application&envLink=https://github.com/cgoinglove/mcp-client-chatbot/blob/main/.env.example&demo-title=MCP+Client+Chatbot&demo-description=An+Open-Source+MCP+Chatbot+Template+Built+With+Next.js+and+the+AI+SDK+by+Vercel.&products=[{"type":"integration","protocol":"storage","productSlug":"neon","integrationSlug":"neon"}])
 
-**MCP Client Chatbot** is a versatile chat interface that supports various AI model providers like [OpenAI](https://openai.com/), [Anthropic](https://www.anthropic.com/), [Gemini](https://gemini.google.com/), and [Ollama](https://ollama.com/). 
+Our goal is to create the best possible chatbot UX — focusing on the joy and intuitiveness users feel when calling and interacting with AI tools.
 
-It is also the first known speech-based chatbot with integrated MCP Server support, enabling real-time multimodal interactions.
+See the experience in action in the [preview](#preview) below!
 
-Our mission is to build the **most powerful tool-using chatbot**, combining the best of language models and tool orchestration.  
-
-We aim to create diverse UX and features that allow LLMs to actively use tools — such as `@tool` mentions for direct invocation,  
-enabling **speech-based chat to access and use MCP server tools**, quick tool presets for fast selection,  
-and the upcoming **workflow with tools** feature for multi-step automation.
+> Built with [Vercel AI SDK](https://sdk.vercel.ai) and [Next.js](https://nextjs.org/), this app adopts modern patterns for building AI chat interfaces. It leverages the power of the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) to seamlessly integrate external tools into your chat experience.
 
 
-> Built with [Vercel AI SDK](https://sdk.vercel.ai) and [Next.js](https://nextjs.org/), this app adopts modern patterns for building AI chat interfaces. Leverage the power of [Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) to seamlessly integrate external tools into your chat experience.
-
-
-**🌟 Open Source Project**
-MCP Client Chatbot is a 100% community-driven open source project.
 
 ## Table of Contents
 
 - [MCP Client Chatbot](#mcp-client-chatbot)
   - [Table of Contents](#table-of-contents)
-  - [Demo](#demo)
+  - [Preview](#preview)
     - [🧩 Browser Automation with Playwright MCP](#-browser-automation-with-playwright-mcp)
-    - [⚡️ Quick Tool Mentions (`@`)](#️-quick-tool-mentions-)
-    - [🔌 Adding MCP Servers Easily](#-adding-mcp-servers-easily)
-    - [🛠️ Standalone Tool Testing](#️-standalone-tool-testing)
-    - [📊 Built-in Chart Tools](#-built-in-chart-tools)
-  - [✨ Key Features](#-key-features)
+    - [🎙️ Realtime Voice Assistant + MCP Tools](#️-realtime-voice-assistant--mcp-tools)
+    - [⚡️ Quick Tool Mentions (`@`) \& Presets](#️-quick-tool-mentions---presets)
+    - [🧭 Tool Choice Mode](#-tool-choice-mode)
+    - [🔌 Easy MCP Server Integration \& 🛠️ Tool Testing](#-easy-mcp-server-integration--️-tool-testing)
     - [Quick Start (Local Version) 🚀](#quick-start-local-version-)
     - [Quick Start (Docker Compose Version) 🐳](#quick-start-docker-compose-version-)
     - [Environment Variables](#environment-variables)
@@ -54,10 +44,9 @@ MCP Client Chatbot is a 100% community-driven open source project.
 
 ---
 
-## Demo
+## Preview
 
-Here are some quick examples of how you can use MCP Client Chatbot:
-
+Get a feel for the UX — here’s a quick look at what’s possible.
 
 ### 🧩 Browser Automation with Playwright MCP
 
@@ -65,11 +54,12 @@ Here are some quick examples of how you can use MCP Client Chatbot:
 
 **Example:** Control a web browser using Microsoft's [playwright-mcp](https://github.com/microsoft/playwright-mcp) tool.
 
+- The LLM autonomously decides how to use tools from the MCP server, calling them multiple times to complete a multi-step task and return a final message.
+
 Sample prompt:
 
 ```prompt
-Please go to GitHub and visit the cgoinglove profile.
-Open the mcp-client-chatbot project.
+Please go to GitHub and visit the cgoinglove/mcp-client-chatbot project.
 Then, click on the README.md file.
 After that, close the browser.
 Finally, tell me how to install the package.
@@ -77,60 +67,66 @@ Finally, tell me how to install the package.
 
 ---
 
-### ⚡️ Quick Tool Mentions (`@`)
+### 🎙️ Realtime Voice Assistant + MCP Tools
+
+[![Watch the demo](https://img.youtube.com/vi/e_8jAN9LNfc/hqdefault.jpg)](https://www.youtube.com/watch?v=e_8jAN9LNfc)
+
+
+This demo showcases a **realtime voice-based chatbot assistant** built with OpenAI’s new Realtime API — now extended with full **MCP tool integration**.
+Talk to the assistant naturally, and watch it execute tools in real time.
+
+
+---
+
+### ⚡️ Quick Tool Mentions (`@`) & Presets
 
 ![mention](https://github.com/user-attachments/assets/1a80dd48-1d95-4938-b0d8-431c02ec2a53)
 
-Quickly call any registered MCP tool during chat by typing `@toolname`.  
-No need to memorize — just type `@` and pick from the list!
 
-You can also control how tools are used with the new **Tool Choice Mode**:
+Quickly call any registered MCP tool during chat by typing `@toolname`.
+No need to memorize — just type `@` and select from the list!
 
-- **Auto:** Tools are automatically called by the model when needed.
-- **Manual:** The model will ask for your permission before calling any tool.
-- **None:** Disables all tool usage.
-
-Toggle modes anytime with the shortcut `⌘P`.
+You can also create **tool presets** by selecting only the MCP servers or tools you want.
+Switch between presets instantly with a click — perfect for organizing tools by task or workflow.
 
 ---
 
-### 🔌 Adding MCP Servers Easily
+### 🧭 Tool Choice Mode
+
+![mention](https://github.com/user-attachments/assets/1a80dd48-1d95-4938-b0d8-431c02ec2a53)
+
+Control how tools are used in each chat with **Tool Choice Mode** — switch anytime with `⌘P`.
+
+* **Auto:** The model automatically calls tools when needed.
+* **Manual:** The model will ask for your permission before calling a tool.
+* **None:** Tool usage is disabled completely.
+
+This lets you flexibly choose between autonomous, guided, or tool-free interaction depending on the situation.
+
+---
+
+### 🔌 Easy MCP Server Integration & 🛠️ Tool Testing
 
 ![mcp-server-install](https://github.com/user-attachments/assets/c71fd58d-b16e-4517-85b3-160685a88e38)
 
-Add new MCP servers easily through the UI, and start using new tools without restarting the app.
+Add new MCP servers effortlessly through the UI — no need to restart the app.
+Each tool is available instantly and can be tested independently outside of chat.
+Perfect for quick debugging and reliable development workflows.
 
 ---
 
-### 🛠️ Standalone Tool Testing
 
-![tool-test](https://github.com/user-attachments/assets/980dd645-333f-4e5c-8ac9-3dc59db19e14)
+The app also offers:
 
-Test MCP tools independently of chat sessions to simplify development and debugging.
+* Support for multiple languages
+* **A wide range of themes** — not just light and dark, but many customizable styles to choose from
+* **Temporary chats** — open a quick popup chat without disrupting your main conversation.
+  These are not saved and can be toggled instantly with a shortcut, making them perfect for quick side questions or testing on the fly.
 
-### 📊 Built-in Chart Tools
+…and there’s even more waiting for you.
+Try it out and see what else it can do!
 
-![May-04-2025 01-55-04](https://github.com/user-attachments/assets/7bf9d895-9023-44b1-b7f2-426ae4d7d643)
 
-Visualize chatbot responses as pie, bar, or line charts using the built-in tool — perfect for quick data insight during conversations.
-
----
-
-## ✨ Key Features
-
-- **💻 100% Local Execution:** Run directly on your PC or server without complex deployment, fully utilizing and controlling your computing resources.
-- **🤖 Multiple AI Model Support:** Flexibly switch between providers like OpenAI, Anthropic, Google AI, and Ollama.
-- **🗣️ Real-time voice chat powered by MCP Server:** Currently supports **OpenAI** provider (Gemini support coming soon)
-- **🛠️ Powerful MCP Integration:** Seamlessly connect external tools (browser automation, database operations, etc.) into chat via Model Context Protocol.
-- **🚀 Standalone Tool Tester:** Test and debug MCP tools separately from the main chat interface.
-- **💬 Intuitive Mentions + Tool Control:** Trigger tools with `@`, and control when they're used via `Auto` / `Manual` / `None` modes.
-- **⚙️ Easy Server Setup:** Configure MCP connections via UI or `.mcp-config.json` file.
-- **📄 Markdown UI:** Communicate in a clean, readable markdown-based interface.
-- **🧩 Custom MCP Server Support:** Modify the built-in MCP server logic or create your own.
-- **📊 Built-in Chart Tools:** Generate pie, bar, and line charts directly in chat with natural prompts.
-- **🛫Easy Deployment:** with vercel support baked in it makes an easily accesible chatbot.
-- **🏃Run anywhere:** Easily launch with Docker Compose—just build the image and run.
-- **🏴i8n suppport:** We have Korean and English languages making the chatbot accessible to all.
 
 > This project uses [pnpm](https://pnpm.io/) as the recommended package manager.
 
