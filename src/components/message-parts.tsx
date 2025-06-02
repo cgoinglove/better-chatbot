@@ -16,7 +16,7 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { Button } from "ui/button";
 import { Markdown } from "./markdown";
-import { PastesContentCard } from "./pasts-content";
+import { MessagePastesContentCard } from "./message-pasts-content";
 import { cn, safeJSONParse, toAny } from "lib/utils";
 import JsonView from "ui/json-view";
 import {
@@ -194,7 +194,7 @@ export const UserMessagePart = ({
             <HighlightedText text={part.text} mentions={toolMentions} />
           </p>
         ) : (
-          <PastesContentCard initialContent={part.text} readonly />
+          <MessagePastesContentCard initialContent={part.text} readonly />
         )}
       </div>
 

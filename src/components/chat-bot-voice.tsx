@@ -52,7 +52,7 @@ import { OpenAIIcon } from "ui/openai-icon";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { ToolMessagePart } from "./message-parts";
 
-import { EnabledMcpTools } from "./enabled-mcp-tools";
+import { EnabledMcpToolsDropdown } from "./enabled-mcp-tools-dropdown";
 import { ToolInvocationUIPart } from "app-types/chat";
 import { appStore } from "@/app/store";
 import { useShallow } from "zustand/shallow";
@@ -60,6 +60,7 @@ import { mutate } from "swr";
 import { useTranslations } from "next-intl";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "ui/dialog";
 import JsonView from "ui/json-view";
+import { useRouter } from "next/navigation";
 
 const isNotEmptyUIMessage = (message: UIMessage) => {
   return message.parts.some((v) => {
@@ -100,7 +101,7 @@ const prependTools = [
   },
 ];
 
-export function VoiceChatBot() {
+export function ChatBotVoice() {
   const t = useTranslations("Chat");
   const [appStoreMutate, voiceChat, model, currentThreadId, currentProjectId] =
     appStore(
@@ -116,6 +117,7 @@ export function VoiceChatBot() {
   const [isClosing, setIsClosing] = useState(false);
   const startAudio = useRef<HTMLAudioElement>(null);
   const [useCompactView, setUseCompactView] = useState(true);
+  const router = useRouter();
 
   // const useVoiceChat = useMemo<VoiceChatHook>(() => {
   //   switch (voiceChat.options.provider) {
@@ -172,7 +174,10 @@ export function VoiceChatBot() {
       if (messages.length && currentThreadId) {
         nextTick().then(() => {
           mutate("threads");
-          window.location.href = `/chat/${currentThreadId}`;
+          router.push(`/chat/${currentThreadId}`);
+          if (window.location.pathname === `/chat/${currentThreadId}`) {
+            router.refresh();
+          }
         });
       }
     });
@@ -289,7 +294,7 @@ export function VoiceChatBot() {
                 </Tooltip>
               </div>
               <DrawerTitle className="flex items-center gap-2 w-full">
-                <EnabledMcpTools
+                <EnabledMcpToolsDropdown
                   align="start"
                   side="bottom"
                   prependTools={prependTools}
@@ -423,8 +428,8 @@ export function VoiceChatBot() {
                       }
                     }}
                     className={cn(
-                      "rounded-full p-6",
-
+                      "rounded-full p-6 transition-all duration-300",
+                      isUserSpeaking && "bg-input!",
                       isLoading
                         ? "bg-accent-foreground text-accent animate-pulse"
                         : !isActive

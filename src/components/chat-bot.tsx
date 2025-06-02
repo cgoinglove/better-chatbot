@@ -15,7 +15,7 @@ import clsx from "clsx";
 import { appStore } from "@/app/store";
 import { cn, generateUUID, truncateString } from "lib/utils";
 import { ErrorMessage, PreviewMessage } from "./message";
-import { Greeting } from "./greeting";
+import { ChatGreeting } from "./chat-greeting";
 
 import { useShallow } from "zustand/shallow";
 import { UIMessage } from "ai";
@@ -252,7 +252,7 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
         slots?.emptySlot ? (
           slots.emptySlot
         ) : (
-          <Greeting />
+          <ChatGreeting />
         )
       ) : (
         <>

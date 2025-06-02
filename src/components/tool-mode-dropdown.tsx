@@ -25,7 +25,7 @@ import {
 import { Separator } from "ui/separator";
 import { useShallow } from "zustand/shallow";
 
-export const ToolChoiceDropDown = ({ disabled }: { disabled?: boolean }) => {
+export const ToolModeDropdown = ({ disabled }: { disabled?: boolean }) => {
   const t = useTranslations("Chat.Tool");
   const [toolChoice, appStoreMutate] = appStore(
     useShallow((state) => [state.toolChoice, state.mutate]),

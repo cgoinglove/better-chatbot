@@ -2,16 +2,16 @@
 
 import { KeyboardShortcutsPopup } from "@/components/keyboard-shortcuts-popup";
 import { ChatPreferencesPopup } from "@/components/chat-preferences-popup";
-import { VoiceChatBot } from "@/components/voice-chat-bot";
-import TemporaryChat from "../temporary-chat";
+import { ChatBotVoice } from "@/components/chat-bot-voice";
+import { ChatBotTemporary } from "@/components/chat-bot-temporary";
 
 export function AppPopupProvider() {
   return (
     <>
       <KeyboardShortcutsPopup />
       <ChatPreferencesPopup />
-      <VoiceChatBot />
-      <TemporaryChat />
+      <ChatBotVoice />
+      <ChatBotTemporary />
     </>
   );
 }

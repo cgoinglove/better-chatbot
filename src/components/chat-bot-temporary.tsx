@@ -33,7 +33,7 @@ import {
 import { DialogTitle } from "@radix-ui/react-dialog";
 import { Textarea } from "ui/textarea";
 
-export default function TemporaryChat() {
+export function ChatBotTemporary() {
   const t = useTranslations("Chat.TemporaryChat");
 
   const [temporaryChat, appStoreMutate] = appStore(

@@ -17,7 +17,7 @@ import {
 
 import { useShallow } from "zustand/shallow";
 
-export function EnabledMcpTools({
+export function EnabledMcpToolsDropdown({
   children,
   align,
   side,
@@ -41,7 +41,7 @@ export function EnabledMcpTools({
     ]),
   );
 
-  const enabledMcpTools = useMemo(() => {
+  const EnabledMcpToolsDropdown = useMemo(() => {
     const mcpTools = mcpList
       .map((mcp) => {
         const serverName = mcp.name;
@@ -74,8 +74,8 @@ export function EnabledMcpTools({
       </DropdownMenuTrigger>
       <DropdownMenuContent className="min-w-40" side={side} align={align}>
         <DropdownMenuGroup className="cursor-pointer">
-          {!noToolChoice && enabledMcpTools.length ? (
-            enabledMcpTools.map((mcp) => {
+          {!noToolChoice && EnabledMcpToolsDropdown.length ? (
+            EnabledMcpToolsDropdown.map((mcp) => {
               return (
                 <DropdownMenuSub key={mcp.serverName}>
                   <DropdownMenuSubTrigger>
