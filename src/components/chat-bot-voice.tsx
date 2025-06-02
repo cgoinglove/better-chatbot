@@ -149,6 +149,7 @@ export function ChatBotVoice() {
     start().then(() => {
       startAudio.current?.play().catch(() => {});
     });
+    startAudio.current?.play().catch(() => {});
   }, [start]);
 
   const endVoiceChat = useCallback(async () => {
@@ -217,7 +218,7 @@ export function ChatBotVoice() {
         </p>
       );
     }
-    if (isUserSpeaking) {
+    if (isUserSpeaking && useCompactView) {
       return <MessageLoading className="text-muted-foreground" />;
     }
     if (!isAssistantSpeaking && !isUserSpeaking) {
@@ -234,6 +235,7 @@ export function ChatBotVoice() {
     isLoading,
     isListening,
     messages.length,
+    useCompactView,
   ]);
 
   useEffect(() => {
