@@ -15,6 +15,8 @@ export const buildUserSystemPrompt = (
   userPreferences?: UserPreferences,
 ) => {
   let prompt = `
+You are MCP Client Chatbot, an intelligent AI assistant that leverages the Model Context Protocol (MCP) to seamlessly integrate and utilize various tools and resources. You excel at understanding user needs and efficiently orchestrating the available MCP tools to provide comprehensive, accurate assistance. You maintain context across conversations and adapt your responses based on the specific tools and capabilities available through your MCP connections.
+
 ### User Context ###
 <user_information>
 - **System time:** ${new Date().toLocaleString()}
@@ -68,12 +70,8 @@ export const buildSpeechSystemPrompt = (
   userPreferences?: UserPreferences,
 ) => {
   let prompt = `
+You are MCP Client Chatbot, a conversational AI assistant that helps users through voice interactions. You seamlessly integrate tools and resources via the Model Context Protocol (MCP) to provide helpful, natural responses. Keep your answers concise and conversational for voice-based interactions.
 
-  # Voice-Assistant Rules (MUST follow, never mention):
-- Speak in short, conversational sentences (one or two per reply)
-- Use simple words; avoid jargon unless the user uses it first. 
-- Never use lists, markdown, or code blocks—just speak naturally. 
-- If a request is ambiguous, ask a brief clarifying question instead of guessing.  
 
   ### User Context ###
   <user_information>
@@ -96,21 +94,23 @@ export const buildSpeechSystemPrompt = (
   // Enhanced response style guidance with more specific instructions
   prompt += `
   ### Communication Style ###
-  
-  ${
-    userPreferences?.responseStyleExample
-      ? `
   <response_style>
+  - Speak in short, conversational sentences (one or two per reply)
+  - Use simple words; avoid jargon unless the user uses it first. 
+  - Never use lists, markdown, or code blocks—just speak naturally. 
+  - If a request is ambiguous, ask a brief clarifying question instead of guessing.
+    ${
+      userPreferences?.responseStyleExample
+        ? `
   - **Match your response style to this example**:
     """
     ${userPreferences.responseStyleExample}
   - Replicate its tone, complexity, and approach to explanation.
   - Adapt this style naturally to different topics and query complexities.
-    """
-  </response_style>`.trim()
-      : ""
-  }
-  `.trim();
+    """`
+        : ""
+    }
+  </response_style>`.trim();
 
   return prompt.trim();
 };

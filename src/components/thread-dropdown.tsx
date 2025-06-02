@@ -1,7 +1,7 @@
 "use client";
 import { deleteThreadAction, updateThreadAction } from "@/app/api/chat/actions";
 import { appStore } from "@/app/store";
-import { useLatest } from "@/hooks/use-latest";
+import { useToRef } from "@/hooks/use-latest";
 import { Loader, PencilLine, Trash, WandSparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { type PropsWithChildren, useState } from "react";
@@ -49,7 +49,7 @@ export function ThreadDropdown({
 }: Props) {
   const router = useRouter();
   const t = useTranslations("Chat.Thread");
-  const push = useLatest(router.push);
+  const push = useToRef(router.push);
 
   const currentThreadId = appStore((state) => state.currentThreadId);
 

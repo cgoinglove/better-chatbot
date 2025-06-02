@@ -17,19 +17,19 @@ import { Textarea } from "ui/textarea";
 import { Markdown } from "./markdown";
 import { useCopy } from "@/hooks/use-copy";
 
-type PastesContentCardProps = {
+type MessagePastesContentCardProps = {
   initialContent: string;
   readonly?: boolean;
   updateContent?: (content: string) => void;
   deleteContent?: () => void;
 };
 
-export function PastesContentCard({
+export function MessagePastesContentCard({
   initialContent,
   updateContent,
   deleteContent,
   readonly,
-}: PastesContentCardProps) {
+}: MessagePastesContentCardProps) {
   const [content, setContent] = useState(initialContent);
   const { copied, copy } = useCopy();
 

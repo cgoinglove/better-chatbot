@@ -166,19 +166,20 @@ function SelectTheme() {
   return (
     <DropdownMenuSub>
       <DropdownMenuSubTrigger
+        className="flex items-center"
         icon={
-          <div className="flex items-center gap-1 justify-end w-full">
-            <span className="text-muted-foreground text-xs">
+          <>
+            <span className="text-muted-foreground text-xs min-w-0 truncate">
               {`${capitalizeFirstLetter(base)} ${capitalizeFirstLetter(
                 isDark ? "dark" : "light",
               )}`}
             </span>
-            <ChevronRight className="size-4" />
-          </div>
+            <ChevronRight className="size-4 ml-2" />
+          </>
         }
       >
         <Palette className="mr-2 size-4" />
-        <div className="flex w-8">{t("theme")}</div>
+        <span className="mr-auto">{t("theme")}</span>
       </DropdownMenuSubTrigger>
       <DropdownMenuPortal>
         <DropdownMenuSubContent className="w-48">

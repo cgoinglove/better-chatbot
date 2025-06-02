@@ -50,7 +50,8 @@ export type OpenAIRealtimeServerEvent =
       type:
         | "input_audio_buffer.speech_started"
         | "input_audio_buffer.speech_stopped"
-        | "input_audio_buffer.committed";
+        | "input_audio_buffer.committed"
+        | "output_audio_buffer.stopped";
       event_id: string;
       item_id: string;
     }

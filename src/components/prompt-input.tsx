@@ -10,7 +10,7 @@ import {
 import { ReactNode, useCallback, useMemo, useState } from "react";
 import { Button } from "ui/button";
 import { notImplementedToast } from "ui/shared-toast";
-import { PastesContentCard } from "./pasts-content";
+import { MessagePastesContentCard } from "./message-pasts-content";
 import { UseChatHelpers } from "@ai-sdk/react";
 import { SelectModel } from "./select-model";
 import { appStore } from "@/app/store";
@@ -19,9 +19,9 @@ import { customModelProvider } from "lib/ai/models";
 import { createMCPToolId } from "lib/ai/mcp/mcp-tool-id";
 import { ChatMessageAnnotation } from "app-types/chat";
 import dynamic from "next/dynamic";
-import { ToolChoiceDropDown } from "./tool-choice-dropdown";
+import { ToolModeDropdown } from "./tool-mode-dropdown";
 import { PROMPT_PASTE_MAX_LENGTH } from "lib/const";
-import { ToolSelector } from "./tool-selector";
+import { ToolSelectDropdown } from "./tool-select-dropdown";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { useTranslations } from "next-intl";
 
@@ -171,7 +171,7 @@ export default function PromptInput({
               </div>
               <div className="flex w-full items-center gap-2">
                 {pastedContents.map((content, index) => (
-                  <PastesContentCard
+                  <MessagePastesContentCard
                     key={index}
                     initialContent={content}
                     deleteContent={() => {
@@ -201,8 +201,8 @@ export default function PromptInput({
 
                 {!toolDisabled && (
                   <>
-                    <ToolChoiceDropDown />
-                    <ToolSelector align="start" side="top" />
+                    <ToolModeDropdown />
+                    <ToolSelectDropdown align="start" side="top" />
                   </>
                 )}
                 <div className="flex-1" />
@@ -229,10 +229,11 @@ export default function PromptInput({
                             voiceChat: {
                               ...state.voiceChat,
                               isOpen: true,
+                              autoSaveConversation: true,
                             },
                           }));
                         }}
-                        className="fade-in animate-in cursor-pointer text-background rounded-full p-2 bg-primary hover:bg-primary/90 transition-all duration-200"
+                        className="border fade-in animate-in cursor-pointer text-background rounded-full p-2 bg-primary hover:bg-primary/90 transition-all duration-200"
                       >
                         <AudioWaveformIcon size={16} />
                       </div>

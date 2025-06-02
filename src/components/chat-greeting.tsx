@@ -13,7 +13,7 @@ function getGreetingByTime() {
   return "goodEvening";
 }
 
-export const Greeting = () => {
+export const ChatGreeting = () => {
   const { data: session } = authClient.useSession();
 
   const t = useTranslations("Chat.Greeting");

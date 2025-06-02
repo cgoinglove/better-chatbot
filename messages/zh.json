@@ -91,7 +91,11 @@
       "closeMic": "关闭麦克风",
       "openMic": "打开麦克风",
       "endConversation": "结束对话",
-      "toggleVoiceChat": "切换语音聊天"
+      "toggleVoiceChat": "切换语音聊天",
+      "readyWhenYouAreJustStartTalking": "准备就绪—请开始说话。",
+      "yourMicIsOff": "您的麦克风已关闭。",
+      "preparing": "准备中...",
+      "startVoiceChat": "开始语音聊天？"
     },
     "Thread": {
       "chat": "聊天",
@@ -191,7 +195,8 @@
     "lastMessageCopy": "复制最后一条消息",
     "openChatPreferences": "打开聊天偏好",
     "deleteThread": "删除聊天",
-    "openShortcutsPopup": "打开快捷键弹窗"
+    "openShortcutsPopup": "打开快捷键弹窗",
+    "toggleVoiceChat": "切换语音聊天"
   },
   "MCP": {
     "marketplace": "市场",

@@ -50,7 +50,7 @@ import { useTranslations } from "next-intl";
 import { Switch } from "ui/switch";
 import { useShallow } from "zustand/shallow";
 
-interface ToolSelectorProps {
+interface ToolSelectDropdownProps {
   align?: "start" | "end" | "center";
   side?: "left" | "right" | "top" | "bottom";
   disabled?: boolean;
@@ -67,12 +67,12 @@ const calculateToolCount = (
   }, 0);
 };
 
-export function ToolSelector({
+export function ToolSelectDropdown({
   children,
   align,
   side,
   disabled,
-}: PropsWithChildren<ToolSelectorProps>) {
+}: PropsWithChildren<ToolSelectDropdownProps>) {
   const [appStoreMutate, toolChoice] = appStore(
     useShallow((state) => [state.mutate, state.toolChoice]),
   );

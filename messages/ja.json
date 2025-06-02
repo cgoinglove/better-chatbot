@@ -91,7 +91,11 @@
       "closeMic": "マイクを閉じる",
       "openMic": "マイクを開く",
       "endConversation": "会話を終了",
-      "toggleVoiceChat": "音声チャットの切り替え"
+      "toggleVoiceChat": "音声チャットの切り替え",
+      "readyWhenYouAreJustStartTalking": "準備ができました。話しかけてください。",
+      "yourMicIsOff": "マイクがオフになっています。",
+      "preparing": "準備中...",
+      "startVoiceChat": "音声チャットを開始しますか？"
     },
     "Thread": {
       "chat": "チャット",
@@ -191,7 +195,8 @@
     "lastMessageCopy": "最後のメッセージをコピー",
     "openChatPreferences": "チャット設定を開く",
     "deleteThread": "チャットを削除",
-    "openShortcutsPopup": "ショートカットポップアップを開く"
+    "openShortcutsPopup": "ショートカットポップアップを開く",
+    "toggleVoiceChat": "音声チャットの切り替え"
   },
   "MCP": {
     "marketplace": "マーケットプレイス",

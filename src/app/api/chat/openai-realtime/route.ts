@@ -28,17 +28,25 @@ export async function POST(request: NextRequest) {
       return new Response("Unauthorized", { status: 401 });
     }
 
-    const { voice, allowedMcpServers, toolChoice, threadId } =
+    const { voice, allowedMcpServers, toolChoice, threadId, projectId } =
       (await request.json()) as {
         model: string;
         voice: string;
         allowedMcpServers: Record<string, AllowedMCPServer>;
         toolChoice: "auto" | "none" | "manual";
+        projectId?: string;
         threadId?: string;
       };
 
-    const { instructions, userPreferences } =
-      await chatRepository.selectThreadInstructions(session.user.id, threadId);
+    const { instructions, userPreferences } = projectId
+      ? await chatRepository.selectThreadInstructionsByProjectId(
+          session.user.id,
+          projectId,
+        )
+      : await chatRepository.selectThreadInstructions(
+          session.user.id,
+          threadId,
+        );
 
     const systemPrompt = mergeSystemPrompt(
       buildSpeechSystemPrompt(session.user, userPreferences),
@@ -79,7 +87,7 @@ export async function POST(request: NextRequest) {
       },
 
       body: JSON.stringify({
-        model: "gpt-4o-mini-realtime-preview-2024-12-17",
+        model: "gpt-4o-realtime-preview",
         voice: voice || "alloy",
         input_audio_transcription: {
           model: "whisper-1",

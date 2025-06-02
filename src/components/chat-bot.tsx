@@ -15,7 +15,7 @@ import clsx from "clsx";
 import { appStore } from "@/app/store";
 import { cn, generateUUID, truncateString } from "lib/utils";
 import { ErrorMessage, PreviewMessage } from "./message";
-import { Greeting } from "./greeting";
+import { ChatGreeting } from "./chat-greeting";
 
 import { useShallow } from "zustand/shallow";
 import { UIMessage } from "ai";
@@ -26,7 +26,7 @@ import {
   ChatApiSchemaRequestBody,
   ChatMessageAnnotation,
 } from "app-types/chat";
-import { useLatest } from "@/hooks/use-latest";
+import { useToRef } from "@/hooks/use-latest";
 import { isShortcutEvent, Shortcuts } from "lib/keyboard-shortcuts";
 import { Button } from "ui/button";
 import { deleteThreadAction } from "@/app/api/chat/actions";
@@ -126,7 +126,7 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
 
   const [isDeleteThreadPopupOpen, setIsDeleteThreadPopupOpen] = useState(false);
 
-  const latestRef = useLatest({
+  const latestRef = useToRef({
     toolChoice,
     model,
     allowedAppDefaultToolkit,
@@ -252,7 +252,7 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
         slots?.emptySlot ? (
           slots.emptySlot
         ) : (
-          <Greeting />
+          <ChatGreeting />
         )
       ) : (
         <>

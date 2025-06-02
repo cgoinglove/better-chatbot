@@ -88,6 +88,13 @@ export type ChatRepository = {
     threadId?: string;
     projectId?: string;
   }>;
+  selectThreadInstructionsByProjectId(
+    userId: string,
+    projectId?: string,
+  ): Promise<{
+    instructions: Project["instructions"] | null;
+    userPreferences?: UserPreferences;
+  }>;
 
   selectMessagesByThreadId(threadId: string): Promise<ChatMessage[]>;
 

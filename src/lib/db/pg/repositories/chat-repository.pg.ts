@@ -73,6 +73,32 @@ export const pgChatRepository: ChatRepository = {
     };
   },
 
+  selectThreadInstructionsByProjectId: async (userId, projectId) => {
+    const result = {
+      instructions: null as Project["instructions"] | null,
+      userPreferences: undefined as UserPreferences | undefined,
+    };
+
+    const user = await pgUserRepository.findById(userId);
+
+    if (!user) throw new Error("User not found");
+
+    result.userPreferences = user.preferences;
+
+    if (projectId) {
+      const [project] = await db
+        .select()
+        .from(ProjectSchema)
+        .where(eq(ProjectSchema.id, projectId));
+
+      if (project) {
+        result.instructions = project.instructions;
+      }
+    }
+
+    return result;
+  },
+
   selectThreadInstructions: async (userId, threadId) => {
     const result = {
       instructions: null as Project["instructions"] | null,

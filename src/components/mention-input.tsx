@@ -13,7 +13,7 @@ import React, {
   memo,
 } from "react";
 import { createPortal } from "react-dom";
-import { useLatest } from "@/hooks/use-latest";
+import { useToRef } from "@/hooks/use-latest";
 import { cn } from "lib/utils";
 import { fuzzySearch } from "@/lib/fuzzy-search";
 import { WrenchIcon } from "lucide-react";
@@ -63,7 +63,7 @@ export default function MentionInput({
     return fuzzySearch(items, suggestion.query);
   }, [suggestion?.query, items]);
 
-  const latestRef = useLatest({ suggestion, filteredItems });
+  const latestRef = useToRef({ suggestion, filteredItems });
 
   // Memoize editor configuration
   const editorConfig = useMemo<UseEditorOptions>(

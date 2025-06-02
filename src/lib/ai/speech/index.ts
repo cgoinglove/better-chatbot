@@ -5,6 +5,8 @@ export type UIMessageWithCompleted = UIMessage & { completed: boolean };
 export interface VoiceChatSession {
   isActive: boolean;
   isListening: boolean;
+  isUserSpeaking: boolean;
+  isAssistantSpeaking: boolean;
   isLoading: boolean;
   messages: UIMessageWithCompleted[];
   error: Error | null;

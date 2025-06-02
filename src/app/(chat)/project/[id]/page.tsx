@@ -5,7 +5,7 @@ import { ProjectDropdown } from "@/components/project-dropdown";
 import { ProjectSystemMessagePopup } from "@/components/project-system-message-popup";
 import PromptInput from "@/components/prompt-input";
 import { ThreadDropdown } from "@/components/thread-dropdown";
-import { useLatest } from "@/hooks/use-latest";
+import { useToRef } from "@/hooks/use-latest";
 import { useChat } from "@ai-sdk/react";
 import { ChatApiSchemaRequestBody, Project } from "app-types/chat";
 import { generateUUID } from "lib/utils";
@@ -92,7 +92,7 @@ export default function ProjectPage() {
     ]),
   );
 
-  const latestRef = useLatest({
+  const latestRef = useToRef({
     model,
     toolChoice,
     allowedMcpServers,

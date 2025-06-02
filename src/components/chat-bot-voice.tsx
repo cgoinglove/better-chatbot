@@ -1,6 +1,6 @@
 "use client";
 
-import { UIMessage } from "ai";
+import { TextPart, UIMessage } from "ai";
 import { DEFAULT_VOICE_TOOLS, UIMessageWithCompleted } from "lib/ai/speech";
 
 import {
@@ -19,6 +19,8 @@ import {
   XIcon,
   MessagesSquareIcon,
   MessageSquareMoreIcon,
+  WrenchIcon,
+  ChevronRight,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -26,13 +28,7 @@ import { safe } from "ts-safe";
 import { Alert, AlertDescription, AlertTitle } from "ui/alert";
 import { Button } from "ui/button";
 
-import {
-  Drawer,
-  DrawerContent,
-  DrawerOverlay,
-  DrawerPortal,
-  DrawerTitle,
-} from "ui/drawer";
+import { Drawer, DrawerContent, DrawerPortal, DrawerTitle } from "ui/drawer";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -49,14 +45,17 @@ import { MessageLoading } from "ui/message-loading";
 import { OpenAIIcon } from "ui/openai-icon";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { ToolMessagePart } from "./message-parts";
-import { FlipWords } from "ui/flip-words";
 
-import { EnabledMcpTools } from "./enabled-mcp-tools";
+import { EnabledMcpToolsDropdown } from "./enabled-mcp-tools-dropdown";
 import { ToolInvocationUIPart } from "app-types/chat";
 import { appStore } from "@/app/store";
 import { useShallow } from "zustand/shallow";
 import { mutate } from "swr";
 import { useTranslations } from "next-intl";
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "ui/dialog";
+import JsonView from "ui/json-view";
+import { useRouter } from "next/navigation";
+import { isShortcutEvent, Shortcuts } from "lib/keyboard-shortcuts";
 
 const isNotEmptyUIMessage = (message: UIMessage) => {
   return message.parts.some((v) => {
@@ -97,7 +96,7 @@ const prependTools = [
   },
 ];
 
-export function VoiceChatBot() {
+export function ChatBotVoice() {
   const t = useTranslations("Chat");
   const [appStoreMutate, voiceChat, model, currentThreadId, currentProjectId] =
     appStore(
@@ -112,7 +111,8 @@ export function VoiceChatBot() {
 
   const [isClosing, setIsClosing] = useState(false);
   const startAudio = useRef<HTMLAudioElement>(null);
-  const [useCompactView, setUseCompactView] = useState(false);
+  const [useCompactView, setUseCompactView] = useState(true);
+  const router = useRouter();
 
   // const useVoiceChat = useMemo<VoiceChatHook>(() => {
   //   switch (voiceChat.options.provider) {
@@ -125,8 +125,10 @@ export function VoiceChatBot() {
 
   const {
     isListening,
+    isAssistantSpeaking,
     isLoading,
     isActive,
+    isUserSpeaking,
     messages,
     error,
     start,
@@ -147,15 +149,15 @@ export function VoiceChatBot() {
   const endVoiceChat = useCallback(async () => {
     setIsClosing(true);
     await safe(() => stop());
-    await safe(() => {
-      if (!currentThreadId) return;
+    await safe(async () => {
+      if (!currentThreadId || !voiceChat.autoSaveConversation) return;
       const saveMessages = messages.filter(
         (v) => v.completed && isNotEmptyUIMessage(v),
       );
       if (saveMessages.length === 0) {
         return;
       }
-      return fetch(`/api/chat/${currentThreadId}`, {
+      await fetch(`/api/chat/${currentThreadId}`, {
         method: "POST",
         body: JSON.stringify({
           messages: mergeConsecutiveMessages(saveMessages),
@@ -163,11 +165,15 @@ export function VoiceChatBot() {
           projectId: currentProjectId,
         }),
       });
-    }).ifOk(() => {
-      if (messages.length && currentThreadId) {
+      return true;
+    }).ifOk((isSaved) => {
+      if (isSaved) {
         nextTick().then(() => {
           mutate("threads");
-          window.location.href = `/chat/${currentThreadId}`;
+          router.push(`/chat/${currentThreadId}`);
+          if (window.location.pathname === `/chat/${currentThreadId}`) {
+            router.refresh();
+          }
         });
       }
     });
@@ -178,7 +184,60 @@ export function VoiceChatBot() {
         isOpen: false,
       },
     });
-  }, [messages, currentProjectId, model, currentThreadId]);
+  }, [
+    messages,
+    currentProjectId,
+    model,
+    currentThreadId,
+    voiceChat.autoSaveConversation,
+  ]);
+
+  const statusMessage = useMemo(() => {
+    if (isLoading) {
+      return (
+        <p className="fade-in animate-in duration-3000" key="start">
+          {t("VoiceChat.preparing")}
+        </p>
+      );
+    }
+    if (!isActive)
+      return (
+        <p className="fade-in animate-in duration-3000" key="start">
+          {t("VoiceChat.startVoiceChat")}
+        </p>
+      );
+    if (!isListening)
+      return (
+        <p className="fade-in animate-in duration-3000" key="stop">
+          {t("VoiceChat.yourMicIsOff")}
+        </p>
+      );
+    if (!isAssistantSpeaking && messages.length === 0) {
+      return (
+        <p className="fade-in animate-in duration-3000" key="ready">
+          {t("VoiceChat.readyWhenYouAreJustStartTalking")}
+        </p>
+      );
+    }
+    if (isUserSpeaking && useCompactView) {
+      return <MessageLoading className="text-muted-foreground" />;
+    }
+    if (!isAssistantSpeaking && !isUserSpeaking) {
+      return (
+        <p className="delayed-fade-in" key="ready">
+          {t("VoiceChat.readyWhenYouAreJustStartTalking")}
+        </p>
+      );
+    }
+  }, [
+    isAssistantSpeaking,
+    isUserSpeaking,
+    isActive,
+    isLoading,
+    isListening,
+    messages.length,
+    useCompactView,
+  ]);
 
   useEffect(() => {
     return () => {
@@ -203,19 +262,37 @@ export function VoiceChatBot() {
     }
   }, [error]);
 
+  useEffect(() => {
+    if (voiceChat.isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isVoiceChatEvent = isShortcutEvent(e, Shortcuts.toggleVoiceChat);
+      if (isVoiceChatEvent) {
+        e.preventDefault();
+        e.stopPropagation();
+        appStoreMutate((prev) => ({
+          voiceChat: {
+            ...prev.voiceChat,
+            isOpen: true,
+          },
+        }));
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [voiceChat.isOpen]);
+
   return (
     <Drawer dismissible={false} open={voiceChat.isOpen} direction="top">
       <DrawerPortal>
-        <DrawerOverlay />
-        <DrawerContent className="max-h-[100vh]! h-full border-none! rounded-none! flex flex-col">
-          <div className="w-full h-full flex flex-col bg-background">
+        <DrawerContent className="max-h-[100vh]! h-full border-none! rounded-none! flex flex-col bg-card">
+          <div className="w-full h-full flex flex-col ">
             <div
               className="w-full flex p-6 gap-2"
               style={{
                 userSelect: "text",
               }}
             >
-              <div className="flex items-center">
+              <div className="flex items-center ">
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
@@ -238,7 +315,7 @@ export function VoiceChatBot() {
                 </Tooltip>
               </div>
               <DrawerTitle className="flex items-center gap-2 w-full">
-                <EnabledMcpTools
+                <EnabledMcpToolsDropdown
                   align="start"
                   side="bottom"
                   prependTools={prependTools}
@@ -350,7 +427,11 @@ export function VoiceChatBot() {
                 </div>
               )}
             </div>
-            <div className="w-full p-6 flex items-center justify-center gap-4">
+            <div className="relative w-full p-6 flex items-center justify-center gap-4">
+              <div className="text-sm text-muted-foreground absolute -top-5 left-0 w-full justify-center flex items-center">
+                {statusMessage}
+              </div>
+
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
@@ -367,7 +448,7 @@ export function VoiceChatBot() {
                       }
                     }}
                     className={cn(
-                      "rounded-full p-6",
+                      "rounded-full p-6 transition-colors duration-300",
 
                       isLoading
                         ? "bg-accent-foreground text-accent animate-pulse"
@@ -375,7 +456,9 @@ export function VoiceChatBot() {
                           ? "bg-green-500/10 text-green-500 hover:bg-green-500/30"
                           : !isListening
                             ? "bg-destructive/30 text-destructive hover:bg-destructive/10"
-                            : "",
+                            : isUserSpeaking
+                              ? "bg-input text-foreground"
+                              : "",
                     )}
                   >
                     {isLoading || isClosing ? (
@@ -383,7 +466,9 @@ export function VoiceChatBot() {
                     ) : !isActive ? (
                       <PhoneIcon className="size-6 fill-green-500 stroke-none" />
                     ) : isListening ? (
-                      <MicIcon className="size-6" />
+                      <MicIcon
+                        className={`size-6 ${isUserSpeaking ? "text-primary" : "text-muted-foreground transition-colors duration-300"}`}
+                      />
                     ) : (
                       <MicOffIcon className="size-6" />
                     )}
@@ -436,7 +521,7 @@ function ConversationView({
   }, [messages.length]);
   return (
     <div className="select-text w-full overflow-y-auto h-full" ref={ref}>
-      <div className="max-w-4xl mx-auto flex flex-col px-6 gap-6 pb-44">
+      <div className="max-w-4xl mx-auto flex flex-col px-6 gap-6 pb-44 min-h-0 min-w-0">
         {messages.map((message) => (
           <div
             key={message.id}
@@ -444,9 +529,6 @@ function ConversationView({
               "flex px-4 py-3",
               message.role == "user" &&
                 "ml-auto max-w-2xl text-foreground rounded-2xl w-fit bg-input/40",
-              message.role == "assistant" &&
-                !message.completed &&
-                "rounded-2xl w-fit",
             )}
           >
             {!message.completed ? (
@@ -460,21 +542,32 @@ function ConversationView({
             ) : (
               message.parts.map((part, index) => {
                 if (part.type === "text") {
-                  return !part.text ? (
-                    <MessageLoading
-                      className={
-                        message.role == "user"
-                          ? "text-muted-foreground"
-                          : "text-accent-foreground"
-                      }
-                      key={index}
-                    />
-                  ) : message.role == "user" ? (
-                    <p key={index} className="whitespace-pre-wrap">
-                      {part.text}
+                  if (!part.text) {
+                    return (
+                      <MessageLoading
+                        key={index}
+                        className={cn(
+                          message.role == "user"
+                            ? "text-muted-foreground"
+                            : "text-foreground",
+                        )}
+                      />
+                    );
+                  }
+                  return (
+                    <p key={index}>
+                      {(part.text || "...")
+                        ?.trim()
+                        .split(" ")
+                        .map((word, wordIndex) => (
+                          <span
+                            key={wordIndex}
+                            className="animate-in fade-in duration-3000"
+                          >
+                            {word}{" "}
+                          </span>
+                        ))}
                     </p>
-                  ) : (
-                    <FlipWords words={[part.text]} key={index} />
                   );
                 } else if (part.type === "tool-invocation") {
                   return (
@@ -498,59 +591,103 @@ function ConversationView({
 
 function CompactMessageView({
   messages,
-}: { messages: UIMessageWithCompleted[] }) {
-  const { toolMessage, assistantMessage } = useMemo(() => {
-    return {
-      toolMessage: messages.findLast((v) =>
-        v.parts.some((v) => v.type === "tool-invocation"),
-      ),
-      assistantMessage: messages.findLast(
-        (v) => v.role === "assistant" && v.parts.some((v) => v.type === "text"),
-      ),
-    };
+}: {
+  messages: UIMessageWithCompleted[];
+}) {
+  const { toolParts, textPart } = useMemo(() => {
+    const toolParts = messages
+      .filter((msg) =>
+        msg.parts.some((part) => part.type === "tool-invocation"),
+      )
+      .map(
+        (msg) =>
+          msg.parts.find(
+            (part) => part.type === "tool-invocation",
+          ) as ToolInvocationUIPart,
+      );
+
+    const textPart = messages.findLast((msg) => msg.role === "assistant")
+      ?.parts[0] as TextPart;
+    return { toolParts, textPart };
   }, [messages]);
 
   return (
-    <div className="mx-auto max-w-5xl flex flex-col gap-6 w-full h-full ">
-      <div className="h-10 w-full relative z-50">
-        <div className="absolute top-0 left-0 w-full h-full">
-          {toolMessage && (
-            <ToolMessagePart
-              part={toolMessage.parts[0] as ToolInvocationUIPart}
-              message={toolMessage}
-              isLast={true}
-            />
-          )}
-        </div>
+    <div className="relative w-full h-full overflow-hidden">
+      <div className="absolute bottom-6 max-h-[80vh] overflow-y-auto left-6 z-10 flex-col gap-2 hidden md:flex">
+        {toolParts.map((toolPart, index) => {
+          const isExecuting = toolPart.toolInvocation.state !== "result";
+          if (!toolPart) return null;
+          return (
+            <Dialog key={index}>
+              <DialogTrigger asChild>
+                <div className="animate-in slide-in-from-bottom-2 fade-in duration-3000 max-w-xs w-full">
+                  <Button
+                    variant={"outline"}
+                    size={"icon"}
+                    className="w-full bg-card flex items-center gap-2 px-2 text-xs text-muted-foreground"
+                  >
+                    <WrenchIcon className="size-3.5" />
+                    <span className="text-sm font-bold min-w-0 truncate mr-auto">
+                      {toolPart.toolInvocation.toolName}
+                    </span>
+                    {isExecuting ? (
+                      <Loader className="size-3.5 animate-spin" />
+                    ) : (
+                      <ChevronRight className="size-3.5" />
+                    )}
+                  </Button>
+                </div>
+              </DialogTrigger>
+              <DialogContent className="z-50 md:max-w-2xl! max-h-[80vh] overflow-y-auto p-8">
+                <DialogTitle>{toolPart.toolInvocation.toolName}</DialogTitle>
+                <div className="flex flex-row gap-4 text-sm ">
+                  <div className="w-1/2 min-w-0 flex flex-col">
+                    <div className="flex items-center gap-2 mb-2 pt-2 pb-1 z-10">
+                      <h5 className="text-muted-foreground text-sm font-medium">
+                        Inputs
+                      </h5>
+                    </div>
+                    <JsonView data={toolPart.toolInvocation.args} />
+                  </div>
+
+                  <div className="w-1/2 min-w-0 pl-4 flex flex-col">
+                    <div className="flex items-center gap-2 mb-4 pt-2 pb-1  z-10">
+                      <h5 className="text-muted-foreground text-sm font-medium">
+                        Outputs
+                      </h5>
+                    </div>
+                    <JsonView
+                      data={
+                        toolPart.toolInvocation.state === "result"
+                          ? toolPart.toolInvocation.result
+                          : {}
+                      }
+                    />
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          );
+        })}
       </div>
-      {assistantMessage ? (
-        <div className="flex flex-col gap-2 text-4xl font-semibold w-full min-h-0 overflow-y-auto select-text flex-1">
-          {assistantMessage.parts.map((v, index) => {
-            if (v.type === "text") {
-              if (assistantMessage.completed) {
-                return (
-                  <div
-                    key={index}
-                    className="w-full h-full flex items-center justify-center"
-                  >
-                    <FlipWords words={[v.text]} key={index} />
-                  </div>
-                );
-              } else {
-                return (
-                  <div
-                    key={index}
-                    className="w-full h-full flex items-center justify-center"
-                  >
-                    <MessageLoading className="text-muted-foreground size-20" />
-                  </div>
-                );
-              }
-            }
-            return null;
-          })}
+
+      {/* Current Message - Prominent */}
+      {textPart && (
+        <div className="w-full mx-auto h-full max-h-[80vh] overflow-y-auto px-4 lg:max-w-4xl flex-1 flex items-center">
+          <div className="animate-in fade-in-50 duration-1000">
+            <p className="text-2xl md:text-3xl lg:text-4xl font-semibold leading-tight tracking-wide">
+              {textPart.text?.split(" ").map((word, wordIndex) => (
+                <span
+                  key={wordIndex}
+                  className="animate-in fade-in duration-5000"
+                >
+                  {word}{" "}
+                </span>
+              ))}
+            </p>
+          </div>
         </div>
-      ) : null}
+      )}
     </div>
   );
 }
