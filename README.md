@@ -24,6 +24,7 @@ See the experience in action in the [preview](#preview) below!
     - [⚡️ Quick Tool Mentions (`@`) \& Presets](#️-quick-tool-mentions---presets)
     - [🧭 Tool Choice Mode](#-tool-choice-mode)
     - [🔌 Easy MCP Server Integration \& 🛠️ Tool Testing](#-easy-mcp-server-integration--️-tool-testing)
+  - [Getting Start](#getting-start)
     - [Quick Start (Local Version) 🚀](#quick-start-local-version-)
     - [Quick Start (Docker Compose Version) 🐳](#quick-start-docker-compose-version-)
     - [Environment Variables](#environment-variables)
@@ -50,7 +51,7 @@ Get a feel for the UX — here’s a quick look at what’s possible.
 
 ### 🧩 Browser Automation with Playwright MCP
 
-![playwright-demo](./docs/images/preview-1.gif)
+![playwright-preview](https://github.com/user-attachments/assets/53ec0069-aab4-47ff-b7c4-a8080a6a98ff)
 
 **Example:** Control a web browser using Microsoft's [playwright-mcp](https://github.com/microsoft/playwright-mcp) tool.
 
@@ -80,8 +81,7 @@ Talk to the assistant naturally, and watch it execute tools in real time.
 
 ### ⚡️ Quick Tool Mentions (`@`) & Presets
 
-![mention](https://github.com/user-attachments/assets/1a80dd48-1d95-4938-b0d8-431c02ec2a53)
-
+![tool-mention](https://github.com/user-attachments/assets/bd47b175-320f-4c38-bc2f-be887c46178e)
 
 Quickly call any registered MCP tool during chat by typing `@toolname`.
 No need to memorize — just type `@` and select from the list!
@@ -93,7 +93,7 @@ Switch between presets instantly with a click — perfect for organizing tools b
 
 ### 🧭 Tool Choice Mode
 
-![mention](https://github.com/user-attachments/assets/1a80dd48-1d95-4938-b0d8-431c02ec2a53)
+![tool-mode](https://github.com/user-attachments/assets/043a37b6-c937-4b94-abb7-939124615368)
 
 Control how tools are used in each chat with **Tool Choice Mode** — switch anytime with `⌘P`.
 
@@ -107,7 +107,8 @@ This lets you flexibly choose between autonomous, guided, or tool-free interacti
 
 ### 🔌 Easy MCP Server Integration & 🛠️ Tool Testing
 
-![mcp-server-install](https://github.com/user-attachments/assets/c71fd58d-b16e-4517-85b3-160685a88e38)
+![add-mcp-server](https://github.com/user-attachments/assets/f66ae118-883e-4638-b4fc-9f9849566da2)
+
 
 Add new MCP servers effortlessly through the UI — no need to restart the app.
 Each tool is available instantly and can be tested independently outside of chat.
@@ -127,6 +128,11 @@ The app also offers:
 Try it out and see what else it can do!
 
 
+<br/>
+
+
+
+## Getting Start 
 
 > This project uses [pnpm](https://pnpm.io/) as the recommended package manager.
 
