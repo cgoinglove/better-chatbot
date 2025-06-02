@@ -21,7 +21,7 @@ export default async function ChatLayout({
     <SidebarProvider defaultOpen={!isCollapsed}>
       <AppPopupProvider />
       <AppSidebar />
-      <main className="relative w-full flex flex-col h-screen">
+      <main className="relative bg-background  w-full flex flex-col h-screen">
         <AppHeader />
         <div className="flex-1 overflow-y-auto">{children}</div>
       </main>

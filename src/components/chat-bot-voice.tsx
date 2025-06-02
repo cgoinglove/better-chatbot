@@ -262,16 +262,15 @@ export function ChatBotVoice() {
   return (
     <Drawer dismissible={false} open={voiceChat.isOpen} direction="top">
       <DrawerPortal>
-        <DrawerOverlay />
-        <DrawerContent className="max-h-[100vh]! h-full border-none! rounded-none! flex flex-col">
-          <div className="w-full h-full flex flex-col bg-background">
+        <DrawerContent className="max-h-[100vh]! h-full border-none! rounded-none! flex flex-col bg-card">
+          <div className="w-full h-full flex flex-col ">
             <div
               className="w-full flex p-6 gap-2"
               style={{
                 userSelect: "text",
               }}
             >
-              <div className="flex items-center">
+              <div className="flex items-center ">
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
@@ -406,7 +405,6 @@ export function ChatBotVoice() {
                 </div>
               )}
             </div>
-
             <div className="relative w-full p-6 flex items-center justify-center gap-4">
               <div className="text-sm text-muted-foreground absolute -top-5 left-0 w-full justify-center flex items-center">
                 {statusMessage}
@@ -428,15 +426,17 @@ export function ChatBotVoice() {
                       }
                     }}
                     className={cn(
-                      "rounded-full p-6 transition-all duration-300",
-                      isUserSpeaking && "bg-input!",
+                      "rounded-full p-6 transition-colors duration-300",
+
                       isLoading
                         ? "bg-accent-foreground text-accent animate-pulse"
                         : !isActive
                           ? "bg-green-500/10 text-green-500 hover:bg-green-500/30"
                           : !isListening
                             ? "bg-destructive/30 text-destructive hover:bg-destructive/10"
-                            : "",
+                            : isUserSpeaking
+                              ? "bg-input text-foreground"
+                              : "",
                     )}
                   >
                     {isLoading || isClosing ? (
@@ -444,7 +444,9 @@ export function ChatBotVoice() {
                     ) : !isActive ? (
                       <PhoneIcon className="size-6 fill-green-500 stroke-none" />
                     ) : isListening ? (
-                      <MicIcon className="size-6" />
+                      <MicIcon
+                        className={`size-6 ${isUserSpeaking ? "text-primary" : "text-muted-foreground transition-colors duration-300"}`}
+                      />
                     ) : (
                       <MicOffIcon className="size-6" />
                     )}
@@ -505,9 +507,6 @@ function ConversationView({
               "flex px-4 py-3",
               message.role == "user" &&
                 "ml-auto max-w-2xl text-foreground rounded-2xl w-fit bg-input/40",
-              message.role == "assistant" &&
-                !message.completed &&
-                "rounded-2xl w-fit",
             )}
           >
             {!message.completed ? (
@@ -521,27 +520,31 @@ function ConversationView({
             ) : (
               message.parts.map((part, index) => {
                 if (part.type === "text") {
-                  return !part.text ? (
-                    <MessageLoading
-                      className={
-                        message.role == "user"
-                          ? "text-muted-foreground"
-                          : "text-accent-foreground"
-                      }
-                      key={index}
-                    />
-                  ) : message.role == "user" ? (
-                    <p key={index}>{part.text}</p>
-                  ) : (
-                    <p key={index} className="whitespace-pre-wrap">
-                      {part.text?.split(" ").map((word, wordIndex) => (
-                        <span
-                          key={wordIndex}
-                          className="animate-in fade-in duration-5000"
-                        >
-                          {word}{" "}
-                        </span>
-                      ))}
+                  if (!part.text) {
+                    return (
+                      <MessageLoading
+                        key={index}
+                        className={cn(
+                          message.role == "user"
+                            ? "text-muted-foreground"
+                            : "text-foreground",
+                        )}
+                      />
+                    );
+                  }
+                  return (
+                    <p key={index}>
+                      {(part.text || "...")
+                        ?.trim()
+                        .split(" ")
+                        .map((word, wordIndex) => (
+                          <span
+                            key={wordIndex}
+                            className="animate-in fade-in duration-3000"
+                          >
+                            {word}{" "}
+                          </span>
+                        ))}
                     </p>
                   );
                 } else if (part.type === "tool-invocation") {
