@@ -195,7 +195,8 @@
     "lastMessageCopy": "Copy Last Message",
     "openChatPreferences": "Open Chat Preferences",
     "deleteThread": "Delete Chat",
-    "openShortcutsPopup": "Open Shortcuts Popup"
+    "openShortcutsPopup": "Open Shortcuts Popup",
+    "toggleVoiceChat": "Toggle Voice Chat"
   },
   "MCP": {
     "marketplace": "Marketplace",

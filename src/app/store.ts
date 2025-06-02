@@ -24,6 +24,7 @@ export interface AppState {
   };
   voiceChat: {
     isOpen: boolean;
+    autoSaveConversation: boolean;
     options: {
       provider: string;
       providerOptions?: Record<string, any>;
@@ -54,6 +55,7 @@ const initialState: AppState = {
   },
   voiceChat: {
     isOpen: false,
+    autoSaveConversation: false,
     options: {
       provider: "openai",
       providerOptions: {

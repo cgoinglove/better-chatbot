@@ -91,7 +91,11 @@
       "closeMic": "Cerrar micrófono",
       "openMic": "Abrir micrófono",
       "endConversation": "Terminar conversación",
-      "toggleVoiceChat": "Alternar Chat por Voz"
+      "toggleVoiceChat": "Alternar Chat por Voz",
+      "readyWhenYouAreJustStartTalking": "Listo cuando lo estés—solo comienza a hablar.",
+      "yourMicIsOff": "Tu micrófono está apagado.",
+      "preparing": "Preparando...",
+      "startVoiceChat": "¿Iniciar chat por voz?"
     },
     "Thread": {
       "chat": "Chat",
@@ -191,7 +195,8 @@
     "lastMessageCopy": "Copiar Último Mensaje",
     "openChatPreferences": "Abrir Preferencias de Chat",
     "deleteThread": "Eliminar Chat",
-    "openShortcutsPopup": "Abrir Ventana de Atajos"
+    "openShortcutsPopup": "Abrir Ventana de Atajos",
+    "toggleVoiceChat": "Alternar Chat por Voz"
   },
   "MCP": {
     "marketplace": "Mercado",

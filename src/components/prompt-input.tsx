@@ -229,6 +229,7 @@ export default function PromptInput({
                             voiceChat: {
                               ...state.voiceChat,
                               isOpen: true,
+                              autoSaveConversation: true,
                             },
                           }));
                         }}

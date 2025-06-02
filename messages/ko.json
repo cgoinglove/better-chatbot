@@ -195,7 +195,8 @@
     "lastMessageCopy": "마지막 메시지 복사",
     "openChatPreferences": "채팅 환경설정 열기",
     "deleteThread": "채팅 삭제",
-    "openShortcutsPopup": "단축키 팝업 열기"
+    "openShortcutsPopup": "단축키 팝업 열기",
+    "toggleVoiceChat": "음성 채팅 토글"
   },
   "MCP": {
     "marketplace": "마켓플레이스",

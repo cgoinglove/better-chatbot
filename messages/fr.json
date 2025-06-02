@@ -91,7 +91,11 @@
       "closeMic": "Fermer le micro",
       "openMic": "Ouvrir le micro",
       "endConversation": "Terminer la conversation",
-      "toggleVoiceChat": "Basculer le Chat Vocal"
+      "toggleVoiceChat": "Basculer le Chat Vocal",
+      "readyWhenYouAreJustStartTalking": "Prêt quand vous l'êtes—commencez simplement à parler.",
+      "yourMicIsOff": "Votre micro est éteint.",
+      "preparing": "Préparation...",
+      "startVoiceChat": "Démarrer le chat vocal ?"
     },
     "Thread": {
       "chat": "Chat",
@@ -191,7 +195,8 @@
     "lastMessageCopy": "Copier le Dernier Message",
     "openChatPreferences": "Ouvrir Préférences Chat",
     "deleteThread": "Supprimer Chat",
-    "openShortcutsPopup": "Ouvrir Popup Raccourcis"
+    "openShortcutsPopup": "Ouvrir Popup Raccourcis",
+    "toggleVoiceChat": "Basculer Chat Vocal"
   },
   "MCP": {
     "marketplace": "Marché",

@@ -28,13 +28,7 @@ import { safe } from "ts-safe";
 import { Alert, AlertDescription, AlertTitle } from "ui/alert";
 import { Button } from "ui/button";
 
-import {
-  Drawer,
-  DrawerContent,
-  DrawerOverlay,
-  DrawerPortal,
-  DrawerTitle,
-} from "ui/drawer";
+import { Drawer, DrawerContent, DrawerPortal, DrawerTitle } from "ui/drawer";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -61,6 +55,7 @@ import { useTranslations } from "next-intl";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "ui/dialog";
 import JsonView from "ui/json-view";
 import { useRouter } from "next/navigation";
+import { isShortcutEvent, Shortcuts } from "lib/keyboard-shortcuts";
 
 const isNotEmptyUIMessage = (message: UIMessage) => {
   return message.parts.some((v) => {
@@ -149,21 +144,20 @@ export function ChatBotVoice() {
     start().then(() => {
       startAudio.current?.play().catch(() => {});
     });
-    startAudio.current?.play().catch(() => {});
   }, [start]);
 
   const endVoiceChat = useCallback(async () => {
     setIsClosing(true);
     await safe(() => stop());
-    await safe(() => {
-      if (!currentThreadId) return;
+    await safe(async () => {
+      if (!currentThreadId || !voiceChat.autoSaveConversation) return;
       const saveMessages = messages.filter(
         (v) => v.completed && isNotEmptyUIMessage(v),
       );
       if (saveMessages.length === 0) {
         return;
       }
-      return fetch(`/api/chat/${currentThreadId}`, {
+      await fetch(`/api/chat/${currentThreadId}`, {
         method: "POST",
         body: JSON.stringify({
           messages: mergeConsecutiveMessages(saveMessages),
@@ -171,8 +165,9 @@ export function ChatBotVoice() {
           projectId: currentProjectId,
         }),
       });
-    }).ifOk(() => {
-      if (messages.length && currentThreadId) {
+      return true;
+    }).ifOk((isSaved) => {
+      if (isSaved) {
         nextTick().then(() => {
           mutate("threads");
           router.push(`/chat/${currentThreadId}`);
@@ -189,7 +184,13 @@ export function ChatBotVoice() {
         isOpen: false,
       },
     });
-  }, [messages, currentProjectId, model, currentThreadId]);
+  }, [
+    messages,
+    currentProjectId,
+    model,
+    currentThreadId,
+    voiceChat.autoSaveConversation,
+  ]);
 
   const statusMessage = useMemo(() => {
     if (isLoading) {
@@ -260,6 +261,25 @@ export function ChatBotVoice() {
       stop();
     }
   }, [error]);
+
+  useEffect(() => {
+    if (voiceChat.isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isVoiceChatEvent = isShortcutEvent(e, Shortcuts.toggleVoiceChat);
+      if (isVoiceChatEvent) {
+        e.preventDefault();
+        e.stopPropagation();
+        appStoreMutate((prev) => ({
+          voiceChat: {
+            ...prev.voiceChat,
+            isOpen: true,
+          },
+        }));
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [voiceChat.isOpen]);
 
   return (
     <Drawer dismissible={false} open={voiceChat.isOpen} direction="top">
