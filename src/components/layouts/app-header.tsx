@@ -129,7 +129,7 @@ export function AppHeader() {
       <div className="flex items-center gap-1">
         <TemporaryChat />
         <Link
-          href="https://github.com/cgoinglove/mcp-client-chatbot"
+          href="https://github.com/WinstonFassett/mcp-client-chatbot"
           target="_blank"
         >
           <Button variant="ghost" size="icon">

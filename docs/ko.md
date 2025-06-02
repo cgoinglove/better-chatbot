@@ -1,11 +1,10 @@
 # MCP 클라이언트 챗봇
 
-
 [![Local First](https://img.shields.io/badge/Local-First-blueviolet)](#)
 [![MCP Supported](https://img.shields.io/badge/MCP-Supported-00c853)](https://modelcontextprotocol.io/introduction)
 [![Discord](https://img.shields.io/discord/1374047276074537103?label=Discord&logo=discord&color=5865F2)](https://discord.gg/gCRu69Upnp)
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/cgoinglove/mcp-client-chatbot&env=BETTER_AUTH_SECRET&env=OPENAI_API_KEY&env=GOOGLE_GENERATIVE_AI_API_KEY&env=ANTHROPIC_API_KEY&envDescription=애플리케이션용+API+키+가져오는+방법+알아보기&envLink=https://github.com/cgoinglove/mcp-client-chatbot/blob/main/.env.example&demo-title=MCP+클라이언트+챗봇&demo-description=Next.js와+Vercel의+AI+SDK로+구축된+오픈소스+MCP+챗봇+템플릿입니다.&products=[{"type":"integration","protocol":"storage","productSlug":"neon","integrationSlug":"neon"}])
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/WinstonFassett/mcp-client-chatbot&env=BETTER_AUTH_SECRET&env=OPENAI_API_KEY&env=GOOGLE_GENERATIVE_AI_API_KEY&env=ANTHROPIC_API_KEY&envDescription=애플리케이션용+API+키+가져오는+방법+알아보기&envLink=https://github.com/WinstonFassett/mcp-client-chatbot/blob/main/.env.example&demo-title=MCP+클라이언트+챗봇&demo-description=Next.js와+Vercel의+AI+SDK로+구축된+오픈소스+MCP+챗봇+템플릿입니다.&products=[{"type":"integration","protocol":"storage","productSlug":"neon","integrationSlug":"neon"}])
 
 **MCP 클라이언트 챗봇**은 [OpenAI](https://openai.com/), [Anthropic](https://www.anthropic.com/), [Gemini](https://gemini.google.com/), [Ollama](https://ollama.com/) 등 다양한 AI 모델 공급업체를 지원하는 다재다능한 채팅 인터페이스입니다.
 
@@ -64,7 +63,7 @@ MCP 클라이언트 챗봇을 사용하는 방법에 대한 몇 가지 빠른 �
 샘플 프롬프트:
 
 ```prompt
-GitHub에 가서 cgoinglove 프로필을 방문해주세요.
+GitHub에 가서 WinstonFassett 프로필을 방문해주세요.
 mcp-client-chatbot 프로젝트를 열어주세요.
 그다음 README.md 파일을 클릭해주세요.
 그 후 브라우저를 닫아주세요.
@@ -219,10 +218,10 @@ GITHUB_CLIENT_SECRET=
 ```jsonc
 // .mcp-config.json
 {
-  "playwright":  {
-      "command": "npx",
-      "args": ["@playwright/mcp@latest"]
-    },
+  "playwright": {
+    "command": "npx",
+    "args": ["@playwright/mcp@latest"]
+  }
 }
 ```
 
@@ -231,16 +230,19 @@ GITHUB_CLIENT_SECRET=
 MCP 클라이언트 챗봇 사용에 대한 몇 가지 실용적인 팁과 가이드입니다:
 
 ### [Docker 호스팅 가이드](./tips-guides/docker.md):
+
 Docker 설정 방법을 배워보세요.
 
 ### [Vercel 호스팅 가이드](./tips-guides/vercel.md):
+
 Vercel 설정 방법을 배워보세요.
 
-
 ### [OAuth Setup Guide (Google & GitHub)](./tips-guides/oauth.md):
+
 Learn how to configure Google and GitHub OAuth for login functionality.
 
 ### [MCP 서버와 함께하는 프로젝트 기능](./tips-guides/project_with_mcp.md):
+
 시스템 지시사항과 구조를 MCP 서버와 통합하여 GitHub 기반 프로젝트 관리를 도와주는 에이전트를 구축하는 방법을 배워보세요.
 
 ## 🗺️ 로드맵: 다음 기능들
@@ -276,7 +278,7 @@ MCP 클라이언트 챗봇은 다음과 같은 예정된 기능들과 함께 발
 - **Daytona 통합을 활용한 LLM 기반 코드 작성 및 편집**
   - Daytona 통합을 통한 클라우드 개발 환경에서의 완벽한 LLM 기반 코드 작성, 편집 및 실행. AI 지원으로 즉시 코드를 생성, 수정 및 실행 - 로컬 설정이 필요하지 않습니다.
 
-💡 제안이나 특정 기능이 필요하시면 [이슈](https://github.com/cgoinglove/mcp-client-chatbot/issues)를 생성해주세요!
+💡 제안이나 특정 기능이 필요하시면 [이슈](https://github.com/WinstonFassett/mcp-client-chatbot/issues)를 생성해주세요!
 
 ## 🙌 기여하기
 
