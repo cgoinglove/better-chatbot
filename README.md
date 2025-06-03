@@ -24,19 +24,18 @@ See the experience in action in the [preview](#preview) below!
     - [⚡️ Quick Tool Mentions (`@`) \& Presets](#️-quick-tool-mentions---presets)
     - [🧭 Tool Choice Mode](#-tool-choice-mode)
     - [🔌 Easy MCP Server Integration \& 🛠️ Tool Testing](#-easy-mcp-server-integration--️-tool-testing)
-  - [Getting Start](#getting-start)
+  - [Getting Started](#getting-started)
     - [Quick Start (Local Version) 🚀](#quick-start-local-version-)
     - [Quick Start (Docker Compose Version) 🐳](#quick-start-docker-compose-version-)
     - [Environment Variables](#environment-variables)
-    - [MCP Server Setup](#mcp-server-setup)
-  - [� Guides](#-guides)
+  - [📘 Guides](#-guides)
       - [🔌 MCP Server Setup](#-mcp-server-setup)
-    - [🐳 Docker Hosting Guide](#-docker-hosting-guide)
-    - [▲ Vercel Hosting Guide](#-vercel-hosting-guide)
-    - [🔐 OAuth Sign-In Setup](#-oauth-sign-in-setup)
+      - [🐳 Docker Hosting Guide](#-docker-hosting-guide)
+      - [▲ Vercel Hosting Guide](#-vercel-hosting-guide)
+      - [🔐 OAuth Sign-In Setup](#-oauth-sign-in-setup)
   - [💡 Tips](#-tips)
-    - [🧠 Agentic Chatbot with Project Instructions](#-agentic-chatbot-with-project-instructions)
-    - [💬 Temporary Chat Windows](#-temporary-chat-windows)
+      - [🧠 Agentic Chatbot with Project Instructions](#-agentic-chatbot-with-project-instructions)
+      - [💬 Temporary Chat Windows](#-temporary-chat-windows)
   - [🗺️ Roadmap](#️-roadmap)
   - [🙌 Contributing](#-contributing)
   - [💬 Join Our Discord](#-join-our-discord)
@@ -64,7 +63,7 @@ After that, close the browser.
 Finally, tell me how to install the package.
 ```
 
----
+<br/><br/>
 
 ### 🎙️ Realtime Voice Assistant + MCP Tools
 
@@ -89,7 +88,7 @@ No need to memorize — just type `@` and select from the list!
 You can also create **tool presets** by selecting only the MCP servers or tools you want.
 Switch between presets instantly with a click — perfect for organizing tools by task or workflow.
 
----
+<br/><br/>
 
 ### 🧭 Tool Choice Mode
 
@@ -103,7 +102,7 @@ Control how tools are used in each chat with **Tool Choice Mode** — switch any
 
 This lets you flexibly choose between autonomous, guided, or tool-free interaction depending on the situation.
 
----
+<br/><br/>
 
 ### 🔌 Easy MCP Server Integration & 🛠️ Tool Testing
 
@@ -114,17 +113,17 @@ Add new MCP servers effortlessly through the UI — no need to restart the app.
 Each tool is available instantly and can be tested independently outside of chat.
 Perfect for quick debugging and reliable development workflows.
 
----
+<br/><br/>
 
 …and there’s even more waiting for you.
 Try it out and see what else it can do!
 
 
-<br/>
+<br/><br/>
 
 
 
-## Getting Start 
+## Getting Started
 
 > This project uses [pnpm](https://pnpm.io/) as the recommended package manager.
 
@@ -132,7 +131,7 @@ Try it out and see what else it can do!
 # If you don't have pnpm:
 npm install -g pnpm
 ```
-
+<br/>
 ### Quick Start (Local Version) 🚀
 
 ```bash
@@ -156,6 +155,7 @@ pnpm build:local && pnpm start
 # Use build:local for local start to ensure correct cookie settings
 ```
 
+<br/>
 
 ### Quick Start (Docker Compose Version) 🐳
 
@@ -173,7 +173,7 @@ pnpm docker-compose:up
 
 Open [http://localhost:3000](http://localhost:3000) in your browser to get started.
 
----
+<br/>
 
 ### Environment Variables
 
@@ -208,60 +208,42 @@ GOOGLE_CLIENT_SECRET=
 GITHUB_CLIENT_ID=
 GITHUB_CLIENT_SECRET=
 ```
----
 
-### MCP Server Setup
-
-You can connect MCP tools via:
-
-1. **UI Setup:** Go to http://localhost:3000/mcp and configure through the interface.
-2. **Custom Logic:** Edit `./custom-mcp-server/index.ts` to implement your own logic, this also doesn't run on vercel or docker.
-3. **File based for local dev:** make .mcp-config.json and put your servers in there. Only works in local dev, no docker or vercel env variable required. For example 
-```jsonc
-// .mcp-config.json
-{
-  "playwright":  {
-      "command": "npx",
-      "args": ["@playwright/mcp@latest"]
-    },
-}
-```
-
----
+<br/>
 
 ## 📘 Guides
 
 Step-by-step setup guides for running and configuring MCP Client Chatbot.
 
-#### [🔌 MCP Server Setup](./docs/tips-guides/mcp-server.md)
+#### [🔌 MCP Server Setup](./docs/tips-guides/mcp-server-setup.md)
 
-How to add and configure MCP servers in your environment
+- How to add and configure MCP servers in your environment
 
-### [🐳 Docker Hosting Guide](./docs/tips-guides/docker.md)
+#### [🐳 Docker Hosting Guide](./docs/tips-guides/docker.md)
 
-How to self-host the chatbot using Docker, including environment configuration.
+- How to self-host the chatbot using Docker, including environment configuration.
 
-### [▲ Vercel Hosting Guide](./docs/tips-guides/vercel.md)
+#### [▲ Vercel Hosting Guide](./docs/tips-guides/vercel.md)
 
-Deploy the chatbot to Vercel with simple setup steps for production use.
+- Deploy the chatbot to Vercel with simple setup steps for production use.
 
-### [🔐 OAuth Sign-In Setup](./docs/tips-guides/oauth.md)
+#### [🔐 OAuth Sign-In Setup](./docs/tips-guides/oauth.md)
 
-Configure Google and GitHub OAuth for secure user login support.
+- Configure Google and GitHub OAuth for secure user login support.
 
-
+<br/>
 
 ## 💡 Tips
 
 Advanced use cases and extra capabilities that enhance your chatbot experience.
 
-### [🧠 Agentic Chatbot with Project Instructions](./docs/tips-guides/project_with_mcp.md)
+#### [🧠 Agentic Chatbot with Project Instructions](./docs/tips-guides/project_with_mcp.md)
 
-Use MCP servers and structured project instructions to build a custom assistant that helps with specific tasks.
+- Use MCP servers and structured project instructions to build a custom assistant that helps with specific tasks.
 
-### [💬 Temporary Chat Windows](./docs/tips-guides/temporary_chat.md)
+#### [💬 Temporary Chat Windows](./docs/tips-guides/temporary_chat.md)
 
-Open lightweight popup chats for quick side questions or testing — separate from your main thread.
+- Open lightweight popup chats for quick side questions or testing — separate from your main thread.
 
 
 
