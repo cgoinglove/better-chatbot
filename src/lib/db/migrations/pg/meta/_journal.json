@@ -50,6 +50,13 @@
       "when": 1748897724414,
       "tag": "0006_careless_boomerang",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1748905473700,
+      "tag": "0007_curvy_jocasta",
+      "breakpoints": true
     }
   ]
 }
