@@ -2,7 +2,8 @@
 
 Temporary Chat allows you to interact with the assistant in a lightweight, popup-style chat — without creating a new thread or saving any messages. It's perfect for side questions, quick tests, or one-off tasks.
 
-![temporary-chat-1](./docs/images/temporary-chat-1.gif)
+![temporarily](https://github.com/user-attachments/assets/e0c9874c-e06a-4d2b-a630-1871c6fe3a69)
+
 
 ## 🔄 How It Works
 
@@ -12,7 +13,8 @@ Temporary Chat allows you to interact with the assistant in a lightweight, popup
 * Messages sent here are **not saved** to history — once closed, they're gone.
 * Temporary chat supports its own **System Prompt**, allowing you to customize behavior.
 
-![temporary-chat-2](./docs/images/temporary-chat-2.gif)
+<img width="1418" alt="systemprompt" src="https://github.com/user-attachments/assets/8e851ace-9deb-4cd4-87ef-2ab56ecad731" />
+
 
 ## 🧠 Why It's Useful
 
