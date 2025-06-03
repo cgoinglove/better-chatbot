@@ -1,138 +1,129 @@
 # MCP Client Chatbot
 
-**English** | [한국어](./docs/ko.md)
 
-[![Local First](https://img.shields.io/badge/Local-First-blueviolet)](#)
 [![MCP Supported](https://img.shields.io/badge/MCP-Supported-00c853)](https://modelcontextprotocol.io/introduction)
 [![Discord](https://img.shields.io/discord/1374047276074537103?label=Discord&logo=discord&color=5865F2)](https://discord.gg/gCRu69Upnp)
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/cgoinglove/mcp-client-chatbot&env=BETTER_AUTH_SECRET&env=OPENAI_API_KEY&env=GOOGLE_GENERATIVE_AI_API_KEY&env=ANTHROPIC_API_KEY&envDescription=Learn+more+about+how+to+get+the+API+Keys+for+the+application&envLink=https://github.com/cgoinglove/mcp-client-chatbot/blob/main/.env.example&demo-title=MCP+Client+Chatbot&demo-description=An+Open-Source+MCP+Chatbot+Template+Built+With+Next.js+and+the+AI+SDK+by+Vercel.&products=[{"type":"integration","protocol":"storage","productSlug":"neon","integrationSlug":"neon"}])
 
-**MCP Client Chatbot** is a versatile chat interface that supports various AI model providers like [OpenAI](https://openai.com/), [Anthropic](https://www.anthropic.com/), [Gemini](https://gemini.google.com/), and [Ollama](https://ollama.com/). 
+Our goal is to create the best possible chatbot UX — focusing on the joy and intuitiveness users feel when calling and interacting with AI tools.
 
-It is also the first known speech-based chatbot with integrated MCP Server support, enabling real-time multimodal interactions.
+See the experience in action in the [preview](#preview) below!
 
-Our mission is to build the **most powerful tool-using chatbot**, combining the best of language models and tool orchestration.  
-
-We aim to create diverse UX and features that allow LLMs to actively use tools — such as `@tool` mentions for direct invocation,  
-enabling **speech-based chat to access and use MCP server tools**, quick tool presets for fast selection,  
-and the upcoming **workflow with tools** feature for multi-step automation.
+> Built with [Vercel AI SDK](https://sdk.vercel.ai) and [Next.js](https://nextjs.org/), this app adopts modern patterns for building AI chat interfaces. It leverages the power of the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) to seamlessly integrate external tools into your chat experience.
 
 
-> Built with [Vercel AI SDK](https://sdk.vercel.ai) and [Next.js](https://nextjs.org/), this app adopts modern patterns for building AI chat interfaces. Leverage the power of [Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) to seamlessly integrate external tools into your chat experience.
-
-
-**🌟 Open Source Project**
-MCP Client Chatbot is a 100% community-driven open source project.
 
 ## Table of Contents
 
 - [MCP Client Chatbot](#mcp-client-chatbot)
   - [Table of Contents](#table-of-contents)
-  - [Demo](#demo)
+  - [Preview](#preview)
     - [🧩 Browser Automation with Playwright MCP](#-browser-automation-with-playwright-mcp)
-    - [⚡️ Quick Tool Mentions (`@`)](#️-quick-tool-mentions-)
-    - [🔌 Adding MCP Servers Easily](#-adding-mcp-servers-easily)
-    - [🛠️ Standalone Tool Testing](#️-standalone-tool-testing)
-    - [📊 Built-in Chart Tools](#-built-in-chart-tools)
-  - [✨ Key Features](#-key-features)
+    - [🎙️ Realtime Voice Assistant + MCP Tools](#️-realtime-voice-assistant--mcp-tools)
+    - [⚡️ Quick Tool Mentions (`@`) \& Presets](#️-quick-tool-mentions---presets)
+    - [🧭 Tool Choice Mode](#-tool-choice-mode)
+    - [🔌 Easy MCP Server Integration \& 🛠️ Tool Testing](#-easy-mcp-server-integration--️-tool-testing)
+  - [Getting Started](#getting-started)
     - [Quick Start (Local Version) 🚀](#quick-start-local-version-)
     - [Quick Start (Docker Compose Version) 🐳](#quick-start-docker-compose-version-)
     - [Environment Variables](#environment-variables)
-    - [MCP Server Setup](#mcp-server-setup)
-  - [💡 Tips \& Guides](#-tips--guides)
-    - [Docker Hosting Guide:](#docker-hosting-guide)
-    - [Vercel Hosting Guide:](#vercel-hosting-guide)
-    - [OAuth Setup Guide (Google \& GitHub):](#oauth-setup-guide-google--github)
-    - [Project Feature with MCP Server:](#project-feature-with-mcp-server)
-  - [🗺️ Roadmap: Next Features](#️-roadmap-next-features)
-    - [🚀 Deployment \& Hosting ✅](#-deployment--hosting-)
-    - [📎 File \& Image](#-file--image)
-    - [🔄 MCP Workflow](#-mcp-workflow)
-    - [🛠️ Built-in Tools \& UX](#️-built-in-tools--ux)
-    - [💻 LLM Code Write (with Daytona)](#-llm-code-write-with-daytona)
+  - [📘 Guides](#-guides)
+      - [🔌 MCP Server Setup](#-mcp-server-setup)
+      - [🐳 Docker Hosting Guide](#-docker-hosting-guide)
+      - [▲ Vercel Hosting Guide](#-vercel-hosting-guide)
+      - [🔐 OAuth Sign-In Setup](#-oauth-sign-in-setup)
+  - [💡 Tips](#-tips)
+      - [🧠 Agentic Chatbot with Project Instructions](#-agentic-chatbot-with-project-instructions)
+      - [💬 Temporary Chat Windows](#-temporary-chat-windows)
+  - [🗺️ Roadmap](#️-roadmap)
   - [🙌 Contributing](#-contributing)
   - [💬 Join Our Discord](#-join-our-discord)
 
 ---
 
-## Demo
+## Preview
 
-Here are some quick examples of how you can use MCP Client Chatbot:
-
+Get a feel for the UX — here’s a quick look at what’s possible.
 
 ### 🧩 Browser Automation with Playwright MCP
 
-![playwright-demo](./docs/images/preview-1.gif)
+![playwright-preview](https://github.com/user-attachments/assets/53ec0069-aab4-47ff-b7c4-a8080a6a98ff)
 
 **Example:** Control a web browser using Microsoft's [playwright-mcp](https://github.com/microsoft/playwright-mcp) tool.
+
+- The LLM autonomously decides how to use tools from the MCP server, calling them multiple times to complete a multi-step task and return a final message.
 
 Sample prompt:
 
 ```prompt
-Please go to GitHub and visit the cgoinglove profile.
-Open the mcp-client-chatbot project.
+Please go to GitHub and visit the cgoinglove/mcp-client-chatbot project.
 Then, click on the README.md file.
 After that, close the browser.
 Finally, tell me how to install the package.
 ```
 
----
+<br/><br/>
 
-### ⚡️ Quick Tool Mentions (`@`)
+### 🎙️ Realtime Voice Assistant + MCP Tools
 
-![mention](https://github.com/user-attachments/assets/1a80dd48-1d95-4938-b0d8-431c02ec2a53)
 
-Quickly call any registered MCP tool during chat by typing `@toolname`.  
-No need to memorize — just type `@` and pick from the list!
+https://github.com/user-attachments/assets/e2657b8c-ce0b-40dd-80b6-755324024973
 
-You can also control how tools are used with the new **Tool Choice Mode**:
 
-- **Auto:** Tools are automatically called by the model when needed.
-- **Manual:** The model will ask for your permission before calling any tool.
-- **None:** Disables all tool usage.
 
-Toggle modes anytime with the shortcut `⌘P`.
+This demo showcases a **realtime voice-based chatbot assistant** built with OpenAI’s new Realtime API — now extended with full **MCP tool integration**.
+Talk to the assistant naturally, and watch it execute tools in real time.
+
 
 ---
 
-### 🔌 Adding MCP Servers Easily
+### ⚡️ Quick Tool Mentions (`@`) & Presets
 
-![mcp-server-install](https://github.com/user-attachments/assets/c71fd58d-b16e-4517-85b3-160685a88e38)
+![tool-mention](https://github.com/user-attachments/assets/bd47b175-320f-4c38-bc2f-be887c46178e)
 
-Add new MCP servers easily through the UI, and start using new tools without restarting the app.
+Quickly call any registered MCP tool during chat by typing `@toolname`.
+No need to memorize — just type `@` and select from the list!
 
----
+You can also create **tool presets** by selecting only the MCP servers or tools you want.
+Switch between presets instantly with a click — perfect for organizing tools by task or workflow.
 
-### 🛠️ Standalone Tool Testing
+<br/><br/>
 
-![tool-test](https://github.com/user-attachments/assets/980dd645-333f-4e5c-8ac9-3dc59db19e14)
+### 🧭 Tool Choice Mode
 
-Test MCP tools independently of chat sessions to simplify development and debugging.
+![tool-mode](https://github.com/user-attachments/assets/043a37b6-c937-4b94-abb7-939124615368)
 
-### 📊 Built-in Chart Tools
+Control how tools are used in each chat with **Tool Choice Mode** — switch anytime with `⌘P`.
 
-![May-04-2025 01-55-04](https://github.com/user-attachments/assets/7bf9d895-9023-44b1-b7f2-426ae4d7d643)
+* **Auto:** The model automatically calls tools when needed.
+* **Manual:** The model will ask for your permission before calling a tool.
+* **None:** Tool usage is disabled completely.
 
-Visualize chatbot responses as pie, bar, or line charts using the built-in tool — perfect for quick data insight during conversations.
+This lets you flexibly choose between autonomous, guided, or tool-free interaction depending on the situation.
 
----
+<br/><br/>
 
-## ✨ Key Features
+### 🔌 Easy MCP Server Integration & 🛠️ Tool Testing
 
-- **💻 100% Local Execution:** Run directly on your PC or server without complex deployment, fully utilizing and controlling your computing resources.
-- **🤖 Multiple AI Model Support:** Flexibly switch between providers like OpenAI, Anthropic, Google AI, and Ollama.
-- **🗣️ Real-time voice chat powered by MCP Server:** Currently supports **OpenAI** provider (Gemini support coming soon)
-- **🛠️ Powerful MCP Integration:** Seamlessly connect external tools (browser automation, database operations, etc.) into chat via Model Context Protocol.
-- **🚀 Standalone Tool Tester:** Test and debug MCP tools separately from the main chat interface.
-- **💬 Intuitive Mentions + Tool Control:** Trigger tools with `@`, and control when they're used via `Auto` / `Manual` / `None` modes.
-- **⚙️ Easy Server Setup:** Configure MCP connections via UI or `.mcp-config.json` file.
-- **📄 Markdown UI:** Communicate in a clean, readable markdown-based interface.
-- **🧩 Custom MCP Server Support:** Modify the built-in MCP server logic or create your own.
-- **📊 Built-in Chart Tools:** Generate pie, bar, and line charts directly in chat with natural prompts.
-- **🛫Easy Deployment:** with vercel support baked in it makes an easily accesible chatbot.
-- **🏃Run anywhere:** Easily launch with Docker Compose—just build the image and run.
-- **🏴i8n suppport:** We have Korean and English languages making the chatbot accessible to all.
+![add-mcp-server](https://github.com/user-attachments/assets/f66ae118-883e-4638-b4fc-9f9849566da2)
+
+
+Add new MCP servers effortlessly through the UI — no need to restart the app.
+Each tool is available instantly and can be tested independently outside of chat.
+Perfect for quick debugging and reliable development workflows.
+
+<br/><br/>
+
+…and there’s even more waiting for you.
+Try it out and see what else it can do!
+
+
+<br/><br/>
+
+
+
+## Getting Started
 
 > This project uses [pnpm](https://pnpm.io/) as the recommended package manager.
 
@@ -140,7 +131,7 @@ Visualize chatbot responses as pie, bar, or line charts using the built-in tool 
 # If you don't have pnpm:
 npm install -g pnpm
 ```
-
+<br/>
 ### Quick Start (Local Version) 🚀
 
 ```bash
@@ -164,6 +155,7 @@ pnpm build:local && pnpm start
 # Use build:local for local start to ensure correct cookie settings
 ```
 
+<br/>
 
 ### Quick Start (Docker Compose Version) 🐳
 
@@ -181,7 +173,7 @@ pnpm docker-compose:up
 
 Open [http://localhost:3000](http://localhost:3000) in your browser to get started.
 
----
+<br/>
 
 ### Environment Variables
 
@@ -216,77 +208,55 @@ GOOGLE_CLIENT_SECRET=
 GITHUB_CLIENT_ID=
 GITHUB_CLIENT_SECRET=
 ```
----
 
-### MCP Server Setup
+<br/>
 
-You can connect MCP tools via:
+## 📘 Guides
 
-1. **UI Setup:** Go to http://localhost:3000/mcp and configure through the interface.
-2. **Custom Logic:** Edit `./custom-mcp-server/index.ts` to implement your own logic, this also doesn't run on vercel or docker.
-3. **File based for local dev:** make .mcp-config.json and put your servers in there. Only works in local dev, no docker or vercel env variable required. For example 
-```jsonc
-// .mcp-config.json
-{
-  "playwright":  {
-      "command": "npx",
-      "args": ["@playwright/mcp@latest"]
-    },
-}
-```
+Step-by-step setup guides for running and configuring MCP Client Chatbot.
+
+#### [🔌 MCP Server Setup](./docs/tips-guides/mcp-server-setup.md)
+
+- How to add and configure MCP servers in your environment
+
+#### [🐳 Docker Hosting Guide](./docs/tips-guides/docker.md)
+
+- How to self-host the chatbot using Docker, including environment configuration.
+
+#### [▲ Vercel Hosting Guide](./docs/tips-guides/vercel.md)
+
+- Deploy the chatbot to Vercel with simple setup steps for production use.
+
+#### [🔐 OAuth Sign-In Setup](./docs/tips-guides/oauth.md)
+
+- Configure Google and GitHub OAuth for secure user login support.
+
+<br/>
+
+## 💡 Tips
+
+Advanced use cases and extra capabilities that enhance your chatbot experience.
+
+#### [🧠 Agentic Chatbot with Project Instructions](./docs/tips-guides/project_with_mcp.md)
+
+- Use MCP servers and structured project instructions to build a custom assistant that helps with specific tasks.
+
+#### [💬 Temporary Chat Windows](./docs/tips-guides/temporary_chat.md)
+
+- Open lightweight popup chats for quick side questions or testing — separate from your main thread.
 
 
-## 💡 Tips & Guides
 
-Here are some practical tips and guides for using MCP Client Chatbot:
+## 🗺️ Roadmap
 
-### [Docker Hosting Guide](./docs/tips-guides/docker.md):
-Learn how to set up docker.
+Planned features coming soon to MCP Client Chatbot:
 
-### [Vercel Hosting Guide](./docs/tips-guides/vercel.md):
-Learn how to set up vercel.
+* [ ] **MCP-integrated LLM Workflow**
+* [ ] **File Attach & Image Generation**
+* [ ] **Collaborative Document Editing** (like OpenAI Canvas: user & assistant co-editing)
+* [ ] **RAG (Retrieval-Augmented Generation)**
+* [ ] **Web-based Compute** (with [WebContainers](https://webcontainers.io) integration)
 
-### [OAuth Setup Guide (Google & GitHub)](./docs/tips-guides/oauth.md):
-Learn how to configure Google and GitHub OAuth for login functionality.
-
-### [Project Feature with MCP Server](./docs/tips-guides/project_with_mcp.md): 
-Learn how to integrate system instructions and structures with MCP servers to build an agent that assists with GitHub-based project management.
-
-
-
-
-## 🗺️ Roadmap: Next Features
-
-MCP Client Chatbot is evolving with these upcoming features:
-
-### 🚀 Deployment & Hosting ✅
-
-- **Self Hosting:** ✅
-  - Easy deployment with Docker Compose ✅
-  - Vercel deployment support (MCP Server: SSE only)✅
-
-### 📎 File & Image
-
-- **File Attach & Image Generation:**
-  - File upload and image generation
-  - Multimodal conversation support
-
-### 🔄 MCP Workflow
-
-- **MCP Flow:**
-  - Workflow automation with MCP Server integration
-
-### 🛠️ Built-in Tools & UX
-
-- **Default Tools for Chatbot:**
-  - Collaborative document editing (like OpenAI Canvas: user & assistant co-editing)
-  - RAG (Retrieval-Augmented Generation)
-  - Useful built-in tools for chatbot UX (usable without MCP)
-
-### 💻 LLM Code Write (with Daytona)
-
-- **LLM-powered code writing and editing using Daytona integration**
-  - Seamless LLM-powered code writing, editing, and execution in a cloud development environment via Daytona integration. Instantly generate, modify, and run code with AI assistance—no local setup required.
 
 💡 If you have suggestions or need specific features, please create an [issue](https://github.com/cgoinglove/mcp-client-chatbot/issues)!
 
