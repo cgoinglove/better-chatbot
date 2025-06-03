@@ -23,6 +23,7 @@ import {
 } from "lib/ai/mcp/is-mcp-config";
 import { updateMcpClientAction } from "@/app/api/mcp/actions";
 import { insertMcpClientAction } from "@/app/api/mcp/actions";
+import { useMcpServerCustomization } from "@/hooks/use-mcp-server-customizations";
 
 import { Alert, AlertDescription, AlertTitle } from "ui/alert";
 import { z } from "zod";
@@ -56,6 +57,17 @@ export default function MCPEditor({
 }: MCPEditorProps) {
   const t = useTranslations();
   const shouldInsert = useMemo(() => isNull(initialName), [initialName]);
+
+  // Server customization hook (works when name is known – on modify page)
+  const {
+    customization: serverCustomization,
+    remove: removeServerCustomization,
+  } = useMcpServerCustomization(initialName);
+
+  const [instructions, setInstructions] = useState<string>(
+    serverCustomization?.customInstructions ?? "",
+  );
+
   const [isLoading, setIsLoading] = useState(false);
   const [jsonError, setJsonError] = useState<string | null>(null);
   const [nameError, setNameError] = useState<string | null>(null);
@@ -134,7 +146,26 @@ export default function MCPEditor({
           ? insertMcpClientAction(name, config)
           : updateMcpClientAction(name, config),
       )
-      .watch(() => setIsLoading(false))
+      .ifOk(async () => {
+        // For new servers, ensure customization is saved after creation
+        if (instructions.trim()) {
+          await fetch("/api/mcp/servers/customize", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              serverName: name,
+              customInstructions: instructions.trim(),
+            }),
+          }).catch((e) => console.error(e));
+        }
+
+        if (!shouldInsert) {
+          // modify flow handled via hook functions
+          if (!instructions.trim() && serverCustomization?.customInstructions) {
+            await removeServerCustomization();
+          }
+        }
+      })
       .ifOk(() => toast.success(t("MCP.configurationSavedSuccessfully")))
       .watch(watchOk(() => mutate("mcp-list")))
       .ifOk(() => router.push("/mcp"))
@@ -220,6 +251,20 @@ export default function MCPEditor({
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Custom instructions */}
+      <div className="space-y-2">
+        <Label htmlFor="custom-instructions">
+          {t("MCP.customInstructions")}
+        </Label>
+        <Textarea
+          id="custom-instructions"
+          value={instructions}
+          onChange={(e) => setInstructions(e.target.value)}
+          placeholder={t("MCP.serverCustomInstructionsPlaceholder")}
+          className="h-32"
+        />
       </div>
 
       {/* Save button */}

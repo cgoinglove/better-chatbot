@@ -223,6 +223,8 @@
     "createInputWithAI": "AIで入力を作成",
     "generateExampleInputJSON": "例の入力JSONを生成",
     "enterPromptToGenerateExampleInputJSON": "選択したツールの例の入力JSONを生成するためのプロンプトを入力してください。",
-    "callTool": "ツールを呼び出す"
+    "callTool": "ツールを呼び出す",
+    "customInstructions": "カスタム指示",
+    "serverCustomInstructionsPlaceholder": "このサーバーのツールが利用可能な場合、これらの行がシステムプロンプトに追加されます。"
   }
 }

@@ -223,6 +223,8 @@
     "createInputWithAI": "用 AI 创建输入",
     "generateExampleInputJSON": "生成示例输入 JSON",
     "enterPromptToGenerateExampleInputJSON": "输入提示为所选工具生成示例输入 JSON。",
-    "callTool": "调用工具"
+    "callTool": "调用工具",
+    "customInstructions": "自定义指令",
+    "serverCustomInstructionsPlaceholder": "当该服务器的任何工具可用时，这些内容将被添加到系统提示中。"
   }
 }

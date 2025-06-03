@@ -28,6 +28,7 @@ import type { MCPServerInfo, MCPToolInfo } from "app-types/mcp";
 
 import { ToolDetailPopup } from "./tool-detail-popup";
 import { useTranslations } from "next-intl";
+import { useMcpServerCustomization } from "@/hooks/use-mcp-server-customizations";
 
 // Main MCPCard component
 export const MCPCard = memo(function MCPCard({
@@ -39,6 +40,8 @@ export const MCPCard = memo(function MCPCard({
 }: MCPServerInfo) {
   const [isProcessing, setIsProcessing] = useState(false);
   const t = useTranslations("MCP");
+  const { customization: serverCustomization } =
+    useMcpServerCustomization(name);
 
   const isLoading = useMemo(() => {
     return isProcessing || status === "loading";
@@ -78,7 +81,12 @@ export const MCPCard = memo(function MCPCard({
       <CardHeader className="flex items-center gap-1 mb-2">
         {isLoading && <Loader className="size-4 z-20 animate-spin mr-1" />}
 
-        <h4 className="font-bold text-xs sm:text-lg">{name}</h4>
+        <h4 className="font-bold text-xs sm:text-lg flex items-center gap-1">
+          {name}
+          {serverCustomization?.customInstructions && (
+            <Pencil className="size-3 text-primary" />
+          )}
+        </h4>
         <div className="flex-1" />
         <Tooltip>
           <TooltipTrigger asChild>
@@ -155,7 +163,7 @@ export const MCPCard = memo(function MCPCard({
             </div>
 
             {toolInfo.length > 0 ? (
-              <ToolsList tools={toolInfo} />
+              <ToolsList tools={toolInfo} serverName={name} />
             ) : (
               <div className="bg-secondary/30 rounded-md p-3 text-center">
                 <p className="text-sm text-muted-foreground">
@@ -171,34 +179,40 @@ export const MCPCard = memo(function MCPCard({
 });
 
 // Tools list component
-const ToolsList = memo(({ tools }: { tools: MCPToolInfo[] }) => (
-  <div className="space-y-2 pr-2">
-    {tools.map((tool) => (
-      <ToolDetailPopup key={tool.name} tool={tool}>
-        <div className="flex cursor-pointer bg-secondary rounded-md p-2 hover:bg-input transition-colors">
-          <div className="flex-1 min-w-0">
-            <p className="font-medium text-sm mb-1 truncate">{tool.name}</p>
-            <p className="text-xs text-muted-foreground line-clamp-1">
-              {tool.description}
-            </p>
-          </div>
+const ToolsList = memo(
+  ({ tools, serverName }: { tools: MCPToolInfo[]; serverName: string }) => (
+    <div className="space-y-2 pr-2">
+      {tools.map((tool) => (
+        <div
+          key={tool.name}
+          className="flex items-start gap-2 bg-secondary rounded-md p-2 hover:bg-input transition-colors"
+        >
+          <ToolDetailPopup tool={tool} serverName={serverName}>
+            <div className="flex-1 min-w-0 cursor-pointer">
+              <p className="font-medium text-sm mb-1 truncate">{tool.name}</p>
+              <p className="text-xs text-muted-foreground line-clamp-1">
+                {tool.description}
+              </p>
+            </div>
+          </ToolDetailPopup>
+
           <div className="flex items-center px-1 justify-center self-stretch">
             <ChevronRight size={16} />
           </div>
         </div>
-      </ToolDetailPopup>
-    ))}
-  </div>
-));
+      ))}
+    </div>
+  ),
+);
 
 ToolsList.displayName = "ToolsList";
 
 // Error alert component
-const ErrorAlert = memo(({ error }: { error: any }) => (
+const ErrorAlert = memo(({ error }: { error: string }) => (
   <div className="px-6 pb-2">
     <Alert variant="destructive" className="border-destructive">
       <AlertTitle>Error</AlertTitle>
-      <AlertDescription>{error?.message || error}</AlertDescription>
+      <AlertDescription>{error}</AlertDescription>
     </Alert>
   </div>
 ));

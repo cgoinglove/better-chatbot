@@ -223,6 +223,8 @@
     "createInputWithAI": "Create Input with AI",
     "generateExampleInputJSON": "Generate Example Input JSON",
     "enterPromptToGenerateExampleInputJSON": "Enter a prompt to generate example input JSON for the selected tool.",
-    "callTool": "Call Tool"
+    "callTool": "Call Tool",
+    "customInstructions": "Custom instructions",
+    "serverCustomInstructionsPlaceholder": "These lines will be added to the AI system prompt whenever a tool from this server is available."
   }
 }

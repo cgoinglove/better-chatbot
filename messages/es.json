@@ -223,6 +223,8 @@
     "createInputWithAI": "Crear Entrada con IA",
     "generateExampleInputJSON": "Generar JSON de Entrada de Ejemplo",
     "enterPromptToGenerateExampleInputJSON": "Ingresa un prompt para generar un JSON de entrada de ejemplo para la herramienta seleccionada.",
-    "callTool": "Llamar Herramienta"
+    "callTool": "Llamar a herramienta",
+    "customInstructions": "Instrucciones personalizadas",
+    "serverCustomInstructionsPlaceholder": "Estas líneas se añadirán al mensaje del sistema siempre que haya una herramienta de este servidor disponible."
   }
 }

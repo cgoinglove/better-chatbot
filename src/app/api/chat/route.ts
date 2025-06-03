@@ -14,6 +14,7 @@ import { customModelProvider, isToolCallUnsupportedModel } from "lib/ai/models";
 import { mcpClientsManager } from "lib/ai/mcp/mcp-manager";
 
 import { chatRepository } from "lib/db/repository";
+import { toolCustomizationRepository } from "lib/db/repository";
 import logger from "logger";
 import {
   buildProjectInstructionsSystemPrompt,
@@ -42,6 +43,7 @@ import {
 } from "./helper";
 import { generateTitleFromUserMessageAction } from "./actions";
 import { getSession } from "auth/server";
+import { mcpServerCustomizationRepository } from "lib/db/repository";
 
 export async function POST(request: Request) {
   try {
@@ -125,12 +127,48 @@ export async function POST(request: Request) {
       }))
       .orElse(undefined);
 
+    const customizations =
+      await toolCustomizationRepository.getUserToolCustomizations(
+        session.user.id,
+      );
+
+    const serverCustoms =
+      await mcpServerCustomizationRepository.getUserServerCustomizations(
+        session.user.id,
+      );
+
+    const customServerPromptAdditions = serverCustoms
+      .filter((c) => c.customInstructions && c.enabled)
+      .map((c) => c.customInstructions!.trim())
+      .filter(Boolean)
+      .join("\n\n");
+
+    if (customServerPromptAdditions) {
+      logger.info("[CHAT] Custom server instructions added", {
+        userId: session.user.id,
+        count: serverCustoms.length,
+      });
+    }
+
     const messages: Message[] = isLastMessageUserMessage
       ? appendClientMessage({
           messages: previousMessages,
           message,
         })
       : previousMessages;
+
+    const customSystemPromptAdditions = customizations
+      .filter((c) => c.customPrompt && c.enabled)
+      .map((c) => c.customPrompt!.trim())
+      .filter(Boolean)
+      .join("\n\n");
+
+    if (customSystemPromptAdditions) {
+      logger.info("[CHAT] Custom tool instructions added", {
+        userId: session.user.id,
+        count: customizations.length,
+      });
+    }
 
     return createDataStreamResponse({
       execute: async (dataStream) => {
@@ -157,6 +195,8 @@ export async function POST(request: Request) {
         const systemPrompt = mergeSystemPrompt(
           buildUserSystemPrompt(session.user, userPreferences),
           buildProjectInstructionsSystemPrompt(thread?.instructions),
+          customSystemPromptAdditions,
+          customServerPromptAdditions,
         );
 
         // Precompute toolChoice to avoid repeated tool calls
