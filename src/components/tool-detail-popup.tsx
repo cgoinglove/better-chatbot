@@ -81,7 +81,13 @@ export const ToolDetailPopup = ({
                 Additional instructions
               </h5>
               {!editing && (
-                <Button variant="ghost" size="icon" onClick={startEdit}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={startEdit}
+                  aria-label="Edit instructions"
+                >
+                  <span className="sr-only">Edit</span>
                   <Pencil className="size-3" />
                 </Button>
               )}

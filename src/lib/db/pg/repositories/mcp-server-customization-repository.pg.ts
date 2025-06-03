@@ -1,5 +1,5 @@
 import { pgDb as db } from "../db.pg";
-import { McpServerCustomizationSchema, McpServerSchema } from "../schema.pg";
+import { McpServerCustomizationSchema } from "../schema.pg";
 import { and, eq } from "drizzle-orm";
 import { generateUUID } from "lib/utils";
 

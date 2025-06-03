@@ -45,6 +45,28 @@ import { generateTitleFromUserMessageAction } from "./actions";
 import { getSession } from "auth/server";
 import { mcpServerCustomizationRepository } from "lib/db/repository";
 
+// ---------------------------------------------------------------------------
+// In-memory 5-minute TTL cache for per-user customization lists. This reduces
+// two extra DB round-trips on every chat request while still reflecting
+// updates within a reasonable time window. The cache lives only for the life
+// of the running instance (acceptable for stateless Vercel serverless).
+// ---------------------------------------------------------------------------
+
+const CACHE_TTL_MS = 60 * 1000; // 1 minute
+type CacheEntry = {
+  ts: number;
+  toolCustomizations: Awaited<
+    ReturnType<typeof toolCustomizationRepository.getUserToolCustomizations>
+  >;
+  serverCustomizations: Awaited<
+    ReturnType<
+      typeof mcpServerCustomizationRepository.getUserServerCustomizations
+    >
+  >;
+};
+
+const customizationCache = new Map<string /* userId */, CacheEntry>();
+
 export async function POST(request: Request) {
   try {
     const json = await request.json();
@@ -127,15 +149,31 @@ export async function POST(request: Request) {
       }))
       .orElse(undefined);
 
-    const customizations =
-      await toolCustomizationRepository.getUserToolCustomizations(
-        session.user.id,
-      );
+    // ------------------------ fetch with caching ---------------------------
+    let customizations: CacheEntry["toolCustomizations"];
+    let serverCustoms: CacheEntry["serverCustomizations"];
 
-    const serverCustoms =
-      await mcpServerCustomizationRepository.getUserServerCustomizations(
-        session.user.id,
-      );
+    const cached = customizationCache.get(session.user.id);
+    if (cached && Date.now() - cached.ts < CACHE_TTL_MS) {
+      ({
+        toolCustomizations: customizations,
+        serverCustomizations: serverCustoms,
+      } = cached);
+    } else {
+      customizations =
+        await toolCustomizationRepository.getUserToolCustomizations(
+          session.user.id,
+        );
+      serverCustoms =
+        await mcpServerCustomizationRepository.getUserServerCustomizations(
+          session.user.id,
+        );
+      customizationCache.set(session.user.id, {
+        ts: Date.now(),
+        toolCustomizations: customizations,
+        serverCustomizations: serverCustoms,
+      });
+    }
 
     const customServerPromptAdditions = serverCustoms
       .filter((c) => c.customInstructions && c.enabled)

@@ -38,11 +38,14 @@ export const useToolCustomization = (
   };
 
   const remove = async () => {
-    const res = await fetch(`/api/tools/customize`, {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ toolName, mcpServerName }),
-    });
+    const res = await fetch(
+      `/api/tools/customize?toolName=${encodeURIComponent(
+        toolName,
+      )}&mcpServerName=${encodeURIComponent(mcpServerName)}`,
+      {
+        method: "DELETE",
+      },
+    );
     if (!res.ok) throw await res.json();
     mutate();
   };

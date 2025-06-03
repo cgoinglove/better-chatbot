@@ -12,14 +12,14 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const url = new URL(request.url);
-  const serverId = url.searchParams.get("serverId");
+  const serverName = url.searchParams.get("serverName");
 
   try {
-    if (serverId) {
+    if (serverName) {
       const data =
         await mcpServerCustomizationRepository.getServerCustomization(
           session.user.id,
-          serverId,
+          serverName,
         );
       return NextResponse.json(data ?? {});
     }
@@ -43,21 +43,16 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const schema = z.object({
-      serverId: z.string().optional(),
       serverName: z.string(),
       customInstructions: z.string().max(8000).optional().nullable(),
     });
-    const { serverId, serverName, customInstructions } = schema.parse(body);
+    const { serverName, customInstructions } = schema.parse(body);
 
-    let id = serverId;
-    if (!id && serverName) {
-      const srv = await mcpRepository.selectServerByName(serverName);
-      if (!srv) {
-        throw new Error("Server not found");
-      }
-      id = srv.id;
+    // Ensure the referenced server exists – lightweight validation only
+    const exists = await mcpRepository.selectServerByName(serverName);
+    if (!exists) {
+      throw new Error("Server not found");
     }
-    if (!id) throw new Error("serverId or serverName required");
 
     const result =
       await mcpServerCustomizationRepository.upsertServerCustomization({
@@ -81,11 +76,11 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
     const url = new URL(request.url);
-    const serverId = url.searchParams.get("serverId");
-    if (!serverId) throw new Error("serverId required");
+    const serverName = url.searchParams.get("serverName");
+    if (!serverName) throw new Error("serverName required");
     await mcpServerCustomizationRepository.deleteServerCustomization(
       session.user.id,
-      serverId,
+      serverName,
     );
     return NextResponse.json({ success: true });
   } catch (e: any) {

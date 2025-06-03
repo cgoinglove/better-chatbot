@@ -72,15 +72,18 @@ export async function DELETE(request: Request) {
   }
 
   try {
-    const body = await request.json();
-    const { toolName, mcpServerName } = z
-      .object({ toolName: z.string(), mcpServerName: z.string() })
-      .parse(body);
+    const url = new URL(request.url);
+    const toolName = url.searchParams.get("toolName");
+    const mcpServerName = url.searchParams.get("mcpServerName");
+
+    const parsed = z
+      .object({ toolName: z.string().min(1), mcpServerName: z.string().min(1) })
+      .parse({ toolName, mcpServerName });
 
     await toolCustomizationRepository.deleteToolCustomization(
       session.user.id,
-      toolName,
-      mcpServerName,
+      parsed.toolName,
+      parsed.mcpServerName,
     );
     return NextResponse.json({ success: true });
   } catch (error: any) {
