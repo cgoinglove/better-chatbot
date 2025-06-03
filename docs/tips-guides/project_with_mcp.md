@@ -1,54 +1,49 @@
-# Project Management with MCP Client Chatbot
+# 🧠 Building a Project Agent with MCP Client Chatbot
 
-## Overview
+You can turn the MCP Client Chatbot into a powerful agent by combining a **Project**, a custom **System Prompt**, and the **Tool Preset** feature. This is similar to how OpenAI and Claude structure their Project features — a way to start conversations with context tailored to a specific task or domain.
 
-The MCP Client Chatbot is a versatile chat interface that supports various AI model providers. This use case explains how to build an agent that assists with project management tasks using the GitHub MCP server.
+---
 
+## 🛠️ How It Works
 
-## ✅ Configuration
+* A **Project** stores reusable instructions (system prompt) that are injected into every chat started within that project.
+* A **Tool Preset** can be used independently to scope the available tools, but it is not directly bound to a project.
 
-To use the GitHub MCP server, use the following configuration. The MCP server used here is the official GitHub MCP server. For more information, visit the [GitHub MCP Server repository](https://github.com/github/github-mcp-server).
+By using both together, you can create an effective workflow-specific assistant.
 
-```json
-{
-  "command": "docker",
-  "args": [
-    "run",
-    "-i",
-    "--rm",
-    "-e",
-    "GITHUB_PERSONAL_ACCESS_TOKEN",
-    "ghcr.io/github/github-mcp-server"
-  ],
-  "env": {
-    "GITHUB_PERSONAL_ACCESS_TOKEN": "<user-github-token>"
-  }
-}
-```
+---
 
-## Setting Up the Project
+## 📦 Example: Managing the `mcp-client-chatbot` Repository
 
-1. **Create a New Project:**
-   - Create a new project in the MCP Client Chatbot.
-   - Write the system prompt to define the MCP server to be used, the background, and the roles, allowing you to create an agent that assists with specific tasks.
+Let’s say you want to build an assistant for managing the `mcp-client-chatbot` GitHub repository:
 
-2. **Define the System Prompt:**
-   - Define the following roles in the system prompt:
-     - A brief description of the mcp-client-chatbot repository
-     - Instructions to use the GitHub MCP server
-     - Assign the role of a contributor managing this repository
+1. **Create a Project** named `mcp-client-chatbot`
+2. In the system prompt, include:
 
-![System Prompt Setup](https://github.com/user-attachments/assets/9cd1ffad-7a44-4ca7-9cfa-f00bc655a772)
+   * A description of the project
+   * Technologies used
+   * That the assistant should behave like a contributor
+   * A brief instruction on how to use the GitHub MCP server
+3. Separately, create a **Tool Preset** including 10–15 GitHub tools like `list_issues`, `comment_on_issue`, `merge_pr`, etc.
 
-## Demonstration
+Now, any chat created under the `mcp-client-chatbot` project will always start with that system prompt. If the user enables the corresponding Tool Preset, the assistant becomes a specialized project agent.
 
-- **Example Interaction:**
-  - When the user sends the message "check latest issue," the agent retrieves and summarizes the latest issue using the GitHub API.
-  - Then, if the user instructs to "write a comment about the benefits," the agent writes the appropriate comment.
+---
 
-![Commenting on Issue](https://github.com/user-attachments/assets/dca87a09-9b5d-4918-bfbc-c44c9455418a)
+## 💬 Example Interaction
 
+**User:** Check recent issues
+**Agent:** (retrieves and summarizes latest issues in the GitHub repository)
 
-In this project thread, the chatbot can provide significant assistance. It can directly merge PRs or perform reviews as well.
+**User:** Write a comment explaining the benefit
+**Agent:** (generates and posts a comment via GitHub MCP tool)
 
-> This kind of workflow can effectively replace many of the repetitive tasks involved in managing a GitHub project.
+---
+
+This setup lets you:
+
+* Reuse task-specific context across chats
+* Focus tools and behavior for a given project
+* Reduce repetitive setup and instructions
+
+> 💡 Great for workflows like translation, repo management, documentation review, or anything with clear structure and goals.
