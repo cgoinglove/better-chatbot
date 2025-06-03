@@ -70,7 +70,9 @@ Finally, tell me how to install the package.
 
 ### 🎙️ Realtime Voice Assistant + MCP Tools
 
-[![Watch the demo](https://img.youtube.com/vi/e_8jAN9LNfc/hqdefault.jpg)](https://www.youtube.com/watch?v=e_8jAN9LNfc)
+
+https://github.com/user-attachments/assets/e2657b8c-ce0b-40dd-80b6-755324024973
+
 
 
 This demo showcases a **realtime voice-based chatbot assistant** built with OpenAI’s new Realtime API — now extended with full **MCP tool integration**.
