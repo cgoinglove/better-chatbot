@@ -29,17 +29,15 @@ See the experience in action in the [preview](#preview) below!
     - [Quick Start (Docker Compose Version) 🐳](#quick-start-docker-compose-version-)
     - [Environment Variables](#environment-variables)
     - [MCP Server Setup](#mcp-server-setup)
-  - [💡 Tips \& Guides](#-tips--guides)
-    - [Docker Hosting Guide:](#docker-hosting-guide)
-    - [Vercel Hosting Guide:](#vercel-hosting-guide)
-    - [OAuth Setup Guide (Google \& GitHub):](#oauth-setup-guide-google--github)
-    - [Project Feature with MCP Server:](#project-feature-with-mcp-server)
-  - [🗺️ Roadmap: Next Features](#️-roadmap-next-features)
-    - [🚀 Deployment \& Hosting ✅](#-deployment--hosting-)
-    - [📎 File \& Image](#-file--image)
-    - [🔄 MCP Workflow](#-mcp-workflow)
-    - [🛠️ Built-in Tools \& UX](#️-built-in-tools--ux)
-    - [💻 LLM Code Write (with Daytona)](#-llm-code-write-with-daytona)
+  - [� Guides](#-guides)
+      - [🔌 MCP Server Setup](#-mcp-server-setup)
+    - [🐳 Docker Hosting Guide](#-docker-hosting-guide)
+    - [▲ Vercel Hosting Guide](#-vercel-hosting-guide)
+    - [🔐 OAuth Sign-In Setup](#-oauth-sign-in-setup)
+  - [💡 Tips](#-tips)
+    - [🧠 Agentic Chatbot with Project Instructions](#-agentic-chatbot-with-project-instructions)
+    - [💬 Temporary Chat Windows](#-temporary-chat-windows)
+  - [🗺️ Roadmap](#️-roadmap)
   - [🙌 Contributing](#-contributing)
   - [💬 Join Our Discord](#-join-our-discord)
 
@@ -117,14 +115,6 @@ Each tool is available instantly and can be tested independently outside of chat
 Perfect for quick debugging and reliable development workflows.
 
 ---
-
-
-The app also offers:
-
-* Support for multiple languages
-* **A wide range of themes** — not just light and dark, but many customizable styles to choose from
-* **Temporary chats** — open a quick popup chat without disrupting your main conversation.
-  These are not saved and can be toggled instantly with a shortcut, making them perfect for quick side questions or testing on the fly.
 
 …and there’s even more waiting for you.
 Try it out and see what else it can do!
@@ -237,58 +227,54 @@ You can connect MCP tools via:
 }
 ```
 
+---
 
-## 💡 Tips & Guides
+## 📘 Guides
 
-Here are some practical tips and guides for using MCP Client Chatbot:
+Step-by-step setup guides for running and configuring MCP Client Chatbot.
 
-### [Docker Hosting Guide](./docs/tips-guides/docker.md):
-Learn how to set up docker.
+#### [🔌 MCP Server Setup](./docs/tips-guides/mcp-server.md)
 
-### [Vercel Hosting Guide](./docs/tips-guides/vercel.md):
-Learn how to set up vercel.
+How to add and configure MCP servers in your environment
 
-### [OAuth Setup Guide (Google & GitHub)](./docs/tips-guides/oauth.md):
-Learn how to configure Google and GitHub OAuth for login functionality.
+### [🐳 Docker Hosting Guide](./docs/tips-guides/docker.md)
 
-### [Project Feature with MCP Server](./docs/tips-guides/project_with_mcp.md): 
-Learn how to integrate system instructions and structures with MCP servers to build an agent that assists with GitHub-based project management.
+How to self-host the chatbot using Docker, including environment configuration.
+
+### [▲ Vercel Hosting Guide](./docs/tips-guides/vercel.md)
+
+Deploy the chatbot to Vercel with simple setup steps for production use.
+
+### [🔐 OAuth Sign-In Setup](./docs/tips-guides/oauth.md)
+
+Configure Google and GitHub OAuth for secure user login support.
 
 
 
+## 💡 Tips
 
-## 🗺️ Roadmap: Next Features
+Advanced use cases and extra capabilities that enhance your chatbot experience.
 
-MCP Client Chatbot is evolving with these upcoming features:
+### [🧠 Agentic Chatbot with Project Instructions](./docs/tips-guides/project_with_mcp.md)
 
-### 🚀 Deployment & Hosting ✅
+Use MCP servers and structured project instructions to build a custom assistant that helps with specific tasks.
 
-- **Self Hosting:** ✅
-  - Easy deployment with Docker Compose ✅
-  - Vercel deployment support (MCP Server: SSE only)✅
+### [💬 Temporary Chat Windows](./docs/tips-guides/temporary_chat.md)
 
-### 📎 File & Image
+Open lightweight popup chats for quick side questions or testing — separate from your main thread.
 
-- **File Attach & Image Generation:**
-  - File upload and image generation
-  - Multimodal conversation support
 
-### 🔄 MCP Workflow
 
-- **MCP Flow:**
-  - Workflow automation with MCP Server integration
+## 🗺️ Roadmap
 
-### 🛠️ Built-in Tools & UX
+Planned features coming soon to MCP Client Chatbot:
 
-- **Default Tools for Chatbot:**
-  - Collaborative document editing (like OpenAI Canvas: user & assistant co-editing)
-  - RAG (Retrieval-Augmented Generation)
-  - Useful built-in tools for chatbot UX (usable without MCP)
+* [ ] **MCP-integrated LLM Workflow**
+* [ ] **File Attach & Image Generation**
+* [ ] **Collaborative Document Editing** (like OpenAI Canvas: user & assistant co-editing)
+* [ ] **RAG (Retrieval-Augmented Generation)**
+* [ ] **Web-based Compute** (with [WebContainers](https://webcontainers.io) integration)
 
-### 💻 LLM Code Write (with Daytona)
-
-- **LLM-powered code writing and editing using Daytona integration**
-  - Seamless LLM-powered code writing, editing, and execution in a cloud development environment via Daytona integration. Instantly generate, modify, and run code with AI assistance—no local setup required.
 
 💡 If you have suggestions or need specific features, please create an [issue](https://github.com/cgoinglove/mcp-client-chatbot/issues)!
 
