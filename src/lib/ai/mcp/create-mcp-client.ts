@@ -4,13 +4,13 @@ import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import {
   type MCPServerInfo,
-  MCPSseConfigZodSchema,
+  MCPRemoteConfigZodSchema,
   MCPStdioConfigZodSchema,
   type MCPServerConfig,
   type MCPToolInfo,
 } from "app-types/mcp";
 import { jsonSchema, Tool, tool, ToolExecutionOptions } from "ai";
-import { isMaybeSseConfig, isMaybeStdioConfig } from "./is-mcp-config";
+import { isMaybeRemoteConfig, isMaybeStdioConfig } from "./is-mcp-config";
 import logger from "logger";
 import type { ConsolaInstance } from "consola";
 import { colorize } from "consola/utils";
@@ -23,7 +23,7 @@ import {
 } from "lib/utils";
 
 import { safe } from "ts-safe";
-import { IS_MCP_SERVER_SSE_ONLY } from "lib/const";
+import { IS_MCP_SERVER_REMOTE_ONLY } from "lib/const";
 
 type ClientOptions = {
   autoDisconnectSeconds?: number;
@@ -94,14 +94,14 @@ export class MCPClient {
       this.locker.lock();
 
       const client = new Client({
-        name: this.name,
+        name: "mcp-chatbot-client",
         version: "1.0.0",
       });
 
       // Create appropriate transport based on server config type
       if (isMaybeStdioConfig(this.serverConfig)) {
         // Skip stdio transport
-        if (IS_MCP_SERVER_SSE_ONLY) {
+        if (IS_MCP_SERVER_REMOTE_ONLY) {
           throw new Error("Stdio transport is not supported");
         }
 
@@ -123,16 +123,27 @@ export class MCPClient {
         });
 
         await client.connect(transport);
-      } else if (isMaybeSseConfig(this.serverConfig)) {
-        const config = MCPSseConfigZodSchema.parse(this.serverConfig);
+      } else if (isMaybeRemoteConfig(this.serverConfig)) {
+        const config = MCPRemoteConfigZodSchema.parse(this.serverConfig);
+        const abortController = new AbortController();
         const url = new URL(config.url);
         try {
           const transport = new StreamableHTTPClientTransport(url, {
             requestInit: {
               headers: config.headers,
+              signal: abortController.signal,
             },
           });
           await client.connect(transport);
+          transport.onerror = (error) => {
+            this.log.error(`${this.name} SSE transport error:`, error);
+          };
+
+          transport.onmessage = (message) => {
+            this.log.debug(
+              `${this.name} Message received: ${JSON.stringify(message)}`,
+            );
+          };
         } catch {
           this.log.info(
             "Streamable HTTP connection failed, falling back to SSE transport",
@@ -140,6 +151,7 @@ export class MCPClient {
           const transport = new SSEClientTransport(url, {
             requestInit: {
               headers: config.headers,
+              signal: abortController.signal,
             },
           });
           await client.connect(transport);

@@ -61,7 +61,7 @@ pnpm docker-compose:up
 ## What is possible in docker and what is not
 
 - Full support for MCP stdio servers that work with bunx, uvx and npx.
-- Full support for SSE servers.
+- Full support for SSE,Streamable Remote servers.
 - And everything else as you would expect.
 
 ## Managing the Container

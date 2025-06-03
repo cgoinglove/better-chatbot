@@ -2,7 +2,7 @@
 import { useState, useMemo } from "react";
 import {
   MCPServerConfig,
-  MCPSseConfigZodSchema,
+  MCPRemoteConfigZodSchema,
   MCPStdioConfigZodSchema,
 } from "app-types/mcp";
 import { Input } from "./ui/input";
@@ -19,7 +19,7 @@ import { mutate } from "swr";
 import { Loader } from "lucide-react";
 import {
   isMaybeMCPServerConfig,
-  isMaybeSseConfig,
+  isMaybeRemoteConfig,
 } from "lib/ai/mcp/is-mcp-config";
 import { updateMcpClientAction } from "@/app/api/mcp/actions";
 import { insertMcpClientAction } from "@/app/api/mcp/actions";
@@ -42,7 +42,7 @@ const STDIO_ARGS_ENV_PLACEHOLDER = `/** STDIO Example */
   }
 }
 
-/** SSE Example */
+/** SSE,Streamable HTTP Example */
 {
   "url": "https://api.example.com",
   "headers": {
@@ -101,8 +101,8 @@ export default function MCPEditor({
 
   // Validate
   const validateConfig = (jsonConfig: unknown): boolean => {
-    const result = isMaybeSseConfig(jsonConfig)
-      ? MCPSseConfigZodSchema.safeParse(jsonConfig)
+    const result = isMaybeRemoteConfig(jsonConfig)
+      ? MCPRemoteConfigZodSchema.safeParse(jsonConfig)
       : MCPStdioConfigZodSchema.safeParse(jsonConfig);
     if (!result.success) {
       handleErrorWithToast(result.error, "mcp-editor-error");
