@@ -1,6 +1,6 @@
 import type {
   MCPServerConfig,
-  MCPSseConfig,
+  MCPRemoteConfig,
   MCPStdioConfig,
 } from "app-types/mcp";
 
@@ -15,9 +15,11 @@ export function isMaybeStdioConfig(config: unknown): config is MCPStdioConfig {
 }
 
 /**
- * Type guard to check if an object is potentially a valid SSE config
+ * Type guard to check if an object is potentially a valid remote config (sse,streamable)
  */
-export function isMaybeSseConfig(config: unknown): config is MCPSseConfig {
+export function isMaybeRemoteConfig(
+  config: unknown,
+): config is MCPRemoteConfig {
   if (typeof config !== "object" || config === null) {
     return false;
   }
@@ -25,10 +27,10 @@ export function isMaybeSseConfig(config: unknown): config is MCPSseConfig {
 }
 
 /**
- * Type guard for MCP server config (either stdio or SSE)
+ * Type guard for MCP server config (either stdio or remote)
  */
 export function isMaybeMCPServerConfig(
   config: unknown,
 ): config is MCPServerConfig {
-  return isMaybeStdioConfig(config) || isMaybeSseConfig(config);
+  return isMaybeStdioConfig(config) || isMaybeRemoteConfig(config);
 }

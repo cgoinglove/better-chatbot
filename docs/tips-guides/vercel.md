@@ -36,5 +36,5 @@
 
 ## Notes
 
-- Only SSE-based MCP servers are supported (STDIO-based servers are not).
+- Only Remote(sse, streamable) MCP servers are supported (STDIO-based servers are not).
 - If you need STDIO support, consider using Docker or Render.

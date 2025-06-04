@@ -107,11 +107,12 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
     generateId: generateUUID,
     experimental_throttle: 100,
     onFinish() {
-      if (threadList[0].id !== threadId) {
+      if (threadList[0]?.id !== threadId) {
         mutate("threads");
       }
     },
     onError: (error) => {
+      console.error(error);
       if (error.message.includes("Unauthorized")) {
         authClient.signOut().finally(() => {
           window.location.href = "/sign-in";

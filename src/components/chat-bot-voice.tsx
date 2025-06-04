@@ -574,6 +574,7 @@ function ConversationView({
                     <ToolMessagePart
                       key={index}
                       part={part}
+                      showActions={false}
                       message={message}
                       isLast={part.toolInvocation.state != "result"}
                     />

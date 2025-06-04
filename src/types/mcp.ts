@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const MCPSseConfigZodSchema = z.object({
+export const MCPRemoteConfigZodSchema = z.object({
   url: z.string().url().describe("The URL of the SSE endpoint"),
   headers: z.record(z.string(), z.string()).optional(),
 });
@@ -18,10 +18,10 @@ export const AllowedMCPServerZodSchema = z.object({
 
 export type AllowedMCPServer = z.infer<typeof AllowedMCPServerZodSchema>;
 
-export type MCPSseConfig = z.infer<typeof MCPSseConfigZodSchema>;
+export type MCPRemoteConfig = z.infer<typeof MCPRemoteConfigZodSchema>;
 export type MCPStdioConfig = z.infer<typeof MCPStdioConfigZodSchema>;
 
-export type MCPServerConfig = MCPSseConfig | MCPStdioConfig;
+export type MCPServerConfig = MCPRemoteConfig | MCPStdioConfig;
 
 export type MCPToolInfo = {
   name: string;
