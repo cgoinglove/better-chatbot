@@ -135,15 +135,6 @@ export class MCPClient {
             },
           });
           await client.connect(transport);
-          transport.onerror = (error) => {
-            this.log.error(`${this.name} SSE transport error:`, error);
-          };
-
-          transport.onmessage = (message) => {
-            this.log.debug(
-              `${this.name} Message received: ${JSON.stringify(message)}`,
-            );
-          };
         } catch {
           this.log.info(
             "Streamable HTTP connection failed, falling back to SSE transport",
