@@ -106,7 +106,9 @@ const PurePreviewMessage = ({
                   threadId={threadId}
                   key={key}
                   part={part}
-                  isLast={isLastPart}
+                  showActions={
+                    isLastMessage ? isLastPart && !isLoading : isLastPart
+                  }
                   message={message}
                   setMessages={setMessages}
                   reload={reload}
@@ -121,6 +123,9 @@ const PurePreviewMessage = ({
                 <ToolMessagePart
                   isLast={isLast}
                   message={message}
+                  showActions={
+                    isLastMessage ? isLastPart && !isLoading : isLastPart
+                  }
                   onPoxyToolCall={isLast ? onPoxyToolCall : undefined}
                   key={key}
                   part={part}

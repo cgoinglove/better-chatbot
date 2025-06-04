@@ -70,7 +70,7 @@ interface UserMessagePartProps {
 interface AssistMessagePartProps {
   part: AssistMessagePart;
   message: UIMessage;
-  isLast: boolean;
+  showActions: boolean;
   threadId?: string;
   setMessages: UseChatHelpers["setMessages"];
   reload: UseChatHelpers["reload"];
@@ -80,6 +80,7 @@ interface AssistMessagePartProps {
 interface ToolMessagePartProps {
   part: ToolMessagePart;
   message: UIMessage;
+  showActions: boolean;
   isLast?: boolean;
   onPoxyToolCall?: (answer: boolean) => void;
   isError?: boolean;
@@ -264,7 +265,7 @@ const modelList = customModelProvider.modelsInfo;
 
 export const AssistMessagePart = ({
   part,
-  isLast,
+  showActions,
   reload,
   message,
   setMessages,
@@ -334,7 +335,7 @@ export const AssistMessagePart = ({
       >
         <Markdown>{part.text}</Markdown>
       </div>
-      {isLast && (
+      {showActions && (
         <div className="flex w-full ">
           <Tooltip>
             <TooltipTrigger asChild>
@@ -401,6 +402,7 @@ export const ToolMessagePart = memo(
   ({
     part,
     isLast,
+    showActions,
     onPoxyToolCall,
     isError,
     message,
@@ -597,7 +599,7 @@ export const ToolMessagePart = memo(
                 </CardContent>
               </Card>
             )}
-            {isLast && (
+            {showActions && (
               <div className="flex flex-row gap-2 items-center">
                 <Tooltip>
                   <TooltipTrigger asChild>
