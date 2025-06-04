@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.6.2](https://github.com/cgoinglove/mcp-client-chatbot/compare/v1.6.1...v1.6.2) (2025-06-04)
+
+
+### Bug Fixes
+
+* enhance error handling in chat bot component ([1519799](https://github.com/cgoinglove/mcp-client-chatbot/commit/15197996ba1f175db002b06e3eac2765cfae1518))
+* improve session error handling in authentication ([eb15b55](https://github.com/cgoinglove/mcp-client-chatbot/commit/eb15b550facf5368f990d58b4b521bf15aecbf72))
+* support OpenAI real-time chat project instructions ([2ebbb5e](https://github.com/cgoinglove/mcp-client-chatbot/commit/2ebbb5e68105ef6706340a6cfbcf10b4d481274a))
+* unify SSE and streamable config as RemoteConfig ([#85](https://github.com/cgoinglove/mcp-client-chatbot/issues/85)) ([66524a0](https://github.com/cgoinglove/mcp-client-chatbot/commit/66524a0398bd49230fcdec73130f1eb574e97477))
+
 ## [1.6.1](https://github.com/cgoinglove/mcp-client-chatbot/compare/v1.6.0...v1.6.1) (2025-06-02)
 
 
