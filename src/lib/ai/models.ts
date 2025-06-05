@@ -114,13 +114,13 @@ export const DEFAULT_MODEL = "4o";
 const fallbackModel = staticModels.openai[DEFAULT_MODEL];
 
 export const customModelProvider = {
-  modelsInfo: Object.entries(allModels).flatMap(([provider, models]) =>
-    Object.entries(models).map(([name, model]) => ({
-      provider,
+  modelsInfo: Object.entries(allModels).map(([provider, models]) => ({
+    provider,
+    models: Object.entries(models).map(([name, model]) => ({
       name,
       isToolCallUnsupported: isToolCallUnsupportedModel(model),
     })),
-  ),
+  })),
   getModel: (model?: string): LanguageModel => {
     for (const providerModels of Object.values(allModels)) {
       if (model && providerModels[model]) {

@@ -17,6 +17,7 @@
     "format": "biome format --write",
     "check-types": "tsc --noEmit",
     "initial:env": "tsx scripts/initial-env.ts",
+    "initial:openAIlike": "tsx scripts/initial-openAI-like.ts",
     "postinstall": "tsx scripts/postinstall.ts",
     "clean": "tsx scripts/clean.ts",
     "db:generate": "drizzle-kit generate",

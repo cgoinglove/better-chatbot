@@ -45,6 +45,7 @@ async function main() {
       "Running in a normal environment, performing initial environment setup.",
     );
     await runCommand("pnpm initial:env", "Initial environment setup");
+    await runCommand("pnpm initial:openAIlike", "Initial openAI like config setup");
   }
 }
 
