@@ -3,14 +3,16 @@ import { openai } from "@ai-sdk/openai";
 import { google } from "@ai-sdk/google";
 import { anthropic } from "@ai-sdk/anthropic";
 import { xai } from "@ai-sdk/xai";
+import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import { LanguageModel } from "ai";
 import { openrouter } from "@openrouter/ai-sdk-provider";
+import { ProvidersListSchema } from "./open-ai-like-schema";
 
 const ollama = createOllama({
   baseURL: process.env.OLLAMA_BASE_URL || "http://localhost:11434/api",
 });
 
-export const allModels = {
+const staticModels = {
   openai: {
     "4o-mini": openai("gpt-4o-mini", {}),
     "gpt-4.1": openai("gpt-4.1"),
@@ -43,44 +45,88 @@ export const allModels = {
     "qwen3-8b:free": openrouter("qwen/qwen3-8b:free"),
     "qwen3-14b:free": openrouter("qwen/qwen3-14b:free"),
   },
-} as const;
+};
+
+const staticUnsupportedModels = new Set([
+  staticModels.openai["o4-mini"],
+  staticModels.xai["grok-3"],
+  staticModels.xai["grok-3-mini"],
+  staticModels.ollama["gemma3:1b"],
+  staticModels.ollama["gemma3:4b"],
+  staticModels.ollama["gemma3:12b"],
+  staticModels.openRouter["qwen3-8b:free"],
+  staticModels.openRouter["qwen3-14b:free"],
+]);
+
+function loadDynamicModels() {
+  const dynamicModels: Record<string, Record<string, LanguageModel>> = {};
+  const dynamicUnsupportedModels = new Set<LanguageModel>();
+
+  if (!process.env.OPENAI_LIKE_DATA)
+    return { dynamicModels, dynamicUnsupportedModels };
+
+  try {
+    const configData = JSON.parse(process.env.OPENAI_LIKE_DATA);
+    const providers = ProvidersListSchema.parse(configData);
+
+    providers.forEach(({ provider, models, baseUrl, apiKeyEnvVar }) => {
+      const providerKey = provider.toLowerCase();
+
+      const customProvider = createOpenAICompatible({
+        name: provider,
+        apiKey: process.env[apiKeyEnvVar],
+        baseURL: baseUrl!,
+      });
+
+      dynamicModels[providerKey] = {};
+
+      models.forEach(({ apiName, uiName, supportsTools }) => {
+        const model = customProvider(apiName);
+        dynamicModels[providerKey][uiName] = model;
+
+        if (!supportsTools) {
+          dynamicUnsupportedModels.add(model);
+        }
+      });
+    });
+  } catch (error) {
+    console.error("Failed to load dynamic models:", error);
+  }
+
+  return { dynamicModels, dynamicUnsupportedModels };
+}
+
+const { dynamicModels, dynamicUnsupportedModels } = loadDynamicModels();
+
+export const allModels = { ...staticModels, ...dynamicModels };
+
+const allUnsupportedModels = new Set([
+  ...staticUnsupportedModels,
+  ...dynamicUnsupportedModels,
+]);
 
 export const isToolCallUnsupportedModel = (model: LanguageModel) => {
-  return [
-    allModels.openai["o4-mini"],
-    allModels.google["gemini-2.0-thinking"],
-    allModels.xai["grok-3"],
-    allModels.xai["grok-3-mini"],
-    allModels.google["gemini-2.0-thinking"],
-    allModels.ollama["gemma3:1b"],
-    allModels.ollama["gemma3:4b"],
-    allModels.ollama["gemma3:12b"],
-    allModels.openRouter["qwen3-8b:free"],
-    allModels.openRouter["qwen3-14b:free"],
-  ].includes(model);
+  return allUnsupportedModels.has(model);
 };
 
 export const DEFAULT_MODEL = "4o";
 
-const fallbackModel = allModels.openai[DEFAULT_MODEL];
+const fallbackModel = staticModels.openai[DEFAULT_MODEL];
 
 export const customModelProvider = {
-  modelsInfo: Object.keys(allModels).map((provider) => {
-    return {
+  modelsInfo: Object.entries(allModels).flatMap(([provider, models]) =>
+    Object.entries(models).map(([name, model]) => ({
       provider,
-      models: Object.keys(allModels[provider]).map((name) => {
-        return {
-          name,
-          isToolCallUnsupported: isToolCallUnsupportedModel(
-            allModels[provider][name],
-          ),
-        };
-      }),
-    };
-  }),
+      name,
+      isToolCallUnsupported: isToolCallUnsupportedModel(model),
+    })),
+  ),
   getModel: (model?: string): LanguageModel => {
-    return (Object.values(allModels).find((models) => {
-      return models[model!];
-    })?.[model!] ?? fallbackModel) as LanguageModel;
+    for (const providerModels of Object.values(allModels)) {
+      if (model && providerModels[model]) {
+        return providerModels[model];
+      }
+    }
+    return fallbackModel;
   },
 };
