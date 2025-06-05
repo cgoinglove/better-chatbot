@@ -38,7 +38,7 @@ export const data = JSON.stringify(providerList);
 
 const ROOT = process.cwd();
 
-const CONFIG_PATH = path.join(ROOT,  ".openAILike.ts");
+const CONFIG_PATH = path.join(ROOT, ".openAILike.ts");
 function createConfigFile() {
   if (!fs.existsSync(CONFIG_PATH)) {
     try {
