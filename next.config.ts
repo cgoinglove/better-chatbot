@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
-// @ts-expect-error it might not exist
+
 import { ifParsed, data as openAIProviderData } from "./.openAILike";
 import logger from "lib/logger";
 import { IS_VERCEL_ENV } from "lib/const";
