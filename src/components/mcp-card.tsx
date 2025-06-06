@@ -29,8 +29,8 @@ import type { MCPServerInfo, MCPToolInfo } from "app-types/mcp";
 
 import { ToolDetailPopup } from "./tool-detail-popup";
 import { useTranslations } from "next-intl";
-import { McpCustomizationPopup } from "./mcp-customization-popup";
 import { Separator } from "ui/separator";
+import { appStore } from "@/app/store";
 
 // Main MCPCard component
 export const MCPCard = memo(function MCPCard({
@@ -43,6 +43,7 @@ export const MCPCard = memo(function MCPCard({
 }: MCPServerInfo & { id: string }) {
   const [isProcessing, setIsProcessing] = useState(false);
   const t = useTranslations("MCP");
+  const appStoreMutate = appStore((state) => state.mutate);
 
   const isLoading = useMemo(() => {
     return isProcessing || status === "loading";
@@ -88,15 +89,24 @@ export const MCPCard = memo(function MCPCard({
         <div className="flex-1" />
         <Tooltip>
           <TooltipTrigger asChild>
-            <div>
-              <McpCustomizationPopup
-                mcpServerInfo={{ id, name, config, status, toolInfo, error }}
-              >
-                <Button variant="ghost" size="icon">
-                  <Settings2 className="size-3.5" />
-                </Button>
-              </McpCustomizationPopup>
-            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() =>
+                appStoreMutate({
+                  mcpCustomizationPopup: {
+                    id,
+                    name,
+                    config,
+                    status,
+                    toolInfo,
+                    error,
+                  },
+                })
+              }
+            >
+              <Settings2 className="size-3.5" />
+            </Button>
           </TooltipTrigger>
           <TooltipContent>
             <p>{t("mcpServerCustomization")}</p>

@@ -1,13 +1,12 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState } from "react";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "ui/dialog";
 
 import useSWR from "swr";
@@ -39,18 +38,29 @@ import { Alert, AlertDescription, AlertTitle } from "ui/alert";
 import { ToolDetailPopupContent } from "./tool-detail-popup";
 import { ExamplePlaceholder } from "ui/example-placeholder";
 import { Input } from "ui/input";
+import { appStore } from "@/app/store";
+import { useShallow } from "zustand/shallow";
 
-interface McpCustomizationPopupProps {
-  mcpServerInfo: MCPServerInfo & { id: string };
-  children: ReactNode;
-}
+export function McpCustomizationPopup() {
+  const [mcpCustomizationPopup, appStoreMutate] = appStore(
+    useShallow((state) => [state.mcpCustomizationPopup, state.mutate]),
+  );
 
-export function McpCustomizationPopup(props: McpCustomizationPopupProps) {
   return (
-    <Dialog>
-      <DialogTrigger asChild>{props.children}</DialogTrigger>
+    <Dialog
+      open={!!mcpCustomizationPopup}
+      onOpenChange={(open) => {
+        if (!open) {
+          appStoreMutate({ mcpCustomizationPopup: undefined });
+        }
+      }}
+    >
       <DialogContent className="sm:max-w-[800px] fixed p-10 overflow-hidden">
-        <McpServerCustomizationContent mcpServerInfo={props.mcpServerInfo} />
+        {mcpCustomizationPopup ? (
+          <McpServerCustomizationContent
+            mcpServerInfo={mcpCustomizationPopup}
+          />
+        ) : null}
       </DialogContent>
     </Dialog>
   );
@@ -230,6 +240,7 @@ function McpServerCustomizationContent({
           readOnly={isProcessing || isLoadingMcpServerCustomization}
           className={cn("resize-none h-20 overflow-y-auto w-full")}
           value={prompt}
+          autoFocus
           onChange={(e) => setPrompt(e.target.value)}
         />
         {!prompt && (
@@ -263,8 +274,8 @@ function McpServerCustomizationContent({
         />
 
         {isLoadingMcpToolCustomizations ? (
-          Array.from({ length: 5 }).map((_, index) => (
-            <Skeleton key={index} className="h-10 w-full" />
+          Array.from({ length: 6 }).map((_, index) => (
+            <Skeleton key={index} className="h-16 w-full" />
           ))
         ) : (
           <div className="flex flex-col gap-2">
