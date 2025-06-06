@@ -154,12 +154,10 @@ export class MCPClientsManager {
 
   async getClients() {
     await this.initializedLock.wait();
-    return Array.from(
-      this.clients.entries().map(([id, { client }]) => ({
-        id,
-        client: client,
-      })),
-    );
+    return Array.from(this.clients.entries()).map(([id, { client }]) => ({
+      id,
+      client: client,
+    }));
   }
   async getClient(id: string) {
     await this.initializedLock.wait();

@@ -1,6 +1,6 @@
 "use client";
 import { McpToolCustomization, MCPToolInfo } from "app-types/mcp";
-import { PropsWithChildren, useState } from "react";
+import { PropsWithChildren, ReactNode, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -48,12 +48,6 @@ export const ToolDetailPopup = ({
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogPortal>
         <DialogContent className="sm:max-w-[800px] fixed p-10 overflow-hidden">
-          <DialogHeader>
-            <DialogTitle>{tool.name}</DialogTitle>
-            <DialogDescription className="text-xs text-muted-foreground mt-4">
-              {tool.description}
-            </DialogDescription>
-          </DialogHeader>
           <ToolDetailPopupContent
             onUpdate={onUpdate}
             tool={tool}
@@ -68,13 +62,15 @@ export const ToolDetailPopup = ({
 const createApiUrl = (serverId: string, toolName: string) =>
   `/api/mcp/tool-customizations/${serverId}/${toolName}`;
 
-function ToolDetailPopupContent({
+export function ToolDetailPopupContent({
   tool,
+  title,
   serverId,
   onUpdate,
 }: {
   onUpdate?: () => void;
   tool: MCPToolInfo;
+  title?: ReactNode;
   serverId: string;
 }) {
   const t = useTranslations();
@@ -140,7 +136,13 @@ function ToolDetailPopupContent({
       });
   };
   return (
-    <div className="flex flex-col h-full overflow-y-auto max-h-[80vh]">
+    <div className="flex flex-col overflow-y-auto h-[70vh]">
+      <DialogHeader>
+        <DialogTitle>{title || tool.name}</DialogTitle>
+        <DialogDescription className="text-xs text-muted-foreground mt-4">
+          {tool.description}
+        </DialogDescription>
+      </DialogHeader>
       <Separator className="my-4" />
       <div>
         <div className="flex items-center mb-1">
