@@ -1,4 +1,3 @@
-import type { MCPServerConfig } from "app-types/mcp";
 import type {
   MCPClientsManager,
   MCPConfigStorage,
@@ -26,28 +25,28 @@ export function createDbBasedMCPConfigsStorage(): MCPConfigStorage {
   async function checkAndRefreshClients() {
     try {
       logger.debug("Checking MCP clients Diff");
-      const servers = await mcpRepository.selectAllServers();
+      const servers = await mcpRepository.selectAll();
       const dbConfigs = servers
         .map((server) => ({
+          id: server.id,
           name: server.name,
           config: server.config,
         }))
-        .sort((a, b) => a.name.localeCompare(b.name));
+        .sort((a, b) => a.id.localeCompare(b.id));
 
       const managerConfigs = await manager
         .getClients()
         .then((clients) =>
-          clients.map((client) => {
+          clients.map(({ id, client }) => {
             const info = client.getInfo();
             return {
+              id: id,
               name: info.name,
               config: info.config,
             };
           }),
         )
-        .then((configs) =>
-          configs.sort((a, b) => a.name.localeCompare(b.name)),
-        );
+        .then((configs) => configs.sort((a, b) => a.id.localeCompare(b.id)));
 
       let shouldRefresh = false;
       if (dbConfigs.length !== managerConfigs.length) {
@@ -57,28 +56,33 @@ export function createDbBasedMCPConfigsStorage(): MCPConfigStorage {
       }
 
       if (shouldRefresh) {
-        const refreshPromises = dbConfigs.map(async ({ name, config }) => {
-          const managerConfig = await manager
-            .getClients()
-            .then((clients) => clients.find((c) => c.getInfo().name === name))
-            .then((c) => c?.getInfo());
+        const refreshPromises = dbConfigs.map(async ({ id, name, config }) => {
+          const managerConfig = await manager.getClient(id);
           if (!managerConfig) {
             logger.debug(`Adding MCP client ${name}`);
-            return manager.addClient(name, config);
+            return manager.addClient(id, name, config);
           }
-          if (!equal(managerConfig.config, config)) {
+          if (
+            !equal(
+              { name, config },
+              {
+                name: managerConfig.name,
+                config: managerConfig.client.getInfo().config,
+              },
+            )
+          ) {
             logger.debug(`Refreshing MCP client ${name}`);
-            return manager.refreshClient(name, config);
+            return manager.refreshClient(id);
           }
         });
         const deletePromises = managerConfigs
           .filter((c) => {
-            const dbConfig = dbConfigs.find((c2) => c2.name === c.name);
+            const dbConfig = dbConfigs.find((c2) => c2.id === c.id);
             return !dbConfig;
           })
           .map((c) => {
             logger.debug(`Removing MCP client ${c.name}`);
-            return manager.removeClient(c.name);
+            return manager.removeClient(c.id);
           });
         await Promise.allSettled([...refreshPromises, ...deletePromises]);
       }
@@ -91,55 +95,48 @@ export function createDbBasedMCPConfigsStorage(): MCPConfigStorage {
 
   return {
     init,
-    async loadAll(): Promise<Record<string, MCPServerConfig>> {
+    async loadAll() {
       try {
-        const servers = await mcpRepository.selectAllServers();
-        return Object.fromEntries(
-          servers.map((server) => [server.name, server.config]),
-        );
+        const servers = await mcpRepository.selectAll();
+        return servers;
       } catch (error) {
         logger.error("Failed to load MCP configs from database:", error);
-        return {};
+        return [];
       }
     },
-    async save(name: string, config: MCPServerConfig): Promise<void> {
+    async save(server) {
       try {
-        const existingServer = await mcpRepository.selectServerByName(name);
-        if (existingServer) {
-          await mcpRepository.updateServer(existingServer.id, { config });
-        } else {
-          await mcpRepository.insertServer({ name, config });
-        }
-      } catch (error) {
-        logger.error(`Failed to save MCP config "${name}" to database:`, error);
-        throw error;
-      }
-    },
-    async delete(name: string): Promise<void> {
-      try {
-        const server = await mcpRepository.selectServerByName(name);
-        if (server) {
-          await mcpRepository.deleteServer(server.id);
-        }
+        return mcpRepository.save(server);
       } catch (error) {
         logger.error(
-          `Failed to delete MCP config "${name}" from database:",`,
+          `Failed to save MCP config "${server.name}" to database:`,
           error,
         );
         throw error;
       }
     },
-    async has(name: string): Promise<boolean> {
+    async delete(id) {
       try {
-        const server = await mcpRepository.selectServerByName(name);
+        await mcpRepository.deleteById(id);
+      } catch (error) {
+        logger.error(
+          `Failed to delete MCP config "${id}" from database:",`,
+          error,
+        );
+        throw error;
+      }
+    },
+    async has(id: string): Promise<boolean> {
+      try {
+        const server = await mcpRepository.selectById(id);
         return !!server;
       } catch (error) {
-        logger.error(
-          `Failed to check MCP config "${name}" in database:`,
-          error,
-        );
+        logger.error(`Failed to check MCP config "${id}" in database:`, error);
         return false;
       }
+    },
+    async get(id) {
+      return mcpRepository.selectById(id);
     },
   };
 }

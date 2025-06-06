@@ -10,7 +10,8 @@
     "create": "创建",
     "showLess": "显示更少",
     "showMore": "显示更多",
-    "generate": "生成"
+    "generate": "生成",
+    "edit": "编辑"
   },
   "Auth": {
     "SignIn": {
@@ -223,6 +224,16 @@
     "createInputWithAI": "用 AI 创建输入",
     "generateExampleInputJSON": "生成示例输入 JSON",
     "enterPromptToGenerateExampleInputJSON": "输入提示为所选工具生成示例输入 JSON。",
-    "callTool": "调用工具"
+    "callTool": "调用工具",
+    "customInstructions": "自定义指令",
+    "serverCustomInstructionsPlaceholder": "当该服务器的任何工具可用时，这些内容将被添加到系统提示中。",
+    "nameAlreadyExists": "名称已存在",
+    "additionalInstructions": "工具自定义指令",
+    "inputSchema": "输入架构",
+    "toolCustomizationInstructions": "工具自定义指令将在工具可用时添加到系统提示中。\n示例）始终以 example@example.com 格式输入电子邮件。",
+    "mcpServerCustomization": "MCP 服务器自定义",
+    "mcpServerCustomizationDescription": "MCP 服务器自定义指令将在 MCP 服务器可用时添加到系统提示中。",
+    "toolCustomizationInstructionsPlaceholder": "工具自定义指令不可用。",
+    "mcpServerCustomizationPlaceholder": "例如：如果输入值是电子邮件，始终以 example@example.com 格式输入电子邮件。"
   }
 }

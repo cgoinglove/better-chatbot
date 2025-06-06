@@ -10,7 +10,8 @@
     "create": "생성",
     "showLess": "적게 보기",
     "showMore": "더 보기",
-    "generate": "생성"
+    "generate": "생성",
+    "edit": "수정"
   },
   "Auth": {
     "SignIn": {
@@ -223,6 +224,16 @@
     "createInputWithAI": "AI로 입력 생성",
     "generateExampleInputJSON": "예제 입력 JSON 생성",
     "enterPromptToGenerateExampleInputJSON": "선택한 도구에 대한 예제 입력 JSON을 생성하기 위한 프롬프트를 입력하세요.",
-    "callTool": "도구 호출"
+    "callTool": "도구 호출",
+    "customInstructions": "사용자 정의 지침",
+    "serverCustomInstructionsPlaceholder": "이 서버의 도구를 사용할 수 있을 때마다 이 내용이 시스템 프롬프트에 추가됩니다.",
+    "nameAlreadyExists": "이미 존재하는 이름입니다",
+    "additionalInstructions": "도구 사용자 지정 지침",
+    "inputSchema": "입력 스키마",
+    "toolCustomizationInstructions": "도구 사용자 지정 지침은 도구를 사용할 때 시스템 프롬프트에 추가됩니다.\n예) 항상 이메일은 example@example.com 형식으로 입력해주세요.",
+    "mcpServerCustomization": "MCP 서버 지침 설정",
+    "mcpServerCustomizationDescription": "MCP 서버 사용자 지정 지침은 MCP서버를 사용할 때 시스템 프롬프트에 추가됩니다.",
+    "toolCustomizationInstructionsPlaceholder": "도구 사용자 지정 지침이 없습니다.",
+    "mcpServerCustomizationPlaceholder": "예) 이 MCP 서버의 툴중에 입력값이 email인 경우 항상 example@example.com 형식으로 입력해주세요."
   }
 }

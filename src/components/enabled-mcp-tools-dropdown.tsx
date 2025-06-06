@@ -25,7 +25,8 @@ export function EnabledMcpToolsDropdown({
 }: PropsWithChildren<{
   align?: "start" | "end";
   prependTools?: {
-    serverName: string;
+    id: string;
+    name: string;
     tools: {
       name: string;
       description: string;
@@ -44,8 +45,7 @@ export function EnabledMcpToolsDropdown({
   const EnabledMcpToolsDropdown = useMemo(() => {
     const mcpTools = mcpList
       .map((mcp) => {
-        const serverName = mcp.name;
-        const allowedMcpServerTools = allowedMcpServers?.[serverName]?.tools;
+        const allowedMcpServerTools = allowedMcpServers?.[mcp.id]?.tools;
         const tools = mcp.toolInfo.map((tool) => {
           return {
             name: tool.name,
@@ -53,7 +53,8 @@ export function EnabledMcpToolsDropdown({
           };
         });
         return {
-          serverName,
+          name: mcp.name,
+          id: mcp.id,
           tools: allowedMcpServerTools
             ? tools.filter((tool) => allowedMcpServerTools.includes(tool.name))
             : tools,
@@ -77,11 +78,11 @@ export function EnabledMcpToolsDropdown({
           {!noToolChoice && EnabledMcpToolsDropdown.length ? (
             EnabledMcpToolsDropdown.map((mcp) => {
               return (
-                <DropdownMenuSub key={mcp.serverName}>
+                <DropdownMenuSub key={mcp.id}>
                   <DropdownMenuSubTrigger>
                     <p className="text-sm font-medium flex items-center gap-2 min-w-32">
                       <WrenchIcon className="size-3.5" />
-                      <span className="truncate">{mcp.serverName}</span>
+                      <span className="truncate">{mcp.name}</span>
                     </p>
                   </DropdownMenuSubTrigger>
                   <DropdownMenuPortal>

@@ -24,6 +24,7 @@ export class MemoryCache implements Cache {
       this.store.delete(key);
       return undefined;
     }
+
     return e.value as T;
   }
 

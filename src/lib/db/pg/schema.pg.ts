@@ -9,6 +9,7 @@ import {
   json,
   uuid,
   boolean,
+  unique,
 } from "drizzle-orm/pg-core";
 
 export const ChatThreadSchema = pgTable("chat_thread", {
@@ -109,8 +110,57 @@ export const VerificationSchema = pgTable("verification", {
     () => /* @__PURE__ */ new Date(),
   ),
 });
+
+// Tool customization table for per-user additional AI instructions
+export const McpToolCustomizationSchema = pgTable(
+  "mcp_server_tool_custom_instructions",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => UserSchema.id, { onDelete: "cascade" }),
+    toolName: text("tool_name").notNull(),
+    mcpServerId: uuid("mcp_server_id")
+      .notNull()
+      .references(() => McpServerSchema.id, { onDelete: "cascade" }),
+    prompt: text("prompt"),
+    createdAt: timestamp("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: timestamp("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [unique().on(table.userId, table.toolName, table.mcpServerId)],
+);
+
+export const McpServerCustomizationSchema = pgTable(
+  "mcp_server_custom_instructions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => UserSchema.id, { onDelete: "cascade" }),
+    mcpServerId: uuid("mcp_server_id")
+      .notNull()
+      .references(() => McpServerSchema.id, { onDelete: "cascade" }),
+    prompt: text("prompt"),
+    createdAt: timestamp("created_at")
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updatedAt: timestamp("updated_at")
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+  },
+  (table) => [unique().on(table.userId, table.mcpServerId)],
+);
+
 export type McpServerEntity = typeof McpServerSchema.$inferSelect;
 export type ChatThreadEntity = typeof ChatThreadSchema.$inferSelect;
 export type ChatMessageEntity = typeof ChatMessageSchema.$inferSelect;
 export type ProjectEntity = typeof ProjectSchema.$inferSelect;
 export type UserEntity = typeof UserSchema.$inferSelect;
+export type ToolCustomizationEntity =
+  typeof McpToolCustomizationSchema.$inferSelect;
+export type McpServerCustomizationEntity =
+  typeof McpServerCustomizationSchema.$inferSelect;

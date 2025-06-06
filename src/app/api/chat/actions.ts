@@ -15,10 +15,14 @@ import {
 
 import type { ChatThread, Project } from "app-types/chat";
 
-import { chatRepository } from "lib/db/repository";
+import {
+  chatRepository,
+  mcpMcpToolCustomizationRepository,
+  mcpServerCustomizationRepository,
+} from "lib/db/repository";
 import { customModelProvider } from "lib/ai/models";
 import { toAny } from "lib/utils";
-import { MCPToolInfo } from "app-types/mcp";
+import { McpServerCustomizationsPrompt, MCPToolInfo } from "app-types/mcp";
 import { serverCache } from "lib/cache";
 import { CacheKeys } from "lib/cache/cache-keys";
 import { getSession } from "auth/server";
@@ -38,6 +42,7 @@ export async function generateTitleFromUserMessageAction({
   message,
   model,
 }: { message: Message; model: LanguageModel }) {
+  await getSession();
   const prompt = toAny(message.parts?.at(-1))?.text || "unknown";
 
   const { text: title } = await generateText({
@@ -51,9 +56,14 @@ export async function generateTitleFromUserMessageAction({
 }
 
 export async function selectThreadWithMessagesAction(threadId: string) {
+  const session = await getSession();
   const thread = await chatRepository.selectThread(threadId);
+
   if (!thread) {
     logger.error("Thread not found", threadId);
+    return redirect("/");
+  }
+  if (thread.userId !== session?.user.id) {
     return redirect("/");
   }
   const messages = await chatRepository.selectMessagesByThreadId(threadId);
@@ -71,6 +81,7 @@ export async function deleteThreadAction(threadId: string) {
 export async function deleteMessagesByChatIdAfterTimestampAction(
   messageId: string,
 ) {
+  "use server";
   await chatRepository.deleteMessagesByChatIdAfterTimestamp(messageId);
 }
 
@@ -224,4 +235,55 @@ export async function updateProjectNameAction(id: string, name: string) {
   const updatedProject = await chatRepository.updateProject(id, { name });
   await serverCache.delete(CacheKeys.project(id));
   return updatedProject;
+}
+
+export async function rememberMcpServerCustomizationsAction(userId: string) {
+  const key = CacheKeys.mcpServerCustomizations(userId);
+
+  const cachedMcpServerCustomizations =
+    await serverCache.get<Record<string, McpServerCustomizationsPrompt>>(key);
+  if (cachedMcpServerCustomizations) {
+    return cachedMcpServerCustomizations;
+  }
+
+  const mcpServerCustomizations =
+    await mcpServerCustomizationRepository.selectByUserId(userId);
+  const mcpToolCustomizations =
+    await mcpMcpToolCustomizationRepository.selectByUserId(userId);
+
+  const serverIds: string[] = [
+    ...mcpServerCustomizations.map(
+      (mcpServerCustomization) => mcpServerCustomization.mcpServerId,
+    ),
+    ...mcpToolCustomizations.map(
+      (mcpToolCustomization) => mcpToolCustomization.mcpServerId,
+    ),
+  ];
+
+  const prompts = Array.from(new Set(serverIds)).reduce(
+    (acc, serverId) => {
+      const sc = mcpServerCustomizations.find((v) => v.mcpServerId == serverId);
+      const tc = mcpToolCustomizations.filter(
+        (mcpToolCustomization) => mcpToolCustomization.mcpServerId === serverId,
+      );
+      const data: McpServerCustomizationsPrompt = {
+        name: sc?.serverName || tc[0]?.serverName || "",
+        id: serverId,
+        prompt: sc?.prompt || "",
+        tools: tc.reduce(
+          (acc, v) => {
+            acc[v.toolName] = v.prompt || "";
+            return acc;
+          },
+          {} as Record<string, string>,
+        ),
+      };
+      acc[serverId] = data;
+      return acc;
+    },
+    {} as Record<string, McpServerCustomizationsPrompt>,
+  );
+
+  serverCache.set(key, prompts, 1000 * 60 * 30); // 30 minutes
+  return prompts;
 }

@@ -7,11 +7,12 @@ import type {
 } from "./create-mcp-clients-manager";
 import chokidar from "chokidar";
 import type { FSWatcher } from "chokidar";
-import { createDebounce, objectFlow } from "lib/utils";
+import { createDebounce } from "lib/utils";
 import equal from "fast-deep-equal";
 import defaultLogger from "logger";
 import { MCP_CONFIG_PATH } from "lib/ai/mcp/config-path";
 import { colorize } from "consola/utils";
+import { McpServerSchema } from "lib/db/pg/schema.pg";
 
 const logger = defaultLogger.withDefaults({
   message: colorize("gray", `MCP File Config Storage: `),
@@ -31,13 +32,18 @@ export function createFileBasedMCPConfigsStorage(
   /**
    * Reads config from file
    */
-  async function readConfigFile(): Promise<Record<string, MCPServerConfig>> {
+  async function readConfigFile(): Promise<
+    (typeof McpServerSchema.$inferSelect)[]
+  > {
     try {
       const configText = await readFile(configPath, { encoding: "utf-8" });
-      return JSON.parse(configText ?? "{}");
+      const config = JSON.parse(configText ?? "{}") as {
+        [name: string]: MCPServerConfig;
+      };
+      return toMcpServerArray(config);
     } catch (err: any) {
       if (err.code === "ENOENT") {
-        return {};
+        return [];
       } else if (err instanceof SyntaxError) {
         throw new Error(
           `Config file ${configPath} has invalid JSON: ${err.message}`,
@@ -64,21 +70,17 @@ export function createFileBasedMCPConfigsStorage(
       logger.debug("Checking MCP clients Diff");
       const fileConfig = await readConfigFile();
 
-      const fileConfigs = Object.entries(fileConfig)
-        .map(([name, config]) => ({ name, config }))
-        .sort((a, b) => a.name.localeCompare(b.name));
+      const fileConfigs = fileConfig.sort((a, b) => a.id.localeCompare(b.id));
 
       // Get current manager configs
       const managerConfigs = await manager
         .getClients()
         .then((clients) =>
-          clients.map((client) => {
-            const info = client.getInfo();
-            return {
-              name: info.name,
-              config: info.config,
-            };
-          }),
+          clients.map(({ client, id }) => ({
+            id,
+            name: client.getInfo().name,
+            config: client.getInfo().config,
+          })),
         )
         .then((configs) =>
           configs.sort((a, b) => a.name.localeCompare(b.name)),
@@ -92,28 +94,27 @@ export function createFileBasedMCPConfigsStorage(
       }
 
       if (shouldRefresh) {
-        const refreshPromises = fileConfigs.map(async ({ name, config }) => {
-          const managerConfig = await manager
-            .getClients()
-            .then((clients) => clients.find((c) => c.getInfo().name === name))
-            .then((c) => c?.getInfo());
-          if (!managerConfig) {
-            logger.debug(`Adding MCP client ${name}`);
-            return manager.addClient(name, config);
-          }
-          if (!equal(managerConfig.config, config)) {
-            logger.debug(`Refreshing MCP client ${name}`);
-            return manager.refreshClient(name, config);
-          }
-        });
+        const refreshPromises = fileConfigs.map(
+          async ({ id, name, config }) => {
+            const managerConfig = await manager.getClient(id);
+            if (!managerConfig) {
+              logger.debug(`Adding MCP client ${id}`);
+              return manager.addClient(id, name, config);
+            }
+            if (!equal(managerConfig.client.getInfo().config, config)) {
+              logger.debug(`Refreshing MCP client ${id}`);
+              return manager.refreshClient(id);
+            }
+          },
+        );
         const deletePromises = managerConfigs
           .filter((c) => {
-            const fileConfig = fileConfigs.find((c2) => c2.name === c.name);
+            const fileConfig = fileConfigs.find((c2) => c2.id === c.id);
             return !fileConfig;
           })
           .map((c) => {
-            logger.debug(`Removing MCP client ${c.name}`);
-            return manager.removeClient(c.name);
+            logger.debug(`Removing MCP client ${c.id}`);
+            return manager.removeClient(c.id);
           });
         await Promise.allSettled([...refreshPromises, ...deletePromises]);
       }
@@ -158,28 +159,67 @@ export function createFileBasedMCPConfigsStorage(
 
   return {
     init,
-    async loadAll(): Promise<Record<string, MCPServerConfig>> {
+    async loadAll() {
       return await readConfigFile();
     },
     // Saves a configuration with the given name
-    async save(name: string, config: MCPServerConfig): Promise<void> {
-      const currentConfig = await readConfigFile();
-      currentConfig[name] = config;
+    async save(server) {
+      const currentConfig = await readConfigFile().then(toMcpServerRecord);
+      currentConfig[server.name] = server.config;
       await writeConfigFile(currentConfig);
+      return fillMcpServerSchema(server);
     },
     // Deletes a configuration by name
-    async delete(name: string): Promise<void> {
+    async delete(id) {
       const currentConfig = await readConfigFile();
-      const newConfig = objectFlow(currentConfig).filter(
-        (_, key) => key !== name,
-      );
-      await writeConfigFile(newConfig);
+      const newConfig = currentConfig.filter((s) => s.id !== id);
+      await writeConfigFile(toMcpServerRecord(newConfig));
     },
 
     // Checks if a configuration exists
-    async has(name: string): Promise<boolean> {
+    async has(id) {
       const currentConfig = await readConfigFile();
-      return name in currentConfig;
+      return currentConfig.some((s) => s.id === id);
+    },
+    async get(id) {
+      const currentConfig = await readConfigFile();
+      return currentConfig.find((s) => s.id === id) ?? null;
     },
   };
+}
+
+function fillMcpServerSchema(
+  server: typeof McpServerSchema.$inferInsert,
+): typeof McpServerSchema.$inferSelect {
+  return {
+    ...server,
+    id: server.name,
+    enabled: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+}
+
+function toMcpServerArray(
+  config: Record<string, MCPServerConfig>,
+): (typeof McpServerSchema.$inferSelect)[] {
+  return Object.entries(config).map(([name, config]) =>
+    fillMcpServerSchema({
+      id: name,
+      name,
+      config,
+    }),
+  );
+}
+
+function toMcpServerRecord(
+  servers: (typeof McpServerSchema.$inferSelect)[],
+): Record<string, MCPServerConfig> {
+  return servers.reduce(
+    (acc, server) => {
+      acc[server.name] = server.config;
+      return acc;
+    },
+    {} as Record<string, MCPServerConfig>,
+  );
 }

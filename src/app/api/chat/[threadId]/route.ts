@@ -29,6 +29,9 @@ export async function POST(
       userId: session.user.id,
     });
   }
+  if (thread.userId !== session.user.id) {
+    return new Response("Forbidden", { status: 403 });
+  }
   await chatRepository.insertMessages(
     messages.map((message) => ({
       ...message,

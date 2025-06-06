@@ -21,16 +21,19 @@ import {
   isMaybeMCPServerConfig,
   isMaybeRemoteConfig,
 } from "lib/ai/mcp/is-mcp-config";
-import { updateMcpClientAction } from "@/app/api/mcp/actions";
-import { insertMcpClientAction } from "@/app/api/mcp/actions";
 
 import { Alert, AlertDescription, AlertTitle } from "ui/alert";
 import { z } from "zod";
 import { useTranslations } from "next-intl";
+import {
+  existMcpClientByServerNameAction,
+  saveMcpClientAction,
+} from "@/app/api/mcp/actions";
 
 interface MCPEditorProps {
   initialConfig?: MCPServerConfig;
   name?: string;
+  id?: string;
 }
 
 const STDIO_ARGS_ENV_PLACEHOLDER = `/** STDIO Example */
@@ -53,9 +56,11 @@ const STDIO_ARGS_ENV_PLACEHOLDER = `/** STDIO Example */
 export default function MCPEditor({
   initialConfig,
   name: initialName,
+  id,
 }: MCPEditorProps) {
   const t = useTranslations();
-  const shouldInsert = useMemo(() => isNull(initialName), [initialName]);
+  const shouldInsert = useMemo(() => isNull(id), [id]);
+
   const [isLoading, setIsLoading] = useState(false);
   const [jsonError, setJsonError] = useState<string | null>(null);
   const [nameError, setNameError] = useState<string | null>(null);
@@ -129,12 +134,21 @@ export default function MCPEditor({
     }
 
     safe(() => setIsLoading(true))
+      .map(async () => {
+        if (shouldInsert) {
+          const exist = await existMcpClientByServerNameAction(name);
+          if (exist) {
+            throw new Error(t("MCP.nameAlreadyExists"));
+          }
+        }
+      })
       .map(() =>
-        shouldInsert
-          ? insertMcpClientAction(name, config)
-          : updateMcpClientAction(name, config),
+        saveMcpClientAction({
+          name,
+          config,
+          id,
+        }),
       )
-      .watch(() => setIsLoading(false))
       .ifOk(() => toast.success(t("MCP.configurationSavedSuccessfully")))
       .watch(watchOk(() => mutate("mcp-list")))
       .ifOk(() => router.push("/mcp"))

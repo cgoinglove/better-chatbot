@@ -1,3 +1,4 @@
+import { Tool } from "ai";
 import { z } from "zod";
 
 export const MCPRemoteConfigZodSchema = z.object({
@@ -40,31 +41,104 @@ export type MCPServerInfo = {
   status: "connected" | "disconnected" | "loading";
   toolInfo: MCPToolInfo[];
 };
+
+export type McpServerInsert = {
+  name: string;
+  config: MCPServerConfig;
+  id?: string;
+};
+export type McpServerSelect = {
+  name: string;
+  config: MCPServerConfig;
+  id: string;
+};
+
+export type VercelAIMcpTool = Tool & {
+  _mcpServerName: string;
+  _mcpServerId: string;
+  _originToolName: string;
+};
+
 export interface MCPRepository {
-  insertServer(server: {
-    name: string;
-    config: MCPServerConfig;
-    enabled?: boolean;
-  }): Promise<string>;
-  selectServerById(id: string): Promise<{
-    id: string;
-    name: string;
-    config: MCPServerConfig;
-    enabled: boolean;
-  } | null>;
-  selectServerByName(name: string): Promise<{
-    id: string;
-    name: string;
-    config: MCPServerConfig;
-    enabled: boolean;
-  } | null>;
-  selectAllServers(): Promise<
-    { id: string; name: string; config: MCPServerConfig; enabled: boolean }[]
-  >;
-  updateServer(
-    id: string,
-    data: { name?: string; config?: MCPServerConfig; enabled?: boolean },
-  ): Promise<void>;
-  deleteServer(id: string): Promise<void>;
-  existsServerWithName(name: string): Promise<boolean>;
+  save(server: McpServerInsert): Promise<McpServerSelect>;
+  selectById(id: string): Promise<McpServerSelect | null>;
+  selectByServerName(name: string): Promise<McpServerSelect | null>;
+  selectAll(): Promise<McpServerSelect[]>;
+  deleteById(id: string): Promise<void>;
+  existsByServerName(name: string): Promise<boolean>;
 }
+
+export const McpToolCustomizationZodSchema = z.object({
+  toolName: z.string().min(1),
+  mcpServerId: z.string().min(1),
+  prompt: z.string().max(1000).optional().nullable(),
+});
+
+export type McpToolCustomization = {
+  id: string;
+  userId: string;
+  toolName: string;
+  mcpServerId: string;
+  prompt?: string | null;
+};
+
+export type McpToolCustomizationRepository = {
+  select(key: {
+    userId: string;
+    mcpServerId: string;
+    toolName: string;
+  }): Promise<McpToolCustomization | null>;
+  selectByUserIdAndMcpServerId: (key: {
+    userId: string;
+    mcpServerId: string;
+  }) => Promise<McpToolCustomization[]>;
+  selectByUserId: (
+    userId: string,
+  ) => Promise<(McpToolCustomization & { serverName: string })[]>;
+  upsertToolCustomization: (
+    data: PartialBy<McpToolCustomization, "id">,
+  ) => Promise<McpToolCustomization>;
+  deleteToolCustomization: (key: {
+    userId: string;
+    mcpServerId: string;
+    toolName: string;
+  }) => Promise<void>;
+};
+
+export const McpServerCustomizationZodSchema = z.object({
+  mcpServerId: z.string().min(1),
+  prompt: z.string().max(3000).optional().nullable(),
+});
+
+export type McpServerCustomization = {
+  id: string;
+  userId: string;
+  mcpServerId: string;
+  prompt?: string | null;
+};
+
+export type McpServerCustomizationRepository = {
+  selectByUserIdAndMcpServerId: (key: {
+    userId: string;
+    mcpServerId: string;
+  }) => Promise<(McpServerCustomization & { serverName: string }) | null>;
+  selectByUserId: (
+    userId: string,
+  ) => Promise<(McpServerCustomization & { serverName: string })[]>;
+  upsertMcpServerCustomization: (
+    data: PartialBy<McpServerCustomization, "id">,
+  ) => Promise<McpServerCustomization>;
+  deleteMcpServerCustomizationByMcpServerIdAndUserId: (key: {
+    mcpServerId: string;
+    userId: string;
+  }) => Promise<void>;
+};
+
+export type McpServerCustomizationsPrompt = {
+  name: string;
+  id: string;
+  prompt?: string;
+  tools?: {
+    [toolName: string]: string;
+  };
+};

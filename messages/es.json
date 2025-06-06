@@ -10,7 +10,8 @@
     "create": "Crear",
     "showLess": "Mostrar menos",
     "showMore": "Mostrar más",
-    "generate": "Generar"
+    "generate": "Generar",
+    "edit": "Editar"
   },
   "Auth": {
     "SignIn": {
@@ -223,6 +224,16 @@
     "createInputWithAI": "Crear Entrada con IA",
     "generateExampleInputJSON": "Generar JSON de Entrada de Ejemplo",
     "enterPromptToGenerateExampleInputJSON": "Ingresa un prompt para generar un JSON de entrada de ejemplo para la herramienta seleccionada.",
-    "callTool": "Llamar Herramienta"
+    "callTool": "Llamar a herramienta",
+    "customInstructions": "Instrucciones personalizadas",
+    "serverCustomInstructionsPlaceholder": "Estas líneas se añadirán al mensaje del sistema siempre que haya una herramienta de este servidor disponible.",
+    "nameAlreadyExists": "El nombre ya existe",
+    "additionalInstructions": "Instrucciones de Personalización de Herramientas",
+    "inputSchema": "Esquema de Entrada",
+    "toolCustomizationInstructions": "Las instrucciones de personalización de herramientas se añadirán al prompt del sistema cuando la herramienta esté disponible.\nejemplo) Siempre ingresa el email en el formato ejemplo@ejemplo.com.",
+    "mcpServerCustomization": "Personalización del Servidor MCP",
+    "mcpServerCustomizationDescription": "Las instrucciones de personalización del servidor MCP se añadirán al prompt del sistema cuando el servidor MCP esté disponible.",
+    "toolCustomizationInstructionsPlaceholder": "Las instrucciones de personalización de herramientas no están disponibles.",
+    "mcpServerCustomizationPlaceholder": "ej. Si el valor de entrada es email, siempre ingresa el email en el formato ejemplo@ejemplo.com."
   }
 }

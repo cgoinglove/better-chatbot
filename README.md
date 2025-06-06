@@ -20,19 +20,19 @@ See the experience in action in the [preview](#preview) below!
     - [🎙️ Realtime Voice Assistant + MCP Tools](#️-realtime-voice-assistant--mcp-tools)
     - [⚡️ Quick Tool Mentions (`@`) \& Presets](#️-quick-tool-mentions---presets)
     - [🧭 Tool Choice Mode](#-tool-choice-mode)
-    - [🔌 Easy MCP Server Integration \& 🛠️ Tool Testing](#-easy-mcp-server-integration--️-tool-testing)
   - [Getting Started](#getting-started)
-    - [Quick Start (Local Version) 🚀](#quick-start-local-version-)
     - [Quick Start (Docker Compose Version) 🐳](#quick-start-docker-compose-version-)
+    - [Quick Start (Local Version) 🚀](#quick-start-local-version-)
     - [Environment Variables](#environment-variables)
   - [📘 Guides](#-guides)
-    - [🔌 MCP Server Setup & Tool Testing](./docs/tips-guides/mcp-server-setup.md)
-    - [🐳 Docker Hosting Guide](#-docker-hosting-guide)
-    - [▲ Vercel Hosting Guide](#-vercel-hosting-guide)
-    - [🔐 OAuth Sign-In Setup](#-oauth-sign-in-setup)
+      - [🔌 MCP Server Setup \& Tool Testing](#-mcp-server-setup--tool-testing)
+      - [🐳 Docker Hosting Guide](#-docker-hosting-guide)
+      - [▲ Vercel Hosting Guide](#-vercel-hosting-guide)
+      - [🎯 System Prompts \& Chat Customization](#-system-prompts--chat-customization)
+      - [🔐 OAuth Sign-In Setup](#-oauth-sign-in-setup)
   - [💡 Tips](#-tips)
-    - [🧠 Agentic Chatbot with Project Instructions](#-agentic-chatbot-with-project-instructions)
-    - [💬 Temporary Chat Windows](#-temporary-chat-windows)
+      - [🧠 Agentic Chatbot with Project Instructions](#-agentic-chatbot-with-project-instructions)
+      - [💬 Temporary Chat Windows](#-temporary-chat-windows)
   - [🗺️ Roadmap](#️-roadmap)
   - [🙌 Contributing](#-contributing)
   - [💬 Join Our Discord](#-join-our-discord)
@@ -200,6 +200,7 @@ GITHUB_CLIENT_SECRET=
 
 Step-by-step setup guides for running and configuring MCP Client Chatbot.
 
+
 #### [🔌 MCP Server Setup & Tool Testing](./docs/tips-guides/mcp-server-setup-and-tool-testing.md)
 
 - How to add and configure MCP servers in your environment
@@ -211,6 +212,10 @@ Step-by-step setup guides for running and configuring MCP Client Chatbot.
 #### [▲ Vercel Hosting Guide](./docs/tips-guides/vercel.md)
 
 - Deploy the chatbot to Vercel with simple setup steps for production use.
+  
+#### [🎯 System Prompts & Chat Customization](./docs/tips-guides/system-prompts-and-customization.md)
+
+- Personalize your chatbot experience with custom system prompts, user preferences, and MCP tool instructions
 
 #### [🔐 OAuth Sign-In Setup](./docs/tips-guides/oauth.md)
 

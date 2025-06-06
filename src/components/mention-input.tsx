@@ -7,7 +7,6 @@ import React, {
   useState,
   useEffect,
   useMemo,
-  ReactNode,
   useRef,
   useCallback,
   memo,
@@ -18,26 +17,53 @@ import { cn } from "lib/utils";
 import { fuzzySearch } from "@/lib/fuzzy-search";
 import { WrenchIcon } from "lucide-react";
 import { MCPIcon } from "ui/mcp-icon";
-import { extractMCPToolId } from "lib/ai/mcp/mcp-tool-id";
 import { PROMPT_PASTE_MAX_LENGTH } from "lib/const";
+import { ChatMention } from "app-types/chat";
 
-type MentionItemType = "tool" | "server" | (string & {});
+type MentionItem = ChatMention & { label: string; id: string };
 
 interface MentionInputProps {
   input?: string;
   onChange?: (value: string) => void;
-  onChangeMention?: (
-    mentionItems: { id: string; label: ReactNode; type?: MentionItemType }[],
-  ) => void;
+  onChangeMention?: (mentionItems: ChatMention[]) => void;
   onEnter?: () => void;
   placeholder?: string;
-  items?: {
-    id: string;
-    label: string;
-    type?: MentionItemType;
-  }[];
+  items?: ChatMention[];
   onPaste?: (e: React.ClipboardEvent) => void;
 }
+
+const encodeMentionItem = (item: ChatMention): string => {
+  const arr: string[] = [item.type];
+  if (item.type === "tool") {
+    arr.push(item.name, item.serverName || "", item.serverId);
+  } else if (item.type === "mcpServer") {
+    arr.push(item.name, item.serverId);
+  }
+  return JSON.stringify(arr);
+};
+
+const decodeMentionItem = (item: string): ChatMention => {
+  const arr = JSON.parse(item ?? "[]") as string[];
+  const type = arr[0] as ChatMention["type"];
+  if (type === "tool") {
+    return {
+      type: "tool",
+      name: arr[1],
+      serverName: arr[2],
+      serverId: arr[3],
+    };
+  } else if (type === "mcpServer") {
+    return {
+      type: "mcpServer",
+      name: arr[1],
+      serverId: arr[2],
+    };
+  }
+  return {
+    type: "unknown",
+    name: arr[1],
+  };
+};
 
 export default function MentionInput({
   input,
@@ -58,10 +84,18 @@ export default function MentionInput({
 
   const mentionRef = useRef<HTMLDivElement>(null);
 
+  const mentionItems = useMemo(() => {
+    return items.map((item) => ({
+      id: encodeMentionItem(item),
+      label: item.name,
+      ...item,
+    }));
+  }, [items]);
+
   const filteredItems = useMemo(() => {
-    if (!suggestion?.query || !items.length) return items;
-    return fuzzySearch(items, suggestion.query);
-  }, [suggestion?.query, items]);
+    if (!suggestion?.query || !mentionItems.length) return mentionItems;
+    return fuzzySearch(mentionItems, suggestion.query);
+  }, [suggestion?.query, mentionItems]);
 
   const latestRef = useToRef({ suggestion, filteredItems });
 
@@ -74,6 +108,16 @@ export default function MentionInput({
         Mention.configure({
           HTMLAttributes: {
             class: "mention",
+          },
+          renderHTML: (props) => {
+            const node = document.createElement("span");
+            node.setAttribute("data-type", "mention");
+            node.setAttribute("data-id", props.node.attrs.id);
+            node.setAttribute("data-label", props.node.attrs.label);
+            node.className = "mention";
+            node.textContent =
+              props.options.suggestion.char + props.node.attrs.label;
+            return node;
           },
           suggestion: {
             char: "@",
@@ -152,7 +196,9 @@ export default function MentionInput({
                       label: item.textContent!,
                     }),
                   );
-                  onChangeMention?.(mentionItemsArray);
+                  onChangeMention?.(
+                    mentionItemsArray.map((item) => decodeMentionItem(item.id)),
+                  );
                   setSuggestion(null);
                 },
               };
@@ -361,26 +407,21 @@ const MentionItem = memo(function MentionItem({
   query,
   addMention,
   isSelected,
-  type,
 }: {
-  item: { id: string; label: string };
-  addMention: (item: { id: string; label: string }) => void;
+  item: MentionItem;
+  addMention: (item: MentionItem) => void;
   isSelected: boolean;
   query: string;
-  type?: MentionItemType;
 }) {
   const label = useMemo(() => {
-    if (type == "tool") {
-      return extractMCPToolId(item.id).toolName;
-    }
     return item.label;
-  }, [item, type]);
+  }, [item]);
 
   const serverName = useMemo(() => {
-    if (type == "tool") {
-      return extractMCPToolId(item.id).serverName;
+    if (item.type == "tool") {
+      return item.serverName;
     }
-  }, [item, type]);
+  }, [item]);
 
   const itemRef = useRef<HTMLDivElement>(null);
 
@@ -418,9 +459,9 @@ const MentionItem = memo(function MentionItem({
       )}
       onClick={handleClick}
     >
-      {type == "tool" ? (
+      {item.type == "tool" ? (
         <WrenchIcon className="size-3 text-muted-foreground" />
-      ) : type == "server" ? (
+      ) : item.type == "mcpServer" ? (
         <div className="p-0.5 rounded bg-accent-foreground">
           <MCPIcon className="size-3" />
         </div>
@@ -440,9 +481,9 @@ const MentionSelect = memo(function MentionSelect({
   addMention,
   selectedIndex,
 }: {
-  items: { id: string; label: string; type?: MentionItemType }[];
+  items: MentionItem[];
   query: string;
-  addMention: (item: { id: string; label: string }) => void;
+  addMention: (item: MentionItem) => void;
   selectedIndex: number;
 }) {
   const emptyMessage = useMemo(() => {
@@ -459,9 +500,8 @@ const MentionSelect = memo(function MentionSelect({
       {emptyMessage}
       {items.map((item, index) => (
         <MentionItem
-          key={item.id}
+          key={index}
           item={item}
-          type={item.type}
           query={query}
           addMention={addMention}
           isSelected={index === selectedIndex}

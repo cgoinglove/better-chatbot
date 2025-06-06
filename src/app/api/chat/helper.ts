@@ -6,42 +6,73 @@ import {
   tool as createTool,
 } from "ai";
 import {
+  ChatMention,
   ChatMessage,
   ChatMessageAnnotation,
   ToolInvocationUIPart,
 } from "app-types/chat";
-import { extractMCPToolId } from "lib/ai/mcp/mcp-tool-id";
 import { errorToString, objectFlow, toAny } from "lib/utils";
 import { callMcpToolAction } from "../mcp/actions";
 import { safe } from "ts-safe";
 import logger from "logger";
 import { defaultTools } from "lib/ai/tools";
-import { AllowedMCPServer } from "app-types/mcp";
+import {
+  AllowedMCPServer,
+  McpServerCustomizationsPrompt,
+  VercelAIMcpTool,
+} from "app-types/mcp";
 import { MANUAL_REJECT_RESPONSE_PROMPT } from "lib/ai/prompts";
 
 export function filterToolsByMentions(
-  tools: Record<string, Tool>,
-  mentions: string[],
+  tools: Record<string, VercelAIMcpTool>,
+  mentions: ChatMention[],
 ) {
-  if (mentions.length === 0) {
+  const toolMentions = mentions.filter(
+    (mention) => mention.type == "tool" || mention.type == "mcpServer",
+  );
+  if (toolMentions.length === 0) {
     return tools;
   }
-  return objectFlow(tools).filter((_tool, key) =>
-    mentions.some((mention) => key.startsWith(mention)),
-  );
+
+  const metionsByServer = toolMentions.reduce(
+    (acc, mention) => {
+      if (mention.type == "mcpServer") {
+        return {
+          ...acc,
+          [mention.serverId]: Object.values(tools).map(
+            (tool) => tool._originToolName,
+          ),
+        };
+      }
+      if (mention.type == "tool") {
+        return {
+          ...acc,
+          [mention.serverId]: [...(acc[mention.serverId] ?? []), mention.name],
+        };
+      }
+      return acc;
+    },
+    {} as Record<string, string[]>,
+  ); // {serverId: [toolName1, toolName2]}
+
+  return objectFlow(tools).filter((_tool) => {
+    if (!metionsByServer[_tool._mcpServerId]) return false;
+    return metionsByServer[_tool._mcpServerId].includes(_tool._originToolName);
+  });
 }
 
 export function filterToolsByAllowedMCPServers(
-  tools: Record<string, Tool>,
+  tools: Record<string, VercelAIMcpTool>,
   allowedMcpServers?: Record<string, AllowedMCPServer>,
-): Record<string, Tool> {
+): Record<string, VercelAIMcpTool> {
   if (!allowedMcpServers) {
     return tools;
   }
-  return objectFlow(tools).filter((_tool, key) => {
-    const { serverName, toolName } = extractMCPToolId(key);
-    if (!allowedMcpServers[serverName]?.tools) return true;
-    return allowedMcpServers[serverName].tools.includes(toolName);
+  return objectFlow(tools).filter((_tool) => {
+    if (!allowedMcpServers[_tool._mcpServerId]?.tools) return true;
+    return allowedMcpServers[_tool._mcpServerId].tools.includes(
+      _tool._originToolName,
+    );
   });
 }
 export function getAllowedDefaultToolkit(
@@ -88,6 +119,7 @@ export function mergeSystemPrompt(...prompts: (string | undefined)[]): string {
 export function manualToolExecuteByLastMessage(
   part: ToolInvocationUIPart,
   message: Message,
+  tools: Record<string, VercelAIMcpTool>,
 ) {
   const { args, toolName } = part.toolInvocation;
 
@@ -102,9 +134,12 @@ export function manualToolExecuteByLastMessage(
 
   if (!manulConfirmation?.result) return MANUAL_REJECT_RESPONSE_PROMPT;
 
-  const toolId = extractMCPToolId(toolName);
+  const tool = tools[toolName];
 
-  return safe(() => callMcpToolAction(toolId.serverName, toolId.toolName, args))
+  return safe(() => {
+    if (!tool) throw new Error(`tool not found: ${toolName}`);
+  })
+    .map(() => callMcpToolAction(tool._mcpServerId, tool._originToolName, args))
     .ifFail((error) => ({
       isError: true,
       statusMessage: `tool call fail: ${toolName}`,
@@ -162,4 +197,46 @@ export function assignToolResult(toolPart: ToolInvocationUIPart, result: any) {
 
 export function isUserMessage(message: Message): boolean {
   return message.role == "user";
+}
+
+export function filterMcpServerCustomizations(
+  tools: Record<string, VercelAIMcpTool>,
+  mcpServerCustomization: Record<string, McpServerCustomizationsPrompt>,
+): Record<string, McpServerCustomizationsPrompt> {
+  const toolNamesByServerId = Object.values(tools).reduce(
+    (acc, tool) => {
+      if (!acc[tool._mcpServerId]) acc[tool._mcpServerId] = [];
+      acc[tool._mcpServerId].push(tool._originToolName);
+      return acc;
+    },
+    {} as Record<string, string[]>,
+  );
+
+  return Object.entries(mcpServerCustomization).reduce(
+    (acc, [serverId, mcpServerCustomization]) => {
+      if (!(serverId in toolNamesByServerId)) return acc;
+
+      if (
+        !mcpServerCustomization.prompt &&
+        !Object.keys(mcpServerCustomization.tools ?? {}).length
+      )
+        return acc;
+
+      const prompts: McpServerCustomizationsPrompt = {
+        id: serverId,
+        name: mcpServerCustomization.name,
+        prompt: mcpServerCustomization.prompt,
+        tools: mcpServerCustomization.tools
+          ? objectFlow(mcpServerCustomization.tools).filter((_, key) => {
+              return toolNamesByServerId[serverId].includes(key as string);
+            })
+          : {},
+      };
+
+      acc[serverId] = prompts;
+
+      return acc;
+    },
+    {} as Record<string, McpServerCustomizationsPrompt>,
+  );
 }

@@ -16,11 +16,13 @@ import { mcpClientsManager } from "lib/ai/mcp/mcp-manager";
 import { chatRepository } from "lib/db/repository";
 import logger from "logger";
 import {
+  buildMcpServerCustomizationsSystemPrompt,
   buildProjectInstructionsSystemPrompt,
   buildUserSystemPrompt,
 } from "lib/ai/prompts";
 import {
   chatApiSchemaRequestBodySchema,
+  ChatMention,
   ChatMessageAnnotation,
 } from "app-types/chat";
 
@@ -39,8 +41,12 @@ import {
   isUserMessage,
   getAllowedDefaultToolkit,
   filterToolsByAllowedMCPServers,
+  filterMcpServerCustomizations,
 } from "./helper";
-import { generateTitleFromUserMessageAction } from "./actions";
+import {
+  generateTitleFromUserMessageAction,
+  rememberMcpServerCustomizationsAction,
+} from "./actions";
 import { getSession } from "auth/server";
 
 export async function POST(request: Request) {
@@ -81,6 +87,10 @@ export async function POST(request: Request) {
       thread = await chatRepository.selectThreadDetails(newThread.id);
     }
 
+    if (thread!.userId !== session.user.id) {
+      return new Response("Forbidden", { status: 403 });
+    }
+
     // if is false, it means the last message is manual tool execution
     const isLastMessageUserMessage = isUserMessage(message);
 
@@ -94,35 +104,24 @@ export async function POST(request: Request) {
 
     const mcpTools = mcpClientsManager.tools();
 
-    const isToolCallAllowed =
-      !isToolCallUnsupportedModel(model) && toolChoice != "none";
+    const mentions = annotations
+      .flatMap((annotation) => annotation.mentions)
+      .filter(Boolean) as ChatMention[];
 
-    const requiredToolsAnnotations = annotations
-      .flatMap((annotation) => annotation.requiredTools)
-      .filter(Boolean) as string[];
+    const isToolCallAllowed =
+      (!isToolCallUnsupportedModel(model) && toolChoice != "none") ||
+      mentions.length > 0;
 
     const tools = safe(mcpTools)
       .map(errorIf(() => !isToolCallAllowed && "Not allowed"))
       .map((tools) => {
         // filter tools by mentions
-        if (requiredToolsAnnotations.length) {
-          return filterToolsByMentions(tools, requiredToolsAnnotations);
+        if (mentions.length) {
+          return filterToolsByMentions(tools, mentions);
         }
         // filter tools by allowed mcp servers
         return filterToolsByAllowedMCPServers(tools, allowedMcpServers);
       })
-      // filter tools by tool choice
-      .map((tools) => {
-        if (toolChoice == "manual") {
-          return excludeToolExecution(tools);
-        }
-        return tools;
-      })
-      // add allowed default toolkit
-      .map((tools) => ({
-        ...getAllowedDefaultToolkit(allowedAppDefaultToolkit),
-        ...tools,
-      }))
       .orElse(undefined);
 
     const messages: Message[] = isLastMessageUserMessage
@@ -142,6 +141,7 @@ export async function POST(request: Request) {
           const toolResult = await manualToolExecuteByLastMessage(
             inProgressToolStep,
             message,
+            mcpTools,
           );
           assignToolResult(inProgressToolStep, toolResult);
           dataStream.write(
@@ -154,18 +154,40 @@ export async function POST(request: Request) {
 
         const userPreferences = thread?.userPreferences || undefined;
 
+        const mcpServerCustomizations = await safe()
+          .map(() => {
+            if (Object.keys(tools ?? {}).length === 0)
+              throw new Error("No tools found");
+            return rememberMcpServerCustomizationsAction(session.user.id);
+          })
+          .map((v) => filterMcpServerCustomizations(tools!, v))
+          .orElse({});
+
         const systemPrompt = mergeSystemPrompt(
           buildUserSystemPrompt(session.user, userPreferences),
           buildProjectInstructionsSystemPrompt(thread?.instructions),
+          buildMcpServerCustomizationsSystemPrompt(mcpServerCustomizations),
         );
 
         // Precompute toolChoice to avoid repeated tool calls
         const computedToolChoice =
-          isToolCallAllowed &&
-          requiredToolsAnnotations.length > 0 &&
-          inProgressToolStep
+          isToolCallAllowed && mentions.length > 0 && inProgressToolStep
             ? "required"
             : "auto";
+
+        const vercelAITooles = safe(tools)
+          .map((t) => {
+            if (!t) return undefined;
+            const bindingTools = {
+              ...getAllowedDefaultToolkit(allowedAppDefaultToolkit),
+              ...t,
+            };
+            if (toolChoice === "manual") {
+              return excludeToolExecution(bindingTools);
+            }
+            return bindingTools;
+          })
+          .unwrap();
 
         const result = streamText({
           model,
@@ -175,7 +197,7 @@ export async function POST(request: Request) {
           experimental_continueSteps: true,
           experimental_transform: smoothStream({ chunking: "word" }),
           maxRetries: 0,
-          tools,
+          tools: vercelAITooles,
           toolChoice: computedToolChoice,
           onFinish: async ({ response, usage }) => {
             const appendMessages = appendResponseMessages({

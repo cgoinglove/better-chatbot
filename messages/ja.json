@@ -10,7 +10,8 @@
     "create": "作成",
     "showLess": "少なく表示",
     "showMore": "もっと表示",
-    "generate": "生成"
+    "generate": "生成",
+    "edit": "編集"
   },
   "Auth": {
     "SignIn": {
@@ -223,6 +224,16 @@
     "createInputWithAI": "AIで入力を作成",
     "generateExampleInputJSON": "例の入力JSONを生成",
     "enterPromptToGenerateExampleInputJSON": "選択したツールの例の入力JSONを生成するためのプロンプトを入力してください。",
-    "callTool": "ツールを呼び出す"
+    "callTool": "ツールを呼び出す",
+    "customInstructions": "カスタム指示",
+    "serverCustomInstructionsPlaceholder": "このサーバーのツールが利用可能な場合、これらの行がシステムプロンプトに追加されます。",
+    "nameAlreadyExists": "名前が既に存在します",
+    "additionalInstructions": "ツールカスタマイゼーション指示",
+    "inputSchema": "入力スキーマ",
+    "toolCustomizationInstructions": "ツールカスタマイゼーション指示は、ツールが利用可能な場合にシステムプロンプトに追加されます。\n例）メールは常にexample@example.comの形式で入力してください。",
+    "mcpServerCustomization": "MCPサーバーカスタマイゼーション",
+    "mcpServerCustomizationDescription": "MCPサーバーカスタマイゼーション指示は、MCPサーバーが利用可能な場合にシステムプロンプトに追加されます。",
+    "toolCustomizationInstructionsPlaceholder": "ツールカスタマイゼーション指示は利用できません。",
+    "mcpServerCustomizationPlaceholder": "例：入力値がメールの場合、常にexample@example.comの形式でメールを入力してください。"
   }
 }

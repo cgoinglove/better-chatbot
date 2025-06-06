@@ -1,4 +1,3 @@
-import type { MCPServerConfig } from "app-types/mcp";
 import { pgDb as db } from "../db.pg";
 import { McpServerSchema } from "../schema.pg";
 import { eq } from "drizzle-orm";
@@ -6,78 +5,54 @@ import { generateUUID } from "lib/utils";
 import type { MCPRepository } from "app-types/mcp";
 
 export const pgMcpRepository: MCPRepository = {
-  async insertServer(server) {
+  async save(server) {
     const [result] = await db
       .insert(McpServerSchema)
       .values({
-        id: generateUUID(),
+        id: server.id ?? generateUUID(),
         name: server.name,
         config: server.config,
-        enabled: server.enabled ?? true,
+        enabled: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .onConflictDoUpdate({
+        target: [McpServerSchema.id],
+        set: {
+          config: server.config,
+          updatedAt: new Date(),
+        },
       })
       .returning();
 
-    return result.id;
+    return result;
   },
 
-  async selectServerById(id) {
+  async selectById(id) {
     const [result] = await db
       .select()
       .from(McpServerSchema)
       .where(eq(McpServerSchema.id, id));
-
-    if (!result) return null;
-
-    return {
-      id: result.id,
-      name: result.name,
-      config: result.config as MCPServerConfig,
-      enabled: result.enabled,
-    };
+    return result;
   },
 
-  async selectServerByName(name) {
+  async selectAll() {
+    const results = await db.select().from(McpServerSchema);
+    return results;
+  },
+
+  async deleteById(id) {
+    await db.delete(McpServerSchema).where(eq(McpServerSchema.id, id));
+  },
+
+  async selectByServerName(name) {
     const [result] = await db
       .select()
       .from(McpServerSchema)
       .where(eq(McpServerSchema.name, name));
-
-    if (!result) return null;
-
-    return {
-      id: result.id,
-      name: result.name,
-      config: result.config as MCPServerConfig,
-      enabled: result.enabled,
-    };
+    return result;
   },
-
-  async selectAllServers() {
-    const results = await db.select().from(McpServerSchema);
-
-    return results.map((result) => ({
-      id: result.id,
-      name: result.name,
-      config: result.config as MCPServerConfig,
-      enabled: result.enabled,
-    }));
-  },
-
-  async updateServer(id, data) {
-    await db
-      .update(McpServerSchema)
-      .set({
-        ...data,
-        updatedAt: new Date(),
-      })
-      .where(eq(McpServerSchema.id, id));
-  },
-
-  async deleteServer(id) {
-    await db.delete(McpServerSchema).where(eq(McpServerSchema.id, id));
-  },
-
-  async existsServerWithName(name) {
+  async existsByServerName(name) {
     const [result] = await db
       .select({ id: McpServerSchema.id })
       .from(McpServerSchema)
