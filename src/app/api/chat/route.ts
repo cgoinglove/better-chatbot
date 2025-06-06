@@ -171,6 +171,20 @@ export async function POST(request: Request) {
             ? "required"
             : "auto";
 
+        const vercelAITooles = safe(tools)
+          .map((t) => {
+            if (!t) return undefined;
+            const bindingTools = {
+              ...getAllowedDefaultToolkit(allowedAppDefaultToolkit),
+              ...t,
+            };
+            if (toolChoice === "manual") {
+              return excludeToolExecution(bindingTools);
+            }
+            return bindingTools;
+          })
+          .unwrap();
+
         const result = streamText({
           model,
           system: systemPrompt,
@@ -179,19 +193,7 @@ export async function POST(request: Request) {
           experimental_continueSteps: true,
           experimental_transform: smoothStream({ chunking: "word" }),
           maxRetries: 0,
-          tools: safe(tools)
-            .map((t) => {
-              if (!t) return undefined;
-              const bindingTools = {
-                ...getAllowedDefaultToolkit(allowedAppDefaultToolkit),
-                ...t,
-              };
-              if (toolChoice === "manual") {
-                return excludeToolExecution(bindingTools);
-              }
-              return bindingTools;
-            })
-            .unwrap(),
+          tools: vercelAITooles,
           toolChoice: computedToolChoice,
           onFinish: async ({ response, usage }) => {
             const appendMessages = appendResponseMessages({

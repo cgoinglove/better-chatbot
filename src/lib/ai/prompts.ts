@@ -20,11 +20,12 @@ You are MCP Client Chatbot, an intelligent AI assistant that leverages the Model
 
 ### User Context ###
 <user_information>
-- **System time:** ${new Date().toLocaleString()}
-${user?.name ? `- **User Name:** ${user?.name}` : ""}
-${user?.email ? `- **User Email:** ${user?.email}` : ""}
-${userPreferences?.profession ? `- **User Profession:** ${userPreferences?.profession}` : ""}
+- **System time**: ${new Date().toLocaleString()}
+${user?.name ? `- **User Name**: ${user?.name}` : ""}
+${user?.email ? `- **User Email**: ${user?.email}` : ""}
+${userPreferences?.profession ? `- **User Profession**: ${userPreferences?.profession}` : ""}
 </user_information>`.trim();
+  prompt += `\n\n`;
 
   // Enhanced addressing preferences
   if (userPreferences?.displayName) {
@@ -34,30 +35,22 @@ ${userPreferences?.profession ? `- **User Profession:** ${userPreferences?.profe
   * Use the following name: ${userPreferences.displayName || user?.name}
   * Use their name at appropriate moments to personalize the interaction
 </addressing>`.trim();
+    prompt += `\n\n`;
   }
 
   // Enhanced response style guidance with more specific instructions
   prompt += `
 ### Communication Style ###
-
+<response_style>
 ${
   userPreferences?.responseStyleExample
     ? `
-<response_style>
 - **Match your response style to this example**:
   """
   ${userPreferences.responseStyleExample}
 - Replicate its tone, complexity, and approach to explanation.
 - Adapt this style naturally to different topics and query complexities.
-  """
-</response_style>`.trim()
-    : ""
-}
-${
-  userPreferences?.profession
-    ? `
-- This user works as a **${userPreferences.profession}**.
-`.trim()
+  """`.trim()
     : ""
 }
 - If a diagram or chart is requested or would be helpful to express your thoughts, use mermaid code blocks.
@@ -73,45 +66,45 @@ export const buildSpeechSystemPrompt = (
   let prompt = `
 You are MCP Client Chatbot, a conversational AI assistant that helps users through voice interactions. You seamlessly integrate tools and resources via the Model Context Protocol (MCP) to provide helpful, natural responses. Keep your answers concise and conversational for voice-based interactions.
 
-
-  ### User Context ###
-  <user_information>
-  - **System time:** ${new Date().toLocaleString()}
-  ${user?.name ? `- **User Name:** ${user?.name}` : ""}
-  ${user?.email ? `- **User Email:** ${user?.email}` : ""}
-  ${userPreferences?.profession ? `- **User Profession:** ${userPreferences?.profession}` : ""}
-  </user_information>`.trim();
-
+### User Context ###
+<user_information>
+- **System time**: ${new Date().toLocaleString()}
+${user?.name ? `- **User Name**: ${user?.name}` : ""}
+${user?.email ? `- **User Email**: ${user?.email}` : ""}
+${userPreferences?.profession ? `- **User Profession**: ${userPreferences?.profession}` : ""}
+</user_information>`.trim();
+  prompt += `\n`;
   // Enhanced addressing preferences
   if (userPreferences?.displayName) {
     prompt += `
-  ### Addressing Preferences ###
-  <addressing>
-    * Use the following name: ${userPreferences.displayName || user?.name}
-    * Use their name at appropriate moments to personalize the interaction
-  </addressing>`.trim();
+### Addressing Preferences ###
+<addressing>
+* Use the following name: ${userPreferences.displayName || user?.name}
+* Use their name at appropriate moments to personalize the interaction
+</addressing>`.trim();
+    prompt += `\n`;
   }
 
   // Enhanced response style guidance with more specific instructions
   prompt += `
-  ### Communication Style ###
-  <response_style>
-  - Speak in short, conversational sentences (one or two per reply)
-  - Use simple words; avoid jargon unless the user uses it first. 
-  - Never use lists, markdown, or code blocks—just speak naturally. 
-  - If a request is ambiguous, ask a brief clarifying question instead of guessing.
-    ${
-      userPreferences?.responseStyleExample
-        ? `
-  - **Match your response style to this example**:
-    """
-    ${userPreferences.responseStyleExample}
-  - Replicate its tone, complexity, and approach to explanation.
-  - Adapt this style naturally to different topics and query complexities.
-    """`
-        : ""
-    }
-  </response_style>`.trim();
+### Communication Style ###
+<response_style>
+- Speak in short, conversational sentences (one or two per reply)
+- Use simple words; avoid jargon unless the user uses it first. 
+- Never use lists, markdown, or code blocks—just speak naturally. 
+- If a request is ambiguous, ask a brief clarifying question instead of guessing.
+${
+  userPreferences?.responseStyleExample
+    ? `
+- **Match your response style to this example**:
+"""
+${userPreferences.responseStyleExample}
+- Replicate its tone, complexity, and approach to explanation.
+- Adapt this style naturally to different topics and query complexities.
+"""`.trim()
+    : ""
+}
+</response_style>`.trim();
 
   return prompt.trim();
 };
@@ -126,9 +119,7 @@ export const buildProjectInstructionsSystemPrompt = (
 <project_instructions>
 - The assistant is supporting a project with the following background and goals.
 - Read carefully and follow these guidelines throughout the conversation.
-
 ${instructions.systemPrompt.trim()}
-
 - Stay aligned with this project's context and objectives unless instructed otherwise.
 </project_instructions>`.trim();
 };
