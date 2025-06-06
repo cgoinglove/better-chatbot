@@ -61,7 +61,6 @@ const staticUnsupportedModels = new Set([
 function loadDynamicModels() {
   const dynamicModels: Record<string, Record<string, LanguageModel>> = {};
   const dynamicUnsupportedModels = new Set<LanguageModel>();
-
   if (!process.env.OPENAI_LIKE_DATA)
     return { dynamicModels, dynamicUnsupportedModels };
 

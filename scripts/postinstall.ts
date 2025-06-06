@@ -39,7 +39,11 @@ async function main() {
       console.error("File based MCP config is not supported in Docker.");
       process.exit(1);
     }
-    console.log("Running in Docker, nothing to do.");
+    console.log("Running in Docker, checking openAI like config.");
+    await runCommand(
+      "pnpm initial:openAIlike",
+      "Initial openAI like config setup",
+    );
   } else {
     console.log(
       "Running in a normal environment, performing initial environment setup.",

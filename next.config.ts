@@ -7,7 +7,7 @@ import { IS_VERCEL_ENV } from "lib/const";
 
 if (!ifParsed && !IS_VERCEL_ENV) {
   logger.error(
-    "Error: openAILike data not parsed and weare not on Vercel. Exiting. Try refactoring the config or remaking it.",
+    "Error: openAILike data not parsed and we are not on Vercel. Exiting. Try refactoring the config or remaking it.",
   );
   process.exit(1);
 }
@@ -22,9 +22,11 @@ export default () => {
       NO_HTTPS: process.env.NO_HTTPS,
       NEXT_PUBLIC_GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
       NEXT_PUBLIC_GITHUB_CLIENT_ID: process.env.GITHUB_CLIENT_ID,
-      ...(ifParsed && !IS_VERCEL_ENV
-        ? { OPENAI_LIKE_DATA: openAIProviderData }
-        : {}),
+      ...(process.env.OPENAI_LIKE_DATA
+        ? { OPENAI_LIKE_DATA: process.env.OPENAI_LIKE_DATA }
+        : ifParsed && !IS_VERCEL_ENV
+          ? { OPENAI_LIKE_DATA: openAIProviderData }
+          : {}),
     },
   };
   const withNextIntl = createNextIntlPlugin();
