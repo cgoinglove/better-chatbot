@@ -1,20 +1,20 @@
 import MCPEditor from "@/components/mcp-editor";
-import { selectMcpClientsAction } from "@/app/api/mcp/actions";
 import { Alert } from "ui/alert";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { getTranslations } from "next-intl/server";
+import { mcpRepository } from "lib/db/repository";
+import { redirect } from "next/navigation";
 
 export default async function Page({
   params,
-}: { params: Promise<{ name: string }> }) {
-  const { name } = await params;
+}: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const t = await getTranslations();
-  const mcpClients = await selectMcpClientsAction();
-  const mcpClient = mcpClients.find((mcp) => mcp.name === name);
+  const mcpClient = await mcpRepository.selectById(id);
 
   if (!mcpClient) {
-    return <div>MCP client not found</div>;
+    return redirect("/mcp");
   }
 
   return (
@@ -38,7 +38,11 @@ export default async function Page({
 
         <main className="my-8">
           {mcpClient ? (
-            <MCPEditor initialConfig={mcpClient.config} name={name} />
+            <MCPEditor
+              initialConfig={mcpClient.config}
+              name={mcpClient.name}
+              id={mcpClient.id}
+            />
           ) : (
             <Alert variant="destructive">MCP client not found</Alert>
           )}

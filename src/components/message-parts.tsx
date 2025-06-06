@@ -129,10 +129,10 @@ export const UserMessagePart = ({
       new Set(
         message.annotations
           .flatMap((annotation) => {
-            return (annotation as ChatMessageAnnotation).requiredTools ?? [];
+            return (annotation as ChatMessageAnnotation).mentions ?? [];
           })
           .filter(Boolean)
-          .map((v) => `@${v}`),
+          .map((v) => `@${v.name}`),
       ),
     );
   }, [message.annotations]);

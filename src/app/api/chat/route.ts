@@ -22,6 +22,7 @@ import {
 } from "lib/ai/prompts";
 import {
   chatApiSchemaRequestBodySchema,
+  ChatMention,
   ChatMessageAnnotation,
 } from "app-types/chat";
 
@@ -118,19 +119,20 @@ export async function POST(request: Request) {
 
     const mcpTools = mcpClientsManager.tools();
 
-    const isToolCallAllowed =
-      !isToolCallUnsupportedModel(model) && toolChoice != "none";
+    const mentions = annotations
+      .flatMap((annotation) => annotation.mentions)
+      .filter(Boolean) as ChatMention[];
 
-    const requiredToolsAnnotations = annotations
-      .flatMap((annotation) => annotation.requiredTools)
-      .filter(Boolean) as string[];
+    const isToolCallAllowed =
+      (!isToolCallUnsupportedModel(model) && toolChoice != "none") ||
+      mentions.length > 0;
 
     const tools = safe(mcpTools)
       .map(errorIf(() => !isToolCallAllowed && "Not allowed"))
       .map((tools) => {
         // filter tools by mentions
-        if (requiredToolsAnnotations.length) {
-          return filterToolsByMentions(tools, requiredToolsAnnotations);
+        if (mentions.length) {
+          return filterToolsByMentions(tools, mentions);
         }
         // filter tools by allowed mcp servers
         return filterToolsByAllowedMCPServers(tools, allowedMcpServers);
@@ -148,7 +150,6 @@ export async function POST(request: Request) {
         ...tools,
       }))
       .orElse(undefined);
-
     // ------------------------ fetch with caching ---------------------------
     let customizations: CacheEntry["toolCustomizations"];
     let serverCustoms: CacheEntry["serverCustomizations"];
@@ -218,6 +219,7 @@ export async function POST(request: Request) {
           const toolResult = await manualToolExecuteByLastMessage(
             inProgressToolStep,
             message,
+            mcpTools,
           );
           assignToolResult(inProgressToolStep, toolResult);
           dataStream.write(
@@ -239,9 +241,7 @@ export async function POST(request: Request) {
 
         // Precompute toolChoice to avoid repeated tool calls
         const computedToolChoice =
-          isToolCallAllowed &&
-          requiredToolsAnnotations.length > 0 &&
-          inProgressToolStep
+          isToolCallAllowed && mentions.length > 0 && inProgressToolStep
             ? "required"
             : "auto";
 

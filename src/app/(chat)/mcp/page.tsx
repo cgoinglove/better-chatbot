@@ -61,7 +61,7 @@ export default function Page() {
         ) : mcpList?.length ? (
           <div className="flex flex-col gap-6 my-4">
             {mcpList.map((mcp) => (
-              <MCPCard key={mcp.name} {...mcp} />
+              <MCPCard key={mcp.id} {...mcp} />
             ))}
           </div>
         ) : (

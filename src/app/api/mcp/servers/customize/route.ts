@@ -49,7 +49,7 @@ export async function POST(request: Request) {
     const { serverName, customInstructions } = schema.parse(body);
 
     // Ensure the referenced server exists – lightweight validation only
-    const exists = await mcpRepository.selectServerByName(serverName);
+    const exists = await mcpRepository.selectByServerName(serverName);
     if (!exists) {
       throw new Error("Server not found");
     }

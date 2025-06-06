@@ -33,8 +33,25 @@ export type ChatMessage = {
   createdAt: Date;
 };
 
+export type ChatMention =
+  | {
+      type: "tool";
+      name: string;
+      serverName?: string;
+      serverId: string;
+    }
+  | {
+      type: "mcpServer";
+      name: string;
+      serverId: string;
+    }
+  | {
+      type: "unknown";
+      name: string;
+    };
+
 export type ChatMessageAnnotation = {
-  requiredTools?: string[];
+  mentions?: ChatMention[];
   usageTokens?: number;
   toolChoice?: "auto" | "none" | "manual";
   [key: string]: any;

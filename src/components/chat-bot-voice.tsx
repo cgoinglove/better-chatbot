@@ -88,7 +88,8 @@ function mergeConsecutiveMessages(messages: UIMessage[]): UIMessage[] {
 
 const prependTools = [
   {
-    serverName: "Browser",
+    id: "Browser",
+    name: "Browser",
     tools: DEFAULT_VOICE_TOOLS.map((tool) => ({
       name: tool.name,
       description: tool.description,

@@ -71,6 +71,7 @@ export async function deleteThreadAction(threadId: string) {
 export async function deleteMessagesByChatIdAfterTimestampAction(
   messageId: string,
 ) {
+  "use server";
   await chatRepository.deleteMessagesByChatIdAfterTimestamp(messageId);
 }
 

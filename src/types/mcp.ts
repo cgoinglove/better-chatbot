@@ -1,3 +1,4 @@
+import { Tool } from "ai";
 import { z } from "zod";
 
 export const MCPRemoteConfigZodSchema = z.object({
@@ -40,31 +41,29 @@ export type MCPServerInfo = {
   status: "connected" | "disconnected" | "loading";
   toolInfo: MCPToolInfo[];
 };
+
+export type McpServerInsert = {
+  name: string;
+  config: MCPServerConfig;
+  id?: string;
+};
+export type McpServerSelect = {
+  name: string;
+  config: MCPServerConfig;
+  id: string;
+};
+
+export type VercelAIMcpTool = Tool & {
+  _mcpServerName: string;
+  _mcpServerId: string;
+  _originToolName: string;
+};
+
 export interface MCPRepository {
-  insertServer(server: {
-    name: string;
-    config: MCPServerConfig;
-    enabled?: boolean;
-  }): Promise<string>;
-  selectServerById(id: string): Promise<{
-    id: string;
-    name: string;
-    config: MCPServerConfig;
-    enabled: boolean;
-  } | null>;
-  selectServerByName(name: string): Promise<{
-    id: string;
-    name: string;
-    config: MCPServerConfig;
-    enabled: boolean;
-  } | null>;
-  selectAllServers(): Promise<
-    { id: string; name: string; config: MCPServerConfig; enabled: boolean }[]
-  >;
-  updateServer(
-    id: string,
-    data: { name?: string; config?: MCPServerConfig; enabled?: boolean },
-  ): Promise<void>;
-  deleteServer(id: string): Promise<void>;
-  existsServerWithName(name: string): Promise<boolean>;
+  save(server: McpServerInsert): Promise<McpServerSelect>;
+  selectById(id: string): Promise<McpServerSelect | null>;
+  selectByServerName(name: string): Promise<McpServerSelect | null>;
+  selectAll(): Promise<McpServerSelect[]>;
+  deleteById(id: string): Promise<void>;
+  existsByServerName(name: string): Promise<boolean>;
 }

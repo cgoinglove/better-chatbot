@@ -225,6 +225,7 @@
     "enterPromptToGenerateExampleInputJSON": "선택한 도구에 대한 예제 입력 JSON을 생성하기 위한 프롬프트를 입력하세요.",
     "callTool": "도구 호출",
     "customInstructions": "사용자 정의 지침",
-    "serverCustomInstructionsPlaceholder": "이 서버의 도구를 사용할 수 있을 때마다 이 내용이 시스템 프롬프트에 추가됩니다."
+    "serverCustomInstructionsPlaceholder": "이 서버의 도구를 사용할 수 있을 때마다 이 내용이 시스템 프롬프트에 추가됩니다.",
+    "nameAlreadyExists": "이미 존재하는 이름입니다"
   }
 }

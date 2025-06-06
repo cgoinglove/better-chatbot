@@ -32,12 +32,13 @@ import { useMcpServerCustomization } from "@/hooks/use-mcp-server-customizations
 
 // Main MCPCard component
 export const MCPCard = memo(function MCPCard({
+  id,
   config,
   error,
   status,
   name,
   toolInfo,
-}: MCPServerInfo) {
+}: MCPServerInfo & { id: string }) {
   const [isProcessing, setIsProcessing] = useState(false);
   const t = useTranslations("MCP");
   const { customization: serverCustomization } =
@@ -65,13 +66,13 @@ export const MCPCard = memo(function MCPCard({
   );
 
   const handleRefresh = useCallback(
-    () => pipeProcessing(() => refreshMcpClientAction(name)),
-    [name],
+    () => pipeProcessing(() => refreshMcpClientAction(id)),
+    [id],
   );
 
   const handleDelete = useCallback(async () => {
-    await pipeProcessing(() => removeMcpClientAction(name));
-  }, [name]);
+    await pipeProcessing(() => removeMcpClientAction(id));
+  }, [id]);
 
   return (
     <Card className="relative hover:border-foreground/20 transition-colors bg-secondary/40">
@@ -91,7 +92,7 @@ export const MCPCard = memo(function MCPCard({
         <Tooltip>
           <TooltipTrigger asChild>
             <Link
-              href={`/mcp/test/${encodeURIComponent(name)}`}
+              href={`/mcp/test/${encodeURIComponent(id)}`}
               className="cursor-pointer hidden sm:block"
             >
               <Button variant="ghost" size="icon">
@@ -126,7 +127,7 @@ export const MCPCard = memo(function MCPCard({
         <Tooltip>
           <TooltipTrigger asChild>
             <Link
-              href={`/mcp/modify/${encodeURIComponent(name)}`}
+              href={`/mcp/modify/${encodeURIComponent(id)}`}
               className="cursor-pointer"
             >
               <Button variant="ghost" size="icon">

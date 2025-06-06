@@ -16,9 +16,9 @@ import {
 import { ToolInvocationUIPart } from "app-types/chat";
 import { appStore } from "@/app/store";
 import { useShallow } from "zustand/shallow";
-import { callMcpToolAction } from "@/app/api/mcp/actions";
-import { extractMCPToolId } from "../../mcp/mcp-tool-id";
+import { callMcpToolByServerNameAction } from "@/app/api/mcp/actions";
 import { useTheme } from "next-themes";
+import { extractMCPToolId } from "lib/ai/mcp/mcp-tool-id";
 
 export const OPENAI_VOICE = {
   Alloy: "alloy",
@@ -238,7 +238,7 @@ export function useOpenAIVoiceChat(
       } else {
         const toolId = extractMCPToolId(toolName);
 
-        toolResult = await callMcpToolAction(
+        toolResult = await callMcpToolByServerNameAction(
           toolId.serverName,
           toolId.toolName,
           toolArgs,

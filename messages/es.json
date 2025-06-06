@@ -225,6 +225,7 @@
     "enterPromptToGenerateExampleInputJSON": "Ingresa un prompt para generar un JSON de entrada de ejemplo para la herramienta seleccionada.",
     "callTool": "Llamar a herramienta",
     "customInstructions": "Instrucciones personalizadas",
-    "serverCustomInstructionsPlaceholder": "Estas líneas se añadirán al mensaje del sistema siempre que haya una herramienta de este servidor disponible."
+    "serverCustomInstructionsPlaceholder": "Estas líneas se añadirán al mensaje del sistema siempre que haya una herramienta de este servidor disponible.",
+    "nameAlreadyExists": "El nombre ya existe"
   }
 }

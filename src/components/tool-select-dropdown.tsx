@@ -1,6 +1,5 @@
 import { selectMcpClientsAction } from "@/app/api/mcp/actions";
 import { appStore } from "@/app/store";
-import { useStateWithBrowserStorage } from "@/hooks/use-state-with-browserstorage";
 import { AppDefaultToolkit } from "app-types/chat";
 import { AllowedMCPServer, MCPServerInfo } from "app-types/mcp";
 import { cn } from "lib/utils";
@@ -58,11 +57,11 @@ interface ToolSelectDropdownProps {
 
 const calculateToolCount = (
   allowedMcpServers: Record<string, AllowedMCPServer>,
-  mcpList: MCPServerInfo[],
+  mcpList: (MCPServerInfo & { id: string })[],
 ) => {
   return mcpList.reduce((acc, server) => {
     const count =
-      allowedMcpServers[server.name]?.tools?.length ?? server.toolInfo.length;
+      allowedMcpServers[server.id]?.tools?.length ?? server.toolInfo.length;
     return acc + count;
   }, 0);
 };
@@ -123,31 +122,25 @@ export function ToolSelectDropdown({
   );
 }
 
-const PRESET_KEY = "~tools-presets";
-
-interface Preset {
-  allowedMcpServers?: Record<string, AllowedMCPServer>;
-  allowedAppDefaultToolkit?: AppDefaultToolkit[];
-  name: string;
-}
-
 function ToolPresets() {
-  const [appStoreMutate, allowedMcpServers, allowedAppDefaultToolkit, mcpList] =
-    appStore(
-      useShallow((state) => [
-        state.mutate,
-        state.allowedMcpServers,
-        state.allowedAppDefaultToolkit,
-        state.mcpList,
-      ]),
-    );
+  const [
+    appStoreMutate,
+    presets,
+    allowedMcpServers,
+    allowedAppDefaultToolkit,
+    mcpList,
+  ] = appStore(
+    useShallow((state) => [
+      state.mutate,
+      state.toolPresets,
+      state.allowedMcpServers,
+      state.allowedAppDefaultToolkit,
+      state.mcpList,
+    ]),
+  );
   const [open, setOpen] = useState(false);
   const [presetName, setPresetName] = useState("");
   const t = useTranslations();
-  const [presets, setPresets] = useStateWithBrowserStorage<Preset[]>(
-    PRESET_KEY,
-    [],
-  );
 
   const presetWithToolCount = useMemo(() => {
     return presets.map((preset) => ({
@@ -166,10 +159,14 @@ function ToolPresets() {
         toast.error(t("Chat.Tool.presetNameAlreadyExists"));
         return;
       }
-      setPresets((prev) => [
-        ...prev,
-        { name, allowedMcpServers, allowedAppDefaultToolkit },
-      ]);
+      appStoreMutate((prev) => {
+        return {
+          toolPresets: [
+            ...prev.toolPresets,
+            { name, allowedMcpServers, allowedAppDefaultToolkit },
+          ],
+        };
+      });
       setPresetName("");
       setOpen(false);
       toast.success(t("Chat.Tool.presetSaved"));
@@ -178,10 +175,14 @@ function ToolPresets() {
   );
 
   const deletePreset = useCallback((index: number) => {
-    setPresets((prev) => prev.filter((_, i) => i !== index));
+    appStoreMutate((prev) => {
+      return {
+        toolPresets: prev.toolPresets.filter((_, i) => i !== index),
+      };
+    });
   }, []);
 
-  const applyPreset = useCallback((preset: Preset) => {
+  const applyPreset = useCallback((preset: (typeof presets)[number]) => {
     appStoreMutate({
       allowedMcpServers: preset.allowedMcpServers,
       allowedAppDefaultToolkit: preset.allowedAppDefaultToolkit,
@@ -308,10 +309,10 @@ function McpServerSelector() {
       )
       .map((server) => {
         const allowedTools: string[] =
-          allowedMcpServers?.[server.name]?.tools ??
+          allowedMcpServers?.[server.id]?.tools ??
           server.toolInfo.map((tool) => tool.name);
         return {
-          id: server.name,
+          id: server.id,
           serverName: server.name,
           checked: allowedTools.length > 0,
           tools: server.toolInfo.map((tool) => ({
@@ -326,13 +327,13 @@ function McpServerSelector() {
   }, [mcpServerList, allowedMcpServers]);
 
   const setMcpServerTool = useCallback(
-    (serverName: string, toolNames: string[]) => {
+    (serverId: string, toolNames: string[]) => {
       appStoreMutate((prev) => {
         return {
           allowedMcpServers: {
             ...prev.allowedMcpServers,
-            [serverName]: {
-              ...(prev.allowedMcpServers?.[serverName] ?? {}),
+            [serverId]: {
+              ...(prev.allowedMcpServers?.[serverId] ?? {}),
               tools: toolNames,
             },
           },

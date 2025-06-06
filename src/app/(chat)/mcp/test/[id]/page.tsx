@@ -366,7 +366,7 @@ const GenerateExampleInputJsonDialog = ({
 };
 
 export default function Page() {
-  const { name } = useParams();
+  const { id } = useParams() as { id: string };
 
   const t = useTranslations();
 
@@ -381,8 +381,8 @@ export default function Page() {
   const [isCallLoading, setIsCallLoading] = useState(false);
   const [showInputSchema, setShowInputSchema] = useState(false);
 
-  const { data: client, isLoading } = useSWR(`/mcp/${name}`, () =>
-    selectMcpClientAction(name as string),
+  const { data: client, isLoading } = useSWR(`/mcp/${id}`, () =>
+    selectMcpClientAction(id as string),
   );
 
   const filteredTools = useMemo(() => {
@@ -436,7 +436,7 @@ export default function Page() {
     setIsCallLoading(true);
     try {
       const result = await callMcpToolAction(
-        name as string,
+        id,
         selectedTool.name,
         parsedInput.value,
       );
@@ -498,7 +498,7 @@ export default function Page() {
         </Link>
         <header>
           <h2 className="text-3xl font-semibold my-2">
-            {decodeURIComponent(name as string)}
+            {decodeURIComponent(client?.name ?? "")}
           </h2>
         </header>
       </div>

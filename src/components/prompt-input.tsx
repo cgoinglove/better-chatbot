@@ -7,7 +7,7 @@ import {
   Paperclip,
   Pause,
 } from "lucide-react";
-import { ReactNode, useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Button } from "ui/button";
 import { notImplementedToast } from "ui/shared-toast";
 import { MessagePastesContentCard } from "./message-pasts-content";
@@ -16,8 +16,7 @@ import { SelectModel } from "./select-model";
 import { appStore } from "@/app/store";
 import { useShallow } from "zustand/shallow";
 import { customModelProvider } from "lib/ai/models";
-import { createMCPToolId } from "lib/ai/mcp/mcp-tool-id";
-import { ChatMessageAnnotation } from "app-types/chat";
+import { ChatMention, ChatMessageAnnotation } from "app-types/chat";
 import dynamic from "next/dynamic";
 import { ToolModeDropdown } from "./tool-mode-dropdown";
 import { PROMPT_PASTE_MAX_LENGTH } from "lib/const";
@@ -78,9 +77,7 @@ export default function PromptInput({
     [setModel, appStoreMutate],
   );
 
-  const [toolMentionItems, setToolMentionItems] = useState<
-    { id: string; label: ReactNode; [key: string]: any }[]
-  >([]);
+  const [toolMentionItems, setToolMentionItems] = useState<ChatMention[]>([]);
 
   const modelList = useMemo(() => {
     return customModelProvider.modelsInfo;
@@ -88,23 +85,23 @@ export default function PromptInput({
 
   const [pastedContents, setPastedContents] = useState<string[]>([]);
 
-  const toolList = useMemo(() => {
+  const mentionItems = useMemo(() => {
     return (
-      mcpList?.flatMap((mcp) => [
+      (mcpList?.flatMap((mcp) => [
         {
-          id: mcp.name,
-          label: mcp.name,
-          type: "server",
+          type: "mcpServer",
+          name: mcp.name,
+          serverId: mcp.id,
         },
         ...mcp.toolInfo.map((tool) => {
-          const id = createMCPToolId(mcp.name, tool.name);
           return {
-            id,
-            label: id,
             type: "tool",
+            name: tool.name,
+            serverId: mcp.id,
+            serverName: mcp.name,
           };
         }),
-      ]) ?? []
+      ]) as ChatMention[]) ?? []
     );
   }, [mcpList]);
 
@@ -132,7 +129,7 @@ export default function PromptInput({
     const annotations: ChatMessageAnnotation[] = [];
     if (toolMentionItems.length > 0) {
       annotations.push({
-        requiredTools: toolMentionItems.map((item) => item.id),
+        mentions: toolMentionItems,
       });
     }
     setPastedContents([]);
@@ -166,7 +163,7 @@ export default function PromptInput({
                   onEnter={submit}
                   placeholder={placeholder ?? t("placeholder")}
                   onPaste={handlePaste}
-                  items={toolList}
+                  items={mentionItems}
                 />
               </div>
               <div className="flex w-full items-center gap-2">
