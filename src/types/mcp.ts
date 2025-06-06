@@ -67,3 +67,78 @@ export interface MCPRepository {
   deleteById(id: string): Promise<void>;
   existsByServerName(name: string): Promise<boolean>;
 }
+
+export const McpToolCustomizationZodSchema = z.object({
+  toolName: z.string().min(1),
+  mcpServerId: z.string().min(1),
+  prompt: z.string().max(1000).optional().nullable(),
+});
+
+export type McpToolCustomization = {
+  id: string;
+  userId: string;
+  toolName: string;
+  mcpServerId: string;
+  prompt?: string | null;
+};
+
+export type McpToolCustomizationRepository = {
+  select(key: {
+    userId: string;
+    mcpServerId: string;
+    toolName: string;
+  }): Promise<McpToolCustomization | null>;
+  selectByUserIdAndMcpServerId: (key: {
+    userId: string;
+    mcpServerId: string;
+  }) => Promise<McpToolCustomization[]>;
+  selectByUserId: (
+    userId: string,
+  ) => Promise<(McpToolCustomization & { serverName: string })[]>;
+  upsertToolCustomization: (
+    data: PartialBy<McpToolCustomization, "id">,
+  ) => Promise<McpToolCustomization>;
+  deleteToolCustomization: (key: {
+    userId: string;
+    mcpServerId: string;
+    toolName: string;
+  }) => Promise<void>;
+};
+
+export const McpServerCustomizationZodSchema = z.object({
+  mcpServerId: z.string().min(1),
+  prompt: z.string().max(3000).optional().nullable(),
+});
+
+export type McpServerCustomization = {
+  id: string;
+  userId: string;
+  mcpServerId: string;
+  prompt?: string | null;
+};
+
+export type McpServerCustomizationRepository = {
+  selectByUserIdAndMcpServerId: (key: {
+    userId: string;
+    mcpServerId: string;
+  }) => Promise<(McpServerCustomization & { serverName: string }) | null>;
+  selectByUserId: (
+    userId: string,
+  ) => Promise<(McpServerCustomization & { serverName: string })[]>;
+  upsertMcpServerCustomization: (
+    data: PartialBy<McpServerCustomization, "id">,
+  ) => Promise<McpServerCustomization>;
+  deleteMcpServerCustomizationByMcpServerIdAndUserId: (key: {
+    mcpServerId: string;
+    userId: string;
+  }) => Promise<void>;
+};
+
+export type McpServerCustomizationsPrompt = {
+  name: string;
+  id: string;
+  prompt?: string;
+  tools?: {
+    [toolName: string]: string;
+  };
+};

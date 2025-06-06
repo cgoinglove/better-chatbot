@@ -6,6 +6,7 @@ import {
   Pencil,
   RotateCw,
   Settings,
+  Settings2,
   Trash,
   Wrench,
 } from "lucide-react";
@@ -28,7 +29,8 @@ import type { MCPServerInfo, MCPToolInfo } from "app-types/mcp";
 
 import { ToolDetailPopup } from "./tool-detail-popup";
 import { useTranslations } from "next-intl";
-import { useMcpServerCustomization } from "@/hooks/use-mcp-server-customizations";
+import { McpCustomizationPopup } from "./mcp-customization-popup";
+import { Separator } from "ui/separator";
 
 // Main MCPCard component
 export const MCPCard = memo(function MCPCard({
@@ -41,8 +43,6 @@ export const MCPCard = memo(function MCPCard({
 }: MCPServerInfo & { id: string }) {
   const [isProcessing, setIsProcessing] = useState(false);
   const t = useTranslations("MCP");
-  const { customization: serverCustomization } =
-    useMcpServerCustomization(name);
 
   const isLoading = useMemo(() => {
     return isProcessing || status === "loading";
@@ -84,11 +84,24 @@ export const MCPCard = memo(function MCPCard({
 
         <h4 className="font-bold text-xs sm:text-lg flex items-center gap-1">
           {name}
-          {serverCustomization?.customInstructions && (
-            <Pencil className="size-3 text-primary" />
-          )}
         </h4>
         <div className="flex-1" />
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div>
+              <McpCustomizationPopup
+                mcpServerInfo={{ id, name, config, status, toolInfo, error }}
+              >
+                <Button variant="ghost" size="icon">
+                  <Settings2 className="size-3.5" />
+                </Button>
+              </McpCustomizationPopup>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{t("mcpServerCustomization")}</p>
+          </TooltipContent>
+        </Tooltip>
         <Tooltip>
           <TooltipTrigger asChild>
             <Link
@@ -104,6 +117,9 @@ export const MCPCard = memo(function MCPCard({
             <p>{t("toolsTest")}</p>
           </TooltipContent>
         </Tooltip>
+        <div className="h-4">
+          <Separator orientation="vertical" />
+        </div>
         <Tooltip>
           <TooltipTrigger asChild>
             <Button variant="ghost" size="icon" onClick={handleRefresh}>
@@ -143,8 +159,8 @@ export const MCPCard = memo(function MCPCard({
 
       {errorMessage && <ErrorAlert error={errorMessage} />}
 
-      <div className="relative hidden sm:flex">
-        <CardContent className="flex min-w-0 h-full flex-row gap-4 text-sm max-h-[240px] overflow-y-auto">
+      <div className="relative hidden sm:flex w-full">
+        <CardContent className="flex min-w-0 w-full h-full flex-row gap-4 text-sm max-h-[240px] overflow-y-auto">
           <div className="w-1/2 min-w-0 flex flex-col h-full pr-2 border-r">
             <div className="flex items-center gap-2 mb-2 pt-2 pb-1 z-10">
               <Settings size={14} className="text-muted-foreground" />
@@ -164,7 +180,7 @@ export const MCPCard = memo(function MCPCard({
             </div>
 
             {toolInfo.length > 0 ? (
-              <ToolsList tools={toolInfo} serverName={name} />
+              <ToolsList tools={toolInfo} serverId={id} />
             ) : (
               <div className="bg-secondary/30 rounded-md p-3 text-center">
                 <p className="text-sm text-muted-foreground">
@@ -181,14 +197,14 @@ export const MCPCard = memo(function MCPCard({
 
 // Tools list component
 const ToolsList = memo(
-  ({ tools, serverName }: { tools: MCPToolInfo[]; serverName: string }) => (
+  ({ tools, serverId }: { tools: MCPToolInfo[]; serverId: string }) => (
     <div className="space-y-2 pr-2">
       {tools.map((tool) => (
         <div
           key={tool.name}
           className="flex items-start gap-2 bg-secondary rounded-md p-2 hover:bg-input transition-colors"
         >
-          <ToolDetailPopup tool={tool} serverName={serverName}>
+          <ToolDetailPopup tool={tool} serverId={serverId}>
             <div className="flex-1 min-w-0 cursor-pointer">
               <p className="font-medium text-sm mb-1 truncate">{tool.name}</p>
               <p className="text-xs text-muted-foreground line-clamp-1">

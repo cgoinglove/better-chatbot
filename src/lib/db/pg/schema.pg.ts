@@ -112,17 +112,18 @@ export const VerificationSchema = pgTable("verification", {
 });
 
 // Tool customization table for per-user additional AI instructions
-export const ToolCustomizationSchema = pgTable(
-  "tool_customization",
+export const McpToolCustomizationSchema = pgTable(
+  "mcp_server_tool_custom_instructions",
   {
     id: uuid("id").primaryKey().notNull().defaultRandom(),
     userId: uuid("user_id")
       .notNull()
       .references(() => UserSchema.id, { onDelete: "cascade" }),
     toolName: text("tool_name").notNull(),
-    mcpServerName: text("mcp_server_name").notNull(),
-    customPrompt: text("custom_prompt"),
-    enabled: boolean("enabled").notNull().default(true),
+    mcpServerId: uuid("mcp_server_id")
+      .notNull()
+      .references(() => McpServerSchema.id, { onDelete: "cascade" }),
+    prompt: text("prompt"),
     createdAt: timestamp("created_at")
       .notNull()
       .default(sql`CURRENT_TIMESTAMP`),
@@ -130,27 +131,20 @@ export const ToolCustomizationSchema = pgTable(
       .notNull()
       .default(sql`CURRENT_TIMESTAMP`),
   },
-  (table) => {
-    return {
-      userToolServerUnique: unique().on(
-        table.userId,
-        table.toolName,
-        table.mcpServerName,
-      ),
-    };
-  },
+  (table) => [unique().on(table.userId, table.toolName, table.mcpServerId)],
 );
 
 export const McpServerCustomizationSchema = pgTable(
-  "mcp_server_customization",
+  "mcp_server_custom_instructions",
   {
     id: uuid("id").primaryKey().defaultRandom(),
     userId: uuid("user_id")
       .notNull()
       .references(() => UserSchema.id, { onDelete: "cascade" }),
-    mcpServerName: text("mcp_server_name").notNull(),
-    customInstructions: text("custom_instructions"),
-    enabled: boolean("enabled").default(true).notNull(),
+    mcpServerId: uuid("mcp_server_id")
+      .notNull()
+      .references(() => McpServerSchema.id, { onDelete: "cascade" }),
+    prompt: text("prompt"),
     createdAt: timestamp("created_at")
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -158,9 +152,7 @@ export const McpServerCustomizationSchema = pgTable(
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
   },
-  (t) => ({
-    uniq: unique().on(t.userId, t.mcpServerName),
-  }),
+  (table) => [unique().on(table.userId, table.mcpServerId)],
 );
 
 export type McpServerEntity = typeof McpServerSchema.$inferSelect;
@@ -169,6 +161,6 @@ export type ChatMessageEntity = typeof ChatMessageSchema.$inferSelect;
 export type ProjectEntity = typeof ProjectSchema.$inferSelect;
 export type UserEntity = typeof UserSchema.$inferSelect;
 export type ToolCustomizationEntity =
-  typeof ToolCustomizationSchema.$inferSelect;
+  typeof McpToolCustomizationSchema.$inferSelect;
 export type McpServerCustomizationEntity =
   typeof McpServerCustomizationSchema.$inferSelect;

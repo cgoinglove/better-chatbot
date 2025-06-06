@@ -14,9 +14,9 @@ import { customModelProvider, isToolCallUnsupportedModel } from "lib/ai/models";
 import { mcpClientsManager } from "lib/ai/mcp/mcp-manager";
 
 import { chatRepository } from "lib/db/repository";
-import { toolCustomizationRepository } from "lib/db/repository";
 import logger from "logger";
 import {
+  buildMcpServerCustomizationsSystemPrompt,
   buildProjectInstructionsSystemPrompt,
   buildUserSystemPrompt,
 } from "lib/ai/prompts";
@@ -41,32 +41,13 @@ import {
   isUserMessage,
   getAllowedDefaultToolkit,
   filterToolsByAllowedMCPServers,
+  filterMcpServerCustomizations,
 } from "./helper";
-import { generateTitleFromUserMessageAction } from "./actions";
+import {
+  generateTitleFromUserMessageAction,
+  rememberMcpServerCustomizationsAction,
+} from "./actions";
 import { getSession } from "auth/server";
-import { mcpServerCustomizationRepository } from "lib/db/repository";
-
-// ---------------------------------------------------------------------------
-// In-memory 5-minute TTL cache for per-user customization lists. This reduces
-// two extra DB round-trips on every chat request while still reflecting
-// updates within a reasonable time window. The cache lives only for the life
-// of the running instance (acceptable for stateless Vercel serverless).
-// ---------------------------------------------------------------------------
-
-const CACHE_TTL_MS = 60 * 1000; // 1 minute
-type CacheEntry = {
-  ts: number;
-  toolCustomizations: Awaited<
-    ReturnType<typeof toolCustomizationRepository.getUserToolCustomizations>
-  >;
-  serverCustomizations: Awaited<
-    ReturnType<
-      typeof mcpServerCustomizationRepository.getUserServerCustomizations
-    >
-  >;
-};
-
-const customizationCache = new Map<string /* userId */, CacheEntry>();
 
 export async function POST(request: Request) {
   try {
@@ -137,57 +118,7 @@ export async function POST(request: Request) {
         // filter tools by allowed mcp servers
         return filterToolsByAllowedMCPServers(tools, allowedMcpServers);
       })
-      // filter tools by tool choice
-      .map((tools) => {
-        if (toolChoice == "manual") {
-          return excludeToolExecution(tools);
-        }
-        return tools;
-      })
-      // add allowed default toolkit
-      .map((tools) => ({
-        ...getAllowedDefaultToolkit(allowedAppDefaultToolkit),
-        ...tools,
-      }))
       .orElse(undefined);
-    // ------------------------ fetch with caching ---------------------------
-    let customizations: CacheEntry["toolCustomizations"];
-    let serverCustoms: CacheEntry["serverCustomizations"];
-
-    const cached = customizationCache.get(session.user.id);
-    if (cached && Date.now() - cached.ts < CACHE_TTL_MS) {
-      ({
-        toolCustomizations: customizations,
-        serverCustomizations: serverCustoms,
-      } = cached);
-    } else {
-      customizations =
-        await toolCustomizationRepository.getUserToolCustomizations(
-          session.user.id,
-        );
-      serverCustoms =
-        await mcpServerCustomizationRepository.getUserServerCustomizations(
-          session.user.id,
-        );
-      customizationCache.set(session.user.id, {
-        ts: Date.now(),
-        toolCustomizations: customizations,
-        serverCustomizations: serverCustoms,
-      });
-    }
-
-    const customServerPromptAdditions = serverCustoms
-      .filter((c) => c.customInstructions && c.enabled)
-      .map((c) => c.customInstructions!.trim())
-      .filter(Boolean)
-      .join("\n\n");
-
-    if (customServerPromptAdditions) {
-      logger.info("[CHAT] Custom server instructions added", {
-        userId: session.user.id,
-        count: serverCustoms.length,
-      });
-    }
 
     const messages: Message[] = isLastMessageUserMessage
       ? appendClientMessage({
@@ -195,19 +126,6 @@ export async function POST(request: Request) {
           message,
         })
       : previousMessages;
-
-    const customSystemPromptAdditions = customizations
-      .filter((c) => c.customPrompt && c.enabled)
-      .map((c) => c.customPrompt!.trim())
-      .filter(Boolean)
-      .join("\n\n");
-
-    if (customSystemPromptAdditions) {
-      logger.info("[CHAT] Custom tool instructions added", {
-        userId: session.user.id,
-        count: customizations.length,
-      });
-    }
 
     return createDataStreamResponse({
       execute: async (dataStream) => {
@@ -232,11 +150,19 @@ export async function POST(request: Request) {
 
         const userPreferences = thread?.userPreferences || undefined;
 
+        const mcpServerCustomizations = await safe()
+          .map(() => {
+            if (Object.keys(tools ?? {}).length === 0)
+              throw new Error("No tools found");
+            return rememberMcpServerCustomizationsAction(session.user.id);
+          })
+          .map((v) => filterMcpServerCustomizations(tools!, v))
+          .orElse({});
+
         const systemPrompt = mergeSystemPrompt(
           buildUserSystemPrompt(session.user, userPreferences),
           buildProjectInstructionsSystemPrompt(thread?.instructions),
-          customSystemPromptAdditions,
-          customServerPromptAdditions,
+          buildMcpServerCustomizationsSystemPrompt(mcpServerCustomizations),
         );
 
         // Precompute toolChoice to avoid repeated tool calls
@@ -253,7 +179,19 @@ export async function POST(request: Request) {
           experimental_continueSteps: true,
           experimental_transform: smoothStream({ chunking: "word" }),
           maxRetries: 0,
-          tools,
+          tools: safe(tools)
+            .map((t) => {
+              if (!t) return undefined;
+              const bindingTools = {
+                ...getAllowedDefaultToolkit(allowedAppDefaultToolkit),
+                ...t,
+              };
+              if (toolChoice === "manual") {
+                return excludeToolExecution(bindingTools);
+              }
+              return bindingTools;
+            })
+            .unwrap(),
           toolChoice: computedToolChoice,
           onFinish: async ({ response, usage }) => {
             const appendMessages = appendResponseMessages({

@@ -93,7 +93,7 @@ export function ChatPreferencesPopup() {
   useEffect(() => {
     if (openChatPreferences) {
       setPreferences({
-        displayName: session?.user.name || "",
+        displayName: "",
         responseStyleExample: "",
         profession: "",
       });

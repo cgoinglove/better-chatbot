@@ -16,7 +16,11 @@ import { callMcpToolAction } from "../mcp/actions";
 import { safe } from "ts-safe";
 import logger from "logger";
 import { defaultTools } from "lib/ai/tools";
-import { AllowedMCPServer, VercelAIMcpTool } from "app-types/mcp";
+import {
+  AllowedMCPServer,
+  McpServerCustomizationsPrompt,
+  VercelAIMcpTool,
+} from "app-types/mcp";
 import { MANUAL_REJECT_RESPONSE_PROMPT } from "lib/ai/prompts";
 
 export function filterToolsByMentions(
@@ -193,4 +197,46 @@ export function assignToolResult(toolPart: ToolInvocationUIPart, result: any) {
 
 export function isUserMessage(message: Message): boolean {
   return message.role == "user";
+}
+
+export function filterMcpServerCustomizations(
+  tools: Record<string, VercelAIMcpTool>,
+  mcpServerCustomization: Record<string, McpServerCustomizationsPrompt>,
+): Record<string, McpServerCustomizationsPrompt> {
+  const toolNamesByServerId = Object.values(tools).reduce(
+    (acc, tool) => {
+      if (!acc[tool._mcpServerId]) acc[tool._mcpServerId] = [];
+      acc[tool._mcpServerId].push(tool._originToolName);
+      return acc;
+    },
+    {} as Record<string, string[]>,
+  );
+
+  return Object.entries(mcpServerCustomization).reduce(
+    (acc, [serverId, mcpServerCustomization]) => {
+      if (!(serverId in toolNamesByServerId)) return acc;
+
+      if (
+        !mcpServerCustomization.prompt &&
+        !Object.keys(mcpServerCustomization.tools ?? {}).length
+      )
+        return acc;
+
+      const prompts: McpServerCustomizationsPrompt = {
+        id: serverId,
+        name: mcpServerCustomization.name,
+        prompt: mcpServerCustomization.prompt,
+        tools: mcpServerCustomization.tools
+          ? objectFlow(mcpServerCustomization.tools).filter((_, key) => {
+              return toolNamesByServerId[serverId].includes(key as string);
+            })
+          : {},
+      };
+
+      acc[serverId] = prompts;
+
+      return acc;
+    },
+    {} as Record<string, McpServerCustomizationsPrompt>,
+  );
 }
