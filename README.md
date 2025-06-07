@@ -221,6 +221,8 @@ Step-by-step setup guides for running and configuring MCP Client Chatbot.
 
 - Configure Google and GitHub OAuth for secure user login support.
 
+#### [Adding openAI like providers](docs/tips-guides/adding-openAI-like-providers.md)
+- Adding openAI like ai providers
 <br/>
 
 ## 💡 Tips
