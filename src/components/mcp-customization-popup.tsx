@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { ReactNode, useMemo, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -66,9 +66,13 @@ export function McpCustomizationPopup() {
   );
 }
 
-function McpServerCustomizationContent({
+export function McpServerCustomizationContent({
   mcpServerInfo: { id, name, toolInfo, error },
-}: { mcpServerInfo: MCPServerInfo & { id: string } }) {
+  title,
+}: {
+  mcpServerInfo: MCPServerInfo & { id: string };
+  title?: ReactNode;
+}) {
   const t = useTranslations();
 
   const [prompt, setPrompt] = useState("");
@@ -185,7 +189,7 @@ function McpServerCustomizationContent({
     <div className="flex flex-col overflow-y-auto h-[70vh]">
       <DialogHeader>
         <DialogTitle className="flex items-center gap-2 mb-2">
-          {name}{" "}
+          {title || name}{" "}
           {error ? <p className="text-xs text-destructive">error</p> : null}
         </DialogTitle>
         <DialogDescription>{/*  */}</DialogDescription>

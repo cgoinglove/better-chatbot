@@ -11,7 +11,8 @@
     "showLess": "显示更少",
     "showMore": "显示更多",
     "generate": "生成",
-    "edit": "编辑"
+    "edit": "编辑",
+    "search": "搜索..."
   },
   "Auth": {
     "SignIn": {
@@ -154,7 +155,11 @@
       "professionExample4": "例如：销售经理",
       "professionExample5": "例如：业务分析师",
       "preferencesSaved": "偏好已保存",
-      "failedToSavePreferences": "保存偏好失败"
+      "failedToSavePreferences": "保存偏好失败",
+      "userInstructions": "用户说明",
+      "userInstructionsDescription": "介绍自己并获得更个性化的回应。",
+      "mcpInstructions": "MCP 说明",
+      "mcpInstructionsDescription": "自定义 MCP 服务器说明。"
     }
   },
   "Layout": {

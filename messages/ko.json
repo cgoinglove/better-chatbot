@@ -11,7 +11,8 @@
     "showLess": "적게 보기",
     "showMore": "더 보기",
     "generate": "생성",
-    "edit": "수정"
+    "edit": "수정",
+    "search": "검색..."
   },
   "Auth": {
     "SignIn": {
@@ -154,7 +155,11 @@
       "professionExample4": "예) 판매 매니저",
       "professionExample5": "예) 비즈니스 분석가",
       "preferencesSaved": "환경설정이 저장되었습니다",
-      "failedToSavePreferences": "환경설정 저장 실패"
+      "failedToSavePreferences": "환경설정 저장 실패",
+      "userInstructions": "사용자 지침",
+      "userInstructionsDescription": "자기소개를 하고 보다 내게 맞춰진 응답을 받으세요.",
+      "mcpInstructions": "MCP 지침사항",
+      "mcpInstructionsDescription": "MCP 서버 지침을 설정하세요."
     }
   },
   "Layout": {

@@ -117,7 +117,6 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
         error.message.includes("Unauthorized") ||
         error.message.includes("Forbidden")
       ) {
-        debugger;
         authClient.signOut().finally(() => {
           window.location.href = "/sign-in";
         });

@@ -11,7 +11,8 @@
     "showLess": "Show less",
     "showMore": "Show more",
     "generate": "Generate",
-    "edit": "Edit"
+    "edit": "Edit",
+    "search": "Search..."
   },
   "Auth": {
     "SignIn": {
@@ -154,7 +155,11 @@
       "professionExample4": "e.g. sales manager",
       "professionExample5": "e.g. business analyst",
       "preferencesSaved": "Preferences saved",
-      "failedToSavePreferences": "Failed to save preferences"
+      "failedToSavePreferences": "Failed to save preferences",
+      "userInstructions": "User Instructions",
+      "userInstructionsDescription": "Introduce yourself and get a more personalized response.",
+      "mcpInstructions": "MCP Instructions",
+      "mcpInstructionsDescription": "Customize the MCP server instructions."
     }
   },
   "Layout": {

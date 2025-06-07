@@ -37,9 +37,6 @@ import { getLocaleAction } from "@/i18n/get-locale";
 import { useCallback } from "react";
 import { GithubIcon } from "ui/github-icon";
 import { DiscordIcon } from "ui/discord-icon";
-import { selectMcpClientsAction } from "@/app/api/mcp/actions";
-import { Skeleton } from "ui/skeleton";
-import { MCPIcon } from "ui/mcp-icon";
 
 export function AppSidebarUser() {
   const appStoreMutate = appStore((state) => state.mutate);
@@ -108,8 +105,6 @@ export function AppSidebarUser() {
               <Settings2 className="size-4 text-foreground" />
               <span>{t("chatPreferences")}</span>
             </DropdownMenuItem>
-
-            <McpCustomizationPopup />
             <SelectTheme />
             <SelectLanguage />
             <DropdownMenuSeparator />
@@ -270,58 +265,6 @@ function SelectLanguage() {
               {locale.name}
             </DropdownMenuCheckboxItem>
           ))}
-        </DropdownMenuSubContent>
-      </DropdownMenuPortal>
-    </DropdownMenuSub>
-  );
-}
-
-function McpCustomizationPopup() {
-  const t = useTranslations("MCP");
-  const appStoreMutate = appStore((state) => state.mutate);
-  const { isLoading, data: mcpList } = useSWR(
-    "mcp-list",
-    selectMcpClientsAction,
-    {
-      fallbackData: [],
-      onSuccess: (data) => {
-        appStoreMutate({ mcpList: data });
-      },
-    },
-  );
-
-  return (
-    <DropdownMenuSub>
-      <DropdownMenuSubTrigger>
-        <MCPIcon className="mr-2 size-4 fill-foreground" />
-        <span>{t("mcpServerCustomization")}</span>
-      </DropdownMenuSubTrigger>
-      <DropdownMenuPortal>
-        <DropdownMenuSubContent className="w-48 max-h-96 overflow-y-auto">
-          {isLoading ? (
-            <DropdownMenuItem>
-              <Skeleton className="w-full h-20" />
-            </DropdownMenuItem>
-          ) : mcpList.length === 0 ? (
-            <DropdownMenuItem className="p-6">
-              <span>{t("configureYourMcpServerConnectionSettings")}</span>
-            </DropdownMenuItem>
-          ) : (
-            mcpList.map((mcp) => (
-              <DropdownMenuItem
-                className="cursor-pointer group"
-                onClick={() => {
-                  appStoreMutate({
-                    mcpCustomizationPopup: mcp,
-                  });
-                }}
-                key={mcp.id}
-              >
-                {mcp.name}
-                <Settings2 className="ml-auto size-4 opacity-0 group-hover:opacity-100 transition-opacity" />
-              </DropdownMenuItem>
-            ))
-          )}
         </DropdownMenuSubContent>
       </DropdownMenuPortal>
     </DropdownMenuSub>

@@ -11,7 +11,8 @@
     "showLess": "Afficher moins",
     "showMore": "Afficher plus",
     "generate": "Générer",
-    "edit": "Modifier"
+    "edit": "Modifier",
+    "search": "Rechercher..."
   },
   "Auth": {
     "SignIn": {
@@ -154,7 +155,11 @@
       "professionExample4": "ex. directeur des ventes",
       "professionExample5": "ex. analyste commercial",
       "preferencesSaved": "Préférences enregistrées",
-      "failedToSavePreferences": "Échec de l'enregistrement des préférences"
+      "failedToSavePreferences": "Échec de l'enregistrement des préférences",
+      "userInstructions": "Instructions Utilisateur",
+      "userInstructionsDescription": "Présentez-vous et obtenez une réponse plus personnalisée.",
+      "mcpInstructions": "Instructions MCP",
+      "mcpInstructionsDescription": "Personnalisez les instructions du serveur MCP."
     }
   },
   "Layout": {

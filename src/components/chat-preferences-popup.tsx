@@ -1,105 +1,52 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogTitle,
-} from "ui/dialog";
-import { useObjectState } from "@/hooks/use-object-state";
-import { UserPreferences } from "app-types/user";
-import { safe } from "ts-safe";
-import { toast } from "sonner";
-import useSWR from "swr";
-import { fetcher } from "lib/utils";
-import { Label } from "ui/label";
-import { Input } from "ui/input";
-import { ExamplePlaceholder } from "ui/example-placeholder";
-import { Textarea } from "ui/textarea";
-import { Button } from "ui/button";
-import { Loader } from "lucide-react";
-import { authClient } from "auth/client";
-import { useTranslations } from "next-intl";
+import { AutoHeight } from "ui/auto-height";
+
 import { appStore } from "@/app/store";
 import { useShallow } from "zustand/shallow";
 import { isShortcutEvent, Shortcuts } from "lib/keyboard-shortcuts";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerPortal,
+  DrawerTitle,
+} from "ui/drawer";
+import {
+  MCPInstructionsContent,
+  UserInstructionsContent,
+} from "./chat-preferences-content";
+import { UserIcon, X } from "lucide-react";
+import { Button } from "ui/button";
+import { useTranslations } from "next-intl";
+import { MCPIcon } from "ui/mcp-icon";
 
 export function ChatPreferencesPopup() {
-  const t = useTranslations();
   const [openChatPreferences, appStoreMutate] = appStore(
     useShallow((state) => [state.openChatPreferences, state.mutate]),
   );
 
-  const responseStyleExamples = useMemo(
-    () => [
-      t("Chat.ChatPreferences.responseStyleExample1"),
-      t("Chat.ChatPreferences.responseStyleExample2"),
-      t("Chat.ChatPreferences.responseStyleExample3"),
-      t("Chat.ChatPreferences.responseStyleExample4"),
-    ],
-    [],
-  );
+  const t = useTranslations();
 
-  const professionExamples = useMemo(
-    () => [
-      t("Chat.ChatPreferences.professionExample1"),
-      t("Chat.ChatPreferences.professionExample2"),
-      t("Chat.ChatPreferences.professionExample3"),
-      t("Chat.ChatPreferences.professionExample4"),
-      t("Chat.ChatPreferences.professionExample5"),
-    ],
-    [],
-  );
-
-  const { data: session } = authClient.useSession();
-  const [preferences, setPreferences] = useObjectState<UserPreferences>({
-    displayName: session?.user.name || "",
-    responseStyleExample: "",
-    profession: "",
-  });
-
-  const [isSaving, setIsSaving] = useState(false);
-
-  const savePreferences = async () => {
-    safe(() => setIsSaving(true))
-      .ifOk(() =>
-        fetch("/api/user/preferences", {
-          method: "PUT",
-          body: JSON.stringify(preferences),
-        }),
-      )
-      .watch((result) => {
-        if (result.isOk)
-          toast.success(t("Chat.ChatPreferences.preferencesSaved"));
-        else toast.error(t("Chat.ChatPreferences.failedToSavePreferences"));
-      })
-      .watch(() => setIsSaving(false))
-      .ifOk(() => appStoreMutate({ openChatPreferences: false }));
-  };
-  const { mutate: fetchPreferences } = useSWR<UserPreferences>(
-    "/api/user/preferences",
-    fetcher,
-    {
-      fallback: {},
-      onSuccess: (data) => {
-        setPreferences(data);
+  const tabs = useMemo(() => {
+    return [
+      {
+        label: t("Chat.ChatPreferences.userInstructions"),
+        icon: <UserIcon className="w-4 h-4" />,
       },
-    },
-  );
+      {
+        label: t("Chat.ChatPreferences.mcpInstructions"),
+        icon: <MCPIcon className="w-4 h-4 fill-muted-foreground" />,
+      },
+    ];
+  }, []);
 
-  useEffect(() => {
-    if (openChatPreferences) {
-      setPreferences({
-        displayName: "",
-        responseStyleExample: "",
-        profession: "",
-      });
-      fetchPreferences();
-    }
-  }, [openChatPreferences]);
+  const [tab, setTab] = useState(0);
+
+  const handleClose = () => {
+    appStoreMutate({ openChatPreferences: false });
+  };
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -114,88 +61,105 @@ export function ChatPreferencesPopup() {
           openChatPreferences: !prev.openChatPreferences,
         }));
       }
+
+      // ESC key to close
+      if (e.key === "Escape" && openChatPreferences) {
+        e.preventDefault();
+        handleClose();
+      }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
-  return (
-    <Dialog
-      open={openChatPreferences}
-      onOpenChange={() =>
-        appStoreMutate({ openChatPreferences: !openChatPreferences })
-      }
-    >
-      <DialogContent hideClose className="md:max-w-2xl">
-        <DialogTitle>{t("Chat.ChatPreferences.title")}</DialogTitle>
-        <DialogDescription>
-          {/* Introduce yourself to receive more personalized responses. */}
-        </DialogDescription>
-        <div className="flex flex-col gap-6 w-full">
-          <div className="flex flex-col gap-2">
-            <Label>{t("Chat.ChatPreferences.whatShouldWeCallYou")}</Label>
-            <Input
-              value={preferences.displayName}
-              onChange={(e) => {
-                setPreferences({
-                  displayName: e.target.value,
-                });
-              }}
-            />
-          </div>
+  }, [openChatPreferences]);
 
-          <div className="flex flex-col gap-2 text-foreground flex-1">
-            <Label>{t("Chat.ChatPreferences.whatBestDescribesYourWork")}</Label>
-            <div className="relative w-full">
-              <Input
-                value={preferences.profession}
-                onChange={(e) => {
-                  setPreferences({
-                    profession: e.target.value,
-                  });
-                }}
-              />
-              {(preferences.profession?.length ?? 0) === 0 && (
-                <div className="absolute left-0 top-0 w-full h-full py-2 px-4 pointer-events-none">
-                  <ExamplePlaceholder placeholder={professionExamples} />
+  useEffect(() => {
+    if (!openChatPreferences) setTab(0);
+  }, [openChatPreferences]);
+
+  return (
+    <Drawer
+      handleOnly
+      open={openChatPreferences}
+      direction="top"
+      onOpenChange={(open) => appStoreMutate({ openChatPreferences: open })}
+    >
+      <DrawerPortal>
+        <DrawerContent
+          style={{
+            userSelect: "text",
+          }}
+          className="max-h-[100vh]! w-full h-full border-none rounded-none flex flex-col bg-card overflow-hidden p-4 md:p-6"
+        >
+          <div className="flex items-center justify-end">
+            <Button variant="ghost" size="icon" onClick={handleClose}>
+              <X />
+            </Button>
+          </div>
+          <DrawerTitle className="sr-only">Chat Preferences</DrawerTitle>
+          <DrawerDescription className="sr-only" />
+
+          <div className="flex justify-center">
+            <div className="w-full mt-4 lg:w-5xl lg:mt-14">
+              {/* Mobile: Tabs as horizontal scroll */}
+              <div className="md:hidden">
+                <div className="flex gap-2 overflow-x-auto pb-2">
+                  {tabs.map((tabItem, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setTab(index)}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 ${
+                        tab === index
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted/50 text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      {tabItem.icon}
+                      <span>{tabItem.label}</span>
+                    </button>
+                  ))}
                 </div>
-              )}
+              </div>
+
+              <div className="flex flex-1 overflow-hidden">
+                {/* Desktop: Sidebar */}
+                <div className="hidden md:block w-64">
+                  <nav className="px-4 flex flex-col gap-2">
+                    {tabs.map((tabItem, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setTab(index)}
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all duration-200 ${
+                          tab === index
+                            ? "bg-primary text-primary-foreground shadow-md"
+                            : "hover:bg-muted/50 text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        {tabItem.icon}
+                        <span className="font-medium">{tabItem.label}</span>
+                      </button>
+                    ))}
+                  </nav>
+                </div>
+
+                {/* Content */}
+                <AutoHeight className="flex-1 rounded-lg border max-h-[80vh] overflow-y-auto">
+                  <div className="p-4 md:p-8">
+                    {openChatPreferences && (
+                      <>
+                        {tab == 0 ? (
+                          <UserInstructionsContent />
+                        ) : tab == 1 ? (
+                          <MCPInstructionsContent />
+                        ) : null}
+                      </>
+                    )}
+                  </div>
+                </AutoHeight>
+              </div>
             </div>
           </div>
-          <div className="flex flex-col gap-2 text-foreground">
-            <Label>
-              {t(
-                "Chat.ChatPreferences.whatPersonalPreferencesShouldBeTakenIntoAccountInResponses",
-              )}
-            </Label>
-            <span className="text-xs text-muted-foreground"></span>
-            <div className="relative w-full">
-              <Textarea
-                className="min-h-24 max-h-44 resize-none"
-                value={preferences.responseStyleExample}
-                onChange={(e) => {
-                  setPreferences({
-                    responseStyleExample: e.target.value,
-                  });
-                }}
-              />
-              {(preferences.responseStyleExample?.length ?? 0) === 0 && (
-                <div className="absolute left-0 top-0 w-full h-full py-2 px-4 pointer-events-none">
-                  <ExamplePlaceholder placeholder={responseStyleExamples} />
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-        <DialogFooter>
-          <DialogClose asChild>
-            <Button variant="ghost">{t("Common.cancel")}</Button>
-          </DialogClose>
-          <Button disabled={isSaving} onClick={savePreferences}>
-            {t("Common.save")}
-            {isSaving && <Loader className="size-4 ml-2 animate-spin" />}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </DrawerContent>
+      </DrawerPortal>
+    </Drawer>
   );
 }

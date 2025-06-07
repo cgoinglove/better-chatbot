@@ -64,7 +64,7 @@ const lastMessageCopyShortcut: Shortcut = {
 const openChatPreferencesShortcut: Shortcut = {
   description: "openChatPreferences",
   shortcut: {
-    key: "I",
+    key: "L",
     command: true,
     shift: true,
   },

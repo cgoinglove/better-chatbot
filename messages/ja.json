@@ -11,7 +11,8 @@
     "showLess": "少なく表示",
     "showMore": "もっと表示",
     "generate": "生成",
-    "edit": "編集"
+    "edit": "編集",
+    "search": "検索..."
   },
   "Auth": {
     "SignIn": {
@@ -154,7 +155,11 @@
       "professionExample4": "例：セールスマネージャー",
       "professionExample5": "例：ビジネスアナリスト",
       "preferencesSaved": "設定が保存されました",
-      "failedToSavePreferences": "設定の保存に失敗しました"
+      "failedToSavePreferences": "設定の保存に失敗しました",
+      "userInstructions": "ユーザー指示",
+      "userInstructionsDescription": "自己紹介をして、よりパーソナライズされた回答を受け取りましょう。",
+      "mcpInstructions": "MCP 指示",
+      "mcpInstructionsDescription": "MCP サーバーの指示をカスタマイズします。"
     }
   },
   "Layout": {
