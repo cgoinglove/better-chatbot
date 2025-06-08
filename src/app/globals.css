@@ -1,5 +1,7 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
+
+@custom-variant dark (&:is(.dark *));
 /* Individual theme variants - themes from  https://github.com/rawestmoreland/theme-generator/blob/main/src/app/globals.css */
 
 @theme inline {
@@ -1455,7 +1457,7 @@
   * {
     @apply border-border outline-ring/50;
   }
-  
+
   /* CodeMirror styling for artifacts */
   .cm-editor {
     height: 100%;
@@ -1463,18 +1465,18 @@
     max-width: 100%;
     overflow-x: auto;
   }
-  
+
   .cm-scroller {
     overflow: auto;
     font-family: var(--font-mono);
   }
-  
+
   .cm-line {
     white-space: pre-wrap !important;
     word-break: break-word !important;
     max-width: 100%;
   }
-  
+
   body {
     @apply bg-background text-foreground;
   }
@@ -1496,4 +1498,15 @@
     padding: 0.2rem 0.6rem;
     margin: 0 0.1rem;
   }
+}
+
+.dark {
+  --sidebar: hsl(240 5.9% 10%);
+  --sidebar-foreground: hsl(240 4.8% 95.9%);
+  --sidebar-primary: hsl(224.3 76.3% 48%);
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent: hsl(240 3.7% 15.9%);
+  --sidebar-accent-foreground: hsl(240 4.8% 95.9%);
+  --sidebar-border: hsl(240 3.7% 15.9%);
+  --sidebar-ring: hsl(217.2 91.2% 59.8%);
 }
