@@ -151,7 +151,7 @@ function UpdateProjectNameDialog({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent hideClose>
+      <DialogContent showCloseButton={false}>
         <DialogHeader>
           <DialogTitle>Rename Project</DialogTitle>
         </DialogHeader>

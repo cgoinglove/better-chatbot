@@ -61,7 +61,7 @@ export function PastesContentCard({
       </DialogTrigger>
       <DialogPortal>
         <DialogContent
-          hideClose
+          showCloseButton={false}
           className="sm:max-w-[80vh] fixed p-10 overflow-hidden"
         >
           <DialogHeader>

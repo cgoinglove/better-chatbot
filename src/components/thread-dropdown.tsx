@@ -231,7 +231,7 @@ function UpdateThreadNameDialog({
   return (
     <Dialog>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent hideClose>
+      <DialogContent showCloseButton={false}>
         <DialogHeader>
           <DialogTitle>Rename Chat</DialogTitle>
         </DialogHeader>

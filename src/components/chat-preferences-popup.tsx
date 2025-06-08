@@ -95,7 +95,7 @@ export function ChatPreferencesPopup({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>{children}</DialogTrigger>
 
-      <DialogContent hideClose className="md:max-w-2xl">
+      <DialogContent showCloseButton={false} className="md:max-w-2xl">
         <DialogTitle>Chat Preferences</DialogTitle>
         <DialogDescription>
           {/* Introduce yourself to receive more personalized responses. */}
