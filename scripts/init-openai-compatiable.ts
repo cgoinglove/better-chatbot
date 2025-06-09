@@ -4,8 +4,8 @@ import * as fs from "fs";
 const CONFIG_TEMPLATE = `
 // don't edit this part
 import {
-  OpenAICompatibleProvidersListSchema, // Updated import
-  type OpenAICompatibleProvider, // New import for the single provider type
+  OpenAICompatibleProvidersListSchema, 
+  type OpenAICompatibleProvider, 
 } from "./src/lib/ai/open-ai-like-schema";
 // edit this part
 const providerList: OpenAICompatibleProvider[] = [ // Updated type annotation
@@ -39,21 +39,24 @@ export const data = JSON.stringify(providerList);
 
 const ROOT = process.cwd();
 
-const CONFIG_PATH = path.join(ROOT, ".openAILike.ts");
+const CONFIG_PATH = path.join(ROOT, ".openai-compatible-config.ts");
 function createConfigFile() {
   if (!fs.existsSync(CONFIG_PATH)) {
     try {
       fs.writeFileSync(CONFIG_PATH, CONFIG_TEMPLATE, "utf-8");
-      console.log(".openAILike.ts file has been created.");
+      console.log(".openai-compatible-config.ts file has been created.");
     } catch (error) {
-      console.error("Error occurred while creating .openAILike.ts file.");
+      console.error(
+        "Error occurred while creating .openai-compatible-config.ts file.",
+      );
       console.error(error);
       return false;
     }
   } else {
-    console.info(".openAILike.ts file already exists. Skipping...");
+    console.info(
+      ".openai-compatible-config.ts file already exists. Skipping...",
+    );
   }
 }
-
 
 createConfigFile();

@@ -1,4 +1,4 @@
-import { data, ifParsed } from "../.openAILike";
+import { data, ifParsed } from "../.openai-compatible-config";
 import * as fs from "fs";
 import * as path from "path";
 if (!ifParsed) {
