@@ -7,7 +7,7 @@ It is an api that is like the openAI one. They are used as llm providers.
 3. Uncomment the example and remove the word example
 4. Modify the api url and other data to match your provider - to add more just copy and paste it and edit it
 5. Edit env variables the api key should be in your env - it should be named what you called it in the file
-6. Restart dev server - if currently running
+6. Run `pnpm openai-compatiable:parse` to update env when you change schema
 ## Adding providers - vercel or anywhere else - ui based method
 1. Go to [this website](https://mcp-client-chatbot-openai-like.vercel.app/)
 2. Press generate JSON and copy it
