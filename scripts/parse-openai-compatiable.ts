@@ -1,6 +1,20 @@
-import { data, ifParsed } from "../.openai-compatible-config";
 import * as fs from "fs";
 import * as path from "path";
+import "load-env";
+import { IS_VERCEL_ENV } from "lib/const";
+// this is avoid type errors and chaos in build
+async function load() {
+  if (!IS_VERCEL_ENV) {
+    // @ts-ignore
+    const { ifParsed, data } = await import("../.openai-compatible-config");
+    return { ifParsed, data };
+  } else {
+    const ifParsed = true;
+    const data = process.env.OPENAI_LIKE_DATA || `[]`;
+    return { ifParsed, data };
+  }
+}
+const { ifParsed, data } = await load();
 if (!ifParsed) {
   throw new Error("Invalid OpenAI compatible provider list configuration.");
 }

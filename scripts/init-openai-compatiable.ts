@@ -8,7 +8,7 @@ import {
   type OpenAICompatibleProvider, 
 } from "./src/lib/ai/open-ai-like-schema";
 // edit this part
-const providerList: OpenAICompatibleProvider[] = [ // Updated type annotation
+const providerList: OpenAICompatibleProvider[] = [ 
   // example {
   //   provider: "Groq",
   //   apiKeyEnvVar: "GROQ_API_KEY",
@@ -33,7 +33,7 @@ const providerList: OpenAICompatibleProvider[] = [ // Updated type annotation
   // },
 ];
 
-export const ifParsed = OpenAICompatibleProvidersListSchema.parse(providerList); // Updated schema name
+export const ifParsed = OpenAICompatibleProvidersListSchema.parse(providerList); 
 export const data = JSON.stringify(providerList);
 `;
 
