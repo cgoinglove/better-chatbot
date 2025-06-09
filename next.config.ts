@@ -1,7 +1,6 @@
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 
-import logger from "lib/logger";
 
 export default () => {
   const nextConfig: NextConfig = {
