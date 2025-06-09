@@ -1,13 +1,14 @@
 import path from "path";
 import * as fs from "fs";
+
 const CONFIG_TEMPLATE = `
 // don't edit this part
 import {
-  ProvidersListSchema,
-  type BaseProvidersList,
+  OpenAICompatibleProvidersListSchema, // Updated import
+  type OpenAICompatibleProvider, // New import for the single provider type
 } from "./src/lib/ai/open-ai-like-schema";
 // edit this part
-const providerList: BaseProvidersList = [
+const providerList: OpenAICompatibleProvider[] = [ // Updated type annotation
   // example {
   //   provider: "Groq",
   //   apiKeyEnvVar: "GROQ_API_KEY",
@@ -32,7 +33,7 @@ const providerList: BaseProvidersList = [
   // },
 ];
 
-export const ifParsed = ProvidersListSchema.parse(providerList);
+export const ifParsed = OpenAICompatibleProvidersListSchema.parse(providerList); // Updated schema name
 export const data = JSON.stringify(providerList);
 `;
 
@@ -53,4 +54,6 @@ function createConfigFile() {
     console.info(".openAILike.ts file already exists. Skipping...");
   }
 }
+
+
 createConfigFile();
