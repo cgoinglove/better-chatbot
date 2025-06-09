@@ -1,12 +1,15 @@
+// models.ts
 import { createOllama } from "ollama-ai-provider";
 import { openai } from "@ai-sdk/openai";
 import { google } from "@ai-sdk/google";
 import { anthropic } from "@ai-sdk/anthropic";
 import { xai } from "@ai-sdk/xai";
-import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
-import { LanguageModel } from "ai";
 import { openrouter } from "@openrouter/ai-sdk-provider";
-import { ProvidersListSchema } from "./open-ai-like-schema";
+import { LanguageModel } from "ai";
+import {
+  dynamicModels,
+  dynamicUnsupportedModels,
+} from "./load-openai-compatiable";
 
 const ollama = createOllama({
   baseURL: process.env.OLLAMA_BASE_URL || "http://localhost:11434/api",
@@ -57,45 +60,6 @@ const staticUnsupportedModels = new Set([
   staticModels.openRouter["qwen3-8b:free"],
   staticModels.openRouter["qwen3-14b:free"],
 ]);
-
-function loadDynamicModels() {
-  const dynamicModels: Record<string, Record<string, LanguageModel>> = {};
-  const dynamicUnsupportedModels = new Set<LanguageModel>();
-  if (!process.env.OPENAI_LIKE_DATA)
-    return { dynamicModels, dynamicUnsupportedModels };
-
-  try {
-    const configData = JSON.parse(process.env.OPENAI_LIKE_DATA);
-    const providers = ProvidersListSchema.parse(configData);
-
-    providers.forEach(({ provider, models, baseUrl, apiKeyEnvVar }) => {
-      const providerKey = provider.toLowerCase();
-
-      const customProvider = createOpenAICompatible({
-        name: provider,
-        apiKey: process.env[apiKeyEnvVar],
-        baseURL: baseUrl!,
-      });
-
-      dynamicModels[providerKey] = {};
-
-      models.forEach(({ apiName, uiName, supportsTools }) => {
-        const model = customProvider(apiName);
-        dynamicModels[providerKey][uiName] = model;
-
-        if (!supportsTools) {
-          dynamicUnsupportedModels.add(model);
-        }
-      });
-    });
-  } catch (error) {
-    console.error("Failed to load dynamic models:", error);
-  }
-
-  return { dynamicModels, dynamicUnsupportedModels };
-}
-
-const { dynamicModels, dynamicUnsupportedModels } = loadDynamicModels();
 
 export const allModels = { ...staticModels, ...dynamicModels };
 

@@ -41,7 +41,7 @@ async function main() {
     }
     console.log("Running in Docker, checking openAI like config.");
     await runCommand(
-      "pnpm initial:openAIlike",
+      "pnpm openai-compatiable:init",
       "Initial openAI like config setup",
     );
   } else {
@@ -50,7 +50,7 @@ async function main() {
     );
     await runCommand("pnpm initial:env", "Initial environment setup");
     await runCommand(
-      "pnpm initial:openAIlike",
+      "pnpm openai-compatiable:init",
       "Initial openAI like config setup",
     );
   }

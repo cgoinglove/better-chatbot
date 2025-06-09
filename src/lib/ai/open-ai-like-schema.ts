@@ -1,10 +1,10 @@
 import { z } from "zod";
 
-// Define the schema for a single AI model
-const ModelSchema = z.object({
+// Define the schema for a single AI model that is compatible with OpenAI's API structure.
+const OpenAICompatibleModelSchema = z.object({
   apiName: z.string().describe("The internal API name for the model."),
   uiName: z.string().describe("The user-friendly name for the model."),
-  // Whether the model supports external tools/function calling, specifically for MCP servers.
+  // Whether the model supports external tools/function calling, specifically for multi-cloud platform (MCP) servers.
   supportsTools: z
     .boolean()
     .describe(
@@ -12,15 +12,16 @@ const ModelSchema = z.object({
     ),
 });
 
-// Define the schema for a provider, which includes a list of its models
-const ProviderSchema = z.object({
+// Define the schema for a provider that is compatible with OpenAI's API structure,
+// which includes a list of its OpenAI-compatible models.
+const OpenAICompatibleProviderSchema = z.object({
   provider: z
     .string()
     .describe(
       "The name of the AI provider (e.g., 'groq', 'OpenAI', 'Google').",
     ),
   models: z
-    .array(ModelSchema)
+    .array(OpenAICompatibleModelSchema)
     .describe("A list of AI models offered by this provider."),
   // The environment variable name for the provider's API key. Stored in .env.
   apiKeyEnvVar: z
@@ -38,8 +39,17 @@ const ProviderSchema = z.object({
     ),
 });
 
-export const ProvidersListSchema = z
-  .array(ProviderSchema)
+// Infer the type for a single OpenAI-compatible provider.
+export type OpenAICompatibleProvider = z.infer<
+  typeof OpenAICompatibleProviderSchema
+>;
+
+// Define the schema for a list of all AI providers and their models that are OpenAI compatible.
+export const OpenAICompatibleProvidersListSchema = z
+  .array(OpenAICompatibleProviderSchema)
   .describe("A list of all AI providers and their models.");
 
-export type BaseProvidersList = z.infer<typeof ProvidersListSchema>;
+// If you still need a base type for the list, you can define it like this:
+export type BaseOpenAICompatibleProvidersList = z.infer<
+  typeof OpenAICompatibleProvidersListSchema
+>;

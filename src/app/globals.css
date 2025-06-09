@@ -1415,7 +1415,7 @@
 
 /* Pink Dark */
 [data-theme="pink-dark"] {
-  color-scheme: dark;
+  --color-scheme: dark;
   --background: hsl(340 50% 8%);
   --foreground: hsl(340 10% 95%);
   --card: hsl(340 50% 10%);
