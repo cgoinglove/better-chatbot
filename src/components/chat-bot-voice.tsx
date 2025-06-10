@@ -104,7 +104,7 @@ export function ChatBotVoice() {
       useShallow((state) => [
         state.mutate,
         state.voiceChat,
-        state.model,
+        state.chatModel,
         state.currentThreadId,
         state.currentProjectId,
       ]),
@@ -162,10 +162,11 @@ export function ChatBotVoice() {
         method: "POST",
         body: JSON.stringify({
           messages: mergeConsecutiveMessages(saveMessages),
-          model,
+          chatModel: model,
           projectId: currentProjectId,
         }),
       });
+
       return true;
     }).ifOk((isSaved) => {
       if (isSaved) {

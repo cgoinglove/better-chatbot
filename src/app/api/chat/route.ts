@@ -62,14 +62,14 @@ export async function POST(request: Request) {
     const {
       id,
       message,
-      model: modelName,
+      chatModel,
       toolChoice,
       allowedAppDefaultToolkit,
       allowedMcpServers,
       projectId,
     } = chatApiSchemaRequestBodySchema.parse(json);
 
-    const model = customModelProvider.getModel(modelName);
+    const model = customModelProvider.getModel(chatModel);
 
     let thread = await chatRepository.selectThreadDetails(id);
 
@@ -207,7 +207,7 @@ export async function POST(request: Request) {
             if (isLastMessageUserMessage) {
               await chatRepository.insertMessage({
                 threadId: thread!.id,
-                model: modelName,
+                model: chatModel?.model ?? null,
                 role: "user",
                 parts: message.parts,
                 attachments: message.experimental_attachments,
@@ -228,7 +228,7 @@ export async function POST(request: Request) {
               );
               dataStream.writeMessageAnnotation(annotations.at(-1)!);
               await chatRepository.upsertMessage({
-                model: modelName,
+                model: chatModel?.model ?? null,
                 threadId: thread!.id,
                 role: assistantMessage.role,
                 id: assistantMessage.id,

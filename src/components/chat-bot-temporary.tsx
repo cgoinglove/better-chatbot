@@ -68,7 +68,7 @@ export function ChatBotTemporary() {
     api: "/api/chat/temporary",
     experimental_throttle: 100,
     body: {
-      model: temporaryChat.model,
+      chatModel: temporaryChat.chatModel,
       instructions: temporaryChat.instructions,
     },
     onError: () => {
@@ -302,12 +302,12 @@ function DrawerTemporaryContent({
         <PromptInput
           input={input}
           append={append}
-          model={temporaryChat.model}
+          model={temporaryChat.chatModel}
           setModel={(model) => {
             appStoreMutate({
               temporaryChat: {
                 ...temporaryChat,
-                model,
+                chatModel: model,
               },
             });
           }}

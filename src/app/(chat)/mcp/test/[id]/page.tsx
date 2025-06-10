@@ -54,16 +54,19 @@ import { appStore } from "@/app/store";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "ui/select";
-import { customModelProvider } from "lib/ai/models";
 import { MCPToolInfo } from "app-types/mcp";
 import { Label } from "ui/label";
 import { safe } from "ts-safe";
 import { useObjectState } from "@/hooks/use-object-state";
 import { useTranslations } from "next-intl";
+import { useChatModels } from "@/hooks/queries/use-chat-models";
+import { ChatModel } from "app-types/chat";
 
 // Type definitions
 type SchemaProperty = {
@@ -264,8 +267,10 @@ const GenerateExampleInputJsonDialog = ({
   children,
   onGenerated,
 }: PropsWithChildren<GenerateExampleInputJsonDialogProps>) => {
-  const currentModelName = appStore((state) => state.model);
+  const currentModelName = appStore((state) => state.chatModel);
   const t = useTranslations();
+
+  const { data: providers } = useChatModels();
 
   const [option, setOption] = useObjectState({
     open: false,
@@ -273,17 +278,12 @@ const GenerateExampleInputJsonDialog = ({
     prompt: "",
     loading: false,
   });
-  const modelList = useMemo(() => {
-    return customModelProvider.modelsInfo.flatMap((v) =>
-      v.models.map((v) => v.name),
-    );
-  }, []);
 
   const generateExampleSchema = useCallback(() => {
     safe(() => setOption({ loading: true }))
       .map(() =>
         generateExampleToolSchemaAction({
-          modelName: option.model,
+          model: option.model,
           toolInfo: toolInfo,
           prompt: option.prompt,
         }),
@@ -291,7 +291,7 @@ const GenerateExampleInputJsonDialog = ({
       .ifOk((result) => {
         onGenerated(JSON.stringify(result, null, 2));
       })
-      .ifOk(() => {
+      .watch(() => {
         setOption({
           loading: false,
           prompt: "",
@@ -317,17 +317,31 @@ const GenerateExampleInputJsonDialog = ({
         <div className="flex flex-col gap-2 py-4 text-foreground">
           <Label>Model</Label>
           <Select
-            value={option.model}
-            onValueChange={(value) => setOption({ model: value })}
+            value={JSON.stringify(option.model ?? "{}")}
+            onValueChange={(value) => {
+              const model = JSON.parse(value) as ChatModel;
+              setOption({ model });
+            }}
           >
             <SelectTrigger className="min-w-48">
               <SelectValue placeholder="Select a model" />
             </SelectTrigger>
             <SelectContent>
-              {modelList.map((model) => (
-                <SelectItem key={model} value={model}>
-                  {model}
-                </SelectItem>
+              {providers?.map((provider) => (
+                <SelectGroup key={provider.provider}>
+                  <SelectLabel>{provider.provider}</SelectLabel>
+                  {provider.models.map((model) => (
+                    <SelectItem
+                      key={model.name}
+                      value={JSON.stringify({
+                        provider: provider.provider,
+                        model: model.name,
+                      })}
+                    >
+                      {model.name}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
               ))}
             </SelectContent>
           </Select>

@@ -7,9 +7,10 @@ import { xai } from "@ai-sdk/xai";
 import { openrouter } from "@openrouter/ai-sdk-provider";
 import { LanguageModel } from "ai";
 import {
-  dynamicModels,
-  dynamicUnsupportedModels,
-} from "./load-openai-compatiable";
+  createOpenAICompatibleModels,
+  openaiCompatibleModelsSafeParse,
+} from "./create-openai-compatiable";
+import { ChatModel } from "app-types/chat";
 
 const ollama = createOllama({
   baseURL: process.env.OLLAMA_BASE_URL || "http://localhost:11434/api",
@@ -61,20 +62,30 @@ const staticUnsupportedModels = new Set([
   staticModels.openRouter["qwen3-14b:free"],
 ]);
 
-export const allModels = { ...staticModels, ...dynamicModels };
+const openaiCompatibleProviders = openaiCompatibleModelsSafeParse(
+  process.env.OPENAI_COMPATIBLE_DATA,
+);
+
+const {
+  providers: openaiCompatibleModels,
+  unsupportedModels: openaiCompatibleUnsupportedModels,
+} = createOpenAICompatibleModels(openaiCompatibleProviders);
+
+const allModels = { ...openaiCompatibleModels, ...staticModels };
 
 const allUnsupportedModels = new Set([
+  ...openaiCompatibleUnsupportedModels,
   ...staticUnsupportedModels,
-  ...dynamicUnsupportedModels,
 ]);
 
 export const isToolCallUnsupportedModel = (model: LanguageModel) => {
   return allUnsupportedModels.has(model);
 };
 
-export const DEFAULT_MODEL = "4o";
+const firstProvider = Object.keys(allModels)[0];
+const firstModel = Object.keys(allModels[firstProvider])[0];
 
-const fallbackModel = staticModels.openai[DEFAULT_MODEL];
+const fallbackModel = allModels[firstProvider][firstModel];
 
 export const customModelProvider = {
   modelsInfo: Object.entries(allModels).map(([provider, models]) => ({
@@ -84,12 +95,8 @@ export const customModelProvider = {
       isToolCallUnsupported: isToolCallUnsupportedModel(model),
     })),
   })),
-  getModel: (model?: string): LanguageModel => {
-    for (const providerModels of Object.values(allModels)) {
-      if (model && providerModels[model]) {
-        return providerModels[model];
-      }
-    }
-    return fallbackModel;
+  getModel: (model?: ChatModel): LanguageModel => {
+    if (!model) return fallbackModel;
+    return allModels[model.provider]?.[model.model] || fallbackModel;
   },
 };

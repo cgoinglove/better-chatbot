@@ -16,18 +16,15 @@ export async function POST(request: Request) {
       return redirect("/sign-in");
     }
 
-    const {
-      messages,
-      model: modelName,
-      instructions,
-    } = json as {
+    const { messages, chatModel, instructions } = json as {
       messages: Message[];
-      model: string;
+      chatModel?: {
+        provider: string;
+        model: string;
+      };
       instructions?: string;
     };
-
-    const model = customModelProvider.getModel(modelName);
-
+    const model = customModelProvider.getModel(chatModel);
     const userPreferences =
       (await userRepository.getPreferences(session.user.id)) || undefined;
 

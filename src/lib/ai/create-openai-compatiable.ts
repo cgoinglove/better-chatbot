@@ -1,4 +1,49 @@
+import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
+import { LanguageModel } from "ai";
+import { isString } from "lib/utils";
+import logger from "logger";
 import { z } from "zod";
+
+/**
+ * OpenAI-compatible models from an environment variable.
+ * @returns An object containing the loaded models and a set of models
+ *          that do not support tool calls.
+ */
+export function createOpenAICompatibleModels(
+  config: OpenAICompatibleProvider[],
+) {
+  const providers: Record<string, Record<string, LanguageModel>> = {};
+  const unsupportedModels = new Set<LanguageModel>();
+
+  if (!config?.length) {
+    return { providers, unsupportedModels };
+  }
+  try {
+    config.forEach(({ provider, models, baseUrl, apiKeyEnvVar }) => {
+      const providerKey = provider;
+      const customProvider = createOpenAICompatible({
+        name: provider,
+        apiKey: process.env[apiKeyEnvVar],
+        baseURL: baseUrl!,
+      });
+
+      providers[providerKey] = {};
+
+      models.forEach(({ apiName, uiName, supportsTools }) => {
+        const model = customProvider(apiName);
+        providers[providerKey][uiName] = model;
+
+        if (!supportsTools) {
+          unsupportedModels.add(model);
+        }
+      });
+    });
+  } catch (error) {
+    console.error("Failed to load or parse dynamic models:", error);
+  }
+
+  return { providers, unsupportedModels };
+}
 
 // Define the schema for a single AI model that is compatible with OpenAI's API structure.
 const OpenAICompatibleModelSchema = z.object({
@@ -14,7 +59,7 @@ const OpenAICompatibleModelSchema = z.object({
 
 // Define the schema for a provider that is compatible with OpenAI's API structure,
 // which includes a list of its OpenAI-compatible models.
-const OpenAICompatibleProviderSchema = z.object({
+export const OpenAICompatibleProviderSchema = z.object({
   provider: z
     .string()
     .describe(
@@ -44,12 +89,14 @@ export type OpenAICompatibleProvider = z.infer<
   typeof OpenAICompatibleProviderSchema
 >;
 
-// Define the schema for a list of all AI providers and their models that are OpenAI compatible.
-export const OpenAICompatibleProvidersListSchema = z
-  .array(OpenAICompatibleProviderSchema)
-  .describe("A list of all AI providers and their models.");
-
-// If you still need a base type for the list, you can define it like this:
-export type BaseOpenAICompatibleProvidersList = z.infer<
-  typeof OpenAICompatibleProvidersListSchema
->;
+export const openaiCompatibleModelsSafeParse = (
+  providers: string | OpenAICompatibleProvider[] = [],
+) => {
+  try {
+    const value = isString(providers) ? JSON.parse(providers) : providers;
+    return z.array(OpenAICompatibleProviderSchema).parse(value);
+  } catch (error) {
+    logger.error(error);
+    return [];
+  }
+};

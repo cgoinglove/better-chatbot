@@ -23,7 +23,6 @@ import { Input } from "ui/input";
 import { Label } from "ui/label";
 import { Textarea } from "ui/textarea";
 import { SelectModel } from "./select-model";
-import { customModelProvider } from "lib/ai/models";
 import { cn } from "lib/utils";
 import { appStore } from "@/app/store";
 import { useObjectState } from "@/hooks/use-object-state";
@@ -99,9 +98,8 @@ function InstructionsStep({
 }) {
   const t = useTranslations();
   const [isLoading, setIsLoading] = useState(false);
-  const currentModelName = appStore((state) => state.model);
-  const [model, setModel] = useState(currentModelName);
-  const modelList = useMemo(() => customModelProvider.modelsInfo, []);
+  const defaultModel = appStore((state) => state.chatModel);
+  const [model, setModel] = useState(defaultModel);
 
   const { complete, completion } = useCompletion({
     api: "/api/chat/summarize",
@@ -117,7 +115,7 @@ function InstructionsStep({
         complete("", {
           body: {
             threadId,
-            model,
+            chatModel: model,
           },
         }),
       )
@@ -142,14 +140,9 @@ function InstructionsStep({
           )}
           {t("Chat.Project.generateWithAI")}
         </Button>
-        <SelectModel
-          model={model}
-          onSelect={setModel}
-          providers={modelList}
-          align="end"
-        >
+        <SelectModel onSelect={setModel} align="end">
           <Button variant="ghost" className="gap-1 justify-between min-w-24">
-            <span>{model}</span>
+            <span>{model?.model}</span>
             <ChevronsUpDown className="size-3.5" />
           </Button>
         </SelectModel>

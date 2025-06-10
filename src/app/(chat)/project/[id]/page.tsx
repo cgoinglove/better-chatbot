@@ -85,7 +85,7 @@ export default function ProjectPage() {
   ] = appStore(
     useShallow((state) => [
       state.mutate,
-      state.model,
+      state.chatModel,
       state.toolChoice,
       state.allowedMcpServers,
       state.allowedAppDefaultToolkit,
@@ -105,7 +105,7 @@ export default function ProjectPage() {
     experimental_prepareRequestBody: ({ messages }) => {
       const request: ChatApiSchemaRequestBody = {
         id: threadId,
-        model: latestRef.current.model,
+        chatModel: latestRef.current.model,
         toolChoice: latestRef.current.toolChoice,
         allowedAppDefaultToolkit: latestRef.current.allowedAppDefaultToolkit,
         allowedMcpServers: latestRef.current.allowedMcpServers,

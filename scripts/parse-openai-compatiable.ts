@@ -1,22 +1,21 @@
 import * as fs from "fs";
 import * as path from "path";
 import "load-env";
-import { IS_VERCEL_ENV } from "lib/const";
-// this is avoid type errors and chaos in build
+import logger from "logger";
+import { openaiCompatibleModelsSafeParse } from "lib/ai/create-openai-compatiable";
+
+const ROOT = process.cwd();
+const FILE_NAME = "openai-compatible.config.ts";
+const CONFIG_PATH = path.join(ROOT, FILE_NAME);
+
 async function load() {
-  if (!IS_VERCEL_ENV) {
-    // @ts-ignore
-    const { ifParsed, data } = await import("../.openai-compatible-config");
-    return { ifParsed, data };
-  } else {
-    const ifParsed = true;
-    const data = process.env.OPENAI_LIKE_DATA || `[]`;
-    return { ifParsed, data };
+  try {
+    const config = await import(CONFIG_PATH).then((m) => m.default);
+    return openaiCompatibleModelsSafeParse(config);
+  } catch (error) {
+    logger.error(error);
+    return [];
   }
-}
-const { ifParsed, data } = await load();
-if (!ifParsed) {
-  throw new Error("Invalid OpenAI compatible provider list configuration.");
 }
 
 /**
@@ -68,7 +67,7 @@ function updateEnvVariable(
 
     fs.writeFileSync(envFilePath, newEnvContent, "utf8");
     console.log(
-      `Successfully updated ${keyToModify} in ${envFilePath} to: ${newValue}`,
+      `Successfully updated ${keyToModify} in ${envFilePath} to: \n\n${newValue}\n`,
     );
     return true;
   } catch (error) {
@@ -80,7 +79,13 @@ function updateEnvVariable(
 const cwd = process.cwd();
 const envPath = path.join(cwd, ".env");
 
-const success = updateEnvVariable(envPath, "OPENAI_LIKE_DATA", `${data}`);
+const openaiCompatibleProviders = await load();
+
+const success = updateEnvVariable(
+  envPath,
+  "OPENAI_COMPATIBLE_DATA",
+  JSON.stringify(openaiCompatibleProviders),
+);
 
 if (success) {
   console.log("Operation completed. Check your .env file!");

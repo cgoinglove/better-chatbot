@@ -1,6 +1,9 @@
 "use client";
 
-import { Fragment, PropsWithChildren, useState } from "react";
+import { appStore } from "@/app/store";
+import { useChatModels } from "@/hooks/queries/use-chat-models";
+import { ChatModel } from "app-types/chat";
+import { Fragment, PropsWithChildren, useEffect, useState } from "react";
 
 import {
   Command,
@@ -14,31 +17,33 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 
 interface SelectModelProps {
-  onSelect: (model: string) => void;
+  onSelect: (model: ChatModel) => void;
   align?: "start" | "end";
-  providers: {
-    provider: string;
-    models: { name: string; isToolCallUnsupported: boolean }[];
-  }[];
-  model: string;
+  defaultModel?: ChatModel;
 }
 
 export const SelectModel = (props: PropsWithChildren<SelectModelProps>) => {
   const [open, setOpen] = useState(false);
+  const { data: providers } = useChatModels();
+  const [model, setModel] = useState(props.defaultModel);
+
+  useEffect(() => {
+    setModel(props.defaultModel ?? appStore.getState().chatModel);
+  }, [props.defaultModel]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>{props.children}</PopoverTrigger>
+      <PopoverTrigger asChild>{props.children || "model"}</PopoverTrigger>
       <PopoverContent className="p-0 w-[280px]" align={props.align || "end"}>
         <Command
           className="rounded-lg relative shadow-md h-80"
-          value={props.model}
+          value={JSON.stringify(model)}
           onClick={(e) => e.stopPropagation()}
         >
           <CommandInput placeholder="search model..." />
           <CommandList className="p-2">
             <CommandEmpty>No results found.</CommandEmpty>
-            {props.providers.map((provider, i) => (
+            {providers?.map((provider, i) => (
               <Fragment key={provider.provider}>
                 <CommandGroup
                   heading={provider.provider}
@@ -52,7 +57,14 @@ export const SelectModel = (props: PropsWithChildren<SelectModelProps>) => {
                       key={model.name}
                       className="cursor-pointer"
                       onSelect={() => {
-                        props.onSelect(model.name);
+                        setModel({
+                          provider: provider.provider,
+                          model: model.name,
+                        });
+                        props.onSelect({
+                          provider: provider.provider,
+                          model: model.name,
+                        });
                         setOpen(false);
                       }}
                       value={model.name}
@@ -66,7 +78,7 @@ export const SelectModel = (props: PropsWithChildren<SelectModelProps>) => {
                     </CommandItem>
                   ))}
                 </CommandGroup>
-                {i < props.providers.length - 1 && <CommandSeparator />}
+                {i < providers?.length - 1 && <CommandSeparator />}
               </Fragment>
             ))}
           </CommandList>

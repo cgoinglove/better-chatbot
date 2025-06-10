@@ -14,13 +14,13 @@ export async function POST(
     return new Response("Unauthorized", { status: 401 });
   }
   const { threadId } = await params;
-  const { messages, model, projectId } = await request.json();
+  const { messages, chatModel, projectId } = await request.json();
 
   let thread = await chatRepository.selectThread(threadId);
   if (!thread) {
     const title = await generateTitleFromUserMessageAction({
       message: messages[0],
-      model: customModelProvider.getModel(model),
+      model: customModelProvider.getModel(chatModel),
     });
     thread = await chatRepository.insertThread({
       id: threadId,

@@ -2,14 +2,11 @@ import path from "path";
 import * as fs from "fs";
 
 const CONFIG_TEMPLATE = `
-// don't edit this part
-import {
-  OpenAICompatibleProvidersListSchema, 
-  type OpenAICompatibleProvider, 
-} from "./src/lib/ai/open-ai-like-schema";
-// edit this part
-const providerList: OpenAICompatibleProvider[] = [ 
-  // example {
+import { type OpenAICompatibleProvider } from "./src/lib/ai/create-openai-compatiable";
+
+const providers: OpenAICompatibleProvider[] = [
+  // example
+  // {
   //   provider: "Groq",
   //   apiKeyEnvVar: "GROQ_API_KEY",
   //   baseUrl: "https://api.groq.com/openai/v1",
@@ -33,29 +30,26 @@ const providerList: OpenAICompatibleProvider[] = [
   // },
 ];
 
-export const ifParsed = OpenAICompatibleProvidersListSchema.parse(providerList); 
-export const data = JSON.stringify(providerList);
-`;
+export default providers;
+
+`.trim();
 
 const ROOT = process.cwd();
+const FILE_NAME = "openai-compatible.config.ts";
+const CONFIG_PATH = path.join(ROOT, FILE_NAME);
 
-const CONFIG_PATH = path.join(ROOT, ".openai-compatible-config.ts");
 function createConfigFile() {
   if (!fs.existsSync(CONFIG_PATH)) {
     try {
       fs.writeFileSync(CONFIG_PATH, CONFIG_TEMPLATE, "utf-8");
-      console.log(".openai-compatible-config.ts file has been created.");
+      console.log(`${FILE_NAME} file has been created.`);
     } catch (error) {
-      console.error(
-        "Error occurred while creating .openai-compatible-config.ts file.",
-      );
+      console.error(`Error occurred while creating ${FILE_NAME} file.`);
       console.error(error);
       return false;
     }
   } else {
-    console.info(
-      ".openai-compatible-config.ts file already exists. Skipping...",
-    );
+    console.info(`${FILE_NAME} file already exists. Skipping...`);
   }
 }
 

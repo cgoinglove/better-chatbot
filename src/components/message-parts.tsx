@@ -35,7 +35,6 @@ import { useCopy } from "@/hooks/use-copy";
 import { Card, CardContent } from "ui/card";
 import { AnimatePresence, motion } from "framer-motion";
 import { SelectModel } from "./select-model";
-import { customModelProvider } from "lib/ai/models";
 import {
   deleteMessageAction,
   deleteMessagesByChatIdAfterTimestampAction,
@@ -43,7 +42,7 @@ import {
 
 import { toast } from "sonner";
 import { safe } from "ts-safe";
-import { ChatMessageAnnotation } from "app-types/chat";
+import { ChatMessageAnnotation, ChatModel } from "app-types/chat";
 import { DefaultToolName } from "lib/ai/tools/utils";
 import { Skeleton } from "ui/skeleton";
 import { PieChart } from "./tool-invocation/pie-chart";
@@ -261,8 +260,6 @@ export const UserMessagePart = ({
   );
 };
 
-const modelList = customModelProvider.modelsInfo;
-
 export const AssistMessagePart = ({
   part,
   showActions,
@@ -293,7 +290,7 @@ export const AssistMessagePart = ({
       .unwrap();
   }, [message.id]);
 
-  const handleModelChange = (model: string) => {
+  const handleModelChange = (model: ChatModel) => {
     safe(() => setIsLoading(true))
       .ifOk(() =>
         threadId
@@ -356,11 +353,7 @@ export const AssistMessagePart = ({
           <Tooltip>
             <TooltipTrigger asChild>
               <div>
-                <SelectModel
-                  model={""}
-                  onSelect={handleModelChange}
-                  providers={modelList}
-                >
+                <SelectModel onSelect={handleModelChange}>
                   <Button
                     data-testid="message-edit-button"
                     variant="ghost"

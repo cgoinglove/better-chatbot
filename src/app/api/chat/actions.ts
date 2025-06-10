@@ -13,7 +13,7 @@ import {
   generateExampleToolSchemaPrompt,
 } from "lib/ai/prompts";
 
-import type { ChatThread, Project } from "app-types/chat";
+import type { ChatModel, ChatThread, Project } from "app-types/chat";
 
 import {
   chatRepository,
@@ -109,11 +109,11 @@ export async function deleteThreadsAction() {
 }
 
 export async function generateExampleToolSchemaAction(options: {
-  modelName: string;
+  model?: ChatModel;
   toolInfo: MCPToolInfo;
   prompt?: string;
 }) {
-  const model = customModelProvider.getModel(options.modelName);
+  const model = customModelProvider.getModel(options.model);
 
   const schema = jsonSchema(
     toAny({

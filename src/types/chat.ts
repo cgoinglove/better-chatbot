@@ -3,6 +3,11 @@ import { z } from "zod";
 import { AllowedMCPServerZodSchema } from "./mcp";
 import { UserPreferences } from "./user";
 
+export type ChatModel = {
+  provider: string;
+  model: string;
+};
+
 export type ChatThread = {
   id: string;
   title: string;
@@ -65,7 +70,12 @@ export const chatApiSchemaRequestBodySchema = z.object({
   id: z.string(),
   projectId: z.string().optional(),
   message: z.any() as z.ZodType<UIMessage>,
-  model: z.string().min(1).max(2000),
+  chatModel: z
+    .object({
+      provider: z.string(),
+      model: z.string(),
+    })
+    .optional(),
   toolChoice: z.enum(["auto", "none", "manual"]),
   allowedMcpServers: z.record(z.string(), AllowedMCPServerZodSchema).optional(),
   allowedAppDefaultToolkit: z.array(z.string()).optional(),

@@ -15,8 +15,7 @@ import { UseChatHelpers } from "@ai-sdk/react";
 import { SelectModel } from "./select-model";
 import { appStore } from "@/app/store";
 import { useShallow } from "zustand/shallow";
-import { customModelProvider } from "lib/ai/models";
-import { ChatMention, ChatMessageAnnotation } from "app-types/chat";
+import { ChatMention, ChatMessageAnnotation, ChatModel } from "app-types/chat";
 import dynamic from "next/dynamic";
 import { ToolModeDropdown } from "./tool-mode-dropdown";
 import { PROMPT_PASTE_MAX_LENGTH } from "lib/const";
@@ -32,8 +31,8 @@ interface PromptInputProps {
   append: UseChatHelpers["append"];
   toolDisabled?: boolean;
   isLoading?: boolean;
-  model?: string;
-  setModel?: (model: string) => void;
+  model?: ChatModel;
+  setModel?: (model: ChatModel) => void;
   voiceDisabled?: boolean;
 }
 
@@ -59,7 +58,7 @@ export default function PromptInput({
   const t = useTranslations("Chat");
 
   const [mcpList, globalModel, appStoreMutate] = appStore(
-    useShallow((state) => [state.mcpList, state.model, state.mutate]),
+    useShallow((state) => [state.mcpList, state.chatModel, state.mutate]),
   );
 
   const chatModel = useMemo(() => {
@@ -67,21 +66,17 @@ export default function PromptInput({
   }, [model, globalModel]);
 
   const setChatModel = useCallback(
-    (model: string) => {
+    (model: ChatModel) => {
       if (setModel) {
         setModel(model);
       } else {
-        appStoreMutate({ model });
+        appStoreMutate({ chatModel: model });
       }
     },
     [setModel, appStoreMutate],
   );
 
   const [toolMentionItems, setToolMentionItems] = useState<ChatMention[]>([]);
-
-  const modelList = useMemo(() => {
-    return customModelProvider.modelsInfo;
-  }, []);
 
   const [pastedContents, setPastedContents] = useState<string[]>([]);
 
@@ -204,16 +199,14 @@ export default function PromptInput({
                 )}
                 <div className="flex-1" />
 
-                <SelectModel
-                  onSelect={setChatModel}
-                  providers={modelList}
-                  model={chatModel}
-                >
+                <SelectModel onSelect={setChatModel} defaultModel={chatModel}>
                   <Button
                     variant={"ghost"}
                     className="rounded-full data-[state=open]:bg-input! hover:bg-input!"
                   >
-                    {chatModel}
+                    {chatModel?.model ?? (
+                      <span className="text-muted-foreground">model</span>
+                    )}
                     <ChevronDown className="size-3" />
                   </Button>
                 </SelectModel>

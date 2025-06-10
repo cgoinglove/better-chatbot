@@ -1,8 +1,11 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { AppDefaultToolkit, ChatThread, Project } from "app-types/chat";
-
-import { DEFAULT_MODEL } from "lib/ai/models";
+import {
+  AppDefaultToolkit,
+  ChatModel,
+  ChatThread,
+  Project,
+} from "app-types/chat";
 import { AllowedMCPServer, MCPServerInfo } from "app-types/mcp";
 import { OPENAI_VOICE } from "lib/ai/speech/open-ai/use-voice-chat.openai";
 export interface AppState {
@@ -19,14 +22,14 @@ export interface AppState {
     allowedAppDefaultToolkit?: AppDefaultToolkit[];
     name: string;
   }[];
-  model: string;
+  chatModel?: ChatModel;
   openShortcutsPopup: boolean;
   openChatPreferences: boolean;
   mcpCustomizationPopup?: MCPServerInfo & { id: string };
   temporaryChat: {
     isOpen: boolean;
     instructions: string;
-    model: string;
+    chatModel?: ChatModel;
   };
   voiceChat: {
     isOpen: boolean;
@@ -52,14 +55,12 @@ const initialState: AppState = {
   allowedMcpServers: undefined,
   allowedAppDefaultToolkit: [],
   toolPresets: [],
-  model: DEFAULT_MODEL,
   openShortcutsPopup: false,
   openChatPreferences: false,
   mcpCustomizationPopup: undefined,
   temporaryChat: {
     isOpen: false,
     instructions: "",
-    model: DEFAULT_MODEL,
   },
   voiceChat: {
     isOpen: false,
@@ -82,7 +83,7 @@ export const appStore = create<AppState & AppDispatch>()(
     {
       name: "mc-app-store-v2.0.0",
       partialize: (state) => ({
-        model: state.model || initialState.model,
+        chatModel: state.chatModel || initialState.chatModel,
         toolChoice: state.toolChoice || initialState.toolChoice,
         allowedMcpServers:
           state.allowedMcpServers || initialState.allowedMcpServers,
