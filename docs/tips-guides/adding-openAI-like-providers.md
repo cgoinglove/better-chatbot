@@ -7,7 +7,7 @@ It is an api that is like the openAI one. They are used as llm providers.
 ## Adding providers - docker and local deployment - file method
 
 1. Set up the app as you normally would
-2. Open `.openai-compatible-config.ts` in an IDE
+2. Open `openai-compatible.config.ts` in an IDE
 3. Uncomment the example and remove the word example
 4. Modify the api url and other data to match your provider - to add more just copy and paste it and edit it, also add your secret key
 5. Run `pnpm openai-compatiable:parse` to update env when you change schema
