@@ -8,7 +8,7 @@ const providers: OpenAICompatibleProvider[] = [
   // example
   // {
   //   provider: "Groq",
-  //   apiKeyEnvVar: "GROQ_API_KEY",
+  //   apiKey: "123",
   //   baseUrl: "https://api.groq.com/openai/v1",
   //   models: [
   //     {

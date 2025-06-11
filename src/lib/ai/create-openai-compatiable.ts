@@ -19,11 +19,11 @@ export function createOpenAICompatibleModels(
     return { providers, unsupportedModels };
   }
   try {
-    config.forEach(({ provider, models, baseUrl, apiKeyEnvVar }) => {
+    config.forEach(({ provider, models, baseUrl, apiKey }) => {
       const providerKey = provider;
       const customProvider = createOpenAICompatible({
         name: provider,
-        apiKey: process.env[apiKeyEnvVar],
+        apiKey: apiKey,
         baseURL: baseUrl!,
       });
 
@@ -69,7 +69,7 @@ export const OpenAICompatibleProviderSchema = z.object({
     .array(OpenAICompatibleModelSchema)
     .describe("A list of AI models offered by this provider."),
   // The environment variable name for the provider's API key. Stored in .env.
-  apiKeyEnvVar: z
+  apiKey: z
     .string()
     .describe(
       "The name of the environment variable (e.g., 'OPENAI_API_KEY') for the provider's API key. This key should be stored in a .env file.",

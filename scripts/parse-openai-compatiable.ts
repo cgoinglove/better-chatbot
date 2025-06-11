@@ -76,8 +76,7 @@ function updateEnvVariable(
   }
 }
 
-const cwd = process.cwd();
-const envPath = path.join(cwd, ".env");
+const envPath = path.join(ROOT, ".env");
 
 const openaiCompatibleProviders = await load();
 

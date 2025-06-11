@@ -9,9 +9,8 @@ It is an api that is like the openAI one. They are used as llm providers.
 1. Set up the app as you normally would
 2. Open `.openai-compatible-config.ts` in an IDE
 3. Uncomment the example and remove the word example
-4. Modify the api url and other data to match your provider - to add more just copy and paste it and edit it
-5. Edit env variables the api key should be in your env - it should be named what you called it in the file
-6. Run `pnpm openai-compatiable:parse` to update env when you change schema
+4. Modify the api url and other data to match your provider - to add more just copy and paste it and edit it, also add your secret key
+5. Run `pnpm openai-compatiable:parse` to update env when you change schema
 
 ## Adding providers - vercel or anywhere else - ui based method
 
