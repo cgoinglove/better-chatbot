@@ -12,7 +12,9 @@
     "showMore": "더 보기",
     "generate": "생성",
     "edit": "수정",
-    "search": "검색..."
+    "search": "검색...",
+    "approve": "승인",
+    "reject": "거절"
   },
   "Auth": {
     "SignIn": {

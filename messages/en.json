@@ -12,7 +12,9 @@
     "showMore": "Show more",
     "generate": "Generate",
     "edit": "Edit",
-    "search": "Search..."
+    "search": "Search...",
+    "approve": "Approve",
+    "reject": "Reject"
   },
   "Auth": {
     "SignIn": {

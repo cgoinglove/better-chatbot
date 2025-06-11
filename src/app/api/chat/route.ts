@@ -178,14 +178,13 @@ export async function POST(request: Request) {
         const vercelAITooles = safe(tools)
           .map((t) => {
             if (!t) return undefined;
-            const bindingTools = {
+            const bindingTools =
+              toolChoice === "manual" ? excludeToolExecution(t) : t;
+
+            return {
               ...getAllowedDefaultToolkit(allowedAppDefaultToolkit),
-              ...t,
+              ...bindingTools,
             };
-            if (toolChoice === "manual") {
-              return excludeToolExecution(bindingTools);
-            }
-            return bindingTools;
           })
           .unwrap();
 

@@ -4,7 +4,6 @@ import { UIMessage } from "ai";
 import {
   Check,
   Copy,
-  ChevronDown,
   Loader,
   Pencil,
   ChevronDownIcon,
@@ -12,12 +11,14 @@ import {
   X,
   Wrench,
   Trash2,
+  ChevronRight,
+  TriangleAlert,
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { Button } from "ui/button";
 import { Markdown } from "./markdown";
 import { MessagePastesContentCard } from "./message-pasts-content";
-import { cn, safeJSONParse, toAny } from "lib/utils";
+import { cn, safeJSONParse } from "lib/utils";
 import JsonView from "ui/json-view";
 import {
   useMemo,
@@ -32,7 +33,6 @@ import { MessageEditor } from "./message-editor";
 import type { UseChatHelpers } from "@ai-sdk/react";
 import { useCopy } from "@/hooks/use-copy";
 
-import { Card, CardContent } from "ui/card";
 import { AnimatePresence, motion } from "framer-motion";
 import { SelectModel } from "./select-model";
 import {
@@ -49,6 +49,9 @@ import { PieChart } from "./tool-invocation/pie-chart";
 import { BarChart } from "./tool-invocation/bar-chart";
 import { LineChart } from "./tool-invocation/line-chart";
 import { PROMPT_PASTE_MAX_LENGTH } from "lib/const";
+import { useTranslations } from "next-intl";
+import { extractMCPToolId } from "lib/ai/mcp/mcp-tool-id";
+import { Separator } from "ui/separator";
 
 type MessagePart = UIMessage["parts"][number];
 
@@ -175,12 +178,9 @@ export const UserMessagePart = ({
   return (
     <div className="flex flex-col gap-2 items-end my-2">
       <div
-        onClick={() => {
-          ref.current?.scrollIntoView({ behavior: "smooth" });
-        }}
         data-testid="message-content"
         className={cn(
-          "flex flex-col gap-4",
+          "flex flex-col gap-4 max-w-full",
           {
             "bg-accent text-accent-foreground px-4 py-3 rounded-2xl":
               isLast || part.text.length <= PROMPT_PASTE_MAX_LENGTH,
@@ -190,7 +190,7 @@ export const UserMessagePart = ({
         )}
       >
         {isLast || part.text.length <= PROMPT_PASTE_MAX_LENGTH ? (
-          <p className={cn("whitespace-pre-wrap text-sm")}>
+          <p className={cn("whitespace-pre-wrap text-sm break-words")}>
             <HighlightedText text={part.text} mentions={toolMentions} />
           </p>
         ) : (
@@ -401,9 +401,10 @@ export const ToolMessagePart = memo(
     message,
     setMessages,
   }: ToolMessagePartProps) => {
+    const t = useTranslations("Common");
     const { toolInvocation } = part;
     const { toolName, toolCallId, state, args } = toolInvocation;
-    const [isExpanded, setIsExpanded] = useState(false);
+    const [expanded, setExpanded] = useState(false);
     const { copied: copiedInput, copy: copyInput } = useCopy();
     const { copied: copiedOutput, copy: copyOutput } = useCopy();
     const [isDeleting, setIsDeleting] = useState(false);
@@ -486,112 +487,138 @@ export const ToolMessagePart = memo(
       return null;
     }, [state, toolInvocation]);
 
+    const { serverName: mcpServerName, toolName: mcpToolName } = useMemo(() => {
+      return extractMCPToolId(toolName);
+    }, [toolName]);
+
+    const isExpanded = useMemo(() => {
+      return expanded || result === null;
+    }, [expanded, result]);
+
     return (
-      <div key={toolCallId} className="flex flex-col gap-2 group w-full">
+      <div key={toolCallId} className="group w-full">
         {ToolResultComponent ? (
           ToolResultComponent
         ) : (
-          <>
-            <div className="flex flex-row gap-2 items-center cursor-pointer">
-              <Button
-                onClick={() => setIsExpanded(!isExpanded)}
-                variant="outline"
-                className={cn(
-                  "flex flex-row gap-2 justify-between items-center text-muted-foreground min-w-44 bg-card",
-                  isExecuting && "animate-pulse bg-input",
-                  isError && "border-destructive",
-                )}
-              >
-                <Wrench className="size-3.5" />
-                <p className={cn("font-bold")}>{toolName}</p>
+          <div className="flex flex-col fade-in duration-300 animate-in">
+            <div
+              className="flex gap-2 items-center cursor-pointer group/title"
+              onClick={() => setExpanded(!expanded)}
+            >
+              <div className="p-1.5 text-primary bg-input/40 rounded">
                 {isExecuting ? (
-                  <Loader className="size-3 animate-spin" />
+                  <Loader className="size-3.5 animate-spin" />
+                ) : isError ? (
+                  <TriangleAlert className="size-3.5 text-destructive" />
                 ) : (
-                  <ChevronDown
-                    className={cn(
-                      isExpanded && "rotate-180",
-                      "transition-transform",
-                      "size-4",
-                    )}
-                  />
+                  <Wrench className="size-3.5" />
                 )}
-              </Button>
-              {onPoxyToolCall && (
+              </div>
+              <span className="font-bold flex items-center gap-2">
+                {mcpServerName}
+              </span>
+              {mcpToolName && (
                 <>
-                  <Button
-                    variant="outline"
-                    className="bg-input"
-                    size="icon"
-                    onClick={() => onPoxyToolCall(true)}
-                  >
-                    <Check />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => onPoxyToolCall(false)}
-                  >
-                    <X />
-                  </Button>
+                  <ChevronRight className="size-3.5" />
+                  <span className="text-muted-foreground group-hover/title:text-primary transition-colors duration-300">
+                    {mcpToolName}
+                  </span>
                 </>
               )}
+              <div className="ml-auto group-hover/title:bg-input p-1.5 rounded transition-colors duration-300">
+                <ChevronDownIcon
+                  className={cn(isExpanded && "rotate-180", "size-3.5")}
+                />
+              </div>
             </div>
-            {isExpanded && (
-              <Card className="relative mt-2 p-4 max-h-[50vh] overflow-y-auto bg-card">
-                <CardContent className="flex flex-row gap-4 text-sm ">
-                  <div className="w-1/2 min-w-0 flex flex-col">
-                    <div className="flex items-center gap-2 mb-2 pt-2 pb-1 z-10">
-                      <h5 className="text-muted-foreground text-sm font-medium">
-                        Inputs
-                      </h5>
-                      <div className="flex-1" />
-
-                      {copiedInput ? (
-                        <Check className="size-4" />
-                      ) : (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="size-3 text-muted-foreground"
-                          onClick={() =>
-                            copyInput(JSON.stringify(toolInvocation.args))
-                          }
-                        >
-                          <Copy />
-                        </Button>
-                      )}
-                    </div>
-                    <JsonView data={toolInvocation.args} />
+            <div className="flex gap-2 py-2">
+              <div className="w-7 flex justify-center">
+                <Separator
+                  orientation="vertical"
+                  className="h-full bg-gradient-to-t from-transparent to-border to-5%"
+                />
+              </div>
+              <div className="w-full flex flex-col gap-2">
+                <div className="min-w-0 w-full p-4 rounded-lg bg-card px-4 border text-xs">
+                  <div className="flex items-center">
+                    <h5 className="text-muted-foreground font-medium select-none">
+                      Request
+                    </h5>
+                    <div className="flex-1" />
+                    {copiedInput ? (
+                      <Check className="size-3" />
+                    ) : (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-3 text-muted-foreground"
+                        onClick={() =>
+                          copyInput(JSON.stringify(toolInvocation.args))
+                        }
+                      >
+                        <Copy />
+                      </Button>
+                    )}
                   </div>
-
-                  <div className="w-1/2 min-w-0 pl-4 flex flex-col">
-                    <div className="flex items-center gap-2 mb-4 pt-2 pb-1  z-10">
-                      <h5 className="text-muted-foreground text-sm font-medium">
-                        Outputs
+                  {isExpanded && (
+                    <div className="p-2 max-h-[300px] overflow-y-auto ">
+                      <JsonView data={toolInvocation.args} />
+                    </div>
+                  )}
+                </div>
+                {result && (
+                  <div className="min-w-0 w-full p-4 rounded-lg bg-card px-4 border text-xs mt-2">
+                    <div className="flex items-center">
+                      <h5 className="text-muted-foreground font-medium select-none">
+                        Response
                       </h5>
                       <div className="flex-1" />
                       {copiedOutput ? (
-                        <Check className="size-4" />
+                        <Check className="size-3" />
                       ) : (
                         <Button
                           variant="ghost"
                           size="icon"
                           className="size-3 text-muted-foreground"
-                          onClick={() =>
-                            copyOutput(
-                              JSON.stringify(toAny(toolInvocation).result),
-                            )
-                          }
+                          onClick={() => copyOutput(JSON.stringify(result))}
                         >
                           <Copy />
                         </Button>
                       )}
                     </div>
-                    <JsonView data={result} />
+                    {isExpanded && (
+                      <div className="p-2 max-h-[300px] overflow-y-auto">
+                        <JsonView data={result} />
+                      </div>
+                    )}
                   </div>
-                </CardContent>
-              </Card>
-            )}
+                )}
+
+                {onPoxyToolCall && (
+                  <div className="flex flex-row gap-2 items-center mt-2">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      className="rounded-full text-xs hover:ring"
+                      onClick={() => onPoxyToolCall(true)}
+                    >
+                      <Check />
+                      {t("approve")}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="rounded-full text-xs"
+                      onClick={() => onPoxyToolCall(false)}
+                    >
+                      <X />
+                      {t("reject")}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+
             {showActions && (
               <div className="flex flex-row gap-2 items-center">
                 <Tooltip>
@@ -616,7 +643,7 @@ export const ToolMessagePart = memo(
                 </Tooltip>
               </div>
             )}
-          </>
+          </div>
         )}
       </div>
     );

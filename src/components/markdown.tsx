@@ -60,7 +60,7 @@ const components: Partial<Components> = {
   },
   li: ({ node, children, ...props }) => {
     return (
-      <li className="py-2" {...props}>
+      <li className="py-2 break-words" {...props}>
         <WordByWordFadeIn>{children}</WordByWordFadeIn>
       </li>
     );

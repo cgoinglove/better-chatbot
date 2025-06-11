@@ -32,6 +32,7 @@ const toggleVoiceChatShortcut: Shortcut = {
   shortcut: {
     key: "I",
     command: true,
+    shift: true,
   },
 };
 

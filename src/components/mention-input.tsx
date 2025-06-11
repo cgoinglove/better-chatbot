@@ -104,7 +104,11 @@ export default function MentionInput({
     () => ({
       immediatelyRender: false,
       extensions: [
-        StarterKit,
+        StarterKit.configure({
+          codeBlock: false,
+          blockquote: false,
+          code: false,
+        }),
         Mention.configure({
           HTMLAttributes: {
             class: "mention",
