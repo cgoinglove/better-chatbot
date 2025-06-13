@@ -1,5 +1,5 @@
 import { UIMessage } from "ai";
-import { ChatModel } from "./chat";
+import { ChatModel } from "app-types/chat";
 
 export type NodeType =
   | "start"
@@ -21,41 +21,63 @@ export type NodeMetadata = {
 
 export type Edge = {
   id: string;
+  workflowId: string;
   source: string;
   target: string;
   sourceHandle?: string | null;
   targetHandle?: string | null;
 };
 
-export type BaseNode<Type extends NodeType> = {
+export type BaseWorkflowNode<Type extends NodeType> = {
   type: Type;
   id: string;
+  workflowId: string;
   name: string;
   description: string;
   metadata: NodeMetadata;
   isMergeNode?: boolean;
   usageFields: string[];
-  generateFields: string[];
+  generateFields: Record<
+    string,
+    "text" | "number" | "boolean" | "date" | "object" | "array"
+  >;
 };
 
-export type StartNode = BaseNode<"start"> & {
-  inputSchema: "text"; // todo: json schema
+export type StartNode = BaseWorkflowNode<"start"> & {
+  input: any;
 };
 
-export type EndNode = BaseNode<"end"> & {
+export type EndNode = BaseWorkflowNode<"end"> & {
   output: any;
 };
 
-export type LLMNode = BaseNode<"llm"> & {
+export type LLMNode = BaseWorkflowNode<"llm"> & {
   model: ChatModel;
   messages: {
     role: "user" | "assistant" | "system";
     parts: Extract<UIMessage["parts"][number], { type: "text" }>[];
   };
-  outputSchema: "text"; // todo: json schema
+  outputSchema: "text" | "json";
 };
 
-export type InformationNode = BaseNode<"information"> & {
+export type InformationNode = BaseWorkflowNode<"information"> & {
   title: string;
   description?: string;
+};
+
+export type WorkflowNode = StartNode | EndNode | LLMNode | InformationNode;
+
+export type WorkflowContext<State extends Record<string, any>> = {
+  state: State;
+  setState: (
+    state: Partial<State> | ((state: State) => Partial<State>),
+  ) => void;
+};
+
+export type WorkflowConfig = {
+  id: string;
+  name: string;
+  description: string;
+  nodes: WorkflowNode[];
+  edges: Edge[];
 };
