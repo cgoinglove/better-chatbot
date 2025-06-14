@@ -1,0 +1,178 @@
+"use client";
+
+import { Dispatch, memo, SetStateAction, useCallback, useMemo } from "react";
+import { Input } from "@/components/ui/input";
+
+import { Textarea } from "@/components/ui/textarea";
+
+import { Separator } from "@/components/ui/separator";
+
+import {
+  EndNode,
+  NodeKind,
+  StartNode,
+  UINode,
+} from "lib/ai/workflow/interface";
+import { NodeIcon } from "./node-icon";
+import { isFunction } from "lib/utils";
+import {
+  LockIcon,
+  MoreHorizontalIcon,
+  PlayIcon,
+  Trash2Icon,
+  XIcon,
+} from "lucide-react";
+import { Button } from "ui/button";
+import { StartNodeConfig } from "./start-node-config";
+import { EndNodeConfig } from "./end-node-config";
+import { Label } from "ui/label";
+import { Edge, useReactFlow } from "@xyflow/react";
+import { NodeRun } from "./node-run";
+
+export const WorkflowPanel = memo(function WorkflowPanel({
+  nodes,
+  setNodes,
+  edges,
+}: {
+  nodes: UINode[];
+  setNodes: Dispatch<SetStateAction<UINode[]>>;
+  edges: Edge[];
+}) {
+  const { updateNode } = useReactFlow();
+
+  const selectedNode = useMemo(() => {
+    return nodes.find((node) => node.selected);
+  }, [nodes]);
+
+  const setNode = useCallback(
+    (data: Mutate<UINode>) => {
+      if (!selectedNode) {
+        return;
+      }
+      setNodes((nodes) =>
+        nodes.map((node) => {
+          if (node.id === selectedNode.id) {
+            const nextNode = isFunction(data) ? data(node) : data;
+            return { ...node, ...nextNode } as UINode;
+          }
+          return node;
+        }),
+      );
+    },
+    [selectedNode, setNodes],
+  );
+
+  return (
+    <div className="min-h-0 h-[90vh] flex flex-col items-end">
+      <div className="flex items-center gap-2 mb-2">
+        <Button variant="secondary" size="icon">
+          <LockIcon />
+        </Button>
+        <div className="h-6">
+          <Separator orientation="vertical" />
+        </div>
+        <Button variant="secondary">
+          <PlayIcon />
+          Execute
+        </Button>
+        <div className="h-6">
+          <Separator orientation="vertical" />
+        </div>
+        <Button variant="default">Save</Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="hover:bg-destructive/20 hover:text-destructive"
+        >
+          <Trash2Icon />
+        </Button>
+      </div>
+      {selectedNode && (
+        <div className="w-90 h-full space-y-4  bg-card border rounded-lg shadow-lg overflow-y-auto py-4">
+          {/* Header */}
+          <div className="px-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 w-full">
+                <NodeIcon type={selectedNode.data.kind} />
+                <Input
+                  maxLength={20}
+                  onChange={(e) =>
+                    setNode((prev) => ({
+                      data: {
+                        ...prev.data,
+                        name: e.target.value,
+                      },
+                    }))
+                  }
+                  value={selectedNode.data.name}
+                  className="bg-transparent border-none px-0 text-lg font-semibold"
+                />
+                <div className="ml-auto rounded hover:bg-secondary cursor-pointer p-1">
+                  <MoreHorizontalIcon className="size-3.5" />
+                </div>
+                <div
+                  className="p-1 rounded hover:bg-secondary cursor-pointer"
+                  onClick={() => {
+                    updateNode(selectedNode.id, { selected: false });
+                  }}
+                >
+                  <XIcon className="size-3.5" />
+                </div>
+              </div>
+            </div>
+            {selectedNode.data.kind !== NodeKind.Information && (
+              <Textarea
+                className="text-xs bg-transparent rounded-none resize-none overflow-y-auto max-h-14 min-h-6 h-6 mt-2 p-0 border-none"
+                value={selectedNode.data.description}
+                onChange={(e) =>
+                  setNode((prev) => ({
+                    data: { ...prev.data, description: e.target.value },
+                  }))
+                }
+                placeholder="node description..."
+              />
+            )}
+          </div>
+
+          <Separator />
+          <div className="px-4">
+            {selectedNode.data.isRunTab ? (
+              <NodeRun />
+            ) : selectedNode.data.kind === NodeKind.Start ? (
+              <StartNodeConfig
+                node={selectedNode as UINode<StartNode>}
+                setNode={setNode}
+              />
+            ) : selectedNode.data.kind === NodeKind.End ? (
+              <EndNodeConfig
+                node={selectedNode as UINode<EndNode>}
+                nodes={nodes}
+                edges={edges}
+                setNode={setNode}
+              />
+            ) : selectedNode.data.kind === NodeKind.Information ? (
+              <div className="h-full flex flex-col gap-2">
+                <Label className="text-muted-foreground text-xs">
+                  Description
+                </Label>
+                <Textarea
+                  className="resize-none min-h-80 max-h-80 overflow-y-auto"
+                  value={selectedNode.data.description}
+                  onChange={(e) =>
+                    setNode((prev) => ({
+                      ...prev,
+                      data: {
+                        ...prev.data,
+                        description: e.target.value,
+                      },
+                    }))
+                  }
+                />
+              </div>
+            ) : null}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+});

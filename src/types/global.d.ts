@@ -1,3 +1,5 @@
+
+
 type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 
 type Mutate<T> = Partial<T> | ((prev: T) => Partial<T>);
@@ -14,3 +16,9 @@ type JsonValue =
   | undefined
   | JsonValue[]
   | { [key: string]: JsonValue };
+
+type DeepPartial<T> = {
+  [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P];
+};
+
+
