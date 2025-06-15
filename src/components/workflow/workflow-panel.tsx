@@ -23,6 +23,7 @@ import { EndNodeConfig } from "./end-node-config";
 import { Label } from "ui/label";
 import { Edge, useReactFlow } from "@xyflow/react";
 import { NodeRun } from "./node-run";
+import { LLMNodeConfig } from "./llm-node.config";
 
 export const WorkflowPanel = memo(function WorkflowPanel({
   nodes,
@@ -144,6 +145,13 @@ export const WorkflowPanel = memo(function WorkflowPanel({
                 nodes={nodes}
                 edges={edges}
                 setNode={setNode}
+              />
+            ) : selectedNode.data.kind === NodeKind.LLM ? (
+              <LLMNodeConfig
+                node={selectedNode as UINode<NodeKind.LLM>}
+                nodes={nodes}
+                edges={edges}
+                setNode={(data) => setNode(data as UINode<NodeKind.LLM>)}
               />
             ) : selectedNode.data.kind === NodeKind.Information ? (
               <div className="h-full flex flex-col gap-2">

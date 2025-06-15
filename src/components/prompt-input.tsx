@@ -36,7 +36,7 @@ interface PromptInputProps {
   voiceDisabled?: boolean;
 }
 
-const MentionInput = dynamic(() => import("./mention-input"), {
+const ChatMentionInput = dynamic(() => import("./chat-mention-input"), {
   ssr: false,
   loading() {
     return <div className="h-[2rem] w-full animate-pulse"></div>;
@@ -151,7 +151,7 @@ export default function PromptInput({
           <div className="rounded-4xl backdrop-blur-sm transition-all duration-200 bg-muted/80 relative flex w-full flex-col cursor-text z-10 border items-stretch focus-within:border-muted-foreground hover:border-muted-foreground p-3">
             <div className="flex flex-col gap-3.5 px-1">
               <div className="relative min-h-[2rem]">
-                <MentionInput
+                <ChatMentionInput
                   input={input}
                   onChange={setInput}
                   onChangeMention={setToolMentionItems}

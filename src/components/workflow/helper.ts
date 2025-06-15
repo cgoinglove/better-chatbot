@@ -1,6 +1,12 @@
+import { appStore } from "@/app/store";
 import { ObjectJsonSchema7 } from "app-types/util";
 import { JSONSchema7 } from "json-schema";
-import { NodeKind, UINode, WorkflowNode } from "lib/ai/workflow/interface";
+import {
+  LLMNode,
+  NodeKind,
+  UINode,
+  WorkflowNode,
+} from "lib/ai/workflow/interface";
 import { generateUUID } from "lib/utils";
 
 export const defaultJsonSchema: ObjectJsonSchema7 = {
@@ -67,6 +73,17 @@ export function generateInitialNode(
 
   if (node.data.kind === NodeKind.End) {
     node.data.outputData = [...(node.data.outputData ?? [])];
+  } else if (node.data.kind === NodeKind.LLM) {
+    node.data.model = node.data.model ?? appStore.getState().chatModel;
+    node.data.messages = [
+      {
+        role: "system",
+        content: {
+          type: "text",
+          text: "",
+        },
+      },
+    ];
   }
 
   return node;

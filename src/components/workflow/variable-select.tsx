@@ -21,13 +21,7 @@ import { Input } from "ui/input";
 
 import { JSONSchema7 } from "json-schema";
 
-export function VariableSelect({
-  currentNodeId,
-  nodes,
-  edges,
-  onChange,
-  children,
-}: {
+interface VariableSelectProps {
   currentNodeId: string;
   nodes: UINode[];
   edges: Edge[];
@@ -40,9 +34,43 @@ export function VariableSelect({
     nodeId: string;
     path: string[];
   }) => void;
-}) {
-  const [query, setQuery] = useState("");
+}
+
+export function VariableSelect({
+  currentNodeId,
+  nodes,
+  edges,
+  item,
+  onChange,
+  children,
+}: VariableSelectProps) {
   const [open, setOpen] = useState(false);
+  return (
+    <DropdownMenu open={open} onOpenChange={setOpen}>
+      <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
+      <DropdownMenuContent className="w-72">
+        <VariableSelectContent
+          currentNodeId={currentNodeId}
+          nodes={nodes}
+          edges={edges}
+          item={item}
+          onChange={(item) => {
+            onChange(item);
+            setOpen(false);
+          }}
+        />
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+export function VariableSelectContent({
+  currentNodeId,
+  nodes,
+  edges,
+  onChange,
+}: Omit<VariableSelectProps, "children">) {
+  const [query, setQuery] = useState("");
 
   const accessibleSchemas = useMemo(() => {
     const accessibleNodes: string[] = [];
@@ -90,7 +118,6 @@ export function VariableSelect({
                     nodeId: id,
                     path,
                   });
-                  setOpen(false);
                 }}
               />
             );
@@ -108,51 +135,39 @@ export function VariableSelect({
       })
       .filter(Boolean);
   }, [accessibleSchemas, query]);
-
   return (
-    <DropdownMenu
-      open={open}
-      onOpenChange={(open) => {
-        setOpen(open);
-        if (!open) {
-          setQuery("");
-        }
-      }}
-    >
-      <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
-      <DropdownMenuContent className="w-72">
-        <div
-          className="flex items-center gap-1 px-2"
-          onKeyDown={(e) => {
+    <div className="flex flex-col w-full">
+      <div
+        className="flex items-center gap-1 px-2"
+        onKeyDown={(e) => {
+          e.stopPropagation();
+        }}
+      >
+        <SearchIcon className="size-4 text-muted-foreground" />
+        <Input
+          autoFocus
+          className="border-none bg-transparent w-full"
+          placeholder="Search..."
+          value={query}
+          onChange={(e) => {
             e.stopPropagation();
+            setQuery(e.target.value);
           }}
-        >
-          <SearchIcon className="size-4 text-muted-foreground" />
-          <Input
-            autoFocus
-            className="border-none bg-transparent w-full"
-            placeholder="Search..."
-            value={query}
-            onChange={(e) => {
-              e.stopPropagation();
-              setQuery(e.target.value);
-            }}
-          />
-        </div>
-        <DropdownMenuSeparator />
-        <div className="max-h-[50vh] overflow-y-auto flex flex-col">
-          {nodes.length === 0 || filteredNodes.length === 0 ? (
-            <div className="flex items-center justify-center h-full">
-              <p className="text-muted-foreground py-4 text-xs">
-                No variables found
-              </p>
-            </div>
-          ) : (
-            filteredNodes
-          )}
-        </div>
-      </DropdownMenuContent>
-    </DropdownMenu>
+        />
+      </div>
+      <DropdownMenuSeparator />
+      <div className="max-h-[50vh] overflow-y-auto flex flex-col">
+        {nodes.length === 0 || filteredNodes.length === 0 ? (
+          <div className="flex items-center justify-center h-full">
+            <p className="text-muted-foreground py-4 text-xs">
+              No variables found
+            </p>
+          </div>
+        ) : (
+          filteredNodes
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -186,7 +201,7 @@ function SchemaItem({
           <span className="text-foreground ml-1">{name}</span>
         </DropdownMenuSubTrigger>
         <DropdownMenuPortal>
-          <DropdownMenuSubContent className="md:w-80 md:max-h-96 overflow-y-auto">
+          <DropdownMenuSubContent className="md:max-h-96 overflow-y-auto">
             {Object.entries(schema.properties ?? {}).map(([key, schema]) => {
               return (
                 <SchemaItem

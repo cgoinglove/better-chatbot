@@ -7,12 +7,13 @@ import {
   ChevronDownIcon,
   PlusIcon,
   TrashIcon,
+  TriangleAlertIcon,
   VariableIcon,
 } from "lucide-react";
 
 import { VariableSelect } from "./variable-select";
 import { Edge } from "@xyflow/react";
-import { addUsageField, findSchemaByPath } from "./helper";
+import { findSchemaByPath } from "./helper";
 import { Input } from "ui/input";
 import { Button } from "ui/button";
 
@@ -40,6 +41,7 @@ export function EndNodeConfig({
         path: source?.path ?? [],
         nodeName: targetNode?.data.name,
         nodeId: targetNode?.data.id,
+        isNotFound: (source && !targetNode) || (targetNode && !schema),
       };
     });
   }, [data.outputSchema, nodes]);
@@ -105,20 +107,14 @@ export function EndNodeConfig({
     <div className="flex flex-col gap-2 text-sm ">
       <div className="flex items-center justify-between">
         <div>Output Variables</div>
-        <VariableSelect
-          nodes={nodes}
-          edges={edges}
-          currentNodeId={data.id}
-          onChange={(item) => {
-            setNode((prev) => ({
-              data: addUsageField(prev.data, item),
-            }));
+        <div
+          onClick={() => {
+            addOutputVariable("text");
           }}
+          className="p-1 hover:bg-secondary rounded cursor-pointer"
         >
-          <div className="p-1 hover:bg-secondary rounded cursor-pointer">
-            <PlusIcon className="size-3" />
-          </div>
-        </VariableSelect>
+          <PlusIcon className="size-3" />
+        </div>
       </div>
       <div className="flex flex-col gap-2">
         {outputVariables.map((item, index) => {
@@ -147,7 +143,12 @@ export function EndNodeConfig({
                 }}
               >
                 <div className="flex-1 min-w-0 w-full flex text-[10px] items-center gap-1 p-2.5 border border-input bg-background rounded-lg cursor-pointer">
-                  <VariableIcon className="size-3 text-blue-500" />
+                  {item.isNotFound ? (
+                    <TriangleAlertIcon className="size-3 text-destructive" />
+                  ) : (
+                    <VariableIcon className="size-3 text-blue-500" />
+                  )}
+
                   <span>{item.nodeName}/</span>
                   <span className="truncate min-w-0 text-blue-500 flex-1">
                     {item.path.join(".")}
@@ -179,6 +180,57 @@ export function EndNodeConfig({
           <PlusIcon /> Add Output
         </Button>
       </div>
+    </div>
+  );
+}
+
+export function EndNodeOutputStack({
+  data,
+  nodes,
+}: { data: EndNode; nodes: UINode[] }) {
+  const outputVariables = useMemo(() => {
+    return data.outputData.map(({ key, source }) => {
+      const targetNode = nodes.find((node) => node.data.id === source?.nodeId);
+      const schema = findSchemaByPath(
+        targetNode?.data.outputSchema ?? {},
+        source?.path ?? [],
+      );
+      return {
+        key,
+        schema,
+        path: source?.path ?? [],
+        nodeName: targetNode?.data.name,
+        nodeId: targetNode?.data.id,
+        isNotFound: (source && !targetNode) || (targetNode && !schema),
+      };
+    });
+  }, [data.outputSchema, nodes]);
+
+  if (!outputVariables.length) return null;
+  return (
+    <div className="flex flex-col gap-1 px-4 py-2">
+      {outputVariables.map((item, index) => {
+        return (
+          <div
+            className="border bg-input text-[10px] rounded px-2 py-1 flex items-center gap-1"
+            key={index}
+          >
+            <div className="flex-1 min-w-0 w-full flex items-center gap-1">
+              {item.isNotFound ? (
+                <TriangleAlertIcon className="size-3 text-destructive" />
+              ) : (
+                <VariableIcon className="size-3 text-blue-500" />
+              )}
+
+              <span>{item.nodeName}/</span>
+              <span className="truncate min-w-0 text-blue-500 flex-1">
+                {item.path.join(".")}
+              </span>
+              <span className="text-muted-foreground">{item.schema?.type}</span>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

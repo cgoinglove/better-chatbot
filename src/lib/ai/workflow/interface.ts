@@ -53,8 +53,8 @@ export type LLMNode = BaseWorkflowNode<{
   model: ChatModel;
   messages: {
     role: "user" | "assistant" | "system";
-    parts: Extract<UIMessage["parts"][number], { type: "text" }>[]; // todo other types
-  };
+    content: Extract<UIMessage["parts"][number], { type: "text" }>; // todo other types
+  }[];
 };
 
 export type WorkflowNode = StartNode | EndNode | LLMNode | InformationNode;

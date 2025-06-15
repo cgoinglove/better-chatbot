@@ -1,6 +1,6 @@
 "use client";
 
-import { NodeKind, UINode } from "lib/ai/workflow/interface";
+import { NodeKind, UINode, WorkflowNode } from "lib/ai/workflow/interface";
 import { useCallback } from "react";
 import {
   Feild,
@@ -10,6 +10,7 @@ import {
 import { PlusIcon, TrashIcon, VariableIcon } from "lucide-react";
 import { PencilIcon } from "lucide-react";
 import { objectFlow } from "lib/utils";
+import { Button } from "ui/button";
 
 export function StartNodeConfig({
   node: { data },
@@ -122,7 +123,44 @@ export function StartNodeConfig({
             </div>
           ),
         )}
+        <EditJsonSchemaFieldPopup onChange={addField}>
+          <Button
+            variant="ghost"
+            className="w-full mt-1 border-dashed border text-muted-foreground"
+          >
+            <PlusIcon /> Add Input
+          </Button>
+        </EditJsonSchemaFieldPopup>
       </div>
+    </div>
+  );
+}
+
+export function OutputSchemaStack({ data }: { data: WorkflowNode }) {
+  const keys = Object.keys(data.outputSchema?.properties ?? {});
+  if (!keys.length) return null;
+  return (
+    <div className="flex flex-col gap-1 px-4 py-2">
+      {keys.map((v) => {
+        const schema = data.outputSchema.properties[v];
+        return (
+          <div
+            className="border bg-input text-[10px] rounded px-2 py-1 flex items-center gap-1"
+            key={v}
+          >
+            <VariableIcon className="size-3 text-blue-500" />
+            <span>{v}</span>
+            <div className="flex-1" />
+
+            <span className="text-[10px] block group-hover/item:hidden text-xs text-muted-foreground">
+              <span className=" text-destructive">
+                {data.outputSchema.required?.includes(v) ? "*" : " "}
+              </span>
+              {getFieldKey(schema)}
+            </span>
+          </div>
+        );
+      })}
     </div>
   );
 }

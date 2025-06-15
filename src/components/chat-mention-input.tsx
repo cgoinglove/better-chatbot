@@ -65,7 +65,7 @@ const decodeMentionItem = (item: string): ChatMention => {
   };
 };
 
-export default function MentionInput({
+export default function ChatMentionInput({
   input,
   onChange,
   onChangeMention,
@@ -229,7 +229,7 @@ export default function MentionInput({
         },
       },
     }),
-    [items, input, onChange, onChangeMention, latestRef],
+    [items],
   );
 
   const editor = useEditor(editorConfig);
@@ -311,7 +311,7 @@ export default function MentionInput({
       </div>,
       document.body,
     );
-  }, [suggestion, filteredItems, mentionRef]);
+  }, [suggestion, filteredItems]);
 
   const placeholderElement = useMemo(() => {
     if (!editor?.isEmpty) return null;
@@ -467,7 +467,7 @@ const MentionItem = memo(function MentionItem({
         <WrenchIcon className="size-3 text-muted-foreground" />
       ) : item.type == "mcpServer" ? (
         <div className="p-0.5 rounded bg-accent-foreground">
-          <MCPIcon className="size-3" />
+          <MCPIcon className="size-3 text-accent" />
         </div>
       ) : null}
       <HighlightText text={label} query={query} />
