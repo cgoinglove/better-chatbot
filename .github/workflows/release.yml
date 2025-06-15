@@ -2,6 +2,7 @@ on:
   push:
     branches:
       - main
+
 permissions:
   contents: write
   pull-requests: write
@@ -13,12 +14,57 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: googleapis/release-please-action@v4
+        id: release
         with:
-          # this assumes that you have created a personal access token
-          # (PAT) and configured it as a GitHub action secret named
-          # `MY_RELEASE_PLEASE_TOKEN` (this secret name is not important).
-          token: ${{ secrets.GITHUB_TOKEN }}
-          # this is a built-in strategy in release-please, see "Action Inputs"
-          # for more options
+          token: ${{ secrets.PAT }}
           release-type: node
-          config-file: .github/release-please-config.json
+          config-file: ./.github/release-please-config.json
+
+      - name: Checkout repository
+        if: ${{ steps.release.outputs.release_created }}
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Add Authors and Update Release
+        if: ${{ steps.release.outputs.release_created }}
+        env:
+          GH_TOKEN: ${{ secrets.PAT }}
+          RELEASE_TAG: ${{ steps.release.outputs.tag_name }}
+        run: |
+          set -e
+
+          TEMP_CHANGELOG="CHANGELOG.md.new"
+          touch "$TEMP_CHANGELOG"
+
+          if [ -f "CHANGELOG.md" ]; then
+            while IFS= read -r line; do
+              if [[ "$line" =~ \*\ (.*)\ \(\[([a-f0-9]{7,40})\]\(.* ]]; then
+                commit_hash="${BASH_REMATCH[2]}"
+                github_user=$(gh api "repos/${{ github.repository }}/commits/${commit_hash}"  | jq -r '.author.login // "unknown"')
+                echo "${line} by @${github_user}" >> "$TEMP_CHANGELOG"
+              else
+                echo "$line" >> "$TEMP_CHANGELOG"
+              fi
+            done < "CHANGELOG.md"
+          else
+            echo "CHANGELOG.md not found. Skipping author addition to changelog content."
+          fi
+
+          mv "$TEMP_CHANGELOG" "CHANGELOG.md"
+
+          RELEASE_BODY=$(awk "/^## \\[?${RELEASE_TAG#v}/{flag=1;next} /^## / && flag{exit} flag" CHANGELOG.md)
+
+          if [ -z "$RELEASE_BODY" ]; then
+            echo "Warning: Could not find release notes for $RELEASE_TAG in CHANGELOG.md."
+            echo "Using a default message for release body."
+            RELEASE_BODY="Release $RELEASE_TAG"
+          fi
+          gh release edit "$RELEASE_TAG" --notes "$RELEASE_BODY"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add CHANGELOG.md
+          git commit -m "chore: add commit authors to CHANGELOG.md [skip ci]" || true
+          git push
