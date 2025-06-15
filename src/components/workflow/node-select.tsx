@@ -1,3 +1,5 @@
+"use client";
+
 import { NodeKind } from "lib/ai/workflow/interface";
 import { ReactNode } from "react";
 import {

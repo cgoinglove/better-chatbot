@@ -13,33 +13,43 @@ export enum NodeKind {
   Condition = "condition",
 }
 
-export type UINode<T extends BaseWorkflowNode<any> = WorkflowNode> = Node<
-  T & {
-    status?: "running" | "success" | "fail" | "idle";
-    stored?: boolean;
-    result?: any;
-    isRunTab?: boolean;
-  }
->;
-
-export type BaseWorkflowNode<Kind extends NodeKind> = {
+export type BaseWorkflowNode<
+  T extends {
+    kind: NodeKind;
+  },
+> = {
   id: string;
-  kind: Kind;
   name: string; // unique name
   description?: string;
   outputSchema: ObjectJsonSchema7;
   usageFields?: {
     [nodeId: string]: string[][]; // path [['title'],['session','id']]
   };
+} & T;
+
+export type StartNode = BaseWorkflowNode<{
+  kind: NodeKind.Start;
+}>;
+
+export type EndNode = BaseWorkflowNode<{
+  kind: NodeKind.End;
+}> & {
+  outputData: {
+    key: string;
+    source?: {
+      nodeId: string;
+      path: string[];
+    };
+  }[];
 };
 
-export type StartNode = BaseWorkflowNode<NodeKind.Start>;
+export type InformationNode = BaseWorkflowNode<{
+  kind: NodeKind.Information;
+}>;
 
-export type EndNode = BaseWorkflowNode<NodeKind.End>;
-
-export type InformationNode = BaseWorkflowNode<NodeKind.Information>;
-
-export type LLMNode = BaseWorkflowNode<NodeKind.LLM> & {
+export type LLMNode = BaseWorkflowNode<{
+  kind: NodeKind.LLM;
+}> & {
   model: ChatModel;
   messages: {
     role: "user" | "assistant" | "system";
@@ -48,3 +58,14 @@ export type LLMNode = BaseWorkflowNode<NodeKind.LLM> & {
 };
 
 export type WorkflowNode = StartNode | EndNode | LLMNode | InformationNode;
+
+export type NodeRuntimeField = {
+  status?: "running" | "success" | "fail" | "idle";
+  stored?: boolean;
+  result?: any;
+  isRunTab?: boolean;
+};
+
+export type UINode<Kind extends NodeKind = NodeKind> = Node<
+  Extract<WorkflowNode, { kind: Kind }> & NodeRuntimeField
+>;

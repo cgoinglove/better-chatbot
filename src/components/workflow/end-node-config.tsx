@@ -1,16 +1,20 @@
-import { EndNode, UINode } from "lib/ai/workflow/interface";
-import { useCallback } from "react";
+"use client";
+
+import { EndNode, NodeKind, UINode } from "lib/ai/workflow/interface";
+import { useCallback, useMemo } from "react";
+
 import {
-  Feild,
-  EditJsonSchemaFieldPopup,
-  getFieldKey,
-} from "../edit-json-schema-field-popup";
-import { PlusIcon, TrashIcon, VariableIcon } from "lucide-react";
-import { PencilIcon } from "lucide-react";
-import { objectFlow } from "lib/utils";
+  ChevronDownIcon,
+  PlusIcon,
+  TrashIcon,
+  VariableIcon,
+} from "lucide-react";
+
 import { VariableSelect } from "./variable-select";
 import { Edge } from "@xyflow/react";
-import { addUsageField } from "./helper";
+import { addUsageField, findSchemaByPath } from "./helper";
+import { Input } from "ui/input";
+import { Button } from "ui/button";
 
 export function EndNodeConfig({
   node: { data },
@@ -18,45 +22,87 @@ export function EndNodeConfig({
   nodes,
   edges,
 }: {
-  node: UINode<EndNode>;
+  node: UINode<NodeKind.End>;
   nodes: UINode[];
   edges: Edge[];
   setNode: (data: Mutate<UINode>) => void;
 }) {
-  const checkRequired = useCallback(
-    (key: string) => {
-      return data.outputSchema.required?.includes(key);
-    },
-    [data.outputSchema],
-  );
+  const outputVariables = useMemo(() => {
+    return data.outputData.map(({ key, source }) => {
+      const targetNode = nodes.find((node) => node.data.id === source?.nodeId);
+      const schema = findSchemaByPath(
+        targetNode?.data.outputSchema ?? {},
+        source?.path ?? [],
+      );
+      return {
+        key,
+        schema,
+        path: source?.path ?? [],
+        nodeName: targetNode?.data.name,
+        nodeId: targetNode?.data.id,
+      };
+    });
+  }, [data.outputSchema, nodes]);
 
-  const addField = useCallback((field: Feild) => {
-    setNode((prev) => ({
-      ...prev,
-      data: {
-        ...prev.data,
-        outputSchema: {
-          ...prev.data.outputSchema,
-          properties: {
-            ...prev.data.outputSchema.properties,
-            [field.key]: {
-              type: field.type,
-              enum:
-                field.type == "string" && field.enum ? field.enum : undefined,
-              description: field.description,
-            },
-          },
-          default: field.defaultValue,
-          required: !field.required
-            ? prev.data.outputSchema.required?.filter((k) => k != field.key)
-            : [...(prev.data.outputSchema.required ?? []), field.key],
+  const updateOutputVariable = useCallback(
+    (
+      index: number,
+      item: { key?: string; source?: { nodeId: string; path: string[] } },
+    ) => {
+      setNode((prev) => ({
+        data: {
+          ...prev.data,
+          outputData: (prev.data as EndNode).outputData.map((v, i) =>
+            i === index ? { ...v, ...item } : v,
+          ),
         },
-      },
-    }));
+      }));
+    },
+    [],
+  );
+  const deleteOutputVariable = useCallback((index: number) => {
+    setNode((prev) => {
+      return {
+        data: {
+          ...prev.data,
+          outputData: (prev.data as EndNode).outputData.filter(
+            (_, i) => i !== index,
+          ),
+        },
+      };
+    });
+  }, []);
+
+  const addOutputVariable = useCallback((key: string = "") => {
+    setNode((prev) => {
+      let newKey = key;
+      let counter = 1;
+
+      while ((prev.data as EndNode).outputData.find((v) => v.key === newKey)) {
+        const baseKey = key.replace(/\d+$/, "");
+        const hasOriginalNumber = key !== baseKey;
+        if (hasOriginalNumber) {
+          const originalNumber = parseInt(key.match(/\d+$/)?.[0] || "0");
+          newKey = baseKey + (originalNumber + counter);
+        } else {
+          newKey = baseKey + counter;
+        }
+        counter++;
+      }
+      return {
+        data: {
+          ...prev.data,
+          outputData: [
+            ...(prev.data as EndNode).outputData,
+            { key: newKey, source: undefined },
+          ],
+        },
+      };
+    });
   }, []);
 
   return (
-    <div className="flex flex-col gap-2 text-sm">
+    <div className="flex flex-col gap-2 text-sm ">
       <div className="flex items-center justify-between">
         <div>Output Variables</div>
         <VariableSelect
@@ -74,68 +120,64 @@ export function EndNodeConfig({
           </div>
         </VariableSelect>
       </div>
-      <div className="flex flex-col gap-1">
-        {Object.entries(data.outputSchema.properties ?? {}).map(
-          ([key, value]) => (
-            <div
-              key={key}
-              className="flex items-center gap-1 py-1 px-2 bg-secondary rounded group/item border cursor-pointer"
-            >
-              <VariableIcon className="size-3 text-blue-500" />
+      <div className="flex flex-col gap-2">
+        {outputVariables.map((item, index) => {
+          return (
+            <div className="flex items-center gap-1" key={index}>
+              <Input
+                value={item.key}
+                onChange={(e) => {
+                  updateOutputVariable(index, { key: e.target.value });
+                }}
+                className="w-24"
+                placeholder="name"
+              />
+              <VariableSelect
+                currentNodeId={data.id}
+                nodes={nodes}
+                edges={edges}
+                item={{
+                  nodeId: item.nodeId ?? "",
+                  path: item.path,
+                }}
+                onChange={(item) => {
+                  updateOutputVariable(index, {
+                    source: item,
+                  });
+                }}
+              >
+                <div className="flex-1 min-w-0 w-full flex text-[10px] items-center gap-1 p-2.5 border border-input bg-background rounded-lg cursor-pointer">
+                  <VariableIcon className="size-3 text-blue-500" />
+                  <span>{item.nodeName}/</span>
+                  <span className="truncate min-w-0 text-blue-500 flex-1">
+                    {item.path.join(".")}
+                  </span>
+                  <span className="text-muted-foreground">
+                    {item.schema?.type}
+                  </span>
 
-              <span>{key}</span>
-              <div className="flex-1" />
-
-              <span className="block group-hover/item:hidden text-xs text-muted-foreground">
-                <span className="text-[10px] text-destructive">
-                  {checkRequired(key) ? "*" : " "}
-                </span>
-                {getFieldKey(value)}
-              </span>
-              <div className="hidden group-hover/item:flex items-center gap-1">
-                <EditJsonSchemaFieldPopup
-                  editAbleKey={false}
-                  field={{
-                    key,
-                    type: value.type as any,
-                    description: value.description,
-                    enum: value.enum as string[],
-                    required: checkRequired(key),
-                  }}
-                  onChange={addField}
-                >
-                  <div className="p-1 text-muted-foreground rounded cursor-pointer hover:bg-input">
-                    <PencilIcon className="size-3" />
-                  </div>
-                </EditJsonSchemaFieldPopup>
-                <div
-                  onClick={() => {
-                    setNode((prev) => {
-                      return {
-                        ...prev,
-                        data: {
-                          ...prev.data,
-                          outputSchema: {
-                            ...prev.data.outputSchema,
-                            properties: objectFlow(
-                              prev.data.outputSchema.properties,
-                            ).filter((_, k) => k != key),
-                            required: prev.data.outputSchema.required?.filter(
-                              (k) => k != key,
-                            ),
-                          },
-                        },
-                      };
-                    });
-                  }}
-                  className="p-1 text-destructive rounded cursor-pointer hover:bg-destructive/10"
-                >
-                  <TrashIcon className="size-3" />
+                  <ChevronDownIcon className="size-3 ml-auto" />
                 </div>
-              </div>
+              </VariableSelect>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => deleteOutputVariable(index)}
+              >
+                <TrashIcon />
+              </Button>
             </div>
-          ),
-        )}
+          );
+        })}
+        <Button
+          variant="ghost"
+          onClick={() => {
+            addOutputVariable("text");
+          }}
+          className="w-full border-dashed border text-muted-foreground"
+        >
+          <PlusIcon /> Add Output
+        </Button>
       </div>
     </div>
   );

@@ -1,4 +1,5 @@
 import { ObjectJsonSchema7 } from "app-types/util";
+import { JSONSchema7 } from "json-schema";
 import { NodeKind, UINode, WorkflowNode } from "lib/ai/workflow/interface";
 import { generateUUID } from "lib/utils";
 
@@ -35,12 +36,20 @@ export const defaultJsonSchema: ObjectJsonSchema7 = {
   },
 };
 
-export function generateInitialNode<T extends NodeKind>(
-  kind: T,
+export function generateInitialNode(
+  kind: NodeKind,
   option?: DeepPartial<UINode>,
 ): UINode {
   const originId = option?.id ?? option?.data?.id;
   const id = originId ?? generateUUID();
+
+  const outputSchema = [NodeKind.End, NodeKind.Information].includes(kind)
+    ? (option?.data?.outputSchema ?? {})
+    : {
+        ...defaultJsonSchema,
+        ...option?.data?.outputSchema,
+      };
+
   const node: UINode = {
     ...option,
     id,
@@ -50,14 +59,16 @@ export function generateInitialNode<T extends NodeKind>(
       kind: kind as any,
       name: option?.data?.name ?? kind,
       id,
-      outputSchema: {
-        ...defaultJsonSchema,
-        ...option?.data?.outputSchema,
-      } as ObjectJsonSchema7,
+      outputSchema: outputSchema as ObjectJsonSchema7,
       stored: !!originId,
     },
     type: "default",
   };
+
+  if (node.data.kind === NodeKind.End) {
+    node.data.outputData = [...(node.data.outputData ?? [])];
+  }
+
   return node;
 }
 
@@ -79,4 +90,15 @@ export function addUsageField(
       [item.nodeId]: dedupedItems,
     },
   };
+}
+
+export function findSchemaByPath(
+  schema: ObjectJsonSchema7 | JSONSchema7,
+  path: string[],
+): JSONSchema7 | undefined {
+  const [key, ...rest] = path;
+  if (rest.length === 0) {
+    return schema.properties?.[key] as JSONSchema7;
+  }
+  return findSchemaByPath(schema.properties![key] as JSONSchema7, rest);
 }

@@ -7,12 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 import { Separator } from "@/components/ui/separator";
 
-import {
-  EndNode,
-  NodeKind,
-  StartNode,
-  UINode,
-} from "lib/ai/workflow/interface";
+import { NodeKind, UINode } from "lib/ai/workflow/interface";
 import { NodeIcon } from "./node-icon";
 import { isFunction } from "lib/utils";
 import {
@@ -88,7 +83,7 @@ export const WorkflowPanel = memo(function WorkflowPanel({
         </Button>
       </div>
       {selectedNode && (
-        <div className="w-90 h-full space-y-4  bg-card border rounded-lg shadow-lg overflow-y-auto py-4">
+        <div className="w-sm h-full space-y-4  bg-card border rounded-lg shadow-lg overflow-y-auto py-4">
           {/* Header */}
           <div className="px-4">
             <div className="flex items-center justify-between">
@@ -140,12 +135,12 @@ export const WorkflowPanel = memo(function WorkflowPanel({
               <NodeRun />
             ) : selectedNode.data.kind === NodeKind.Start ? (
               <StartNodeConfig
-                node={selectedNode as UINode<StartNode>}
+                node={selectedNode as UINode<NodeKind.Start>}
                 setNode={setNode}
               />
             ) : selectedNode.data.kind === NodeKind.End ? (
               <EndNodeConfig
-                node={selectedNode as UINode<EndNode>}
+                node={selectedNode as UINode<NodeKind.End>}
                 nodes={nodes}
                 edges={edges}
                 setNode={setNode}

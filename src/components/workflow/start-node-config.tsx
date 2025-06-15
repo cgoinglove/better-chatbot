@@ -1,4 +1,6 @@
-import { StartNode, UINode } from "lib/ai/workflow/interface";
+"use client";
+
+import { NodeKind, UINode } from "lib/ai/workflow/interface";
 import { useCallback } from "react";
 import {
   Feild,
@@ -13,7 +15,7 @@ export function StartNodeConfig({
   node: { data },
   setNode,
 }: {
-  node: UINode<StartNode>;
+  node: UINode<NodeKind.Start>;
   setNode: (data: Mutate<UINode>) => void;
 }) {
   const checkRequired = useCallback(

@@ -1,4 +1,5 @@
 "use client";
+
 import { Handle, Position, useReactFlow, type NodeProps } from "@xyflow/react";
 import { NodeKind, UINode } from "lib/ai/workflow/interface";
 import { cn, generateUUID } from "lib/utils";
@@ -89,7 +90,7 @@ export const DefaultNode = memo(function DefaultNode({
       <ContextMenuTrigger>
         <div
           className={cn(
-            "group py-4 w-72 relative bg-secondary border hover:border-blue-500 rounded-lg flex flex-col cursor-grab transition-colors",
+            "fade-300 group py-4 w-72 relative bg-secondary border hover:border-blue-500 rounded-lg flex flex-col cursor-grab transition-colors",
             selected && "border-blue-500",
             data.kind === NodeKind.Information &&
               "bg-primary-foreground text-primary rounded-none border-card",
@@ -113,7 +114,7 @@ export const DefaultNode = memo(function DefaultNode({
                 type="source"
                 position={Position.Right}
                 className={cn(
-                  !rightCount && "opacity-0",
+                  !selected && !rightCount && "opacity-0",
                   "group-hover:opacity-100 h-3! rounded-none! border-none! bg-blue-500! w-[1px]! -right-[3px]!",
                 )}
                 id="right"
@@ -122,7 +123,7 @@ export const DefaultNode = memo(function DefaultNode({
                 <NodeSelect onChange={appendNode}>
                   <div
                     className={cn(
-                      "fade-in animate-in duration-300  hidden p-1 absolute bg-blue-500 -left-3 -top-2 rounded-full group-hover:block",
+                      "fade-in animate-in duration-300 hidden p-1 absolute bg-blue-500 -left-3 -top-2 rounded-full group-hover:block",
                       selected && "block",
                     )}
                   >

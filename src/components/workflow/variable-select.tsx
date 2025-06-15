@@ -1,3 +1,5 @@
+"use client";
+
 import { Edge } from "@xyflow/react";
 import { UINode } from "lib/ai/workflow/interface";
 import { ChevronRightIcon, SearchIcon, VariableIcon } from "lucide-react";
@@ -45,7 +47,6 @@ export function VariableSelect({
   const accessibleSchemas = useMemo(() => {
     const accessibleNodes: string[] = [];
     let currentNodes = [currentNodeId];
-
     while (currentNodes.length > 0) {
       const targets = [...currentNodes];
       currentNodes = [];
@@ -63,51 +64,49 @@ export function VariableSelect({
         return {
           id: node.data.id,
           name: node.data.name,
-          schema: node.data.outputSchema,
+          schema: node.data.outputSchema?.properties,
           kind: node.data.kind,
         };
       })
-      .filter((v) => v.schema);
+      .filter((v) => {
+        return v.schema && Object.keys(v.schema).length;
+      });
   }, [nodes, currentNodeId, edges]);
 
   const filteredNodes = useMemo<ReactNode[]>(() => {
-    return accessibleSchemas.map(({ name, id, schema }) => {
-      const items = Array.from(Object.entries(schema.properties))
-        .filter(
-          ([key, { properties }]) =>
-            key.includes(query) ||
-            Array.from(Object.keys(properties ?? {})).some((key) =>
-              key.includes(query),
-            ),
-        )
-        .map(([key, schema]) => {
-          return (
-            <SchemaItem
-              key={key}
-              name={key}
-              schema={schema}
-              path={[]}
-              onChange={(path) => {
-                onChange({
-                  nodeId: id,
-                  path,
-                });
-                setOpen(false);
-              }}
-            />
-          );
-        });
+    return accessibleSchemas
+      .map(({ name, id, schema }) => {
+        const items = Array.from(Object.entries(schema ?? {}))
+          .filter(([key]) => key.includes(query))
+          .map(([key, schema]) => {
+            return (
+              <SchemaItem
+                key={key}
+                name={key}
+                schema={schema}
+                path={[]}
+                onChange={(path) => {
+                  onChange({
+                    nodeId: id,
+                    path,
+                  });
+                  setOpen(false);
+                }}
+              />
+            );
+          });
 
-      if (!items.length) return null;
-      return (
-        <DropdownMenuGroup key={id}>
-          <DropdownMenuLabel className="text-xs text-muted-foreground flex items-center gap-1">
-            {name}
-          </DropdownMenuLabel>
-          {items}
-        </DropdownMenuGroup>
-      );
-    });
+        if (!items.length) return null;
+        return (
+          <DropdownMenuGroup key={id}>
+            <DropdownMenuLabel className="text-xs text-muted-foreground flex items-center gap-1">
+              {name}
+            </DropdownMenuLabel>
+            {items}
+          </DropdownMenuGroup>
+        );
+      })
+      .filter(Boolean);
   }, [accessibleSchemas, query]);
 
   return (
@@ -120,7 +119,7 @@ export function VariableSelect({
         }
       }}
     >
-      <DropdownMenuTrigger>{children}</DropdownMenuTrigger>
+      <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
       <DropdownMenuContent className="w-72">
         <div
           className="flex items-center gap-1 px-2"
