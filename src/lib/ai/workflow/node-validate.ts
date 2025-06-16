@@ -24,7 +24,11 @@ export function validateSchema(key: string, schema: JSONSchema7) {
     throw new Error("Invalid Schema");
   }
   if (schema.type == "array" || schema.type == "object") {
-    return Object.keys(schema.properties ?? {}).every((key) => {
+    const keys = Array.from(Object.keys(schema.properties ?? {}));
+    if (keys.length != new Set(keys).size) {
+      throw new Error("Output data must have unique keys");
+    }
+    return keys.every((key) => {
       return validateSchema(key, schema.properties![key] as JSONSchema7);
     });
   }
@@ -111,6 +115,11 @@ export const endNodeValidate: NodeValidate<EndNode> = ({
   nodes,
   edges,
 }) => {
+  const names = node.outputData.map((data) => data.key);
+  const uniqueNames = [...new Set(names)];
+  if (names.length !== uniqueNames.length) {
+    throw new Error("Output data must have unique keys");
+  }
   node.outputData.forEach((data) => {
     const variableName = cleanVariableName(data.key);
     if (variableName.length === 0) {
