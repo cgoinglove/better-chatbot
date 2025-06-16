@@ -1,9 +1,9 @@
 "use client";
 
 import { Handle, Position, useReactFlow, type NodeProps } from "@xyflow/react";
-import { NodeKind, UINode, WorkflowNode } from "lib/ai/workflow/interface";
+import { NodeKind, UINode } from "lib/ai/workflow/interface";
 import { cn, generateUUID } from "lib/utils";
-import { PlusIcon, VariableIcon } from "lucide-react";
+import { PlusIcon } from "lucide-react";
 
 import { memo, useCallback, useEffect, useMemo } from "react";
 import { NodeSelect } from "./node-select";
@@ -16,7 +16,7 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "ui/context-menu";
-import { getFieldKey } from "../edit-json-schema-field-popup";
+
 import { OutputSchemaStack } from "./start-node-config";
 import { EndNodeOutputStack } from "./end-node-config";
 

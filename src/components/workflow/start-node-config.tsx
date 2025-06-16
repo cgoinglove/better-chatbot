@@ -11,6 +11,7 @@ import { PlusIcon, TrashIcon, VariableIcon } from "lucide-react";
 import { PencilIcon } from "lucide-react";
 import { objectFlow } from "lib/utils";
 import { Button } from "ui/button";
+import { Label } from "ui/label";
 
 export function StartNodeConfig({
   node: { data },
@@ -54,7 +55,7 @@ export function StartNodeConfig({
   return (
     <div className="flex flex-col gap-2 text-sm">
       <div className="flex items-center justify-between">
-        <div>Input Fields</div>
+        <Label className="text-sm text-muted-foreground">Input Fields</Label>
         <EditJsonSchemaFieldPopup onChange={addField}>
           <div className="p-1 hover:bg-secondary rounded cursor-pointer">
             <PlusIcon className="size-3" />

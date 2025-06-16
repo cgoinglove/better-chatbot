@@ -14,6 +14,7 @@ const unSupportedKinds: NodeKind[] = [
   NodeKind.Code,
   NodeKind.Http,
   NodeKind.Condition,
+  NodeKind.Tool,
 ];
 
 export function NodeSelect({
@@ -29,6 +30,11 @@ export function NodeSelect({
       <DropdownMenuContent side="right" align="center" className="w-64">
         {Object.keys(NodeKind)
           .filter((key) => NodeKind[key] !== NodeKind.Start)
+          .sort((a, b) => {
+            const aIndex = unSupportedKinds.indexOf(NodeKind[a]);
+            const bIndex = unSupportedKinds.indexOf(NodeKind[b]);
+            return aIndex - bIndex;
+          })
           .map((key) => (
             <DropdownMenuItem
               disabled={unSupportedKinds.includes(NodeKind[key])}

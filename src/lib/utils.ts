@@ -257,3 +257,11 @@ export function convertToUIMessage(message: ChatMessage): UIMessage {
 export async function nextTick() {
   return new Promise((resolve) => setTimeout(resolve, 0));
 }
+
+export function cleanVariableName(input: string = ""): string {
+  if (!input || typeof input !== "string") {
+    return "";
+  }
+
+  return input.replace(/[^\w\u0080-\uFFFF-]/g, "").replace(/^[0-9]+/, "");
+}

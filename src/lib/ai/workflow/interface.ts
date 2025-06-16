@@ -1,7 +1,7 @@
 import { Node } from "@xyflow/react";
-import { UIMessage } from "ai";
 import { ChatModel } from "app-types/chat";
-import { ObjectJsonSchema7 } from "app-types/util";
+import { ObjectJsonSchema7, TipTapMentionJsonContent } from "app-types/util";
+
 export enum NodeKind {
   Start = "start",
   End = "end",
@@ -22,10 +22,12 @@ export type BaseWorkflowNode<
   name: string; // unique name
   description?: string;
   outputSchema: ObjectJsonSchema7;
-  usageFields?: {
-    [nodeId: string]: string[][]; // path [['title'],['session','id']]
-  };
 } & T;
+
+export type OutputSchemaSource = {
+  nodeId: string;
+  path: string[];
+};
 
 export type StartNode = BaseWorkflowNode<{
   kind: NodeKind.Start;
@@ -36,10 +38,7 @@ export type EndNode = BaseWorkflowNode<{
 }> & {
   outputData: {
     key: string;
-    source?: {
-      nodeId: string;
-      path: string[];
-    };
+    source?: OutputSchemaSource;
   }[];
 };
 
@@ -53,7 +52,7 @@ export type LLMNode = BaseWorkflowNode<{
   model: ChatModel;
   messages: {
     role: "user" | "assistant" | "system";
-    content: Extract<UIMessage["parts"][number], { type: "text" }>; // todo other types
+    content?: TipTapMentionJsonContent;
   }[];
 };
 

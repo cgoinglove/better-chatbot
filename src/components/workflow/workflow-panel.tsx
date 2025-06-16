@@ -23,7 +23,7 @@ import { EndNodeConfig } from "./end-node-config";
 import { Label } from "ui/label";
 import { Edge, useReactFlow } from "@xyflow/react";
 import { NodeRun } from "./node-run";
-import { LLMNodeConfig } from "./llm-node.config";
+import { LLMNodeConfig } from "./llm-node-config";
 
 export const WorkflowPanel = memo(function WorkflowPanel({
   nodes,

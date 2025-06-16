@@ -39,6 +39,7 @@ import {
   SelectItem,
   SelectValue,
 } from "ui/select";
+import { cleanVariableName } from "lib/utils";
 
 type FieldType = "string" | "number" | "boolean";
 export type Feild = {
@@ -245,8 +246,12 @@ export function EditJsonSchemaFieldContent({
           disabled={!editAbleKey}
           value={field.key ?? ""}
           className="bg-secondary border-none"
+          maxLength={30}
           onChange={(e) =>
-            onChange((prev) => ({ ...prev, key: e.target.value }))
+            onChange((prev) => ({
+              ...prev,
+              key: cleanVariableName(e.target.value),
+            }))
           }
           placeholder="Enter variable name..."
         />
@@ -379,7 +384,10 @@ export function EditJsonSchemaFieldContent({
           id="field-required"
           checked={field.required ?? false}
           onCheckedChange={(checked) =>
-            onChange((prev) => ({ ...prev, required: checked === true }))
+            onChange((prev) => ({
+              ...prev,
+              required: checked === true,
+            }))
           }
         />
         <Label

@@ -16,25 +16,22 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "ui/dropdown-menu";
-import { generateUUID, toAny } from "lib/utils";
+import { TipTapMentionJsonContent } from "app-types/util";
 
 interface OutputSchemaMentionInputProps {
   currentNodeId: string;
   nodes: UINode[];
   edges: Edge[];
-  input: string;
-  onChange: (input: string) => void;
-  onChangeMention: (mention: { nodeId: string; path: string[] }) => void;
+  content?: TipTapMentionJsonContent;
+  onChange: (content: TipTapMentionJsonContent) => void;
   placeholder?: string;
 }
-
-const EL_DATA_KEY = "_mention_item";
 
 export function OutputSchemaMentionInput({
   currentNodeId,
   nodes,
   edges,
-  input,
+  content,
   onChange,
 }: OutputSchemaMentionInputProps) {
   const [suggestion, setSuggestion] = useState<{
@@ -59,16 +56,11 @@ export function OutputSchemaMentionInput({
             class: "mention",
           },
           renderHTML: (props) => {
-            const item = JSON.parse(props.node.attrs.id) as {
-              nodeId: string;
-              path: string[];
-            };
             const node = document.createElement("div");
-            node.setAttribute("data-type", EL_DATA_KEY);
-            toAny(node)[EL_DATA_KEY] = item;
+            node.setAttribute("data-mention-item", props.node.attrs.id);
             node.className =
-              "flex gap-1 items-center px-2 py-1 border rounded-md bg-input";
-            node.innerHTML = `<span>${item.path.join(".")}</span>`;
+              "mr-1 inline-flex text-blue-500 gap-1 items-center hover:border-blue-500 border rounded-xs bg-background text-xs px-1";
+            node.innerHTML = props.node.attrs.label;
             return node;
           },
           suggestion: {
@@ -85,30 +77,16 @@ export function OutputSchemaMentionInput({
                     });
                   }
                 },
-                onExit: (props) => {
-                  const mentionItems =
-                    props.editor?.$doc.element.querySelectorAll(
-                      `[data-type='${EL_DATA_KEY}']`,
-                    );
-                  const mentionItemsArray = Array.from(mentionItems).map(
-                    (item) => toAny(item)[EL_DATA_KEY],
-                  );
-
-                  console.log(mentionItemsArray);
-                  //   onChangeMention?.(
-                  //     mentionItemsArray.map((item) => decodeMentionItem(item.id)),
-                  //   );
-                  setSuggestion(null);
-                },
+                onExit: () => setSuggestion(null),
               };
             },
           },
         }),
       ],
-      content: input,
+      content,
       autofocus: true,
       onUpdate: ({ editor }) => {
-        onChange?.(editor.getHTML());
+        onChange?.(editor.getJSON() as TipTapMentionJsonContent);
       },
       editorProps: {
         attributes: {
@@ -121,12 +99,6 @@ export function OutputSchemaMentionInput({
   );
 
   const editor = useEditor(editorConfig);
-
-  useEffect(() => {
-    if (input?.trim() !== editor?.getText().trim()) {
-      editor?.commands.setContent(input || "");
-    }
-  }, [input, editor]);
 
   useEffect(() => {
     if (!suggestion) return;
@@ -147,7 +119,6 @@ export function OutputSchemaMentionInput({
 
   const suggestionPortal = useMemo(() => {
     if (!suggestion) return null;
-
     return createPortal(
       <div
         className="fixed z-50"
@@ -171,7 +142,11 @@ export function OutputSchemaMentionInput({
                     {
                       type: "mention",
                       attrs: {
-                        id: JSON.stringify(item),
+                        id: JSON.stringify({
+                          nodeId: item.nodeId,
+                          path: item.path,
+                        }),
+                        label: `<span class="text-foreground">${item.nodeName}/</span>${item.path.join(".")}`,
                       },
                     },
                   ])

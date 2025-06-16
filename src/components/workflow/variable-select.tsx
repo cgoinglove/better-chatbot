@@ -33,6 +33,8 @@ interface VariableSelectProps {
   onChange: (item: {
     nodeId: string;
     path: string[];
+    nodeName: string;
+    type: string;
   }) => void;
 }
 
@@ -117,6 +119,8 @@ export function VariableSelectContent({
                   onChange({
                     nodeId: id,
                     path,
+                    nodeName: name,
+                    type: schema.type as string,
                   });
                 }}
               />

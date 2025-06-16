@@ -8,3 +8,20 @@ export type ObjectJsonSchema7 = {
     [key: string]: JSONSchema7;
   };
 };
+
+export type TipTapMentionJsonContent = {
+  type: "doc";
+  content: (
+    | {
+        type: "text";
+        text: string;
+      }
+    | {
+        type: "mention";
+        attrs: {
+          id: string;
+          label: string;
+        };
+      }
+  )[];
+};

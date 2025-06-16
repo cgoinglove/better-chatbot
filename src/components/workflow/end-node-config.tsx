@@ -13,9 +13,11 @@ import {
 
 import { VariableSelect } from "./variable-select";
 import { Edge } from "@xyflow/react";
-import { findSchemaByPath } from "./helper";
+import { findOutputSchemaSource } from "./helper";
 import { Input } from "ui/input";
 import { Button } from "ui/button";
+import { cleanVariableName } from "lib/utils";
+import { Label } from "ui/label";
 
 export function EndNodeConfig({
   node: { data },
@@ -31,10 +33,12 @@ export function EndNodeConfig({
   const outputVariables = useMemo(() => {
     return data.outputData.map(({ key, source }) => {
       const targetNode = nodes.find((node) => node.data.id === source?.nodeId);
-      const schema = findSchemaByPath(
-        targetNode?.data.outputSchema ?? {},
-        source?.path ?? [],
-      );
+      const schema = targetNode
+        ? findOutputSchemaSource(
+            targetNode.data.outputSchema,
+            source?.path ?? [],
+          )
+        : undefined;
       return {
         key,
         schema,
@@ -106,7 +110,9 @@ export function EndNodeConfig({
   return (
     <div className="flex flex-col gap-2 text-sm ">
       <div className="flex items-center justify-between">
-        <div>Output Variables</div>
+        <Label className="text-sm text-muted-foreground">
+          Output Variables
+        </Label>
         <div
           onClick={() => {
             addOutputVariable("text");
@@ -123,7 +129,9 @@ export function EndNodeConfig({
               <Input
                 value={item.key}
                 onChange={(e) => {
-                  updateOutputVariable(index, { key: e.target.value });
+                  updateOutputVariable(index, {
+                    key: cleanVariableName(e.target.value),
+                  });
                 }}
                 className="w-24"
                 placeholder="name"
@@ -138,7 +146,10 @@ export function EndNodeConfig({
                 }}
                 onChange={(item) => {
                   updateOutputVariable(index, {
-                    source: item,
+                    source: {
+                      nodeId: item.nodeId,
+                      path: item.path,
+                    },
                   });
                 }}
               >
@@ -191,10 +202,12 @@ export function EndNodeOutputStack({
   const outputVariables = useMemo(() => {
     return data.outputData.map(({ key, source }) => {
       const targetNode = nodes.find((node) => node.data.id === source?.nodeId);
-      const schema = findSchemaByPath(
-        targetNode?.data.outputSchema ?? {},
-        source?.path ?? [],
-      );
+      const schema = targetNode
+        ? findOutputSchemaSource(
+            targetNode.data.outputSchema,
+            source?.path ?? [],
+          )
+        : undefined;
       return {
         key,
         schema,
