@@ -40,7 +40,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "ui/dialog";
-import { authClient } from "auth/client";
 import { useTranslations } from "next-intl";
 
 type Props = {
@@ -113,14 +112,7 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
     },
     onError: (error) => {
       console.error(error);
-      if (
-        error.message.includes("Unauthorized") ||
-        error.message.includes("Forbidden")
-      ) {
-        authClient.signOut().finally(() => {
-          window.location.href = "/sign-in";
-        });
-      }
+
       toast.error(
         truncateString(error.message, 100) ||
           "An error occured, please try again!",

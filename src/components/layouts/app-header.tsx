@@ -74,7 +74,8 @@ export function AppHeader() {
                   voiceChat: {
                     ...state.voiceChat,
                     isOpen: true,
-                    autoSaveConversation: false,
+                    threadId: undefined,
+                    projectId: undefined,
                   },
                 }));
               }}

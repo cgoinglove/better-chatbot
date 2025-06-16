@@ -49,7 +49,7 @@ export async function generateTitleFromUserMessageAction({
     model,
     system: CREATE_THREAD_TITLE_PROMPT,
     prompt,
-    maxTokens: 30,
+    maxTokens: 200,
   });
 
   return title.trim();

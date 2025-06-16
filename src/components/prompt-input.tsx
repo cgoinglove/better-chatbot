@@ -57,8 +57,20 @@ export default function PromptInput({
 }: PromptInputProps) {
   const t = useTranslations("Chat");
 
-  const [mcpList, globalModel, appStoreMutate] = appStore(
-    useShallow((state) => [state.mcpList, state.chatModel, state.mutate]),
+  const [
+    currentThreadId,
+    currentProjectId,
+    mcpList,
+    globalModel,
+    appStoreMutate,
+  ] = appStore(
+    useShallow((state) => [
+      state.currentThreadId,
+      state.currentProjectId,
+      state.mcpList,
+      state.chatModel,
+      state.mutate,
+    ]),
   );
 
   const chatModel = useMemo(() => {
@@ -219,7 +231,8 @@ export default function PromptInput({
                             voiceChat: {
                               ...state.voiceChat,
                               isOpen: true,
-                              autoSaveConversation: true,
+                              threadId: currentThreadId ?? undefined,
+                              projectId: currentProjectId ?? undefined,
                             },
                           }));
                         }}
