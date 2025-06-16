@@ -13,7 +13,7 @@ import {
 
 import { VariableSelect } from "./variable-select";
 import { Edge } from "@xyflow/react";
-import { findOutputSchemaSource } from "./helper";
+import { findOutputSchemaSource, generateUniqueKey } from "./helper";
 import { Input } from "ui/input";
 import { Button } from "ui/button";
 import { cleanVariableName } from "lib/utils";
@@ -81,20 +81,10 @@ export function EndNodeConfig({
 
   const addOutputVariable = useCallback((key: string = "") => {
     setNode((prev) => {
-      let newKey = key;
-      let counter = 1;
-
-      while ((prev.data as EndNode).outputData.find((v) => v.key === newKey)) {
-        const baseKey = key.replace(/\d+$/, "");
-        const hasOriginalNumber = key !== baseKey;
-        if (hasOriginalNumber) {
-          const originalNumber = parseInt(key.match(/\d+$/)?.[0] || "0");
-          newKey = baseKey + (originalNumber + counter);
-        } else {
-          newKey = baseKey + counter;
-        }
-        counter++;
-      }
+      const newKey = generateUniqueKey(
+        key,
+        (prev.data as EndNode).outputData.map((v) => v.key),
+      );
       return {
         data: {
           ...prev.data,
@@ -221,7 +211,7 @@ export function EndNodeOutputStack({
 
   if (!outputVariables.length) return null;
   return (
-    <div className="flex flex-col gap-1 px-4 py-2">
+    <div className="flex flex-col gap-1 px-4 mt-4">
       {outputVariables.map((item, index) => {
         return (
           <div

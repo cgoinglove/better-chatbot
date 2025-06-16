@@ -8,17 +8,18 @@ import { PlusIcon } from "lucide-react";
 import { memo, useCallback, useEffect, useMemo } from "react";
 import { NodeSelect } from "./node-select";
 import { NodeIcon } from "./node-icon";
-import { generateInitialNode } from "./helper";
+import { generateInitialNode, generateUniqueKey } from "./helper";
 import { useUpdate } from "@/hooks/use-update";
 import {
   ContextMenu,
   ContextMenuContent,
-  ContextMenuItem,
   ContextMenuTrigger,
 } from "ui/context-menu";
 
 import { OutputSchemaStack } from "./start-node-config";
 import { EndNodeOutputStack } from "./end-node-config";
+import { LLMNodeStack } from "./llm-node-config";
+import { NodeContextMenuContent } from "./node-context-menu-content";
 
 type Props = NodeProps<UINode>;
 
@@ -31,8 +32,15 @@ export const DefaultNode = memo(function DefaultNode({
   positionAbsoluteY,
   width,
 }: Props) {
-  const { getEdges, addNodes, getNodes, addEdges, updateNode, setNodes } =
-    useReactFlow();
+  const {
+    fitView,
+    getEdges,
+    addNodes,
+    getNode,
+    getNodes,
+    addEdges,
+    updateNode,
+  } = useReactFlow();
   const update = useUpdate();
   const edges = getEdges();
   const nodes = getNodes() as UINode[];
@@ -54,8 +62,11 @@ export const DefaultNode = memo(function DefaultNode({
       const maxY = Math.max(
         ...nodes.map((node) => node.position.y + (node.measured?.height ?? 0)),
       );
+      const names = nodes.map((node) => node.data.name as string);
+      const name = generateUniqueKey(kind.toUpperCase(), names);
 
       const node = generateInitialNode(kind, {
+        name,
         position: {
           x: positionAbsoluteX + 300 * 1.2,
           y: !nodes.length ? positionAbsoluteY : maxY + 80,
@@ -85,8 +96,15 @@ export const DefaultNode = memo(function DefaultNode({
       updateNode(id, {
         selected: true,
       });
+      const node = getNode(id)!;
+      node &&
+        fitView({
+          padding: 1,
+          duration: 600,
+          nodes: [node],
+        });
     }
-  }, []);
+  }, [id]);
 
   return (
     <ContextMenu>
@@ -136,29 +154,26 @@ export const DefaultNode = memo(function DefaultNode({
               </Handle>
             )}
           </div>
-          {data.kind === NodeKind.Start && <OutputSchemaStack data={data} />}
-          {data.kind === NodeKind.End && (
-            <EndNodeOutputStack data={data} nodes={nodes} />
-          )}
-          {data.description && (
-            <div className="px-4 py-2">
-              <div className="text-xs text-muted-foreground">
-                <p className="break-all whitespace-pre-wrap">
-                  {data.description}
-                </p>
+          <div>
+            {data.kind === NodeKind.Start && <OutputSchemaStack data={data} />}
+            {data.kind === NodeKind.End && (
+              <EndNodeOutputStack data={data} nodes={nodes} />
+            )}
+            {data.kind === NodeKind.LLM && <LLMNodeStack data={data} />}
+            {data.description && (
+              <div className="px-4 mt-2">
+                <div className="text-xs text-muted-foreground">
+                  <p className="break-all whitespace-pre-wrap">
+                    {data.description}
+                  </p>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </ContextMenuTrigger>
-      <ContextMenuContent>
-        <ContextMenuItem
-          onClick={() => {
-            setNodes((nodes) => nodes.filter((node) => node.id !== id));
-          }}
-        >
-          Delete
-        </ContextMenuItem>
+      <ContextMenuContent className="p-2">
+        <NodeContextMenuContent node={data} />
       </ContextMenuContent>
     </ContextMenu>
   );

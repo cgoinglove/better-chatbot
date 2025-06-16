@@ -28,35 +28,39 @@ export function NodeSelect({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
       <DropdownMenuContent side="right" align="center" className="w-64">
-        {Object.keys(NodeKind)
-          .filter((key) => NodeKind[key] !== NodeKind.Start)
-          .sort((a, b) => {
-            const aIndex = unSupportedKinds.indexOf(NodeKind[a]);
-            const bIndex = unSupportedKinds.indexOf(NodeKind[b]);
-            return aIndex - bIndex;
-          })
-          .map((key) => (
-            <DropdownMenuItem
-              disabled={unSupportedKinds.includes(NodeKind[key])}
-              onClick={() => {
-                if (unSupportedKinds.includes(NodeKind[key])) {
-                  return;
-                }
-                onChange(NodeKind[key]);
-              }}
-              key={key}
-            >
-              <NodeIcon type={NodeKind[key]} />
-              {key}
-
-              {unSupportedKinds.includes(NodeKind[key]) && (
-                <span className="ml-auto text-xs text-muted-foreground">
-                  Soon...
-                </span>
-              )}
-            </DropdownMenuItem>
-          ))}
+        <NodeSelectContent onChange={onChange} />
       </DropdownMenuContent>
     </DropdownMenu>
   );
+}
+
+function NodeSelectContent({
+  onChange,
+}: { onChange: (nodeKind: NodeKind) => void }) {
+  return Object.keys(NodeKind)
+    .filter((key) => NodeKind[key] !== NodeKind.Start)
+    .sort((a, b) => {
+      const aIndex = unSupportedKinds.indexOf(NodeKind[a]);
+      const bIndex = unSupportedKinds.indexOf(NodeKind[b]);
+      return aIndex - bIndex;
+    })
+    .map((key) => (
+      <DropdownMenuItem
+        disabled={unSupportedKinds.includes(NodeKind[key])}
+        onClick={() => {
+          if (unSupportedKinds.includes(NodeKind[key])) {
+            return;
+          }
+          onChange(NodeKind[key]);
+        }}
+        key={key}
+      >
+        <NodeIcon type={NodeKind[key]} />
+        {key}
+
+        {unSupportedKinds.includes(NodeKind[key]) && (
+          <span className="ml-auto text-xs text-muted-foreground">Soon...</span>
+        )}
+      </DropdownMenuItem>
+    ));
 }

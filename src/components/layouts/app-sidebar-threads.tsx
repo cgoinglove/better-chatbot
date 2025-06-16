@@ -51,15 +51,15 @@ export function AppSidebarThreads() {
   // State to track if expanded view is active
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const {
-    data: threadList,
-    isLoading,
-    error,
-  } = useSWR("threads", selectThreadListByUserIdAction, {
-    onError: handleErrorWithToast,
-    fallbackData: [],
-    onSuccess: (data) => storeMutate({ threadList: data }),
-  });
+  const { data: threadList, isLoading } = useSWR(
+    "threads",
+    selectThreadListByUserIdAction,
+    {
+      onError: handleErrorWithToast,
+      fallbackData: [],
+      onSuccess: (data) => storeMutate({ threadList: data }),
+    },
+  );
 
   // Check if we have 40 or more threads to display "View All" button
   const hasExcessThreads = threadList && threadList.length >= MAX_THREADS_COUNT;
@@ -123,14 +123,6 @@ export function AppSidebarThreads() {
       error: t("failedToDeleteAllChats"),
     });
   };
-
-  useEffect(() => {
-    if (error) {
-      authClient.signOut().finally(() => {
-        window.location.href = "/sign-in";
-      });
-    }
-  }, [error]);
 
   if (isLoading || threadList?.length === 0)
     return (

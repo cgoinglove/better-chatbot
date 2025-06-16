@@ -24,6 +24,12 @@ import { Label } from "ui/label";
 import { Edge, useReactFlow } from "@xyflow/react";
 import { NodeRun } from "./node-run";
 import { LLMNodeConfig } from "./llm-node-config";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "ui/dropdown-menu";
+import { NodeContextMenuContent } from "./node-context-menu-content";
 
 export const WorkflowPanel = memo(function WorkflowPanel({
   nodes,
@@ -103,9 +109,16 @@ export const WorkflowPanel = memo(function WorkflowPanel({
                   value={selectedNode.data.name}
                   className="bg-transparent border-none px-0 text-lg font-semibold"
                 />
-                <div className="ml-auto rounded hover:bg-secondary cursor-pointer p-1">
-                  <MoreHorizontalIcon className="size-3.5" />
-                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <div className="ml-auto rounded hover:bg-secondary cursor-pointer p-1">
+                      <MoreHorizontalIcon className="size-3.5" />
+                    </div>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <NodeContextMenuContent node={selectedNode.data} />
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 <div
                   className="p-1 rounded hover:bg-secondary cursor-pointer"
                   onClick={() => {

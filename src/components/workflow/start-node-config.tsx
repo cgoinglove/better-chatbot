@@ -141,7 +141,7 @@ export function OutputSchemaStack({ data }: { data: WorkflowNode }) {
   const keys = Object.keys(data.outputSchema?.properties ?? {});
   if (!keys.length) return null;
   return (
-    <div className="flex flex-col gap-1 px-4 py-2">
+    <div className="flex flex-col gap-1 px-4 mt-4">
       {keys.map((v) => {
         const schema = data.outputSchema.properties[v];
         return (

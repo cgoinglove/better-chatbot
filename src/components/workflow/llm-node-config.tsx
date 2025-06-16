@@ -159,3 +159,14 @@ export function LLMNodeConfig({
     </div>
   );
 }
+
+export function LLMNodeStack({ data }: { data: LLMNode }) {
+  if (!data.model) return null;
+  return (
+    <div className="flex flex-col gap-1 px-4 mt-4">
+      <div className="border bg-input text-[10px] rounded px-2 py-1 flex items-center gap-1">
+        <span className="font-semibold">{data.model.model}</span>
+      </div>
+    </div>
+  );
+}

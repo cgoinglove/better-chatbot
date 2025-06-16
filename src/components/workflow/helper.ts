@@ -24,7 +24,7 @@ export function generateInitialNode(
     position: option?.position ?? { x: 0, y: 0 },
     data: {
       kind: kind as any,
-      name: option?.name ?? kind,
+      name: option?.name ?? kind.toUpperCase(),
       id,
       outputSchema: { ...defaultJsonSchema },
       stored: false,
@@ -63,4 +63,22 @@ export function findOutputSchemaSource(
     schema.properties![key] as ObjectJsonSchema7,
     rest,
   );
+}
+
+export function generateUniqueKey(key: string, existingKeys: string[]) {
+  let newKey = key;
+  let counter = 1;
+
+  while (existingKeys.includes(newKey)) {
+    const baseKey = key.replace(/\d+$/, "");
+    const hasOriginalNumber = key !== baseKey;
+    if (hasOriginalNumber) {
+      const originalNumber = parseInt(key.match(/\d+$/)?.[0] || "0");
+      newKey = baseKey + (originalNumber + counter);
+    } else {
+      newKey = baseKey + counter;
+    }
+    counter++;
+  }
+  return newKey;
 }
