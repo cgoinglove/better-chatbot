@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.9.0](https://github.com/cgoinglove/mcp-client-chatbot/compare/v1.8.0...v1.9.0) (2025-06-16)
+
+
+### Features
+
+* credit contributors in releases and changlogs ([#104](https://github.com/cgoinglove/mcp-client-chatbot/issues/104)) ([e0e4443](https://github.com/cgoinglove/mcp-client-chatbot/commit/e0e444382209a36f03b6e898f26ebd805032c306))
+
+
+### Bug Fixes
+
+* increase maxTokens for title generation in chat actions issue  [#102](https://github.com/cgoinglove/mcp-client-chatbot/issues/102) ([bea2588](https://github.com/cgoinglove/mcp-client-chatbot/commit/bea2588e24cf649133e8ce5f3b6391265b604f06))
+* temporary chat initial model ([0393f7a](https://github.com/cgoinglove/mcp-client-chatbot/commit/0393f7a190463faf58cbfbca1c21d349a9ff05dc))
+* update adding-openAI-like-providers.md ([#101](https://github.com/cgoinglove/mcp-client-chatbot/issues/101)) ([2bb94e7](https://github.com/cgoinglove/mcp-client-chatbot/commit/2bb94e7df63a105e33c1d51271751c7b89fead23))
+* update config file path in release workflow ([7209cbe](https://github.com/cgoinglove/mcp-client-chatbot/commit/7209cbeb89bd65b14aee66a40ed1abb5c5f2e018))
+
 ## [1.8.0](https://github.com/cgoinglove/mcp-client-chatbot/compare/v1.7.0...v1.8.0) (2025-06-11)
 
 
