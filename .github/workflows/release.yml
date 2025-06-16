@@ -35,36 +35,60 @@ jobs:
         run: |
           set -e
 
+          echo "Starting 'Add Authors and Update Release' step..."
+          echo "Release tag detected: $RELEASE_TAG"
+
           TEMP_CHANGELOG="CHANGELOG.md.new"
           touch "$TEMP_CHANGELOG"
+          echo "Created temporary changelog file: $TEMP_CHANGELOG"
 
           if [ -f "CHANGELOG.md" ]; then
+            echo "CHANGELOG.md found. Processing to add authors..."
             while IFS= read -r line; do
               if [[ "$line" =~ \*\ (.*)\ \(\[([a-f0-9]{7,40})\]\(.* ]]; then
                 commit_hash="${BASH_REMATCH[2]}"
+                echo "  Found commit hash: $commit_hash in line: $line"
                 github_user=$(gh api "repos/${{ github.repository }}/commits/${commit_hash}"  | jq -r '.author.login // "unknown"')
+                echo "  Fetched GitHub user for commit $commit_hash: @${github_user}"
                 echo "${line} by @${github_user}" >> "$TEMP_CHANGELOG"
               else
+                echo "  Copying line without modification: $line"
                 echo "$line" >> "$TEMP_CHANGELOG"
               fi
             done < "CHANGELOG.md"
+            echo "Finished processing CHANGELOG.md. Moving temporary file to original."
           else
             echo "CHANGELOG.md not found. Skipping author addition to changelog content."
           fi
 
           mv "$TEMP_CHANGELOG" "CHANGELOG.md"
+          echo "CHANGELOG.md updated with author information."
 
+          echo "Extracting release body for tag: $RELEASE_TAG"
           RELEASE_BODY=$(awk "/^## \\[?${RELEASE_TAG#v}/{flag=1;next} /^## / && flag{exit} flag" CHANGELOG.md)
 
           if [ -z "$RELEASE_BODY" ]; then
             echo "Warning: Could not find release notes for $RELEASE_TAG in CHANGELOG.md."
             echo "Using a default message for release body."
             RELEASE_BODY="Release $RELEASE_TAG"
+          else
+            echo "Successfully extracted release body for $RELEASE_TAG."
+            echo "Release Body Preview:"
+            echo "---"
+            echo "$RELEASE_BODY" | head -n 5 # Show first 5 lines of the release body
+            echo "---"
+            echo "---"
           fi
-          gh release edit "$RELEASE_TAG" --notes "$RELEASE_BODY"
 
+          echo "Attempting to edit GitHub release $RELEASE_TAG with extracted notes."
+          gh release edit "$RELEASE_TAG" --notes "$RELEASE_BODY"
+          echo "GitHub release $RELEASE_TAG updated successfully."
+
+          echo "Configuring git user for commit."
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          echo "Adding CHANGELOG.md to git index."
           git add CHANGELOG.md
-          git commit -m "update CHANGELOG.md with author info [skip ci] [skip release]" || true
+          echo "Attempting to commit changes to CHANGELOG.md."
+          git commit -m "update CHANGELOG.md with author info [skip ci] [skip release]" || echo "No changes to commit for CHANGELOG.md or commit failed (this is expected if no changes)."
           git push
