@@ -2,6 +2,8 @@ import { ObjectJsonSchema7 } from "app-types/util";
 import { JSONSchema7 } from "json-schema";
 import { OutputSchemaSource, WorkflowNode } from "./interface";
 
+const variableIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-variable size-3.5 text-blue-500"><path d="M8 21s-4-3-4-9 4-9 4-9"></path><path d="M16 3s4 3 4 9-4 9-4 9"></path><line x1="15" x2="9" y1="9" y2="15"></line><line x1="9" x2="15" y1="9" y2="15"></line></svg>`;
+const errorIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-triangle-alert size-3 text-destructive"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>`;
 export function createVariableMentionLabel({
   nodeName,
   path,
@@ -11,7 +13,7 @@ export function createVariableMentionLabel({
   path: string[];
   notFound?: boolean;
 }) {
-  return `${notFound ? "<span class='text-destructive'>X</span>" : ""}<span class="text-foreground">${nodeName}/</span>${path.join(".")}`;
+  return `${notFound ? errorIcon : variableIcon}<span class="text-foreground">${nodeName}/</span>${path.join(".")}`;
 }
 
 export function findAccessibleNodeIds({

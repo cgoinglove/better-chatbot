@@ -17,11 +17,11 @@ import {
   DropdownMenuTrigger,
 } from "ui/dropdown-menu";
 import { TipTapMentionJsonContent } from "app-types/util";
-import {
-  createVariableMentionLabel,
-  findUseageSchema,
-} from "lib/ai/workflow/shared";
+import { findUseageSchema } from "lib/ai/workflow/shared";
 import { useToRef } from "@/hooks/use-latest";
+import { createRoot } from "react-dom/client";
+import { VariableMentionItem } from "./variable-mention-item";
+import { generateUUID } from "lib/utils";
 
 interface OutputSchemaMentionInputProps {
   currentNodeId: string;
@@ -47,7 +47,15 @@ export function OutputSchemaMentionInput({
 
   const mentionRef = useRef<HTMLDivElement>(null);
 
-  const latestRef = useToRef({ nodes, edges });
+  const removeMention = (id: string) => {
+    const newContent = editor?.getJSON() as unknown as TipTapMentionJsonContent;
+    newContent.content[0].content = newContent.content[0].content.filter(
+      (item) => !(item.type == "mention" && item.attrs.id === id),
+    );
+    editor?.commands.setContent(newContent);
+  };
+
+  const latestRef = useToRef({ nodes, edges, removeMention });
 
   const editorConfig = useMemo<UseEditorOptions>(
     () => ({
@@ -64,7 +72,7 @@ export function OutputSchemaMentionInput({
           },
           renderHTML: (props) => {
             const el = document.createElement("div");
-            const item = JSON.parse(props.node.attrs.id) as {
+            const item = JSON.parse(props.node.attrs.label) as {
               nodeId: string;
               path: string[];
             };
@@ -78,7 +86,7 @@ export function OutputSchemaMentionInput({
               (node) => node.id === item.nodeId,
             );
 
-            labelData.nodeName = sourceNode?.data.name ?? "NOT_FOUND";
+            labelData.nodeName = sourceNode?.data.name ?? "ERROR";
             labelData.path = item.path;
 
             const schema = findUseageSchema({
@@ -93,10 +101,16 @@ export function OutputSchemaMentionInput({
             }
 
             el.setAttribute("data-mention-item", props.node.attrs.id);
-            el.className =
-              "mr-1 inline-flex text-blue-500 gap-1 items-center hover:border-blue-500 border rounded-xs bg-background text-xs px-1";
-
-            el.innerHTML = createVariableMentionLabel(labelData);
+            el.className = "mr-1 inline-flex";
+            const root = createRoot(el);
+            root.render(
+              <VariableMentionItem
+                {...labelData}
+                onRemove={() =>
+                  latestRef.current.removeMention(props.node.attrs.id)
+                }
+              />,
+            );
             return el;
           },
           suggestion: {
@@ -178,7 +192,8 @@ export function OutputSchemaMentionInput({
                     {
                       type: "mention",
                       attrs: {
-                        id: JSON.stringify({
+                        id: generateUUID(),
+                        label: JSON.stringify({
                           nodeId: item.nodeId,
                           path: item.path,
                         }),
