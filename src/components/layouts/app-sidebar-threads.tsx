@@ -30,8 +30,8 @@ import { useShallow } from "zustand/shallow";
 import { useRouter } from "next/navigation";
 import useSWR, { mutate } from "swr";
 import { handleErrorWithToast } from "ui/shared-toast";
-import { useEffect, useMemo, useState } from "react";
-import { authClient } from "auth/client";
+import { useMemo, useState } from "react";
+
 import { useTranslations } from "next-intl";
 
 type ThreadGroup = {

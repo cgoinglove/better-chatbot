@@ -4,9 +4,7 @@ import { NodeKind, UINode } from "lib/ai/workflow/interface";
 
 const initialNodes: UINode[] = [
   generateInitialNode(NodeKind.Start, {
-    data: {
-      name: "START",
-    },
+    name: "START",
   }),
 ];
 
