@@ -17,6 +17,11 @@ import {
   DropdownMenuTrigger,
 } from "ui/dropdown-menu";
 import { TipTapMentionJsonContent } from "app-types/util";
+import {
+  createVariableMentionLabel,
+  findUseageSchema,
+} from "lib/ai/workflow/shared";
+import { useToRef } from "@/hooks/use-latest";
 
 interface OutputSchemaMentionInputProps {
   currentNodeId: string;
@@ -42,6 +47,8 @@ export function OutputSchemaMentionInput({
 
   const mentionRef = useRef<HTMLDivElement>(null);
 
+  const latestRef = useToRef({ nodes, edges });
+
   const editorConfig = useMemo<UseEditorOptions>(
     () => ({
       immediatelyRender: false,
@@ -56,12 +63,41 @@ export function OutputSchemaMentionInput({
             class: "mention",
           },
           renderHTML: (props) => {
-            const node = document.createElement("div");
-            node.setAttribute("data-mention-item", props.node.attrs.id);
-            node.className =
+            const el = document.createElement("div");
+            const item = JSON.parse(props.node.attrs.id) as {
+              nodeId: string;
+              path: string[];
+            };
+            const labelData = {
+              nodeName: "",
+              path: [] as string[],
+              notFound: false,
+            };
+
+            const sourceNode = latestRef.current.nodes.find(
+              (node) => node.id === item.nodeId,
+            );
+
+            labelData.nodeName = sourceNode?.data.name ?? "NOT_FOUND";
+            labelData.path = item.path;
+
+            const schema = findUseageSchema({
+              nodeId: currentNodeId,
+              source: item,
+              nodes: latestRef.current.nodes.map((node) => node.data),
+              edges: latestRef.current.edges,
+            });
+
+            if (!schema) {
+              labelData.notFound = true;
+            }
+
+            el.setAttribute("data-mention-item", props.node.attrs.id);
+            el.className =
               "mr-1 inline-flex text-blue-500 gap-1 items-center hover:border-blue-500 border rounded-xs bg-background text-xs px-1";
-            node.innerHTML = props.node.attrs.label;
-            return node;
+
+            el.innerHTML = createVariableMentionLabel(labelData);
+            return el;
           },
           suggestion: {
             char: "/",
@@ -146,7 +182,6 @@ export function OutputSchemaMentionInput({
                           nodeId: item.nodeId,
                           path: item.path,
                         }),
-                        label: `<span class="text-foreground">${item.nodeName}/</span>${item.path.join(".")}`,
                       },
                     },
                   ])

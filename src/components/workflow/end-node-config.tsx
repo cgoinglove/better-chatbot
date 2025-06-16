@@ -13,10 +13,10 @@ import {
 
 import { VariableSelect } from "./variable-select";
 import { Edge } from "@xyflow/react";
-import { findOutputSchemaSource, generateUniqueKey } from "./helper";
+import { findJsonSchemaByPath } from "../../lib/ai/workflow/shared";
 import { Input } from "ui/input";
 import { Button } from "ui/button";
-import { cleanVariableName } from "lib/utils";
+import { cleanVariableName, generateUniqueKey } from "lib/utils";
 import { Label } from "ui/label";
 
 export function EndNodeConfig({
@@ -34,10 +34,7 @@ export function EndNodeConfig({
     return data.outputData.map(({ key, source }) => {
       const targetNode = nodes.find((node) => node.data.id === source?.nodeId);
       const schema = targetNode
-        ? findOutputSchemaSource(
-            targetNode.data.outputSchema,
-            source?.path ?? [],
-          )
+        ? findJsonSchemaByPath(targetNode.data.outputSchema, source?.path ?? [])
         : undefined;
       return {
         key,
@@ -193,10 +190,7 @@ export function EndNodeOutputStack({
     return data.outputData.map(({ key, source }) => {
       const targetNode = nodes.find((node) => node.data.id === source?.nodeId);
       const schema = targetNode
-        ? findOutputSchemaSource(
-            targetNode.data.outputSchema,
-            source?.path ?? [],
-          )
+        ? findJsonSchemaByPath(targetNode.data.outputSchema, source?.path ?? [])
         : undefined;
       return {
         key,

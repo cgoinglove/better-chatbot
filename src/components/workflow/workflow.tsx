@@ -18,7 +18,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { UINode } from "lib/ai/workflow/interface";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 const nodeTypes = {
   default: DefaultNode,
@@ -80,14 +80,16 @@ export default function Workflow({
           ...edge.style,
           stroke: isConnected ? "oklch(62.3% 0.214 259.815)" : undefined,
           strokeWidth: 2,
-          transition: "all 0.3s ease-in-out",
+          transition: "stroke 0.3s",
         },
       };
     });
   }, [edges, activeNodeIds]);
 
+  useEffect(() => {}, []);
+
   return (
-    <div className="w-full h-full text-blue-500">
+    <div className="w-full h-full">
       <ReactFlow
         fitView
         deleteKeyCode={null}

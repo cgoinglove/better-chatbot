@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/chart";
 
 import { JsonViewPopup } from "../json-view-popup";
-import { sanitizeCssVariableName } from "./utils";
+import { sanitizeCssVariableName } from "./shared";
 // LineChart component props interface
 export interface LineChartProps {
   // Chart title (required)

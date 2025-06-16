@@ -1,9 +1,9 @@
-import { generateInitialNode } from "@/components/workflow/helper";
 import Workflow from "@/components/workflow/workflow";
 import { NodeKind, UINode } from "lib/ai/workflow/interface";
+import { generateUINode } from "@/components/workflow/shared";
 
 const initialNodes: UINode[] = [
-  generateInitialNode(NodeKind.Start, {
+  generateUINode(NodeKind.Start, {
     name: "START",
   }),
 ];

@@ -265,3 +265,21 @@ export function cleanVariableName(input: string = ""): string {
 
   return input.replace(/[^\w\u0080-\uFFFF-]/g, "").replace(/^[0-9]+/, "");
 }
+
+export function generateUniqueKey(key: string, existingKeys: string[]) {
+  let newKey = key;
+  let counter = 1;
+
+  while (existingKeys.includes(newKey)) {
+    const baseKey = key.replace(/\d+$/, "");
+    const hasOriginalNumber = key !== baseKey;
+    if (hasOriginalNumber) {
+      const originalNumber = parseInt(key.match(/\d+$/)?.[0] || "0");
+      newKey = baseKey + (originalNumber + counter);
+    } else {
+      newKey = baseKey + counter;
+    }
+    counter++;
+  }
+  return newKey;
+}

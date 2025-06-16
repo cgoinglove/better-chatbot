@@ -20,12 +20,16 @@ const unSupportedKinds: NodeKind[] = [
 export function NodeSelect({
   children,
   onChange,
+  open,
+  onOpenChange,
 }: {
   onChange: (nodeKind: NodeKind) => void;
   children: ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
   return (
-    <DropdownMenu>
+    <DropdownMenu open={open} onOpenChange={onOpenChange}>
       <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
       <DropdownMenuContent side="right" align="center" className="w-64">
         <NodeSelectContent onChange={onChange} />

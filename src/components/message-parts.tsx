@@ -43,7 +43,7 @@ import {
 import { toast } from "sonner";
 import { safe } from "ts-safe";
 import { ChatMessageAnnotation, ChatModel } from "app-types/chat";
-import { DefaultToolName } from "lib/ai/tools/utils";
+import { DefaultToolName } from "lib/ai/tools/app-default-tool-name";
 import { Skeleton } from "ui/skeleton";
 import { PieChart } from "./tool-invocation/pie-chart";
 import { BarChart } from "./tool-invocation/bar-chart";

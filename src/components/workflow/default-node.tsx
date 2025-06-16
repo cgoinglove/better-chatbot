@@ -2,13 +2,13 @@
 
 import { Handle, Position, useReactFlow, type NodeProps } from "@xyflow/react";
 import { NodeKind, UINode } from "lib/ai/workflow/interface";
-import { cn, generateUUID } from "lib/utils";
+import { cn, generateUniqueKey, generateUUID } from "lib/utils";
 import { PlusIcon } from "lucide-react";
 
-import { memo, useCallback, useEffect, useMemo } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { NodeSelect } from "./node-select";
 import { NodeIcon } from "./node-icon";
-import { generateInitialNode, generateUniqueKey } from "./helper";
+
 import { useUpdate } from "@/hooks/use-update";
 import {
   ContextMenu,
@@ -20,6 +20,7 @@ import { OutputSchemaStack } from "./start-node-config";
 import { EndNodeOutputStack } from "./end-node-config";
 import { LLMNodeStack } from "./llm-node-config";
 import { NodeContextMenuContent } from "./node-context-menu-content";
+import { generateUINode } from "./shared";
 
 type Props = NodeProps<UINode>;
 
@@ -32,6 +33,8 @@ export const DefaultNode = memo(function DefaultNode({
   positionAbsoluteY,
   width,
 }: Props) {
+  const [openNodeSelect, setOpenNodeSelect] = useState(false);
+
   const {
     fitView,
     getEdges,
@@ -49,27 +52,30 @@ export const DefaultNode = memo(function DefaultNode({
       leftCount: edges.filter((edge) => edge.target === id).length,
       rightCount: edges.filter((edge) => edge.source === id).length,
     };
-  }, [edges, id]);
+  }, [edges, id, nodes]);
 
   const appendNode = useCallback(
     (kind: NodeKind) => {
-      const targetNodes = getEdges()
+      setOpenNodeSelect(false);
+      const targetEdges = edges
         .filter((edge) => edge.source === id)
         .map((v) => v.target);
-      const nodes = getNodes().filter((node) => {
-        return targetNodes.includes(node.id);
+      const targetNodes = nodes.filter((node) => {
+        return targetEdges.includes(node.id);
       });
       const maxY = Math.max(
-        ...nodes.map((node) => node.position.y + (node.measured?.height ?? 0)),
+        ...targetNodes.map(
+          (node) => node.position.y + (node.measured?.height ?? 0),
+        ),
       );
       const names = nodes.map((node) => node.data.name as string);
       const name = generateUniqueKey(kind.toUpperCase(), names);
 
-      const node = generateInitialNode(kind, {
+      const node = generateUINode(kind, {
         name,
         position: {
           x: positionAbsoluteX + 300 * 1.2,
-          y: !nodes.length ? positionAbsoluteY : maxY + 80,
+          y: !targetNodes.length ? positionAbsoluteY : maxY + 80,
         },
       });
       addNodes([node]);
@@ -88,7 +94,16 @@ export const DefaultNode = memo(function DefaultNode({
         });
       });
     },
-    [id, addNodes, positionAbsoluteX, positionAbsoluteY, width, rightCount],
+    [
+      id,
+      nodes,
+      edges,
+      addNodes,
+      positionAbsoluteX,
+      positionAbsoluteY,
+      width,
+      rightCount,
+    ],
   );
 
   useEffect(() => {
@@ -97,12 +112,14 @@ export const DefaultNode = memo(function DefaultNode({
         selected: true,
       });
       const node = getNode(id)!;
-      node &&
+      if (node) {
         fitView({
           padding: 1,
-          duration: 600,
+          maxZoom: 1.2,
+          duration: 300,
           nodes: [node],
         });
+      }
     }
   }, [id]);
 
@@ -123,7 +140,7 @@ export const DefaultNode = memo(function DefaultNode({
               type="target"
               className={cn(
                 !leftCount && "opacity-0",
-                "h-4! rounded-none! border-none! bg-blue-500! w-[1px]! -left-[4px]!",
+                "h-4! border-none! bg-blue-500! w-[1px]! -left-[4px]! rounded-l-xs! rounded-r-none!",
               )}
               position={Position.Left}
               isConnectable={isConnectable}
@@ -136,21 +153,32 @@ export const DefaultNode = memo(function DefaultNode({
                 position={Position.Right}
                 className={cn(
                   !selected && !rightCount && "opacity-0",
-                  "-right-[5px]! z-10 group-hover:opacity-100 border-none! bg-blue-500! rounded-none! h-4!",
+                  "-right-[5px]! z-10 group-hover:opacity-100 border-none! bg-blue-500! h-4! rounded-l-none! rounded-r-xs! ",
                   "group-hover:w-4! group-hover:rounded-full! group-hover:h-4! group-hover:-right-0!",
                   selected && "w-4! rounded-full! -right-0!",
                 )}
                 id="right"
                 isConnectable={isConnectable}
+                onMouseUp={() => {
+                  setOpenNodeSelect(true);
+                }}
               >
-                <NodeSelect onChange={appendNode}>
-                  <PlusIcon
-                    className={cn(
-                      "size-4 hidden group-hover:block",
-                      selected && "block",
-                    )}
-                  />
-                </NodeSelect>
+                <div className="pointer-events-none">
+                  <NodeSelect
+                    onChange={appendNode}
+                    open={openNodeSelect}
+                    onOpenChange={(open) => {
+                      setOpenNodeSelect(open);
+                    }}
+                  >
+                    <PlusIcon
+                      className={cn(
+                        "size-4 hidden group-hover:block",
+                        selected && "block",
+                      )}
+                    />
+                  </NodeSelect>
+                </div>
               </Handle>
             )}
           </div>

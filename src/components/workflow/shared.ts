@@ -1,6 +1,5 @@
 import { appStore } from "@/app/store";
 import { ObjectJsonSchema7 } from "app-types/util";
-import { JSONSchema7 } from "json-schema";
 import { NodeKind, UINode } from "lib/ai/workflow/interface";
 import { generateUUID } from "lib/utils";
 
@@ -9,7 +8,7 @@ export const defaultJsonSchema: ObjectJsonSchema7 = {
   properties: {},
 };
 
-export function generateInitialNode(
+export function generateUINode(
   kind: NodeKind,
   option?: Partial<{
     position: { x: number; y: number };
@@ -49,36 +48,4 @@ export function generateInitialNode(
   }
 
   return node;
-}
-
-export function findOutputSchemaSource(
-  schema: ObjectJsonSchema7,
-  path: string[],
-): JSONSchema7 | undefined {
-  const [key, ...rest] = path;
-  if (rest.length === 0) {
-    return schema.properties?.[key] as JSONSchema7;
-  }
-  return findOutputSchemaSource(
-    schema.properties![key] as ObjectJsonSchema7,
-    rest,
-  );
-}
-
-export function generateUniqueKey(key: string, existingKeys: string[]) {
-  let newKey = key;
-  let counter = 1;
-
-  while (existingKeys.includes(newKey)) {
-    const baseKey = key.replace(/\d+$/, "");
-    const hasOriginalNumber = key !== baseKey;
-    if (hasOriginalNumber) {
-      const originalNumber = parseInt(key.match(/\d+$/)?.[0] || "0");
-      newKey = baseKey + (originalNumber + counter);
-    } else {
-      newKey = baseKey + counter;
-    }
-    counter++;
-  }
-  return newKey;
 }

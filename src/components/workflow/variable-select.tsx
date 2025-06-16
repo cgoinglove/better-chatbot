@@ -20,6 +20,7 @@ import {
 import { Input } from "ui/input";
 
 import { JSONSchema7 } from "json-schema";
+import { findAccessibleNodeIds } from "lib/ai/workflow/shared";
 
 interface VariableSelectProps {
   currentNodeId: string;
@@ -75,19 +76,11 @@ export function VariableSelectContent({
   const [query, setQuery] = useState("");
 
   const accessibleSchemas = useMemo(() => {
-    const accessibleNodes: string[] = [];
-    let currentNodes = [currentNodeId];
-    while (currentNodes.length > 0) {
-      const targets = [...currentNodes];
-      currentNodes = [];
-      for (const target of targets) {
-        const sources = edges
-          .filter((edge) => edge.target === target)
-          .map((edge) => edge.source);
-        accessibleNodes.push(...sources);
-        currentNodes.push(...sources);
-      }
-    }
+    const accessibleNodes = findAccessibleNodeIds({
+      nodeId: currentNodeId,
+      nodes: nodes.map((node) => node.data),
+      edges,
+    });
     return nodes
       .filter((node) => accessibleNodes.includes(node.id))
       .map((node) => {

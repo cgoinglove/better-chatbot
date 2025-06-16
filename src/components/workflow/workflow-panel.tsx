@@ -90,7 +90,10 @@ export const WorkflowPanel = memo(function WorkflowPanel({
         </Button>
       </div>
       {selectedNode && (
-        <div className="w-sm h-full space-y-4  bg-card border rounded-lg shadow-lg overflow-y-auto py-4">
+        <div
+          key={selectedNode.id}
+          className="w-sm h-full space-y-4  bg-card border rounded-lg shadow-lg overflow-y-auto py-4"
+        >
           {/* Header */}
           <div className="px-4">
             <div className="flex items-center justify-between">
