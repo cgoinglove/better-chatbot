@@ -6,7 +6,7 @@ interface AutoHeightProps {
   children: ReactNode;
   className?: string;
   duration?: number;
-  ease?: string;
+  ease?: "easeIn" | "easeOut" | "easeInOut" | "linear";
 }
 
 export function AutoHeight({
