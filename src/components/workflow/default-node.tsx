@@ -47,9 +47,9 @@ export const DefaultNode = memo(function DefaultNode({
   const update = useUpdate();
   const edges = getEdges();
   const nodes = getNodes() as UINode[];
-  const { leftCount, rightCount } = useMemo(() => {
+
+  const { rightCount } = useMemo(() => {
     return {
-      leftCount: edges.filter((edge) => edge.target === id).length,
       rightCount: edges.filter((edge) => edge.source === id).length,
     };
   }, [edges, id, nodes]);
@@ -139,7 +139,7 @@ export const DefaultNode = memo(function DefaultNode({
               id="left"
               type="target"
               className={cn(
-                !leftCount && "opacity-0",
+                data.kind == NodeKind.Start && "opacity-0",
                 "h-4! border-none! bg-blue-500! w-[1px]! -left-[4px]! rounded-l-xs! rounded-r-none!",
               )}
               position={Position.Left}
@@ -150,6 +150,7 @@ export const DefaultNode = memo(function DefaultNode({
             {![NodeKind.Information, NodeKind.End].includes(data.kind) && (
               <Handle
                 type="source"
+                onConnect={() => update()}
                 position={Position.Right}
                 className={cn(
                   !selected && !rightCount && "opacity-0",

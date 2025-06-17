@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator";
 
 import { NodeKind, UINode } from "lib/ai/workflow/interface";
 import { NodeIcon } from "./node-icon";
-import { isFunction } from "lib/utils";
+import { isFunction, nextTick } from "lib/utils";
 import {
   LockIcon,
   MoreHorizontalIcon,
@@ -30,39 +30,28 @@ import {
   DropdownMenuTrigger,
 } from "ui/dropdown-menu";
 import { NodeContextMenuContent } from "./node-context-menu-content";
+import { NextNodeInfo } from "./next-node-info";
 
 export const WorkflowPanel = memo(function WorkflowPanel({
   nodes,
-  setNodes,
   edges,
 }: {
   nodes: UINode[];
-  setNodes: Dispatch<SetStateAction<UINode[]>>;
   edges: Edge[];
 }) {
-  const { updateNode } = useReactFlow();
+  const { updateNode, setEdges } = useReactFlow<UINode>();
 
   const selectedNode = useMemo(() => {
     return nodes.find((node) => node.selected);
   }, [nodes]);
 
-  const setNode = useCallback(
-    (data: Mutate<UINode>) => {
-      if (!selectedNode) {
-        return;
-      }
-      setNodes((nodes) =>
-        nodes.map((node) => {
-          if (node.id === selectedNode.id) {
-            const nextNode = isFunction(data) ? data(node) : data;
-            return { ...node, ...nextNode } as UINode;
-          }
-          return node;
-        }),
-      );
-    },
-    [selectedNode, setNodes],
-  );
+  const unLink = useCallback((source: string, target: string) => {
+    setEdges((edges) => {
+      const edge = edges.find((e) => e.source == source && e.target == target);
+      if (!edge) return edges;
+      return edges.filter((e) => e != edge);
+    });
+  }, []);
 
   return (
     <div className="min-h-0 h-[90vh] flex flex-col items-end">
@@ -102,7 +91,7 @@ export const WorkflowPanel = memo(function WorkflowPanel({
                 <Input
                   maxLength={20}
                   onChange={(e) =>
-                    setNode((prev) => ({
+                    updateNode(selectedNode.id, (prev) => ({
                       data: {
                         ...prev.data,
                         name: e.target.value,
@@ -137,7 +126,7 @@ export const WorkflowPanel = memo(function WorkflowPanel({
                 className="text-xs bg-transparent rounded-none resize-none overflow-y-auto max-h-14 min-h-6 h-6 mt-2 p-0 border-none"
                 value={selectedNode.data.description}
                 onChange={(e) =>
-                  setNode((prev) => ({
+                  updateNode(selectedNode.id, (prev) => ({
                     data: { ...prev.data, description: e.target.value },
                   }))
                 }
@@ -153,21 +142,21 @@ export const WorkflowPanel = memo(function WorkflowPanel({
             ) : selectedNode.data.kind === NodeKind.Start ? (
               <StartNodeConfig
                 node={selectedNode as UINode<NodeKind.Start>}
-                setNode={setNode}
+                setNode={(partial) => updateNode(selectedNode.data.id, partial)}
               />
             ) : selectedNode.data.kind === NodeKind.End ? (
               <EndNodeConfig
                 node={selectedNode as UINode<NodeKind.End>}
                 nodes={nodes}
                 edges={edges}
-                setNode={setNode}
+                setNode={(partial) => updateNode(selectedNode.data.id, partial)}
               />
             ) : selectedNode.data.kind === NodeKind.LLM ? (
               <LLMNodeConfig
                 node={selectedNode as UINode<NodeKind.LLM>}
                 nodes={nodes}
                 edges={edges}
-                setNode={(data) => setNode(data as UINode<NodeKind.LLM>)}
+                setNode={(partial) => updateNode(selectedNode.data.id, partial)}
               />
             ) : selectedNode.data.kind === NodeKind.Information ? (
               <div className="h-full flex flex-col gap-2">
@@ -178,8 +167,7 @@ export const WorkflowPanel = memo(function WorkflowPanel({
                   className="resize-none min-h-80 max-h-80 overflow-y-auto"
                   value={selectedNode.data.description}
                   onChange={(e) =>
-                    setNode((prev) => ({
-                      ...prev,
+                    updateNode(selectedNode.data.id, (prev) => ({
                       data: {
                         ...prev.data,
                         description: e.target.value,
@@ -189,6 +177,19 @@ export const WorkflowPanel = memo(function WorkflowPanel({
                 />
               </div>
             ) : null}
+          </div>
+
+          <div className="px-4">
+            <NextNodeInfo
+              edges={edges}
+              nodes={nodes}
+              node={selectedNode}
+              onSelectNode={(id) => {
+                updateNode(selectedNode.id, { selected: false });
+                nextTick().then(() => updateNode(id, { selected: true }));
+              }}
+              onDisconnected={(id) => unLink(selectedNode.data.id, id)}
+            />
           </div>
         </div>
       )}

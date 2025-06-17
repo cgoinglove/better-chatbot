@@ -49,7 +49,9 @@ export default function Workflow({
   );
 
   const onConnect: OnConnect = useCallback(
-    (connection) => setEdges((eds) => addEdge(connection, eds)),
+    (connection) => {
+      setEdges((eds) => addEdge(connection, eds));
+    },
     [setEdges],
   );
 
@@ -107,7 +109,7 @@ export default function Workflow({
         <Background gap={12} size={0.6} />
 
         <Panel position="top-right" className="h-full">
-          <WorkflowPanel nodes={nodes} edges={edges} setNodes={setNodes} />
+          <WorkflowPanel nodes={nodes} edges={edges} />
         </Panel>
       </ReactFlow>
     </div>

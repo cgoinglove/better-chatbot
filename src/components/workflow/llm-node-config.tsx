@@ -24,7 +24,7 @@ export function LLMNodeConfig({
   node: UINode<NodeKind.LLM>;
   nodes: UINode[];
   edges: Edge[];
-  setNode: (node: Mutate<UINode<NodeKind.LLM>>) => void;
+  setNode: (node: Mutate<UINode>) => void;
 }) {
   const model = node.data.model;
 
@@ -35,7 +35,9 @@ export function LLMNodeConfig({
     setNode((prev) => ({
       data: {
         ...prev.data,
-        messages: prev.data.messages.map((m, i) => (i === index ? message : m)),
+        messages: (prev.data as LLMNode).messages.map((m, i) =>
+          i === index ? message : m,
+        ),
       },
     }));
   };
@@ -44,7 +46,7 @@ export function LLMNodeConfig({
     setNode((prev) => ({
       data: {
         ...prev.data,
-        messages: prev.data.messages.filter((_, i) => i !== index),
+        messages: (prev.data as LLMNode).messages.filter((_, i) => i !== index),
       },
     }));
   };
@@ -53,7 +55,7 @@ export function LLMNodeConfig({
     setNode((prev) => ({
       data: {
         ...prev.data,
-        messages: [...prev.data.messages, { role: "assistant" }],
+        messages: [...(prev.data as LLMNode).messages, { role: "assistant" }],
       },
     }));
   };
