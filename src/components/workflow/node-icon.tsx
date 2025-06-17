@@ -5,9 +5,12 @@ import { cn } from "lib/utils";
 import {
   BotIcon,
   BoxIcon,
+  HardDriveUpload,
   HouseIcon,
   InfoIcon,
   LandPlotIcon,
+  SplitIcon,
+  TerminalIcon,
   WrenchIcon,
 } from "lucide-react";
 import { useMemo } from "react";
@@ -28,6 +31,12 @@ export function NodeIcon({
         return WrenchIcon;
       case NodeKind.LLM:
         return BotIcon;
+      case NodeKind.Condition:
+        return SplitIcon;
+      case NodeKind.Http:
+        return HardDriveUpload;
+      case NodeKind.Code:
+        return TerminalIcon;
       default:
         return BoxIcon;
     }
@@ -39,19 +48,21 @@ export function NodeIcon({
         type === NodeKind.Start
           ? "bg-blue-500"
           : type === NodeKind.End
-            ? "bg-green-400"
+            ? "bg-green-500"
             : type === NodeKind.Information
               ? "text-foreground bg-input"
-              : type === NodeKind.Tool
+              : type === NodeKind.Tool || type === NodeKind.LLM
                 ? "bg-indigo-500"
-                : type === NodeKind.LLM
-                  ? "bg-indigo-500"
-                  : "bg-card",
+                : type === NodeKind.Code || type === NodeKind.Http
+                  ? "bg-rose-500"
+                  : type === NodeKind.Condition
+                    ? "bg-amber-500"
+                    : "bg-card",
         "p-1 rounded",
         className,
       )}
     >
-      <Icon className="size-4 text-foreground" />
+      <Icon className="size-4 text-white" />
     </div>
   );
 }

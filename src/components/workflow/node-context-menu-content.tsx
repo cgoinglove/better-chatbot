@@ -25,7 +25,7 @@ export function NodeContextMenuContent({
     <div className="w-full flex flex-col gap-2 min-w-40 text-sm">
       <div
         onClick={handleDeleteNode}
-        className="flex items-center p-2 gap-2 cursor-pointer rounded-lg hover:bg-destructive/10 hover:text-destructive transition-colors"
+        className="flex items-center p-2 gap-2 cursor-pointer rounded-lg hover:bg-destructive/10 text-destructive transition-colors"
       >
         <Trash2Icon className="size-3" />
         Delete

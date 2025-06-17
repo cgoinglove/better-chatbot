@@ -31,7 +31,6 @@ export const DefaultNode = memo(function DefaultNode({
   id,
   positionAbsoluteX,
   positionAbsoluteY,
-  width,
 }: Props) {
   const [openNodeSelect, setOpenNodeSelect] = useState(false);
 
@@ -94,16 +93,7 @@ export const DefaultNode = memo(function DefaultNode({
         });
       });
     },
-    [
-      id,
-      nodes,
-      edges,
-      addNodes,
-      positionAbsoluteX,
-      positionAbsoluteY,
-      width,
-      rightCount,
-    ],
+    [id, nodes, edges, addNodes, positionAbsoluteX, positionAbsoluteY],
   );
 
   useEffect(() => {
@@ -128,23 +118,24 @@ export const DefaultNode = memo(function DefaultNode({
       <ContextMenuTrigger>
         <div
           className={cn(
-            "fade-300 group py-4 w-72 relative bg-secondary border-2 hover:border-blue-500 rounded-lg flex flex-col cursor-grab transition-colors",
-            selected && "border-blue-500",
+            "fade-300 group py-4 w-72 relative bg-secondary border-2 hover:bg-input rounded-lg flex flex-col cursor-grab transition-colors",
+            selected && "border-blue-500 bg-secondary!",
             data.kind === NodeKind.Information &&
               "bg-primary-foreground text-primary rounded-none border-card",
           )}
         >
           <div className="flex items-center gap-2 relative px-4">
-            <Handle
-              id="left"
-              type="target"
-              className={cn(
-                data.kind == NodeKind.Start && "opacity-0",
-                "h-4! border-none! bg-blue-500! w-[1px]! -left-[4px]! rounded-l-xs! rounded-r-none!",
-              )}
-              position={Position.Left}
-              isConnectable={isConnectable}
-            />
+            {![NodeKind.Information, NodeKind.Start].includes(data.kind) && (
+              <Handle
+                id="left"
+                type="target"
+                className={cn(
+                  "h-4! border-none! bg-blue-500! w-[1px]! -left-[4px]! rounded-l-xs! rounded-r-none!",
+                )}
+                position={Position.Left}
+                isConnectable={isConnectable}
+              />
+            )}
             <NodeIcon type={data.kind} />
             <div className="font-bold truncate">{data.name}</div>
             {![NodeKind.Information, NodeKind.End].includes(data.kind) && (
@@ -174,7 +165,7 @@ export const DefaultNode = memo(function DefaultNode({
                   >
                     <PlusIcon
                       className={cn(
-                        "size-4 hidden group-hover:block",
+                        "size-4 text-white hidden group-hover:block",
                         selected && "block",
                       )}
                     />

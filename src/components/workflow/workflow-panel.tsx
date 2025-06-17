@@ -1,6 +1,6 @@
 "use client";
 
-import { Dispatch, memo, SetStateAction, useCallback, useMemo } from "react";
+import { memo, useCallback, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 
 import { Textarea } from "@/components/ui/textarea";
@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator";
 
 import { NodeKind, UINode } from "lib/ai/workflow/interface";
 import { NodeIcon } from "./node-icon";
-import { isFunction, nextTick } from "lib/utils";
+import { nextTick } from "lib/utils";
 import {
   LockIcon,
   MoreHorizontalIcon,
@@ -81,7 +81,7 @@ export const WorkflowPanel = memo(function WorkflowPanel({
       {selectedNode && (
         <div
           key={selectedNode.id}
-          className="w-sm h-full space-y-4  bg-card border rounded-lg shadow-lg overflow-y-auto py-4"
+          className="w-sm h-full space-y-4 bg-card border rounded-lg shadow-lg overflow-y-auto py-4"
         >
           {/* Header */}
           <div className="px-4">
@@ -135,7 +135,7 @@ export const WorkflowPanel = memo(function WorkflowPanel({
             )}
           </div>
 
-          <Separator />
+          <Separator className="my-6" />
           <div className="px-4">
             {selectedNode.data.isRunTab ? (
               <NodeRun />
@@ -178,8 +178,8 @@ export const WorkflowPanel = memo(function WorkflowPanel({
               </div>
             ) : null}
           </div>
-
-          <div className="px-4">
+          <Separator className="my-6" />
+          <div className="px-4 mt-auto flex-1 h-full">
             <NextNodeInfo
               edges={edges}
               nodes={nodes}

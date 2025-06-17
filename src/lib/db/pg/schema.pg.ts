@@ -10,6 +10,8 @@ import {
   uuid,
   boolean,
   unique,
+  varchar,
+  index,
 } from "drizzle-orm/pg-core";
 
 export const ChatThreadSchema = pgTable("chat_thread", {
@@ -153,6 +155,65 @@ export const McpServerCustomizationSchema = pgTable(
       .notNull(),
   },
   (table) => [unique().on(table.userId, table.mcpServerId)],
+);
+
+export const WorkflowSchema = pgTable("workflow", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  version: text("version").notNull().default("0.1.0"),
+  name: text("name").notNull(),
+  description: text("description"),
+  isPublished: boolean("is_published").notNull().default(false),
+  visibility: varchar("visibility", { enum: ["public", "private"] })
+    .notNull()
+    .default("private"),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => UserSchema.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const WorkflowNodeSchema = pgTable(
+  "workflow_node",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    workflowId: uuid("workflow_id")
+      .notNull()
+      .references(() => WorkflowSchema.id, { onDelete: "cascade" }),
+    kind: text("kind").notNull(),
+    name: text("name").notNull(),
+    description: text("description"),
+    uiConfig: json("ui_config").default({}),
+    nodeConfig: json("node_config").default({}),
+    createdAt: timestamp("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: timestamp("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (t) => [index("workflow_node_kind_idx").on(t.kind)],
+);
+
+export const WorkflowEdgeSchema = pgTable(
+  "workflow_edge",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    workflowId: uuid("workflow_id")
+      .notNull()
+      .references(() => WorkflowSchema.id, { onDelete: "cascade" }),
+    source: uuid("source")
+      .notNull()
+      .references(() => WorkflowNodeSchema.id, { onDelete: "cascade" }),
+    target: uuid("target")
+      .notNull()
+      .references(() => WorkflowNodeSchema.id, { onDelete: "cascade" }),
+    uiConfig: json("ui_config").default({}),
+    createdAt: timestamp("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (t) => [unique().on(t.workflowId, t.source, t.target)],
 );
 
 export type McpServerEntity = typeof McpServerSchema.$inferSelect;
