@@ -50,10 +50,10 @@ export function allNodeValidate({
       node: UINode;
       errorMessage: string;
     } {
-  if (nodes.some((n) => n.data.kind === NodeKind.Start)) {
+  if (!nodes.some((n) => n.data.kind === NodeKind.Start)) {
     throw new Error("Start node must be only one");
   }
-  if (nodes.some((n) => n.data.kind === NodeKind.End)) {
+  if (!nodes.some((n) => n.data.kind === NodeKind.End)) {
     throw new Error("End node must be only one");
   }
 
@@ -81,7 +81,7 @@ export const nodeValidate: NodeValidate<WorkflowNode> = ({
 }) => {
   if (
     node.kind != NodeKind.Information &&
-    nodes.some((n) => n.data.name === node.name)
+    nodes.filter((n) => n.data.name === node.name).length > 1
   ) {
     throw new Error("Node name must be unique");
   }
