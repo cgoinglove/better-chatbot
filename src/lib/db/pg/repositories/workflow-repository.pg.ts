@@ -1,4 +1,4 @@
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { pgDb } from "../db.pg";
 import {
   WorkflowEdgeSchema,
@@ -10,22 +10,52 @@ import {
   WorkflowEdgeDB,
   WorkflowRepository,
 } from "app-types/workflow";
-import { UINode } from "lib/ai/workflow/interface";
+import { NodeKind, UINode } from "lib/ai/workflow/interface";
 import { exclude } from "lib/utils";
 import { Edge } from "@xyflow/react";
+import { generateUINode } from "@/components/workflow/shared";
 
 export const pgWorkflowRepository: WorkflowRepository = {
+  async checkAccess(workflowId, userId) {
+    const [workflow] = await pgDb
+      .select({
+        visibility: WorkflowSchema.visibility,
+        userId: WorkflowSchema.userId,
+      })
+      .from(WorkflowSchema)
+      .where(and(eq(WorkflowSchema.id, workflowId)));
+    if (!workflow) {
+      return false;
+    }
+    if (workflow.visibility === "private" && workflow.userId !== userId) {
+      return false;
+    }
+    return true;
+  },
   async delete(id) {
-    await pgDb.delete(WorkflowSchema).where(eq(WorkflowSchema.id, id));
+    const result = await pgDb
+      .delete(WorkflowSchema)
+      .where(eq(WorkflowSchema.id, id));
+    if (result.rowCount === 0) {
+      throw new Error("Workflow not found");
+    }
   },
   async selectByUserId(userId) {
     const rows = await pgDb
       .select()
       .from(WorkflowSchema)
-      .where(eq(WorkflowSchema.userId, userId));
+      .where(eq(WorkflowSchema.userId, userId))
+      .orderBy(desc(WorkflowSchema.createdAt));
     return rows as WorkflowDB[];
   },
   async save(workflow) {
+    const prev = workflow.id
+      ? await pgDb
+          .select({ id: WorkflowSchema.id })
+          .from(WorkflowSchema)
+          .where(eq(WorkflowSchema.id, workflow.id))
+      : null;
+    const isNew = !prev;
     const [row] = await pgDb
       .insert(WorkflowSchema)
       .values(workflow)
@@ -37,9 +67,26 @@ export const pgWorkflowRepository: WorkflowRepository = {
         },
       })
       .returning();
+
+    if (isNew) {
+      const startNode = generateUINode(NodeKind.Start);
+      await pgDb.insert(WorkflowNodeSchema).values({
+        kind: NodeKind.Start,
+        name: "START",
+        workflowId: row.id,
+        nodeConfig: {
+          outputSchema: startNode.data.outputSchema,
+        },
+        uiConfig: {
+          position: startNode.position,
+          type: "default",
+        },
+      });
+    }
+
     return row as WorkflowDB;
   },
-  async saveStructure(workflowId, nodes, edges) {
+  async saveStructure({ workflowId, nodes, edges }) {
     await pgDb.transaction(async (tx) => {
       if (nodes?.length) {
         await tx
@@ -78,7 +125,7 @@ export const pgWorkflowRepository: WorkflowRepository = {
       }
     });
   },
-  async deleteStructure(workflowId, nodeIds, edgeIds) {
+  async deleteStructure({ workflowId, nodeIds, edgeIds }) {
     await pgDb.transaction(async (tx) => {
       if (nodeIds?.length) {
         await tx
@@ -141,7 +188,7 @@ function convertToDB(
     workflowId,
     kind: node.data.kind,
     name: node.data.name,
-    description: node.data.description,
+    description: node.data.description || "",
     nodeConfig: exclude(node.data, ["id", "name", "description"]),
     uiConfig: {
       position: node.position,
@@ -157,7 +204,7 @@ function convertToUI(node: typeof WorkflowNodeSchema.$inferSelect): UINode {
       ...(node.nodeConfig as any),
       id: node.id,
       name: node.name,
-      description: node.description,
+      description: node.description || "",
       kind: node.kind as any,
     },
   };

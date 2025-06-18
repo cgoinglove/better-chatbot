@@ -54,6 +54,7 @@ export type WorkflowEdgeDB = {
 export interface WorkflowRepository {
   delete(id: string): Promise<void>;
   selectByUserId(userId: string): Promise<WorkflowDB[]>;
+  checkAccess(workflowId: string, userId: string): Promise<boolean>;
   save(
     workflow: PartialBy<
       WorkflowDB,
@@ -65,16 +66,17 @@ export interface WorkflowRepository {
       | "version"
     >,
   ): Promise<WorkflowDB>;
-  saveStructure(
-    workflowId: string,
-    nodes?: UINode[],
-    edges?: Edge[],
-  ): Promise<void>;
-  deleteStructure(
-    workflowId: string,
-    nodeIds?: string[],
-    edgeIds?: string[],
-  ): Promise<void>;
+  saveStructure(data: {
+    workflowId: string;
+
+    nodes?: UINode[];
+    edges?: Edge[];
+  }): Promise<void>;
+  deleteStructure(data: {
+    workflowId: string;
+    nodeIds?: string[];
+    edgeIds?: string[];
+  }): Promise<void>;
   selectStructureById(id: string): Promise<
     | null
     | (WorkflowDB & {

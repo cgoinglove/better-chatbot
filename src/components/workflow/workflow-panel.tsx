@@ -179,18 +179,20 @@ export const WorkflowPanel = memo(function WorkflowPanel({
             ) : null}
           </div>
           <Separator className="my-6" />
-          <div className="px-4 mt-auto flex-1 h-full">
-            <NextNodeInfo
-              edges={edges}
-              nodes={nodes}
-              node={selectedNode}
-              onSelectNode={(id) => {
-                updateNode(selectedNode.id, { selected: false });
-                nextTick().then(() => updateNode(id, { selected: true }));
-              }}
-              onDisconnected={(id) => unLink(selectedNode.data.id, id)}
-            />
-          </div>
+          {selectedNode.data.kind !== NodeKind.End && (
+            <div className="px-4 mt-auto flex-1 h-full">
+              <NextNodeInfo
+                edges={edges}
+                nodes={nodes}
+                node={selectedNode}
+                onSelectNode={(id) => {
+                  updateNode(selectedNode.id, { selected: false });
+                  nextTick().then(() => updateNode(id, { selected: true }));
+                }}
+                onDisconnected={(id) => unLink(selectedNode.data.id, id)}
+              />
+            </div>
+          )}
         </div>
       )}
     </div>

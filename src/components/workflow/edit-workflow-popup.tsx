@@ -34,6 +34,7 @@ import { handleErrorWithToast } from "ui/shared-toast";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { cn } from "lib/utils";
+import { mutate } from "swr";
 
 const BACKGROUND_COLORS = [
   "oklch(87% 0 0)",
@@ -48,7 +49,7 @@ const BACKGROUND_COLORS = [
 ];
 
 const defaultConfig = {
-  id: "",
+  id: undefined as string | undefined,
   icon: {
     type: "emoji",
     value:
@@ -126,9 +127,11 @@ export function EditWorkflowPopup({
       })
       .ifOk((workflow) => {
         toast.success("success");
+        mutate("/api/workflow");
         if (submitAfterRoute) {
           router.push(`/workflow/${workflow.id}`);
         }
+        onOpenChange?.(false);
       })
       .ifFail(handleErrorWithToast)
       .watch(() => setLoading(false));
@@ -143,12 +146,7 @@ export function EditWorkflowPopup({
       }}
     >
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent
-        className="p-2 md:p-10 pb-0"
-        onClick={(e) => {
-          e.stopPropagation();
-        }}
-      >
+      <DialogContent className="p-2 md:p-10 pb-0">
         <DialogHeader className={cn("mb-4", config.id && "sr-only")}>
           <DialogTitle>Create Workflow</DialogTitle>
           <DialogDescription>
