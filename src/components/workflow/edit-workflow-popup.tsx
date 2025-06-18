@@ -1,0 +1,258 @@
+"use client";
+import EmojiPicker, { Theme } from "emoji-picker-react";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "ui/dialog";
+import { Input } from "ui/input";
+import { Textarea } from "ui/textarea";
+import { Label } from "ui/label";
+import { Button } from "ui/button";
+import { useTheme } from "next-themes";
+import { useObjectState } from "@/hooks/use-object-state";
+import { useState } from "react";
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "ui/dropdown-menu";
+
+import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
+import { Loader } from "lucide-react";
+import { safe } from "ts-safe";
+import { z } from "zod";
+
+import { WorkflowDB, WorkflowIcon } from "app-types/workflow";
+import { handleErrorWithToast } from "ui/shared-toast";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import { cn } from "lib/utils";
+
+const BACKGROUND_COLORS = [
+  "oklch(87% 0 0)",
+  "oklch(20.5% 0 0)",
+  "oklch(80.8% 0.114 19.571)",
+  "oklch(83.7% 0.128 66.29)",
+  "oklch(84.5% 0.143 164.978)",
+  "oklch(82.8% 0.111 230.318)",
+  "oklch(78.5% 0.115 274.713)",
+  "oklch(81% 0.117 11.638)",
+  "oklch(81% 0.117 11.638)",
+];
+
+const defaultConfig = {
+  id: "",
+  icon: {
+    type: "emoji",
+    value:
+      "https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f916.png",
+    style: {
+      backgroundColor: BACKGROUND_COLORS[0],
+    },
+  } as WorkflowIcon,
+  name: "",
+  description: "",
+};
+
+const zodSchema = z.object({
+  id: z.string().optional(),
+  name: z.string().min(1),
+  description: z.string().optional(),
+  icon: z.object({
+    type: z.enum(["emoji"]),
+    value: z.string().min(1),
+    style: z
+      .object({
+        backgroundColor: z.string().min(1),
+      })
+      .optional(),
+  }),
+});
+
+export function EditWorkflowPopup({
+  children,
+  defaultValue,
+  submitAfterRoute = true,
+  open,
+  onOpenChange,
+}: {
+  children?: React.ReactNode;
+  defaultValue?: WorkflowDB;
+  submitAfterRoute?: boolean;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}) {
+  const { theme } = useTheme();
+
+  const getInitialConfig = () => {
+    return defaultValue
+      ? {
+          description: defaultValue.description || "",
+          icon: defaultValue.icon || defaultConfig.icon,
+          name: defaultValue.name || "",
+          id: defaultValue.id || "",
+        }
+      : { ...defaultConfig };
+  };
+
+  const [config, setConfig] = useObjectState<typeof defaultConfig>(
+    getInitialConfig(),
+  );
+
+  const isDark = theme?.endsWith("-dark");
+
+  const router = useRouter();
+
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async () => {
+    setLoading(true);
+
+    await safe(() => zodSchema.parse(config))
+      .map(async (body) => {
+        const response = await fetch("/api/workflow", {
+          method: "POST",
+          body: JSON.stringify(body),
+        });
+        const data = await response.json();
+        return data as WorkflowDB;
+      })
+      .ifOk((workflow) => {
+        toast.success("success");
+        if (submitAfterRoute) {
+          router.push(`/workflow/${workflow.id}`);
+        }
+      })
+      .ifFail(handleErrorWithToast)
+      .watch(() => setLoading(false));
+  };
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(open) => {
+        !open && setConfig(getInitialConfig());
+        onOpenChange?.(open);
+      }}
+    >
+      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogContent
+        className="p-2 md:p-10 pb-0"
+        onClick={(e) => {
+          e.stopPropagation();
+        }}
+      >
+        <DialogHeader className={cn("mb-4", config.id && "sr-only")}>
+          <DialogTitle>Create Workflow</DialogTitle>
+          <DialogDescription>
+            Create a workflow to automate your tasks.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="flex w-full h-full gap-10">
+          {/* Left: Form */}
+          <div className="gap-6 flex flex-col justify-center w-full">
+            <div className="flex gap-2">
+              <div className="flex flex-col gap-2 flex-1">
+                <Label htmlFor="workflow-name">Workflow Name And Icon</Label>
+                <Input
+                  value={config.name}
+                  onChange={(e) => setConfig({ name: e.target.value })}
+                  autoFocus
+                  className="bg-input border-transparent"
+                  id="workflow-name"
+                  placeholder="Enter workflow name"
+                />
+              </div>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <div
+                    style={{
+                      backgroundColor: config.icon.style?.backgroundColor,
+                    }}
+                    className="transition-colors hover:bg-secondary! group items-center justify-center flex w-14 h-14 rounded-lg cursor-pointer ring ring-background hover:ring-ring"
+                  >
+                    <Avatar>
+                      <AvatarImage
+                        src={config.icon.value}
+                        className="group-hover:scale-110  transition-transform"
+                      />
+                      <AvatarFallback></AvatarFallback>
+                    </Avatar>
+                  </div>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="p-0 bg-transparent flex flex-col gap-2 border-none">
+                  <div className="flex gap-2 border rounded-xl p-4  bg-secondary">
+                    {BACKGROUND_COLORS.map((color, index) => (
+                      <div
+                        key={index}
+                        className="w-6 h-6 rounded cursor-pointer"
+                        onClick={() => {
+                          setConfig({
+                            icon: {
+                              ...config.icon,
+                              style: { backgroundColor: color },
+                            },
+                          });
+                        }}
+                        style={{ backgroundColor: color }}
+                      ></div>
+                    ))}
+                  </div>
+                  <EmojiPicker
+                    lazyLoadEmojis
+                    open
+                    className="fade-300"
+                    theme={isDark ? Theme.DARK : Theme.LIGHT}
+                    onEmojiClick={(emoji) => {
+                      console.log(emoji);
+                      setConfig({
+                        icon: {
+                          ...config.icon,
+                          value: emoji.imageUrl,
+                        },
+                      });
+                    }}
+                  />
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label
+                className="flex items-center gap-1"
+                htmlFor="workflow-description"
+              >
+                Description
+                <span className="text-xs text-muted-foreground">optional</span>
+              </Label>
+              <Textarea
+                id="workflow-description"
+                placeholder="Describe your workflow"
+                className="resize-none min-h-[100px] bg-input border-transparent"
+                value={config.description}
+                onChange={(e) => setConfig({ description: e.target.value })}
+              />
+            </div>
+          </div>
+        </div>
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button variant="ghost">Cancel</Button>
+          </DialogClose>
+          <Button onClick={handleSubmit} disabled={loading}>
+            Save
+            {loading && <Loader className="size-3.5 animate-spin" />}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}

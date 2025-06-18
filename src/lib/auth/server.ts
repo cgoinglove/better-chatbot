@@ -35,7 +35,7 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
-    disableSignUp: process.env.DISABLE_SIGN_UP == "true" ? true : false,
+    disableSignUp: process.env.DISABLE_SIGN_UP ? true : false,
   },
   session: {
     cookieCache: {

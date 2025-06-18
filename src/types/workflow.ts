@@ -1,8 +1,15 @@
 import { Edge } from "@xyflow/react";
 import { NodeKind, UINode, WorkflowNode } from "lib/ai/workflow/interface";
 
+export type WorkflowIcon = {
+  type: "emoji";
+  value: string;
+  style?: Record<string, string>;
+};
+
 export type WorkflowDB = {
   id: string;
+  icon?: WorkflowIcon;
   readonly version: string;
   name: string;
   description?: string;
@@ -57,7 +64,7 @@ export interface WorkflowRepository {
       | "isPublished"
       | "version"
     >,
-  ): Promise<void>;
+  ): Promise<WorkflowDB>;
   saveStructure(
     workflowId: string,
     nodes?: UINode[],

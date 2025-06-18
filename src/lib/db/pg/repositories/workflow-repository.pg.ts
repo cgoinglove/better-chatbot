@@ -26,7 +26,7 @@ export const pgWorkflowRepository: WorkflowRepository = {
     return rows as WorkflowDB[];
   },
   async save(workflow) {
-    await pgDb
+    const [row] = await pgDb
       .insert(WorkflowSchema)
       .values(workflow)
       .onConflictDoUpdate({
@@ -35,7 +35,9 @@ export const pgWorkflowRepository: WorkflowRepository = {
           ...workflow,
           updatedAt: new Date(),
         },
-      });
+      })
+      .returning();
+    return row as WorkflowDB;
   },
   async saveStructure(workflowId, nodes, edges) {
     await pgDb.transaction(async (tx) => {

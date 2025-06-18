@@ -13,6 +13,7 @@ import {
   varchar,
   index,
 } from "drizzle-orm/pg-core";
+import { WorkflowDB } from "app-types/workflow";
 
 export const ChatThreadSchema = pgTable("chat_thread", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
@@ -161,6 +162,7 @@ export const WorkflowSchema = pgTable("workflow", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
   version: text("version").notNull().default("0.1.0"),
   name: text("name").notNull(),
+  icon: json("icon").$type<WorkflowDB["icon"]>(),
   description: text("description"),
   isPublished: boolean("is_published").notNull().default(false),
   visibility: varchar("visibility", { enum: ["public", "private"] })
@@ -177,6 +179,7 @@ export const WorkflowNodeSchema = pgTable(
   "workflow_node",
   {
     id: uuid("id").primaryKey().notNull().defaultRandom(),
+    version: text("version").notNull().default("0.1.0"),
     workflowId: uuid("workflow_id")
       .notNull()
       .references(() => WorkflowSchema.id, { onDelete: "cascade" }),
@@ -199,6 +202,7 @@ export const WorkflowEdgeSchema = pgTable(
   "workflow_edge",
   {
     id: uuid("id").primaryKey().notNull().defaultRandom(),
+    version: text("version").notNull().default("0.1.0"),
     workflowId: uuid("workflow_id")
       .notNull()
       .references(() => WorkflowSchema.id, { onDelete: "cascade" }),
