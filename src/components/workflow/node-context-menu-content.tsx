@@ -1,9 +1,10 @@
 "use client";
 
 import { useReactFlow } from "@xyflow/react";
-import { WorkflowNode } from "lib/ai/workflow/interface";
+import { NodeKind, WorkflowNode } from "lib/ai/workflow/interface";
 import { Trash2Icon } from "lucide-react";
 import { useCallback } from "react";
+import { toast } from "sonner";
 
 export function NodeContextMenuContent({
   node,
@@ -13,6 +14,9 @@ export function NodeContextMenuContent({
   const { setEdges, setNodes } = useReactFlow();
 
   const handleDeleteNode = useCallback(() => {
+    if (node.kind === NodeKind.Start) {
+      return toast.warning("Start node cannot be deleted");
+    }
     setEdges((edges) =>
       edges.filter(
         (edge) => edge.source !== node.id && edge.target !== node.id,

@@ -188,7 +188,7 @@ export const WorkflowPanel = memo(function WorkflowPanel({
           </div>
           <Separator className="my-6" />
           {selectedNode.data.kind !== NodeKind.End && (
-            <div className="px-4 mt-auto">
+            <div className="px-4 ">
               <NextNodeInfo
                 edges={edges}
                 nodes={nodes}
