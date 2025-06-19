@@ -60,11 +60,11 @@ export type WorkflowNode = StartNode | EndNode | LLMNode | InformationNode;
 
 export type NodeRuntimeField = {
   status?: "running" | "success" | "fail" | "idle";
-  stored?: boolean;
+  isNew?: boolean;
   result?: any;
   isRunTab?: boolean;
 };
 
 export type UINode<Kind extends NodeKind = NodeKind> = Node<
-  Extract<WorkflowNode, { kind: Kind }> & NodeRuntimeField
+  Extract<WorkflowNode, { kind: Kind }> & { runtime?: NodeRuntimeField }
 >;

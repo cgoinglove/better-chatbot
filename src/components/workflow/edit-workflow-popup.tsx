@@ -211,7 +211,6 @@ export function EditWorkflowPopup({
                     className="fade-300"
                     theme={isDark ? Theme.DARK : Theme.LIGHT}
                     onEmojiClick={(emoji) => {
-                      console.log(emoji);
                       setConfig({
                         icon: {
                           ...config.icon,

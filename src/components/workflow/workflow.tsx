@@ -18,8 +18,8 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { extractWorkflowDiff } from "lib/ai/workflow/extract-workflow-diff";
-import { UINode } from "lib/ai/workflow/interface";
-import { createDebounce, wait } from "lib/utils";
+import { NodeKind, UINode } from "lib/ai/workflow/interface";
+import { createDebounce, generateUUID } from "lib/utils";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { safe } from "ts-safe";
 
@@ -40,18 +40,18 @@ export default function Workflow({
 }) {
   const [nodes, setNodes] = useState<UINode[]>(initialNodes);
   const [edges, setEdges] = useState<Edge[]>(initialEdges);
-  const [isProcessing, setIsProcessing] = useState(false);
-
+  const [processingIds, setProcessingIds] = useState<string[]>([]);
   const [activeNodeIds, setActiveNodeIds] = useState<string[]>([]);
 
   const snapshot = useRef({ nodes: initialNodes, edges: initialEdges });
 
+  const isProcessing = useMemo(() => {
+    return processingIds.length > 0;
+  }, [processingIds]);
+
   const save = () => {
-    console.log(`trigger`, {
-      prev: nodes,
-      next: snapshot.current.nodes,
-    });
-    setIsProcessing(true);
+    const processId = generateUUID();
+    setProcessingIds((prev) => [...prev, processId]);
     safe()
       .map(() =>
         extractWorkflowDiff(snapshot.current, {
@@ -76,7 +76,6 @@ export default function Workflow({
             if (res.status > 300) {
               throw new Error(String(res.statusText || res.status || "Error"));
             }
-            return wait(5000);
           });
         }
       })
@@ -89,7 +88,9 @@ export default function Workflow({
       .ifFail(() => {
         window.location.reload();
       })
-      .watch(() => setIsProcessing(false));
+      .watch(() =>
+        setProcessingIds((prev) => prev.filter((id) => id !== processId)),
+      );
   };
 
   const onNodesChange: OnNodesChange = useCallback(
@@ -97,7 +98,7 @@ export default function Workflow({
       if (isProcessing) return;
       setNodes((nds) => applyNodeChanges(changes, nds) as UINode[]);
     },
-    [setNodes],
+    [setNodes, isProcessing],
   );
   const onEdgesChange: OnEdgesChange = useCallback(
     (changes) => {
@@ -109,26 +110,43 @@ export default function Workflow({
   const onConnect: OnConnect = useCallback(
     (connection) => {
       if (isProcessing) return;
-      setEdges((eds) => addEdge(connection, eds));
+      setEdges((eds) =>
+        addEdge(
+          {
+            ...connection,
+            id: generateUUID(),
+          },
+          eds,
+        ),
+      );
     },
     [setEdges, isProcessing],
   );
 
   const onSelectionChange: OnSelectionChangeFunc = useCallback(
     ({ nodes: selectedNodes }) => {
+      if (isProcessing) return;
       setActiveNodeIds(selectedNodes.map((node) => node.id));
     },
-    [],
+    [isProcessing],
   );
-  const onNodeMouseEnter: NodeMouseHandler = useCallback((_, node) => {
-    setActiveNodeIds((prev) => {
-      return prev.includes(node.id) ? prev : [...prev, node.id];
-    });
-  }, []);
+  const onNodeMouseEnter: NodeMouseHandler = useCallback(
+    (_, node) => {
+      if (isProcessing) return;
+      setActiveNodeIds((prev) => {
+        return prev.includes(node.id) ? prev : [...prev, node.id];
+      });
+    },
+    [isProcessing],
+  );
 
-  const onNodeMouseLeave: NodeMouseHandler = useCallback((_, node) => {
-    setActiveNodeIds((prev) => prev.filter((id) => id !== node.id));
-  }, []);
+  const onNodeMouseLeave: NodeMouseHandler = useCallback(
+    (_, node) => {
+      if (isProcessing) return;
+      setActiveNodeIds((prev) => prev.filter((id) => id !== node.id));
+    },
+    [isProcessing],
+  );
 
   const styledEdges = useMemo(() => {
     return edges.map((edge) => {
@@ -148,8 +166,19 @@ export default function Workflow({
   }, [edges, activeNodeIds]);
 
   useEffect(() => {
-    debounce(save, 3000); // auto save 10s
+    debounce(save, 10000); // auto save 10s
   }, [nodes, edges]);
+
+  useEffect(() => {
+    setNodes((nds) => {
+      return nds.map((node) => {
+        if (node.data.kind === NodeKind.Start && !node.selected) {
+          return { ...node, selected: true };
+        }
+        return node;
+      });
+    });
+  }, []);
 
   return (
     <div className="w-full h-full relative">
@@ -159,6 +188,7 @@ export default function Workflow({
         nodes={nodes}
         edges={styledEdges}
         multiSelectionKeyCode={null}
+        id={workflowId}
         nodeTypes={nodeTypes}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
@@ -172,7 +202,7 @@ export default function Workflow({
         }}
       >
         <Background gap={12} size={0.6} />
-        <Panel position="top-right" className="h-full z-20!">
+        <Panel position="top-right" className="z-20!">
           <WorkflowPanel
             onSave={save}
             isProcessing={isProcessing}

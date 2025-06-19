@@ -17,6 +17,7 @@ describe("extractWorkflowDiff", () => {
       name,
       kind: NodeKind.Start,
       outputSchema: { type: "object", properties: {} },
+      runtime: {},
     },
   });
 

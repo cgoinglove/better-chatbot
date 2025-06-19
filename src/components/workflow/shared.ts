@@ -26,7 +26,9 @@ export function generateUINode(
       name: option?.name ?? kind.toUpperCase(),
       id,
       outputSchema: { ...defaultJsonSchema },
-      stored: false,
+      runtime: {
+        isNew: true,
+      },
     },
     type: "default",
   };

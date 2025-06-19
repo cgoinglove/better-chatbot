@@ -34,6 +34,8 @@ CREATE TABLE IF NOT EXISTS "workflow" (
 	"created_at" timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
 	"updated_at" timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
+
+
 --> statement-breakpoint
 DO $$ BEGIN
 ALTER TABLE "workflow_edge" ADD CONSTRAINT "workflow_edge_workflow_id_workflow_id_fk" FOREIGN KEY ("workflow_id") REFERENCES "public"."workflow"("id") ON DELETE cascade ON UPDATE no action;
@@ -51,6 +53,13 @@ END $$;
 
 DO $$ BEGIN
 ALTER TABLE "workflow_edge" ADD CONSTRAINT "workflow_edge_target_workflow_node_id_fk" FOREIGN KEY ("target") REFERENCES "public"."workflow_node"("id") ON DELETE cascade ON UPDATE no action;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+
+DO $$ BEGIN
+ALTER TABLE "workflow_node" ADD CONSTRAINT "workflow_node_workflow_id_workflow_id_fk" FOREIGN KEY ("workflow_id") REFERENCES "public"."workflow"("id") ON DELETE cascade ON UPDATE no action;
 EXCEPTION
     WHEN duplicate_object THEN null;
 END $$;

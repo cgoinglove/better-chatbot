@@ -47,7 +47,7 @@ export const WorkflowPanel = memo(function WorkflowPanel({
   const { updateNode, setEdges } = useReactFlow<UINode>();
 
   const selectedNode = useMemo(() => {
-    return nodes.find((node) => node.selected);
+    return nodes.findLast((node) => node.selected);
   }, [nodes]);
 
   const unLink = useCallback((source: string, target: string) => {
@@ -59,7 +59,7 @@ export const WorkflowPanel = memo(function WorkflowPanel({
   }, []);
 
   return (
-    <div className="min-h-0 h-[90vh] flex flex-col items-end">
+    <div className="min-h-0 flex flex-col items-end">
       <div className="flex items-center gap-2 mb-2">
         <Button variant="secondary" size="icon">
           <LockIcon />
@@ -89,7 +89,7 @@ export const WorkflowPanel = memo(function WorkflowPanel({
       {selectedNode && (
         <div
           key={selectedNode.id}
-          className="w-sm h-full space-y-4 bg-card border rounded-lg shadow-lg overflow-y-auto py-4"
+          className="w-sm h-[85vh] space-y-4 bg-card border rounded-lg shadow-lg overflow-y-auto py-4"
         >
           {/* Header */}
           <div className="px-4">
@@ -144,8 +144,8 @@ export const WorkflowPanel = memo(function WorkflowPanel({
           </div>
 
           <Separator className="my-6" />
-          <div className="px-4">
-            {selectedNode.data.isRunTab ? (
+          <div className="px-4 flex-1">
+            {selectedNode.data.runtime?.isRunTab ? (
               <NodeRun />
             ) : selectedNode.data.kind === NodeKind.Start ? (
               <StartNodeConfig
@@ -188,7 +188,7 @@ export const WorkflowPanel = memo(function WorkflowPanel({
           </div>
           <Separator className="my-6" />
           {selectedNode.data.kind !== NodeKind.End && (
-            <div className="px-4 mt-auto flex-1 h-full">
+            <div className="px-4 mt-auto">
               <NextNodeInfo
                 edges={edges}
                 nodes={nodes}

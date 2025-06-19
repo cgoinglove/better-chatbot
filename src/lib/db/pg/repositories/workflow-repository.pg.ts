@@ -189,7 +189,7 @@ function convertToDB(
     kind: node.data.kind,
     name: node.data.name,
     description: node.data.description || "",
-    nodeConfig: exclude(node.data, ["id", "name", "description"]),
+    nodeConfig: exclude(node.data, ["id", "name", "description", "runtime"]),
     uiConfig: {
       position: node.position,
     },
