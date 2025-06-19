@@ -33,6 +33,8 @@ export async function POST(
     nodes,
     edges,
   });
+
+  return Response.json({ success: true });
 }
 
 export async function DELETE(

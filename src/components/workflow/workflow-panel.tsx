@@ -11,6 +11,7 @@ import { NodeKind, UINode } from "lib/ai/workflow/interface";
 import { NodeIcon } from "./node-icon";
 import { nextTick } from "lib/utils";
 import {
+  Loader,
   LockIcon,
   MoreHorizontalIcon,
   PlayIcon,
@@ -35,9 +36,13 @@ import { NextNodeInfo } from "./next-node-info";
 export const WorkflowPanel = memo(function WorkflowPanel({
   nodes,
   edges,
+  isProcessing,
+  onSave,
 }: {
   nodes: UINode[];
   edges: Edge[];
+  onSave: () => void;
+  isProcessing: boolean;
 }) {
   const { updateNode, setEdges } = useReactFlow<UINode>();
 
@@ -69,7 +74,10 @@ export const WorkflowPanel = memo(function WorkflowPanel({
         <div className="h-6">
           <Separator orientation="vertical" />
         </div>
-        <Button variant="default">Save</Button>
+        <Button disabled={isProcessing} onClick={onSave} variant="default">
+          Save
+          {isProcessing && <Loader className="size-3.5 animate-spin" />}
+        </Button>
         <Button
           variant="ghost"
           size="icon"

@@ -28,7 +28,7 @@ export default async function WorkflowPage({
   return (
     <Workflow
       key={id}
-      id={id}
+      workflowId={id}
       initialNodes={initialNodes}
       initialEdges={initialEdges}
     />

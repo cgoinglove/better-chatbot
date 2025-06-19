@@ -97,7 +97,7 @@ export const DefaultNode = memo(function DefaultNode({
   );
 
   useEffect(() => {
-    if (!data.stored) {
+    if (data.stored === false) {
       updateNode(id, {
         selected: true,
       });

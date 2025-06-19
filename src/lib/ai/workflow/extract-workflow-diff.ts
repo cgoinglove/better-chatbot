@@ -1,12 +1,28 @@
 import { Edge } from "@xyflow/react";
-import { UINode } from "./interface";
+import { NodeKind, UINode } from "./interface";
 import equal from "fast-deep-equal";
 
 function normalizeNode(node: UINode) {
+  let nodeDataByKind: any[] = [];
+
+  switch (node.data.kind) {
+    case NodeKind.LLM: {
+      nodeDataByKind = [node.data.model, node.data.messages];
+      break;
+    }
+    case NodeKind.End: {
+      nodeDataByKind = [node.data.outputData];
+      break;
+    }
+  }
+
   return {
     id: node.id,
-    data: node.data,
-    position: node.position,
+    data: nodeDataByKind,
+    outputSchema: { ...node.data.outputSchema },
+    name: node.data.name || "",
+    description: node.data.description || "",
+    position: { ...node.position },
   };
 }
 function normalizeEdge(edge: Edge) {
@@ -26,40 +42,40 @@ export function extractWorkflowDiff(
   const updateNodes: UINode[] = [];
   const updateEdges: Edge[] = [];
 
-  const oldNodes = oldData.nodes.map(normalizeNode);
+  const oldNodes = oldData.nodes;
   const newNodes = new Map<string, UINode>(
-    newData.nodes.map((node) => [node.id, normalizeNode(node)]),
+    newData.nodes.map((node) => [node.id, node]),
   );
 
   oldNodes.forEach((node) => {
     const newNode = newNodes.get(node.id);
     if (!newNode) {
       deleteNodes.push(node);
-    } else if (!equal(node, newNode)) {
+    } else if (!equal(normalizeNode(node), normalizeNode(newNode))) {
       updateNodes.push(newNode);
     }
+
     newNodes.delete(node.id);
   });
 
   updateNodes.push(...newNodes.values());
 
-  const oldEdges = oldData.edges.map(normalizeEdge);
+  const oldEdges = oldData.edges;
   const newEdges = new Map<string, Edge>(
-    newData.edges.map((edge) => [edge.id, normalizeEdge(edge)]),
+    newData.edges.map((edge) => [edge.id, edge]),
   );
 
   oldEdges.forEach((edge) => {
     const newEdge = newEdges.get(edge.id);
     if (!newEdge) {
       deleteEdges.push(edge);
-    } else if (!equal(edge, newEdge)) {
+    } else if (!equal(normalizeEdge(edge), normalizeEdge(newEdge))) {
       updateEdges.push(newEdge);
     }
     newEdges.delete(edge.id);
   });
 
   updateEdges.push(...newEdges.values());
-
   return {
     deleteNodes,
     deleteEdges,
