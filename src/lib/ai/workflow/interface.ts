@@ -24,7 +24,7 @@ export type BaseWorkflowNode<
   outputSchema: ObjectJsonSchema7;
 } & T;
 
-export type OutputSchemaSource = {
+export type OutputSchemaSourceKey = {
   nodeId: string;
   path: string[];
 };
@@ -38,7 +38,7 @@ export type EndNode = BaseWorkflowNode<{
 }> & {
   outputData: {
     key: string;
-    source?: OutputSchemaSource;
+    source?: OutputSchemaSourceKey;
   }[];
 };
 
@@ -61,7 +61,7 @@ export type WorkflowNode = StartNode | EndNode | LLMNode | InformationNode;
 export type NodeRuntimeField = {
   status?: "running" | "success" | "fail" | "idle";
   isNew?: boolean;
-  result?: any;
+  result?: Record<string, unknown>;
   isRunTab?: boolean;
 };
 

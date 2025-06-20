@@ -229,6 +229,26 @@ export function objectFlow<T extends Record<string, any>>(obj: T) {
     find(fn: (value: T[keyof T], key: keyof T) => any): T | undefined {
       return Object.entries(obj).find(([key, value]) => fn(value, key))?.[1];
     },
+    getByPath<U>(path: string[]): U | undefined {
+      let result: any = obj;
+      path.find((p) => {
+        result = result?.[p];
+        return !result;
+      });
+      return result;
+    },
+    setByPath(path: string[], value: any) {
+      path.reduce((acc, cur, i) => {
+        const isLast = i == path.length - 1;
+        if (isLast) {
+          acc[cur] = value;
+          return acc;
+        }
+        acc[cur] ??= {};
+        return acc[cur];
+      }, obj as object);
+      return obj;
+    },
   };
 }
 

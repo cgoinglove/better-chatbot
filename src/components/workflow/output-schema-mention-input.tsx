@@ -7,7 +7,7 @@ import {
 } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { Edge } from "@xyflow/react";
-import { UINode } from "lib/ai/workflow/interface";
+import { OutputSchemaSourceKey, UINode } from "lib/ai/workflow/interface";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { VariableSelectContent } from "./variable-select";
@@ -72,10 +72,9 @@ export function OutputSchemaMentionInput({
           },
           renderHTML: (props) => {
             const el = document.createElement("div");
-            const item = JSON.parse(props.node.attrs.label) as {
-              nodeId: string;
-              path: string[];
-            };
+            const item = JSON.parse(
+              props.node.attrs.label,
+            ) as OutputSchemaSourceKey;
             const labelData = {
               nodeName: "",
               path: [] as string[],

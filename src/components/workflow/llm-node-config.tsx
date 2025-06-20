@@ -107,7 +107,7 @@ export function LLMNodeConfig({
             <div key={index} className="w-full bg-secondary rounded-md p-2">
               <div className="flex items-center gap-2">
                 <Select
-                  defaultValue={message.role}
+                  value={message.role}
                   onValueChange={(value) => {
                     updateMessage(index, {
                       ...message,
