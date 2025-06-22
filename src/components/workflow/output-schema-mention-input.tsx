@@ -7,7 +7,10 @@ import {
 } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { Edge } from "@xyflow/react";
-import { OutputSchemaSourceKey, UINode } from "lib/ai/workflow/interface";
+import {
+  OutputSchemaSourceKey,
+  UINode,
+} from "lib/ai/workflow/workflow.interface";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { VariableSelectContent } from "./variable-select";
@@ -17,7 +20,7 @@ import {
   DropdownMenuTrigger,
 } from "ui/dropdown-menu";
 import { TipTapMentionJsonContent } from "app-types/util";
-import { findUseageSchema } from "lib/ai/workflow/shared";
+import { findAvailableSchemaBySource } from "lib/ai/workflow/shared.workflow";
 import { useToRef } from "@/hooks/use-latest";
 import { createRoot } from "react-dom/client";
 import { VariableMentionItem } from "./variable-mention-item";
@@ -88,7 +91,7 @@ export function OutputSchemaMentionInput({
             labelData.nodeName = sourceNode?.data.name ?? "ERROR";
             labelData.path = item.path;
 
-            const schema = findUseageSchema({
+            const schema = findAvailableSchemaBySource({
               nodeId: currentNodeId,
               source: item,
               nodes: latestRef.current.nodes.map((node) => node.data),

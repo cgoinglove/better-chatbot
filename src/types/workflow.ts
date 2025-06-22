@@ -1,13 +1,10 @@
-import { Edge } from "@xyflow/react";
-import { NodeKind, UINode, WorkflowNode } from "lib/ai/workflow/interface";
-
 export type WorkflowIcon = {
   type: "emoji";
   value: string;
   style?: Record<string, string>;
 };
 
-export type WorkflowDB = {
+export type DBWorkflow = {
   id: string;
   icon?: WorkflowIcon;
   readonly version: string;
@@ -20,18 +17,15 @@ export type WorkflowDB = {
   updatedAt: Date;
 };
 
-export type WorkflowNodeDB<T extends NodeKind = NodeKind> = {
+export type DBNode = {
   id: string;
   workflowId: string;
-  kind: NodeKind;
+  kind: string;
   name: string;
   description?: string;
-  nodeConfig: Omit<
-    Extract<WorkflowNode, { kind: T }>,
-    "id" | "name" | "description"
-  >;
+  nodeConfig: Record<string, any>;
   uiConfig: {
-    position: {
+    position?: {
       x: number;
       y: number;
     };
@@ -40,7 +34,7 @@ export type WorkflowNodeDB<T extends NodeKind = NodeKind> = {
   createdAt: Date;
   updatedAt: Date;
 };
-export type WorkflowEdgeDB = {
+export type DBEdge = {
   id: string;
   workflowId: string;
   source: string;
@@ -55,11 +49,11 @@ export type WorkflowEdgeDB = {
 
 export interface WorkflowRepository {
   delete(id: string): Promise<void>;
-  selectByUserId(userId: string): Promise<WorkflowDB[]>;
+  selectByUserId(userId: string): Promise<DBWorkflow[]>;
   checkAccess(workflowId: string, userId: string): Promise<boolean>;
   save(
     workflow: PartialBy<
-      WorkflowDB,
+      DBWorkflow,
       | "id"
       | "createdAt"
       | "updatedAt"
@@ -67,20 +61,20 @@ export interface WorkflowRepository {
       | "isPublished"
       | "version"
     >,
-  ): Promise<WorkflowDB>;
+  ): Promise<DBWorkflow>;
   saveStructure(data: {
     workflowId: string;
-    nodes?: UINode[];
-    edges?: Edge[];
-    deleteNodes?: UINode[];
-    deleteEdges?: Edge[];
+    nodes?: DBNode[];
+    edges?: DBEdge[];
+    deleteNodes?: string[]; // node id
+    deleteEdges?: string[]; // edge id
   }): Promise<void>;
 
   selectStructureById(id: string): Promise<
     | null
-    | (WorkflowDB & {
-        nodes: UINode[];
-        edges: Edge[];
+    | (DBWorkflow & {
+        nodes: DBNode[];
+        edges: DBEdge[];
       })
   >;
 }

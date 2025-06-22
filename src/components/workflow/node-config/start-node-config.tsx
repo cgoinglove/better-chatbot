@@ -1,19 +1,23 @@
 "use client";
 
-import { NodeKind, UINode, WorkflowNode } from "lib/ai/workflow/interface";
+import {
+  NodeKind,
+  UINode,
+  WorkflowNodeData,
+} from "lib/ai/workflow/workflow.interface";
 import { useCallback } from "react";
 import {
   Feild,
   EditJsonSchemaFieldPopup,
   getFieldKey,
-} from "../edit-json-schema-field-popup";
+} from "../../edit-json-schema-field-popup";
 import { PlusIcon, TrashIcon, VariableIcon } from "lucide-react";
 import { PencilIcon } from "lucide-react";
 import { objectFlow } from "lib/utils";
 import { Button } from "ui/button";
 import { Label } from "ui/label";
 
-export function StartNodeConfig({
+export function StartNodeDataConfig({
   node: { data },
   setNode,
 }: {
@@ -137,7 +141,7 @@ export function StartNodeConfig({
   );
 }
 
-export function OutputSchemaStack({ data }: { data: WorkflowNode }) {
+export function OutputSchemaStack({ data }: { data: WorkflowNodeData }) {
   const keys = Object.keys(data.outputSchema?.properties ?? {});
   if (!keys.length) return null;
   return (

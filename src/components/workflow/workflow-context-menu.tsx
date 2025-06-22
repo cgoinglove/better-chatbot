@@ -1,5 +1,5 @@
 "use client";
-import { WorkflowDB } from "app-types/workflow";
+import { DBWorkflow } from "app-types/workflow";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,7 +17,7 @@ import { Loader2 } from "lucide-react";
 
 interface WorkflowContextMenuProps {
   children: React.ReactNode;
-  workflow: WorkflowDB;
+  workflow: DBWorkflow;
 }
 
 export function WorkflowContextMenu(props: WorkflowContextMenuProps) {

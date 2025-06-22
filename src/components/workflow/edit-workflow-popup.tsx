@@ -29,7 +29,7 @@ import { Loader } from "lucide-react";
 import { safe } from "ts-safe";
 import { z } from "zod";
 
-import { WorkflowDB, WorkflowIcon } from "app-types/workflow";
+import { DBWorkflow, WorkflowIcon } from "app-types/workflow";
 import { handleErrorWithToast } from "ui/shared-toast";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -85,7 +85,7 @@ export function EditWorkflowPopup({
   onOpenChange,
 }: {
   children?: React.ReactNode;
-  defaultValue?: WorkflowDB;
+  defaultValue?: DBWorkflow;
   submitAfterRoute?: boolean;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
@@ -123,7 +123,7 @@ export function EditWorkflowPopup({
           body: JSON.stringify(body),
         });
         const data = await response.json();
-        return data as WorkflowDB;
+        return data as DBWorkflow;
       })
       .ifOk((workflow) => {
         toast.success("success");

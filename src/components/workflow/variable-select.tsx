@@ -1,7 +1,7 @@
 "use client";
 
 import { Edge } from "@xyflow/react";
-import { UINode } from "lib/ai/workflow/interface";
+import { UINode } from "lib/ai/workflow/workflow.interface";
 import { ChevronRightIcon, SearchIcon, VariableIcon } from "lucide-react";
 import { ReactNode, useMemo, useState } from "react";
 import {
@@ -20,7 +20,7 @@ import {
 import { Input } from "ui/input";
 
 import { JSONSchema7 } from "json-schema";
-import { findAccessibleNodeIds } from "lib/ai/workflow/shared";
+import { findAccessibleNodeIds } from "lib/ai/workflow/shared.workflow";
 import { cn } from "lib/utils";
 
 interface VariableSelectProps {

@@ -1,5 +1,5 @@
 import { Edge } from "@xyflow/react";
-import { UINode } from "./interface";
+import { UINode } from "./workflow.interface";
 import equal from "fast-deep-equal";
 import { exclude } from "lib/utils";
 

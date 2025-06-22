@@ -1,14 +1,17 @@
 import { Edge, useReactFlow } from "@xyflow/react";
-import { ConditionNode, NodeKind, UINode } from "lib/ai/workflow/interface";
+import {
+  ConditionNodeData,
+  NodeKind,
+  UINode,
+} from "lib/ai/workflow/workflow.interface";
 import { ReactNode, useCallback, useMemo } from "react";
 import { Label } from "ui/label";
 import { NodeIcon } from "./node-icon";
 import { Button } from "ui/button";
 import { PlusIcon, Unlink } from "lucide-react";
 import { NodeSelect } from "./node-select";
-import { generateUniqueKey, generateUUID } from "lib/utils";
-import { generateUINode } from "./shared";
 import { useUpdate } from "@/hooks/use-update";
+import { createAppendNode } from "./create-append-node";
 
 interface NextNodeInfoProps {
   node: UINode;
@@ -44,37 +47,16 @@ export function NextNodeInfo({
   const update = useUpdate();
   const appendNode = useCallback(
     (kind: NodeKind, partialEdge?: Partial<Edge>) => {
-      const targetEdges = edges
-        .filter((edge) => edge.source === node.id)
-        .map((v) => v.target);
-      const targetNodes = nodes.filter((node) => {
-        return targetEdges.includes(node.id);
-      });
-      const maxY = Math.max(
-        ...targetNodes.map(
-          (node) => node.position.y + (node.measured?.height ?? 0),
-        ),
-      );
-      const names = nodes.map((node) => node.data.name as string);
-      const name = generateUniqueKey(kind.toUpperCase(), names);
-
-      const newNode = generateUINode(kind, {
-        name,
-        position: {
-          x: node.position.x + 300 * 1.2,
-          y: !targetNodes.length ? node.position.y : maxY + 80,
-        },
+      const { node: newNode, edge: newEdge } = createAppendNode({
+        sourceNode: node,
+        kind,
+        edge: partialEdge,
+        allNodes: nodes,
+        allEdges: edges,
       });
       addNodes([newNode]);
-      if (kind !== NodeKind.Information) {
-        addEdges([
-          {
-            id: generateUUID(),
-            source: node.id,
-            target: newNode.id,
-            ...partialEdge,
-          },
-        ]);
+      if (newEdge) {
+        addEdges([newEdge]);
       }
       update(() => {
         updateNode(node.id, {
@@ -89,7 +71,7 @@ export function NextNodeInfo({
       <Label>Next Step</Label>
       <p className="my-2 text-xs">이 워크플로우에 다음 단계를 추가하세요.</p>
       {node.data.kind === NodeKind.Condition ? (
-        <ConditionNodeConnector
+        <ConditionNodeDataConnector
           node={node}
           nextNodes={nextNodes}
           onDisconnected={onDisconnected}
@@ -121,14 +103,14 @@ interface NodeConnectorProps {
   label?: ReactNode;
 }
 
-function ConditionNodeConnector({
+function ConditionNodeDataConnector({
   node,
   onDisconnected,
   appendNode,
   onSelectNode,
   nextNodes,
 }: NodeConnectorProps) {
-  const data = node.data as ConditionNode;
+  const data = node.data as ConditionNodeData;
   const { ifNextNodes, elseNextNodes, elseIfNextNodes } = useMemo(() => {
     const ifNextNodes = nextNodes.filter(
       (n) => n.edge.sourceHandle === data.branches.if.id,

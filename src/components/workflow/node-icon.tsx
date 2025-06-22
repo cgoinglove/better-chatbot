@@ -1,6 +1,6 @@
 "use client";
 
-import { NodeKind } from "lib/ai/workflow/interface";
+import { NodeKind } from "lib/ai/workflow/workflow.interface";
 import { cn } from "lib/utils";
 import {
   BotIcon,

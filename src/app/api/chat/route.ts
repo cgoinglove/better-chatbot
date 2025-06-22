@@ -42,7 +42,7 @@ import {
   getAllowedDefaultToolkit,
   filterToolsByAllowedMCPServers,
   filterMcpServerCustomizations,
-} from "./helper";
+} from "./shared.chat";
 import {
   generateTitleFromUserMessageAction,
   rememberMcpServerCustomizationsAction,

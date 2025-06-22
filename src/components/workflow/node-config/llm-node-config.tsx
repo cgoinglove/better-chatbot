@@ -1,8 +1,8 @@
 import { Edge } from "@xyflow/react";
-import { LLMNode, UINode } from "lib/ai/workflow/interface";
+import { LLMNodeData, UINode } from "lib/ai/workflow/workflow.interface";
 
-import { NodeKind } from "lib/ai/workflow/interface";
-import { SelectModel } from "../select-model";
+import { NodeKind } from "lib/ai/workflow/workflow.interface";
+import { SelectModel } from "../../select-model";
 import { Button } from "ui/button";
 import {
   ChevronDown,
@@ -11,11 +11,11 @@ import {
   VariableIcon,
 } from "lucide-react";
 import { Select, SelectTrigger, SelectContent, SelectItem } from "ui/select";
-import { OutputSchemaMentionInput } from "./output-schema-mention-input";
+import { OutputSchemaMentionInput } from "../output-schema-mention-input";
 import { Label } from "ui/label";
 import { Separator } from "ui/separator";
 
-export function LLMNodeConfig({
+export function LLMNodeDataConfig({
   node,
   nodes,
   edges,
@@ -30,12 +30,12 @@ export function LLMNodeConfig({
 
   const updateMessage = (
     index: number,
-    message: LLMNode["messages"][number],
+    message: LLMNodeData["messages"][number],
   ) => {
     setNode((prev) => ({
       data: {
         ...prev.data,
-        messages: (prev.data as LLMNode).messages.map((m, i) =>
+        messages: (prev.data as LLMNodeData).messages.map((m, i) =>
           i === index ? message : m,
         ),
       },
@@ -46,7 +46,9 @@ export function LLMNodeConfig({
     setNode((prev) => ({
       data: {
         ...prev.data,
-        messages: (prev.data as LLMNode).messages.filter((_, i) => i !== index),
+        messages: (prev.data as LLMNodeData).messages.filter(
+          (_, i) => i !== index,
+        ),
       },
     }));
   };
@@ -55,7 +57,10 @@ export function LLMNodeConfig({
     setNode((prev) => ({
       data: {
         ...prev.data,
-        messages: [...(prev.data as LLMNode).messages, { role: "assistant" }],
+        messages: [
+          ...(prev.data as LLMNodeData).messages,
+          { role: "assistant" },
+        ],
       },
     }));
   };
@@ -162,7 +167,7 @@ export function LLMNodeConfig({
   );
 }
 
-export function LLMNodeStack({ data }: { data: LLMNode }) {
+export function LLMNodeDataStack({ data }: { data: LLMNodeData }) {
   if (!data.model) return null;
   return (
     <div className="flex flex-col gap-1 px-4 mt-4">

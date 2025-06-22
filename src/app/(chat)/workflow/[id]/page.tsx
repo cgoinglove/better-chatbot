@@ -1,14 +1,11 @@
-import { generateUINode } from "@/components/workflow/shared";
+import {
+  convertDBEdgeToUIEdge,
+  convertDBNodeToUINode,
+} from "lib/ai/workflow/shared.workflow";
 import Workflow from "@/components/workflow/workflow";
 import { getSession } from "auth/server";
-import { NodeKind, UINode } from "lib/ai/workflow/interface";
 import { workflowRepository } from "lib/db/repository";
-
-const defaultNodes: UINode[] = [
-  generateUINode(NodeKind.Start, {
-    name: "START",
-  }),
-];
+import { notFound } from "next/navigation";
 
 export default async function WorkflowPage({
   params,
@@ -22,9 +19,11 @@ export default async function WorkflowPage({
     return new Response("Unauthorized", { status: 401 });
   }
   const workflow = await workflowRepository.selectStructureById(id);
-
-  const initialNodes = workflow?.nodes ?? defaultNodes;
-  const initialEdges = workflow?.edges ?? [];
+  if (!workflow) {
+    return notFound();
+  }
+  const initialNodes = workflow.nodes.map(convertDBNodeToUINode);
+  const initialEdges = workflow.edges.map(convertDBEdgeToUIEdge);
   return (
     <Workflow
       key={id}

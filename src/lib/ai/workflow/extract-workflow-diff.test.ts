@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { Edge } from "@xyflow/react";
 import { extractWorkflowDiff } from "./extract-workflow-diff";
-import { UINode, NodeKind } from "./interface";
+import { UINode, NodeKind } from "./workflow.interface";
 
 describe("extractWorkflowDiff", () => {
   const createTestNode = (

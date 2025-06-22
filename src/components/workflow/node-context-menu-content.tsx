@@ -1,7 +1,7 @@
 "use client";
 
 import { useReactFlow } from "@xyflow/react";
-import { NodeKind, WorkflowNode } from "lib/ai/workflow/interface";
+import { NodeKind, WorkflowNodeData } from "lib/ai/workflow/workflow.interface";
 import { Trash2Icon } from "lucide-react";
 import { useCallback } from "react";
 import { toast } from "sonner";
@@ -9,7 +9,7 @@ import { toast } from "sonner";
 export function NodeContextMenuContent({
   node,
 }: {
-  node: WorkflowNode;
+  node: WorkflowNodeData;
 }) {
   const { setEdges, setNodes } = useReactFlow();
 

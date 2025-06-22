@@ -2,18 +2,20 @@ import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { pgDb } from "../db.pg";
 import {
   WorkflowEdgeSchema,
-  WorkflowNodeSchema,
+  WorkflowNodeDataSchema,
   WorkflowSchema,
 } from "../schema.pg";
 import {
-  WorkflowDB,
-  WorkflowEdgeDB,
+  DBWorkflow,
+  DBEdge,
+  DBNode,
   WorkflowRepository,
 } from "app-types/workflow";
-import { NodeKind, UINode } from "lib/ai/workflow/interface";
-import { exclude } from "lib/utils";
-import { Edge } from "@xyflow/react";
-import { generateUINode } from "@/components/workflow/shared";
+import { NodeKind } from "lib/ai/workflow/workflow.interface";
+import {
+  convertUINodeToDBNode,
+  generateUINode,
+} from "lib/ai/workflow/shared.workflow";
 
 export const pgWorkflowRepository: WorkflowRepository = {
   async checkAccess(workflowId, userId) {
@@ -46,7 +48,7 @@ export const pgWorkflowRepository: WorkflowRepository = {
       .from(WorkflowSchema)
       .where(eq(WorkflowSchema.userId, userId))
       .orderBy(desc(WorkflowSchema.createdAt));
-    return rows as WorkflowDB[];
+    return rows as DBWorkflow[];
   },
   async save(workflow) {
     const prev = workflow.id
@@ -70,88 +72,64 @@ export const pgWorkflowRepository: WorkflowRepository = {
 
     if (isNew) {
       const startNode = generateUINode(NodeKind.Start);
-      await pgDb.insert(WorkflowNodeSchema).values({
-        kind: NodeKind.Start,
+      await pgDb.insert(WorkflowNodeDataSchema).values({
+        ...convertUINodeToDBNode(row.id, startNode),
         name: "START",
-        workflowId: row.id,
-        nodeConfig: {
-          outputSchema: startNode.data.outputSchema,
-        },
-        uiConfig: {
-          position: startNode.position,
-          type: "default",
-        },
       });
     }
 
-    return row as WorkflowDB;
+    return row as DBWorkflow;
   },
   async saveStructure({ workflowId, nodes, edges, deleteNodes, deleteEdges }) {
     await pgDb.transaction(async (tx) => {
       const deletePromises: Promise<any>[] = [];
       if (deleteNodes?.length) {
-        const deleteNodePromises = tx.delete(WorkflowNodeSchema).where(
-          and(
-            eq(WorkflowNodeSchema.workflowId, workflowId),
-            inArray(
-              WorkflowNodeSchema.id,
-              deleteNodes.map((node) => node.id),
+        const deleteNodePromises = tx
+          .delete(WorkflowNodeDataSchema)
+          .where(
+            and(
+              eq(WorkflowNodeDataSchema.workflowId, workflowId),
+              inArray(WorkflowNodeDataSchema.id, deleteNodes),
             ),
-          ),
-        );
+          );
         deletePromises.push(deleteNodePromises);
       }
       if (deleteEdges?.length) {
-        const deleteEdgePromises = tx.delete(WorkflowEdgeSchema).where(
-          and(
-            eq(WorkflowEdgeSchema.workflowId, workflowId),
-            inArray(
-              WorkflowEdgeSchema.id,
-              deleteEdges.map((edge) => edge.id),
+        const deleteEdgePromises = tx
+          .delete(WorkflowEdgeSchema)
+          .where(
+            and(
+              eq(WorkflowEdgeSchema.workflowId, workflowId),
+              inArray(WorkflowEdgeSchema.id, deleteEdges),
             ),
-          ),
-        );
+          );
         deletePromises.push(deleteEdgePromises);
       }
       await Promise.all(deletePromises);
       if (nodes?.length) {
         await tx
-          .insert(WorkflowNodeSchema)
-          .values(nodes.map((node) => convertToDB(workflowId, node)))
+          .insert(WorkflowNodeDataSchema)
+          .values(nodes)
           .onConflictDoUpdate({
-            target: [WorkflowNodeSchema.id],
+            target: [WorkflowNodeDataSchema.id],
             set: {
               nodeConfig: sql.raw(
-                `excluded.${WorkflowNodeSchema.nodeConfig.name}`,
+                `excluded.${WorkflowNodeDataSchema.nodeConfig.name}`,
               ),
-              uiConfig: sql.raw(`excluded.${WorkflowNodeSchema.uiConfig.name}`),
-              name: sql.raw(`excluded.${WorkflowNodeSchema.name.name}`),
+              uiConfig: sql.raw(
+                `excluded.${WorkflowNodeDataSchema.uiConfig.name}`,
+              ),
+              name: sql.raw(`excluded.${WorkflowNodeDataSchema.name.name}`),
               description: sql.raw(
-                `excluded.${WorkflowNodeSchema.description.name}`,
+                `excluded.${WorkflowNodeDataSchema.description.name}`,
               ),
-              kind: sql.raw(`excluded.${WorkflowNodeSchema.kind.name}`),
+              kind: sql.raw(`excluded.${WorkflowNodeDataSchema.kind.name}`),
               updatedAt: new Date(),
             },
           });
       }
       if (edges?.length) {
-        const dbEdges = edges.map(
-          (edge) =>
-            ({
-              workflowId,
-              id: edge.id,
-              source: edge.source,
-              target: edge.target,
-              uiConfig: {
-                sourceHandle: edge.sourceHandle,
-                targetHandle: edge.targetHandle,
-              },
-            }) as WorkflowEdgeDB,
-        );
-        await tx
-          .insert(WorkflowEdgeSchema)
-          .values(dbEdges)
-          .onConflictDoNothing();
+        await tx.insert(WorkflowEdgeSchema).values(edges).onConflictDoNothing();
       }
     });
   },
@@ -162,59 +140,19 @@ export const pgWorkflowRepository: WorkflowRepository = {
       .where(eq(WorkflowSchema.id, id));
 
     if (!workflow) return null;
-    const nodes = await pgDb
+    const nodePromises = pgDb
       .select()
-      .from(WorkflowNodeSchema)
-      .where(eq(WorkflowNodeSchema.workflowId, id));
-    const edges = await pgDb
+      .from(WorkflowNodeDataSchema)
+      .where(eq(WorkflowNodeDataSchema.workflowId, id));
+    const edgePromises = pgDb
       .select()
       .from(WorkflowEdgeSchema)
       .where(eq(WorkflowEdgeSchema.workflowId, id));
+    const [nodes, edges] = await Promise.all([nodePromises, edgePromises]);
     return {
-      ...(workflow as WorkflowDB),
-      nodes: nodes.map(convertToUI),
-      edges: edges.map((edge) => {
-        const uiEdge: Edge = {
-          id: edge.id,
-          source: edge.source,
-          target: edge.target,
-          targetHandle: edge.uiConfig?.targetHandle ?? "",
-          sourceHandle: edge.uiConfig?.sourceHandle ?? "",
-        };
-        return uiEdge;
-      }),
+      ...(workflow as DBWorkflow),
+      nodes: nodes as DBNode[],
+      edges: edges as DBEdge[],
     };
   },
 };
-
-function convertToDB(
-  workflowId: string,
-  node: UINode,
-): Omit<typeof WorkflowNodeSchema.$inferInsert, "createdAt" | "updatedAt"> {
-  return {
-    id: node.id,
-    workflowId,
-    kind: node.data.kind,
-    name: node.data.name,
-    description: node.data.description || "",
-    nodeConfig: exclude(node.data, ["id", "name", "description", "runtime"]),
-    uiConfig: {
-      position: node.position,
-    },
-  };
-}
-
-function convertToUI(node: typeof WorkflowNodeSchema.$inferSelect): UINode {
-  const uiNode: UINode = {
-    id: node.id,
-    ...(node.uiConfig as any),
-    data: {
-      ...(node.nodeConfig as any),
-      id: node.id,
-      name: node.name,
-      description: node.description || "",
-      kind: node.kind as any,
-    },
-  };
-  return uiNode;
-}

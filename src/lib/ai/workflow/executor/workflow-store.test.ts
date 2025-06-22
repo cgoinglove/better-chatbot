@@ -3,7 +3,7 @@ import { createWorkflowStore } from "./workflow-store";
 
 describe("workflow-store", () => {
   it("source", () => {
-    const store = createWorkflowStore("test");
+    const store = createWorkflowStore();
     const context = store();
 
     expect(context.outputs).toEqual({});

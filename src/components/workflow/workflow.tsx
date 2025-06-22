@@ -15,10 +15,17 @@ import {
   OnConnect,
   OnSelectionChangeFunc,
   NodeMouseHandler,
+  IsValidConnection,
+  Connection,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { extractWorkflowDiff } from "lib/ai/workflow/extract-workflow-diff";
-import { NodeKind, UINode } from "lib/ai/workflow/interface";
+import {
+  convertUIEdgeToDBEdge,
+  convertUINodeToDBNode,
+} from "lib/ai/workflow/shared.workflow";
+import { NodeKind, UINode } from "lib/ai/workflow/workflow.interface";
+import { wouldCreateCycle } from "lib/ai/workflow/would-create-cycle";
 import { createDebounce, generateUUID } from "lib/utils";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { safe } from "ts-safe";
@@ -28,6 +35,11 @@ const nodeTypes = {
 };
 
 const debounce = createDebounce();
+
+const fitViewOptions = {
+  duration: 500,
+  padding: 1,
+};
 
 export default function Workflow({
   initialNodes,
@@ -70,10 +82,14 @@ export default function Workflow({
           return fetch(`/api/workflow/${workflowId}`, {
             method: "POST",
             body: JSON.stringify({
-              nodes: diff.updateNodes,
-              edges: diff.updateEdges,
-              deleteNodes: diff.deleteNodes,
-              deleteEdges: diff.deleteEdges,
+              nodes: diff.updateNodes.map((node) =>
+                convertUINodeToDBNode(workflowId, node),
+              ),
+              edges: diff.updateEdges.map((edge) =>
+                convertUIEdgeToDBEdge(workflowId, edge),
+              ),
+              deleteNodes: diff.deleteNodes.map((node) => node.id),
+              deleteEdges: diff.deleteEdges.map((edge) => edge.id),
             }),
           }).then((res) => {
             if (res.status >= 400) {
@@ -151,6 +167,15 @@ export default function Workflow({
     [isProcessing],
   );
 
+  const isValidConnection: IsValidConnection = useCallback(
+    (connection) => {
+      if (isProcessing) return false;
+      if (connection.source === connection.target) return false;
+      return !wouldCreateCycle(connection as Connection, edges as Connection[]);
+    },
+    [isProcessing, edges],
+  );
+
   const styledEdges = useMemo(() => {
     return edges.map((edge) => {
       const isConnected =
@@ -176,8 +201,8 @@ export default function Workflow({
     const debounceDelay =
       snapshot.current.nodes.length !== nodes.length ||
       snapshot.current.edges.length !== edges.length
-        ? 100
-        : 10000;
+        ? 200
+        : 5000;
     debounce(save, debounceDelay);
   }, [nodes, edges]);
 
@@ -205,13 +230,11 @@ export default function Workflow({
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onSelectionChange={onSelectionChange}
+        isValidConnection={isValidConnection}
         onConnect={onConnect}
         onNodeMouseEnter={onNodeMouseEnter}
         onNodeMouseLeave={onNodeMouseLeave}
-        fitViewOptions={{
-          duration: 500,
-          padding: 1,
-        }}
+        fitViewOptions={fitViewOptions}
       >
         <Background gap={12} size={0.6} />
         <Panel position="top-right" className="z-20!">

@@ -14,7 +14,7 @@ export enum NodeKind {
   Condition = "condition",
 }
 
-export type BaseWorkflowNode<
+export type BaseWorkflowNodeDataData<
   T extends {
     kind: NodeKind;
   },
@@ -30,11 +30,11 @@ export type OutputSchemaSourceKey = {
   path: string[];
 };
 
-export type StartNode = BaseWorkflowNode<{
+export type StartNodeData = BaseWorkflowNodeDataData<{
   kind: NodeKind.Start;
 }>;
 
-export type EndNode = BaseWorkflowNode<{
+export type EndNodeData = BaseWorkflowNodeDataData<{
   kind: NodeKind.End;
 }> & {
   outputData: {
@@ -43,11 +43,11 @@ export type EndNode = BaseWorkflowNode<{
   }[];
 };
 
-export type InformationNode = BaseWorkflowNode<{
+export type InformationNodeData = BaseWorkflowNodeDataData<{
   kind: NodeKind.Information;
 }>;
 
-export type LLMNode = BaseWorkflowNode<{
+export type LLMNodeData = BaseWorkflowNodeDataData<{
   kind: NodeKind.LLM;
 }> & {
   model: ChatModel;
@@ -57,26 +57,26 @@ export type LLMNode = BaseWorkflowNode<{
   }[];
 };
 
-export type ConditionNode = BaseWorkflowNode<{
+export type ConditionNodeData = BaseWorkflowNodeDataData<{
   kind: NodeKind.Condition;
 }> & {
   branches: ConditionBranches; // if-elseIf-else structure
 };
 
-export type WorkflowNode =
-  | StartNode
-  | EndNode
-  | LLMNode
-  | InformationNode
-  | ConditionNode;
+export type WorkflowNodeData =
+  | StartNodeData
+  | EndNodeData
+  | LLMNodeData
+  | InformationNodeData
+  | ConditionNodeData;
 
 export type NodeRuntimeField = {
   status?: "running" | "success" | "fail" | "idle";
   isNew?: boolean;
-  result?: Record<string, unknown>;
+  result?: any;
   isRunTab?: boolean;
 };
 
 export type UINode<Kind extends NodeKind = NodeKind> = Node<
-  Extract<WorkflowNode, { kind: Kind }> & { runtime?: NodeRuntimeField }
+  Extract<WorkflowNodeData, { kind: Kind }> & { runtime?: NodeRuntimeField }
 >;

@@ -1,4 +1,5 @@
-import { OutputSchemaSourceKey } from "./interface";
+import { safe } from "ts-safe";
+import { OutputSchemaSourceKey } from "./workflow.interface";
 
 // Condition operators for different data types
 export enum StringConditionOperator {
@@ -13,8 +14,8 @@ export enum StringConditionOperator {
 }
 
 export enum NumberConditionOperator {
-  Equals = "equals",
-  NotEquals = "not_equals",
+  Equals = StringConditionOperator.Equals,
+  NotEquals = StringConditionOperator.NotEquals,
   GreaterThan = "greater_than",
   LessThan = "less_than",
   GreaterThanOrEqual = "greater_than_or_equal",
@@ -65,3 +66,85 @@ export type ConditionBranches = {
   elseIf?: ConditionBranch[]; // Optional multiple elseIf branches
   else: ConditionBranch; // Optional else branch
 };
+
+export function checkConditionBranch(
+  branch: ConditionBranch,
+  getSourceValue: (
+    source: OutputSchemaSourceKey,
+  ) => string | number | boolean | undefined,
+): boolean {
+  const results = branch.conditions?.map((condition) => {
+    return checkConditionRule({
+      operator: condition.operator,
+      target: String(condition.value || ""),
+      source: getSourceValue(condition.source),
+    });
+  }) ?? [false];
+  if (branch.logicalOperator === "AND") {
+    return results.every((result) => result);
+  }
+  return results.some((result) => result);
+}
+
+function checkConditionRule({
+  operator,
+  target,
+  source,
+}: {
+  operator: ConditionOperator;
+  target: string;
+  source?: string | number | boolean;
+}): boolean {
+  return safe(() => {
+    switch (operator) {
+      case StringConditionOperator.Equals:
+        if (source == target) return true;
+        break;
+      case StringConditionOperator.NotEquals:
+        if (source != target) return true;
+        break;
+      case StringConditionOperator.Contains:
+        if (String(source).includes(String(target))) return true;
+        break;
+      case StringConditionOperator.NotContains:
+        if (!String(source).includes(String(target))) return true;
+        break;
+      case StringConditionOperator.StartsWith:
+        if (String(source).startsWith(String(target))) return true;
+        break;
+      case StringConditionOperator.EndsWith:
+        if (String(source).endsWith(String(target))) return true;
+        break;
+      case StringConditionOperator.IsEmpty:
+        if (!source) return true;
+        break;
+      case StringConditionOperator.IsNotEmpty:
+        if (source) return true;
+        break;
+      case NumberConditionOperator.GreaterThan:
+        if (Number(source) > Number(target)) return true;
+        break;
+      case NumberConditionOperator.LessThan:
+        if (Number(source) < Number(target)) return true;
+        break;
+      case NumberConditionOperator.GreaterThanOrEqual:
+        if (Number(source) >= Number(target)) return true;
+        break;
+      case NumberConditionOperator.LessThanOrEqual:
+        if (Number(source) <= Number(target)) return true;
+        break;
+      case BooleanConditionOperator.IsTrue:
+        if (source) return true;
+        break;
+      case BooleanConditionOperator.IsFalse:
+        if (!source) return true;
+        break;
+    }
+    return false;
+  })
+    .ifFail((e) => {
+      console.error(e);
+      return false;
+    })
+    .unwrap();
+}

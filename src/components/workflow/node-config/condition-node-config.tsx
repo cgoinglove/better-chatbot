@@ -2,15 +2,15 @@
 
 import { Edge, Handle, Position, useReactFlow } from "@xyflow/react";
 import {
-  ConditionNode,
+  ConditionNodeData,
   NodeKind,
   OutputSchemaSourceKey,
   UINode,
-} from "lib/ai/workflow/interface";
+} from "lib/ai/workflow/workflow.interface";
 import { PlusIcon, TrashIcon } from "lucide-react";
 import { Button } from "ui/button";
 import { Separator } from "ui/separator";
-import { VariableSelect } from "./variable-select";
+import { VariableSelect } from "../variable-select";
 import {
   Select,
   SelectContent,
@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from "ui/select";
 
-import { VariableMentionItem } from "./variable-mention-item";
+import { VariableMentionItem } from "../variable-mention-item";
 import {
   BooleanConditionOperator,
   ConditionBranch,
@@ -30,14 +30,14 @@ import {
   StringConditionOperator,
 } from "lib/ai/workflow/condition";
 import { useMemo, useState } from "react";
-import { findJsonSchemaByPath } from "lib/ai/workflow/shared";
+import { findJsonSchemaByPath } from "lib/ai/workflow/shared.workflow";
 import { Badge } from "ui/badge";
-import { cn, generateUniqueKey, generateUUID } from "lib/utils";
-import { NodeSelect } from "./node-select";
-import { generateUINode } from "./shared";
+import { cn, generateUUID, isNull } from "lib/utils";
+import { NodeSelect } from "../node-select";
 import { useUpdate } from "@/hooks/use-update";
+import { createAppendNode } from "../create-append-node";
 
-export function ConditionNodeConfig({
+export function ConditionNodeDataConfig({
   node,
   nodes,
   edges,
@@ -52,7 +52,7 @@ export function ConditionNodeConfig({
 }) {
   const updateIfBranch = (branch: ConditionBranch) => {
     setNode((prev) => {
-      const data = prev.data as ConditionNode;
+      const data = prev.data as ConditionNodeData;
       return {
         data: { ...data, branches: { ...data.branches, if: branch } },
       };
@@ -61,7 +61,7 @@ export function ConditionNodeConfig({
 
   const updateElseIfBranch = (index: number, branch: ConditionBranch) => {
     setNode((prev) => {
-      const data = prev.data as ConditionNode;
+      const data = prev.data as ConditionNodeData;
       return {
         data: {
           ...data,
@@ -78,7 +78,7 @@ export function ConditionNodeConfig({
 
   const addElseIfBranch = () => {
     setNode((prev) => {
-      const data = prev.data as ConditionNode;
+      const data = prev.data as ConditionNodeData;
       return {
         data: {
           ...data,
@@ -100,13 +100,13 @@ export function ConditionNodeConfig({
   };
 
   const removeElseIfBranch = (index: number) => {
-    const data = node.data as ConditionNode;
+    const data = node.data as ConditionNodeData;
     const connectedEdges = edges.filter(
       (edge) => edge.sourceHandle == data.branches.elseIf![index].id,
     );
     deleteEdges(connectedEdges.map((edge) => edge.id));
     setNode((prev) => {
-      const data = prev.data as ConditionNode;
+      const data = prev.data as ConditionNodeData;
       return {
         data: {
           ...data,
@@ -416,7 +416,11 @@ function ConditionRuleItem({
         <Select
           defaultValue={item.operator}
           onValueChange={(value) =>
-            onChange({ ...item, operator: value as ConditionOperator })
+            onChange({
+              ...item,
+              value: undefined,
+              operator: value as ConditionOperator,
+            })
           }
         >
           <SelectTrigger className="text-xs border-none w-24">
@@ -436,7 +440,7 @@ function ConditionRuleItem({
         <>
           <Separator className="my-1" />
           <input
-            value={String(item.value)}
+            value={isNull(item.value) ? undefined : String(item.value)}
             autoFocus
             className="text-xs py-1 px-2 focus:outline-none"
             placeholder="...value"
@@ -449,10 +453,10 @@ function ConditionRuleItem({
   );
 }
 
-export function ConditionNodeOutputStack({
+export function ConditionNodeDataOutputStack({
   data,
 }: {
-  data: ConditionNode;
+  data: ConditionNodeData;
 }) {
   const [sourceHandle, setSourceHandle] = useState("");
 
@@ -463,39 +467,20 @@ export function ConditionNodeOutputStack({
   const appendNode = (kind: NodeKind) => {
     if (!sourceHandle) return;
     setSourceHandle("");
-    const nodes = getNodes();
-    const currentNode = nodes.find((node) => node.data.id === data.id)!;
-    const targetEdges = getEdges()
-      .filter((edge) => edge.source === data.id)
-      .map((v) => v.target);
-    const targetNodes = nodes.filter((node) => {
-      return targetEdges.includes(node.id);
-    });
-    const maxY = Math.max(
-      ...targetNodes.map(
-        (node) => node.position.y + (node.measured?.height ?? 0),
-      ),
-    );
-    const names = nodes.map((node) => node.data.name as string);
-    const name = generateUniqueKey(kind.toUpperCase(), names);
-
-    const node = generateUINode(kind, {
-      name,
-      position: {
-        x: currentNode.position.x + 300 * 1.2,
-        y: !targetNodes.length ? currentNode.position.y : maxY + 80,
+    const allNodes = getNodes() as UINode[];
+    const { node: newNode, edge: newEdge } = createAppendNode({
+      sourceNode: allNodes.find((node) => node.data.id === data.id)!,
+      kind,
+      allNodes,
+      edge: {
+        sourceHandle,
       },
+      allEdges: getEdges(),
     });
-    addNodes([node]);
-    if (kind !== NodeKind.Information) {
-      addEdges([
-        {
-          id: generateUUID(),
-          source: data.id,
-          target: node.id,
-          sourceHandle: sourceHandle,
-        },
-      ]);
+
+    addNodes([newNode]);
+    if (newEdge) {
+      addEdges([newEdge]);
     }
     update(() => {
       updateNode(data.id, {

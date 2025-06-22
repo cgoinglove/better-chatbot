@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 import { Separator } from "@/components/ui/separator";
 
-import { NodeKind, UINode } from "lib/ai/workflow/interface";
+import { NodeKind, UINode } from "lib/ai/workflow/workflow.interface";
 import { NodeIcon } from "./node-icon";
 import { nextTick } from "lib/utils";
 import {
@@ -19,12 +19,12 @@ import {
   XIcon,
 } from "lucide-react";
 import { Button } from "ui/button";
-import { StartNodeConfig } from "./start-node-config";
-import { EndNodeConfig } from "./end-node-config";
+import { StartNodeDataConfig } from "./node-config/start-node-config";
+import { EndNodeDataConfig } from "./node-config/end-node-config";
 import { Label } from "ui/label";
 import { Edge, useReactFlow } from "@xyflow/react";
 import { NodeRun } from "./node-run";
-import { LLMNodeConfig } from "./llm-node-config";
+import { LLMNodeDataConfig } from "./node-config/llm-node-config";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,7 +32,7 @@ import {
 } from "ui/dropdown-menu";
 import { NodeContextMenuContent } from "./node-context-menu-content";
 import { NextNodeInfo } from "./next-node-info";
-import { ConditionNodeConfig } from "./condition-node-config";
+import { ConditionNodeDataConfig } from "./node-config/condition-node-config";
 
 export const WorkflowPanel = memo(function WorkflowPanel({
   nodes,
@@ -147,26 +147,26 @@ export const WorkflowPanel = memo(function WorkflowPanel({
             {selectedNode.data.runtime?.isRunTab ? (
               <NodeRun />
             ) : selectedNode.data.kind === NodeKind.Start ? (
-              <StartNodeConfig
+              <StartNodeDataConfig
                 node={selectedNode as UINode<NodeKind.Start>}
                 setNode={(partial) => updateNode(selectedNode.data.id, partial)}
               />
             ) : selectedNode.data.kind === NodeKind.End ? (
-              <EndNodeConfig
+              <EndNodeDataConfig
                 node={selectedNode as UINode<NodeKind.End>}
                 nodes={nodes}
                 edges={edges}
                 setNode={(partial) => updateNode(selectedNode.data.id, partial)}
               />
             ) : selectedNode.data.kind === NodeKind.LLM ? (
-              <LLMNodeConfig
+              <LLMNodeDataConfig
                 node={selectedNode as UINode<NodeKind.LLM>}
                 nodes={nodes}
                 edges={edges}
                 setNode={(partial) => updateNode(selectedNode.data.id, partial)}
               />
             ) : selectedNode.data.kind === NodeKind.Condition ? (
-              <ConditionNodeConfig
+              <ConditionNodeDataConfig
                 deleteEdges={(targets) => {
                   targets.length &&
                     setEdges((edges) => {

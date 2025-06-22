@@ -1,17 +1,18 @@
 import { Edge } from "@xyflow/react";
 import { JSONSchema7 } from "json-schema";
 import {
-  ConditionNode,
-  EndNode,
-  LLMNode,
+  ConditionNodeData,
+  EndNodeData,
+  LLMNodeData,
   NodeKind,
-  StartNode,
+  StartNodeData,
   UINode,
-  WorkflowNode,
-} from "lib/ai/workflow/interface";
+  WorkflowNodeData,
+} from "lib/ai/workflow/workflow.interface";
 import { cleanVariableName } from "lib/utils";
 import { safe } from "ts-safe";
-import { findJsonSchemaByPath } from "./shared";
+import { findJsonSchemaByPath } from "./shared.workflow";
+import { ConditionBranch } from "./condition";
 
 export function validateSchema(key: string, schema: JSONSchema7) {
   const variableName = cleanVariableName(key);
@@ -48,14 +49,18 @@ export function allNodeValidate({
 }: { nodes: UINode[]; edges: Edge[] }):
   | true
   | {
-      node: UINode;
+      node?: UINode;
       errorMessage: string;
     } {
   if (!nodes.some((n) => n.data.kind === NodeKind.Start)) {
-    throw new Error("Start node must be only one");
+    return {
+      errorMessage: "Start node must be only one",
+    };
   }
   if (!nodes.some((n) => n.data.kind === NodeKind.End)) {
-    throw new Error("End node must be only one");
+    return {
+      errorMessage: "End node must be only one",
+    };
   }
 
   for (const node of nodes) {
@@ -75,7 +80,7 @@ export function allNodeValidate({
   return true;
 }
 
-export const nodeValidate: NodeValidate<WorkflowNode> = ({
+export const nodeValidate: NodeValidate<WorkflowNodeData> = ({
   node,
   nodes,
   edges,
@@ -93,10 +98,15 @@ export const nodeValidate: NodeValidate<WorkflowNode> = ({
       return endNodeValidate({ node, nodes, edges });
     case NodeKind.LLM:
       return llmNodeValidate({ node, nodes, edges });
+    case NodeKind.Condition:
+      return conditionNodeValidate({ node, nodes, edges });
   }
 };
 
-export const startNodeValidate: NodeValidate<StartNode> = ({ node, edges }) => {
+export const startNodeValidate: NodeValidate<StartNodeData> = ({
+  node,
+  edges,
+}) => {
   if (!edges.some((e) => e.source === node.id)) {
     throw new Error("Start node must have an edge");
   }
@@ -111,7 +121,7 @@ export const startNodeValidate: NodeValidate<StartNode> = ({ node, edges }) => {
   });
 };
 
-export const endNodeValidate: NodeValidate<EndNode> = ({
+export const endNodeValidate: NodeValidate<EndNodeData> = ({
   node,
   nodes,
   edges,
@@ -141,20 +151,20 @@ export const endNodeValidate: NodeValidate<EndNode> = ({
     if (!sourceSchema) throw new Error("Source schema not found");
   });
 
-  let current: WorkflowNode | undefined = node as WorkflowNode;
+  let current: WorkflowNodeData | undefined = node as WorkflowNodeData;
   while (current && current.kind !== NodeKind.Start) {
     const prevNodeId = edges.find((e) => e.target === current!.id)?.source;
     if (!prevNodeId) throw new Error("Prev node must have an edge");
     const prevNode = nodes.find((n) => n.data.id === prevNodeId);
     if (!prevNode) current = undefined;
-    else current = prevNode.data as WorkflowNode;
+    else current = prevNode.data as WorkflowNodeData;
   }
 
   if (current?.kind !== NodeKind.Start)
     throw new Error("Prev node must be a start node");
 };
 
-export const llmNodeValidate: NodeValidate<LLMNode> = ({ node }) => {
+export const llmNodeValidate: NodeValidate<LLMNodeData> = ({ node }) => {
   if (!node.model) throw new Error("LLM node must have a model");
   node.messages.map((message) => {
     if (!message.role) throw new Error("LLM node must have a role");
@@ -164,11 +174,15 @@ export const llmNodeValidate: NodeValidate<LLMNode> = ({ node }) => {
     throw new Error("LLM node must have a message");
 };
 
-export const conditionNodeValidate: NodeValidate<ConditionNode> = ({
+export const conditionNodeValidate: NodeValidate<ConditionNodeData> = ({
   node,
 }) => {
-  [node.branches.if, ...(node.branches.elseIf ?? [])].forEach((branch) => {
-    if (!branch.conditions?.length)
-      throw new Error("Condition node must have a condition");
-  });
+  const branchValidate = (branch: ConditionBranch) => {
+    branch.conditions.forEach((condition) => {
+      if (!condition.operator)
+        throw new Error("Condition must have a operator");
+      if (!condition.source) throw new Error("Condition must have a value");
+    });
+  };
+  [node.branches.if, ...(node.branches.elseIf ?? [])].forEach(branchValidate);
 };

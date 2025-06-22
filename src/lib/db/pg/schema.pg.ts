@@ -13,7 +13,7 @@ import {
   varchar,
   index,
 } from "drizzle-orm/pg-core";
-import { WorkflowDB, WorkflowEdgeDB } from "app-types/workflow";
+import { DBWorkflow, DBEdge, DBNode } from "app-types/workflow";
 
 export const ChatThreadSchema = pgTable("chat_thread", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
@@ -162,7 +162,7 @@ export const WorkflowSchema = pgTable("workflow", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
   version: text("version").notNull().default("0.1.0"),
   name: text("name").notNull(),
-  icon: json("icon").$type<WorkflowDB["icon"]>(),
+  icon: json("icon").$type<DBWorkflow["icon"]>(),
   description: text("description"),
   isPublished: boolean("is_published").notNull().default(false),
   visibility: varchar("visibility", { enum: ["public", "private"] })
@@ -175,7 +175,7 @@ export const WorkflowSchema = pgTable("workflow", {
   updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
-export const WorkflowNodeSchema = pgTable(
+export const WorkflowNodeDataSchema = pgTable(
   "workflow_node",
   {
     id: uuid("id").primaryKey().notNull().defaultRandom(),
@@ -186,8 +186,8 @@ export const WorkflowNodeSchema = pgTable(
     kind: text("kind").notNull(),
     name: text("name").notNull(),
     description: text("description"),
-    uiConfig: json("ui_config").default({}),
-    nodeConfig: json("node_config").default({}),
+    uiConfig: json("ui_config").$type<DBNode["uiConfig"]>().default({}),
+    nodeConfig: json("node_config").$type<DBNode["nodeConfig"]>().default({}),
     createdAt: timestamp("created_at")
       .notNull()
       .default(sql`CURRENT_TIMESTAMP`),
@@ -206,11 +206,11 @@ export const WorkflowEdgeSchema = pgTable("workflow_edge", {
     .references(() => WorkflowSchema.id, { onDelete: "cascade" }),
   source: uuid("source")
     .notNull()
-    .references(() => WorkflowNodeSchema.id, { onDelete: "cascade" }),
+    .references(() => WorkflowNodeDataSchema.id, { onDelete: "cascade" }),
   target: uuid("target")
     .notNull()
-    .references(() => WorkflowNodeSchema.id, { onDelete: "cascade" }),
-  uiConfig: json("ui_config").default({}).$type<WorkflowEdgeDB["uiConfig"]>(),
+    .references(() => WorkflowNodeDataSchema.id, { onDelete: "cascade" }),
+  uiConfig: json("ui_config").$type<DBEdge["uiConfig"]>().default({}),
   createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 

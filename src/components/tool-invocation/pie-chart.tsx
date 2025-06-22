@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/chart";
 
 import { JsonViewPopup } from "../json-view-popup";
-import { sanitizeCssVariableName } from "./shared";
+import { sanitizeCssVariableName } from "./shared.tool-invocation";
 
 // PieChart component props interface
 export interface PieChartProps {

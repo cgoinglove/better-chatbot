@@ -1,8 +1,8 @@
 "use client";
 
 import { Handle, Position, useReactFlow, type NodeProps } from "@xyflow/react";
-import { NodeKind, UINode } from "lib/ai/workflow/interface";
-import { cn, generateUniqueKey, generateUUID } from "lib/utils";
+import { NodeKind, UINode } from "lib/ai/workflow/workflow.interface";
+import { cn } from "lib/utils";
 import { PlusIcon } from "lucide-react";
 
 import { memo, useCallback, useEffect, useState } from "react";
@@ -16,12 +16,12 @@ import {
   ContextMenuTrigger,
 } from "ui/context-menu";
 
-import { OutputSchemaStack } from "./start-node-config";
-import { EndNodeOutputStack } from "./end-node-config";
-import { LLMNodeStack } from "./llm-node-config";
+import { OutputSchemaStack } from "./node-config/start-node-config";
+import { EndNodeDataOutputStack } from "./node-config/end-node-config";
+import { LLMNodeDataStack } from "./node-config/llm-node-config";
 import { NodeContextMenuContent } from "./node-context-menu-content";
-import { generateUINode } from "./shared";
-import { ConditionNodeOutputStack } from "./condition-node-config";
+import { ConditionNodeDataOutputStack } from "./node-config/condition-node-config";
+import { createAppendNode } from "./create-append-node";
 
 type Props = NodeProps<UINode>;
 
@@ -30,8 +30,6 @@ export const DefaultNode = memo(function DefaultNode({
   isConnectable,
   selected,
   id,
-  positionAbsoluteX,
-  positionAbsoluteY,
 }: Props) {
   const [openNodeSelect, setOpenNodeSelect] = useState(false);
 
@@ -51,36 +49,16 @@ export const DefaultNode = memo(function DefaultNode({
   const appendNode = useCallback(
     (kind: NodeKind) => {
       setOpenNodeSelect(false);
-      const targetEdges = edges
-        .filter((edge) => edge.source === id)
-        .map((v) => v.target);
-      const targetNodes = nodes.filter((node) => {
-        return targetEdges.includes(node.id);
-      });
-      const maxY = Math.max(
-        ...targetNodes.map(
-          (node) => node.position.y + (node.measured?.height ?? 0),
-        ),
-      );
-      const names = nodes.map((node) => node.data.name as string);
-      const name = generateUniqueKey(kind.toUpperCase(), names);
 
-      const node = generateUINode(kind, {
-        name,
-        position: {
-          x: positionAbsoluteX + 300 * 1.2,
-          y: !targetNodes.length ? positionAbsoluteY : maxY + 80,
-        },
+      const { node: newNode, edge: newEdge } = createAppendNode({
+        sourceNode: getNode(data.id)! as UINode,
+        kind,
+        allNodes: nodes,
+        allEdges: edges,
       });
-      addNodes([node]);
-      if (kind !== NodeKind.Information) {
-        addEdges([
-          {
-            id: generateUUID(),
-            source: id,
-            target: node.id,
-          },
-        ]);
+      addNodes([newNode]);
+      if (newEdge) {
+        addEdges([newEdge]);
       }
       update(() => {
         updateNode(id, {
@@ -88,7 +66,7 @@ export const DefaultNode = memo(function DefaultNode({
         });
       });
     },
-    [id, nodes, edges, addNodes, positionAbsoluteX, positionAbsoluteY],
+    [id, nodes, edges, addNodes],
   );
 
   useEffect(() => {
@@ -179,11 +157,11 @@ export const DefaultNode = memo(function DefaultNode({
           <div>
             {data.kind === NodeKind.Start && <OutputSchemaStack data={data} />}
             {data.kind === NodeKind.End && (
-              <EndNodeOutputStack data={data} nodes={nodes} />
+              <EndNodeDataOutputStack data={data} nodes={nodes} />
             )}
-            {data.kind === NodeKind.LLM && <LLMNodeStack data={data} />}
+            {data.kind === NodeKind.LLM && <LLMNodeDataStack data={data} />}
             {data.kind === NodeKind.Condition && (
-              <ConditionNodeOutputStack data={data} />
+              <ConditionNodeDataOutputStack data={data} />
             )}
             {data.description && (
               <div className="px-4 mt-2">

@@ -1,6 +1,10 @@
 "use client";
 
-import { EndNode, NodeKind, UINode } from "lib/ai/workflow/interface";
+import {
+  EndNodeData,
+  NodeKind,
+  UINode,
+} from "lib/ai/workflow/workflow.interface";
 import { useCallback, useMemo } from "react";
 
 import {
@@ -11,15 +15,15 @@ import {
   VariableIcon,
 } from "lucide-react";
 
-import { VariableSelect } from "./variable-select";
+import { VariableSelect } from "../variable-select";
 import { Edge } from "@xyflow/react";
-import { findJsonSchemaByPath } from "../../lib/ai/workflow/shared";
+import { findJsonSchemaByPath } from "../../../lib/ai/workflow/shared.workflow";
 import { Input } from "ui/input";
 import { Button } from "ui/button";
 import { cleanVariableName, generateUniqueKey } from "lib/utils";
 import { Label } from "ui/label";
 
-export function EndNodeConfig({
+export function EndNodeDataConfig({
   node: { data },
   setNode,
   nodes,
@@ -55,7 +59,7 @@ export function EndNodeConfig({
       setNode((prev) => ({
         data: {
           ...prev.data,
-          outputData: (prev.data as EndNode).outputData.map((v, i) =>
+          outputData: (prev.data as EndNodeData).outputData.map((v, i) =>
             i === index ? { ...v, ...item } : v,
           ),
         },
@@ -68,7 +72,7 @@ export function EndNodeConfig({
       return {
         data: {
           ...prev.data,
-          outputData: (prev.data as EndNode).outputData.filter(
+          outputData: (prev.data as EndNodeData).outputData.filter(
             (_, i) => i !== index,
           ),
         },
@@ -80,13 +84,13 @@ export function EndNodeConfig({
     setNode((prev) => {
       const newKey = generateUniqueKey(
         key,
-        (prev.data as EndNode).outputData.map((v) => v.key),
+        (prev.data as EndNodeData).outputData.map((v) => v.key),
       );
       return {
         data: {
           ...prev.data,
           outputData: [
-            ...(prev.data as EndNode).outputData,
+            ...(prev.data as EndNodeData).outputData,
             { key: newKey, source: undefined },
           ],
         },
@@ -178,10 +182,10 @@ export function EndNodeConfig({
   );
 }
 
-export function EndNodeOutputStack({
+export function EndNodeDataOutputStack({
   data,
   nodes,
-}: { data: EndNode; nodes: UINode[] }) {
+}: { data: EndNodeData; nodes: UINode[] }) {
   const outputVariables = useMemo(() => {
     return data.outputData.map(({ key, source }) => {
       const targetNode = nodes.find((node) => node.data.id === source?.nodeId);

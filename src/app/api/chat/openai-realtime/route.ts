@@ -6,7 +6,7 @@ import {
   filterMcpServerCustomizations,
   filterToolsByAllowedMCPServers,
   mergeSystemPrompt,
-} from "../helper";
+} from "../shared.chat";
 import {
   buildMcpServerCustomizationsSystemPrompt,
   buildProjectInstructionsSystemPrompt,

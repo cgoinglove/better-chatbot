@@ -1,31 +1,33 @@
 import { customModelProvider } from "lib/ai/models";
 import {
-  EndNode,
-  LLMNode,
+  ConditionNodeData,
+  EndNodeData,
+  LLMNodeData,
   OutputSchemaSourceKey,
-  StartNode,
-  WorkflowNode,
-} from "../interface";
+  StartNodeData,
+  WorkflowNodeData,
+} from "../workflow.interface";
 import { WorkflowRuntimeState } from "./workflow-store";
 import { generateText, Message } from "ai";
+import { checkConditionBranch } from "../condition";
 
-export type NodeExecutor<T extends WorkflowNode = any> = (input: {
+export type NodeExecutor<T extends WorkflowNodeData = any> = (input: {
   node: T;
   state: WorkflowRuntimeState;
-}) => any; // Node Output
+}) => any; // Node OutputSchema Type
 
-export const startNodeExecutor: NodeExecutor<StartNode> = ({ state }) => {
+export const startNodeExecutor: NodeExecutor<StartNodeData> = ({ state }) => {
   return state.input;
 };
 
-export const endNodeExecutor: NodeExecutor<EndNode> = ({ node, state }) => {
+export const endNodeExecutor: NodeExecutor<EndNodeData> = ({ node, state }) => {
   return node.outputData.reduce((acc, cur) => {
     acc[cur.key] = state.getOutput(cur.source!);
     return acc;
   }, {} as object);
 };
 
-export const llmNodeExecutor: NodeExecutor<LLMNode> = async ({
+export const llmNodeExecutor: NodeExecutor<LLMNodeData> = async ({
   node,
   state,
 }) => {
@@ -77,8 +79,28 @@ export const llmNodeExecutor: NodeExecutor<LLMNode> = async ({
     model,
     messages,
   });
-
+  console.dir(messages, { depth: null });
   return {
     chat_response: response.text,
+  };
+};
+
+export const conditionNodeExecutor: NodeExecutor<ConditionNodeData> = async ({
+  node,
+  state,
+}) => {
+  const okBranch = [node.branches.if, ...(node.branches.elseIf || [])].find(
+    (branch) => {
+      return checkConditionBranch(branch, state.getOutput);
+    },
+  );
+
+  if (okBranch) {
+    return {
+      branch: okBranch.id,
+    };
+  }
+  return {
+    branch: node.branches.else.id,
   };
 };
