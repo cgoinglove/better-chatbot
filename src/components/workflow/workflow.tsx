@@ -64,40 +64,8 @@ export default function Workflow({
   const save = () => {
     const processId = generateUUID();
     setProcessingIds((prev) => [...prev, processId]);
-
     safe()
-      .map(() =>
-        extractWorkflowDiff(snapshot.current, {
-          nodes,
-          edges,
-        }),
-      )
-      .ifOk((diff) => {
-        if (
-          diff.deleteEdges.length ||
-          diff.deleteNodes.length ||
-          diff.updateEdges.length ||
-          diff.updateNodes.length
-        ) {
-          return fetch(`/api/workflow/${workflowId}`, {
-            method: "POST",
-            body: JSON.stringify({
-              nodes: diff.updateNodes.map((node) =>
-                convertUINodeToDBNode(workflowId, node),
-              ),
-              edges: diff.updateEdges.map((edge) =>
-                convertUIEdgeToDBEdge(workflowId, edge),
-              ),
-              deleteNodes: diff.deleteNodes.map((node) => node.id),
-              deleteEdges: diff.deleteEdges.map((edge) => edge.id),
-            }),
-          }).then((res) => {
-            if (res.status >= 400) {
-              throw new Error(String(res.statusText || res.status || "Error"));
-            }
-          });
-        }
-      })
+      .map(() => saveWorkflow(workflowId, snapshot.current, { nodes, edges }))
       .ifOk(() => {
         snapshot.current = {
           edges,
@@ -112,19 +80,23 @@ export default function Workflow({
       );
   };
 
+  const selectedNode = useMemo(() => {
+    return nodes.findLast((node) => node.selected);
+  }, [nodes]);
+
   const onNodesChange: OnNodesChange = useCallback(
     (changes) => {
       if (isProcessing) return;
       setNodes((nds) => applyNodeChanges(changes, nds) as UINode[]);
     },
-    [setNodes, isProcessing],
+    [isProcessing],
   );
   const onEdgesChange: OnEdgesChange = useCallback(
     (changes) => {
       if (isProcessing) return;
       setEdges((eds) => applyEdgeChanges(changes, eds));
     },
-    [setEdges, isProcessing],
+    [isProcessing],
   );
   const onConnect: OnConnect = useCallback(
     (connection) => {
@@ -139,7 +111,7 @@ export default function Workflow({
         ),
       );
     },
-    [setEdges, isProcessing],
+    [isProcessing],
   );
 
   const onSelectionChange: OnSelectionChangeFunc = useCallback(
@@ -241,8 +213,7 @@ export default function Workflow({
           <WorkflowPanel
             onSave={save}
             isProcessing={isProcessing}
-            nodes={nodes}
-            edges={edges}
+            selectedNode={selectedNode}
           />
         </Panel>
         <Panel
@@ -257,4 +228,39 @@ export default function Workflow({
       </ReactFlow>
     </div>
   );
+}
+
+function saveWorkflow(
+  workflowId: string,
+  before: { nodes: UINode[]; edges: Edge[] },
+  after: { nodes: UINode[]; edges: Edge[] },
+) {
+  const diff = extractWorkflowDiff(before, after);
+
+  if (
+    diff.deleteEdges.length ||
+    diff.deleteNodes.length ||
+    diff.updateEdges.length ||
+    diff.updateNodes.length
+  ) {
+    return fetch(`/api/workflow/${workflowId}`, {
+      method: "POST",
+      body: JSON.stringify({
+        nodes: diff.updateNodes.map((node) =>
+          convertUINodeToDBNode(workflowId, node),
+        ),
+        edges: diff.updateEdges.map((edge) =>
+          convertUIEdgeToDBEdge(workflowId, edge),
+        ),
+        deleteNodes: diff.deleteNodes.map((node) => node.id),
+        deleteEdges: diff.deleteEdges.map((edge) => edge.id),
+      }),
+    }).then((res) => {
+      if (res.status >= 400) {
+        throw new Error(String(res.statusText || res.status || "Error"));
+      }
+    });
+  }
+
+  return Promise.resolve();
 }

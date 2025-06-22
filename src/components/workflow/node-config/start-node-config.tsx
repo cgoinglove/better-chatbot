@@ -1,11 +1,10 @@
 "use client";
 
 import {
-  NodeKind,
-  UINode,
+  StartNodeData,
   WorkflowNodeData,
 } from "lib/ai/workflow/workflow.interface";
-import { useCallback } from "react";
+import { memo, useCallback } from "react";
 import {
   Feild,
   EditJsonSchemaFieldPopup,
@@ -16,14 +15,15 @@ import { PencilIcon } from "lucide-react";
 import { objectFlow } from "lib/utils";
 import { Button } from "ui/button";
 import { Label } from "ui/label";
+import { useReactFlow } from "@xyflow/react";
 
-export function StartNodeDataConfig({
-  node: { data },
-  setNode,
+export const StartNodeDataConfig = memo(function ({
+  data,
 }: {
-  node: UINode<NodeKind.Start>;
-  setNode: (data: Mutate<UINode>) => void;
+  data: StartNodeData;
 }) {
+  const { updateNodeData } = useReactFlow();
+
   const checkRequired = useCallback(
     (key: string) => {
       return data.outputSchema.required?.includes(key);
@@ -31,15 +31,14 @@ export function StartNodeDataConfig({
     [data.outputSchema],
   );
 
-  const addField = useCallback((field: Feild) => {
-    setNode((prev) => ({
-      ...prev,
-      data: {
-        ...prev.data,
-        outputSchema: {
-          ...prev.data.outputSchema,
+  const addField = useCallback(
+    (field: Feild) => {
+      updateNodeData(data.id, (node) => {
+        const prev = node.data as StartNodeData;
+        const outputSchema = {
+          ...prev,
           properties: {
-            ...prev.data.outputSchema.properties,
+            ...prev.outputSchema.properties,
             [field.key]: {
               type: field.type,
               enum:
@@ -49,12 +48,36 @@ export function StartNodeDataConfig({
           },
           default: field.defaultValue,
           required: !field.required
-            ? prev.data.outputSchema.required?.filter((k) => k != field.key)
-            : [...(prev.data.outputSchema.required ?? []), field.key],
-        },
-      },
-    }));
-  }, []);
+            ? prev.outputSchema.required?.filter((k) => k != field.key)
+            : [...(prev.outputSchema.required ?? []), field.key],
+        };
+
+        return {
+          outputSchema,
+        };
+      });
+    },
+    [data.id],
+  );
+
+  const removeField = useCallback(
+    (key: string) => {
+      updateNodeData(data.id, (node) => {
+        const prev = node.data as StartNodeData;
+        const outputSchema = {
+          ...prev,
+          properties: objectFlow(prev.outputSchema.properties).filter(
+            (_, k) => k != key,
+          ),
+          required: prev.outputSchema.required?.filter((k) => k != key),
+        };
+        return {
+          outputSchema,
+        };
+      });
+    },
+    [data.outputSchema],
+  );
 
   return (
     <div className="flex flex-col gap-2 text-sm px-4 ">
@@ -101,25 +124,7 @@ export function StartNodeDataConfig({
                   </div>
                 </EditJsonSchemaFieldPopup>
                 <div
-                  onClick={() => {
-                    setNode((prev) => {
-                      return {
-                        ...prev,
-                        data: {
-                          ...prev.data,
-                          outputSchema: {
-                            ...prev.data.outputSchema,
-                            properties: objectFlow(
-                              prev.data.outputSchema.properties,
-                            ).filter((_, k) => k != key),
-                            required: prev.data.outputSchema.required?.filter(
-                              (k) => k != key,
-                            ),
-                          },
-                        },
-                      };
-                    });
-                  }}
+                  onClick={() => removeField(key)}
                   className="p-1 text-destructive rounded cursor-pointer hover:bg-destructive/10"
                 >
                   <TrashIcon className="size-3" />
@@ -139,9 +144,12 @@ export function StartNodeDataConfig({
       </div>
     </div>
   );
-}
+});
+StartNodeDataConfig.displayName = "StartNodeDataConfig";
 
-export function OutputSchemaStack({ data }: { data: WorkflowNodeData }) {
+export const OutputSchemaStack = memo(function ({
+  data,
+}: { data: WorkflowNodeData }) {
   const keys = Object.keys(data.outputSchema?.properties ?? {});
   if (!keys.length) return null;
   return (
@@ -168,4 +176,5 @@ export function OutputSchemaStack({ data }: { data: WorkflowNodeData }) {
       })}
     </div>
   );
-}
+});
+OutputSchemaStack.displayName = "OutputSchemaStack";

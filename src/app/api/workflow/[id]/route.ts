@@ -39,6 +39,24 @@ export async function POST(
   return Response.json({ success: true });
 }
 
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  await request.json();
+  const { id } = await params;
+  const session = await getSession();
+  const hasAccess = await workflowRepository.checkAccess(id, session.user.id);
+  if (!hasAccess) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+
+  const workflow = await workflowRepository.selectStructureById(id);
+  if (!workflow) {
+    return new Response("Workflow not found", { status: 404 });
+  }
+}
+
 export async function DELETE(
   _: Request,
   { params }: { params: Promise<{ id: string }> },

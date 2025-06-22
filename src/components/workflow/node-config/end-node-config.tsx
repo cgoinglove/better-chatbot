@@ -1,11 +1,7 @@
 "use client";
 
-import {
-  EndNodeData,
-  NodeKind,
-  UINode,
-} from "lib/ai/workflow/workflow.interface";
-import { useCallback, useMemo } from "react";
+import { EndNodeData, UINode } from "lib/ai/workflow/workflow.interface";
+import { memo, useCallback, useMemo } from "react";
 
 import {
   ChevronDownIcon,
@@ -16,25 +12,23 @@ import {
 } from "lucide-react";
 
 import { VariableSelect } from "../variable-select";
-import { Edge } from "@xyflow/react";
-import { findJsonSchemaByPath } from "../../../lib/ai/workflow/shared.workflow";
+import { useReactFlow } from "@xyflow/react";
+
 import { Input } from "ui/input";
 import { Button } from "ui/button";
 import { cleanVariableName, generateUniqueKey } from "lib/utils";
 import { Label } from "ui/label";
+import { findJsonSchemaByPath } from "lib/ai/workflow/shared.workflow";
 
-export function EndNodeDataConfig({
-  node: { data },
-  setNode,
-  nodes,
-  edges,
+export const EndNodeDataConfig = memo(function ({
+  data,
 }: {
-  node: UINode<NodeKind.End>;
-  nodes: UINode[];
-  edges: Edge[];
-  setNode: (data: Mutate<UINode>) => void;
+  data: EndNodeData;
 }) {
+  const { getNodes, updateNodeData } = useReactFlow();
+
   const outputVariables = useMemo(() => {
+    const nodes = getNodes() as UINode[];
     return data.outputData.map(({ key, source }) => {
       const targetNode = nodes.find((node) => node.data.id === source?.nodeId);
       const schema = targetNode
@@ -49,54 +43,51 @@ export function EndNodeDataConfig({
         isNotFound: (source && !targetNode) || (targetNode && !schema),
       };
     });
-  }, [data.outputSchema, nodes]);
+  }, [data]);
 
   const updateOutputVariable = useCallback(
     (
       index: number,
       item: { key?: string; source?: { nodeId: string; path: string[] } },
     ) => {
-      setNode((prev) => ({
-        data: {
-          ...prev.data,
-          outputData: (prev.data as EndNodeData).outputData.map((v, i) =>
+      updateNodeData(data.id, (node) => {
+        const prev = node.data as EndNodeData;
+        return {
+          outputData: prev.outputData.map((v, i) =>
             i === index ? { ...v, ...item } : v,
           ),
-        },
-      }));
+        };
+      });
     },
-    [],
+    [data.id],
   );
-  const deleteOutputVariable = useCallback((index: number) => {
-    setNode((prev) => {
-      return {
-        data: {
-          ...prev.data,
-          outputData: (prev.data as EndNodeData).outputData.filter(
-            (_, i) => i !== index,
-          ),
-        },
-      };
-    });
-  }, []);
+  const deleteOutputVariable = useCallback(
+    (index: number) => {
+      updateNodeData(data.id, (node) => {
+        const prev = node.data as EndNodeData;
+        return {
+          outputData: prev.outputData.filter((_, i) => i !== index),
+        };
+      });
+    },
+    [data.id],
+  );
 
-  const addOutputVariable = useCallback((key: string = "") => {
-    setNode((prev) => {
-      const newKey = generateUniqueKey(
-        key,
-        (prev.data as EndNodeData).outputData.map((v) => v.key),
-      );
-      return {
-        data: {
-          ...prev.data,
-          outputData: [
-            ...(prev.data as EndNodeData).outputData,
-            { key: newKey, source: undefined },
-          ],
-        },
-      };
-    });
-  }, []);
+  const addOutputVariable = useCallback(
+    (key: string = "") => {
+      updateNodeData(data.id, (node) => {
+        const prev = node.data as EndNodeData;
+        const newKey = generateUniqueKey(
+          key,
+          prev.outputData.map((v) => v.key),
+        );
+        return {
+          outputData: [...prev.outputData, { key: newKey, source: undefined }],
+        };
+      });
+    },
+    [data.id],
+  );
 
   return (
     <div className="flex flex-col gap-2 text-sm px-4 ">
@@ -129,8 +120,6 @@ export function EndNodeDataConfig({
               />
               <VariableSelect
                 currentNodeId={data.id}
-                nodes={nodes}
-                edges={edges}
                 onChange={(item) => {
                   updateOutputVariable(index, {
                     source: {
@@ -180,13 +169,15 @@ export function EndNodeDataConfig({
       </div>
     </div>
   );
-}
+});
+EndNodeDataConfig.displayName = "EndNodeDataConfig";
 
-export function EndNodeDataOutputStack({
+export const EndNodeDataOutputStack = memo(function ({
   data,
-  nodes,
-}: { data: EndNodeData; nodes: UINode[] }) {
+}: { data: EndNodeData }) {
+  const { getNodes } = useReactFlow();
   const outputVariables = useMemo(() => {
+    const nodes = getNodes() as UINode[];
     return data.outputData.map(({ key, source }) => {
       const targetNode = nodes.find((node) => node.data.id === source?.nodeId);
       const schema = targetNode
@@ -201,7 +192,7 @@ export function EndNodeDataOutputStack({
         isNotFound: (source && !targetNode) || (targetNode && !schema),
       };
     });
-  }, [data.outputSchema, nodes]);
+  }, [data.outputSchema]);
 
   if (!outputVariables.length) return null;
   return (
@@ -230,4 +221,5 @@ export function EndNodeDataOutputStack({
       })}
     </div>
   );
-}
+});
+EndNodeDataOutputStack.displayName = "EndNodeDataOutputStack";

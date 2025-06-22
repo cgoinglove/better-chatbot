@@ -1,6 +1,6 @@
 "use client";
 
-import { Edge, Handle, Position, useReactFlow } from "@xyflow/react";
+import { Handle, Position, useNodes, useReactFlow } from "@xyflow/react";
 import {
   ConditionNodeData,
   NodeKind,
@@ -29,7 +29,7 @@ import {
   NumberConditionOperator,
   StringConditionOperator,
 } from "lib/ai/workflow/condition";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { findJsonSchemaByPath } from "lib/ai/workflow/shared.workflow";
 import { Badge } from "ui/badge";
 import { cn, generateUUID, isNull } from "lib/utils";
@@ -38,103 +38,97 @@ import { useUpdate } from "@/hooks/use-update";
 import { createAppendNode } from "../create-append-node";
 
 export function ConditionNodeDataConfig({
-  node,
-  nodes,
-  edges,
-  setNode,
-  deleteEdges,
+  data,
 }: {
-  node: UINode<NodeKind.Condition>;
-  nodes: UINode[];
-  edges: Edge[];
-  setNode: (node: Mutate<UINode>) => void;
-  deleteEdges: (edgeIds: string[]) => void;
+  data: ConditionNodeData;
 }) {
-  const updateIfBranch = (branch: ConditionBranch) => {
-    setNode((prev) => {
-      const data = prev.data as ConditionNodeData;
-      return {
-        data: { ...data, branches: { ...data.branches, if: branch } },
-      };
-    });
-  };
+  const { updateNodeData, setEdges, getEdges } = useReactFlow();
 
-  const updateElseIfBranch = (index: number, branch: ConditionBranch) => {
-    setNode((prev) => {
-      const data = prev.data as ConditionNodeData;
-      return {
-        data: {
-          ...data,
+  const updateIfBranch = useCallback(
+    (branch: ConditionBranch) => {
+      updateNodeData(data.id, (node) => {
+        const prev = node.data as ConditionNodeData;
+        return {
+          branches: { ...prev.branches, if: branch },
+        };
+      });
+    },
+    [data.id],
+  );
+
+  const updateElseIfBranch = useCallback(
+    (index: number, branch: ConditionBranch) => {
+      updateNodeData(data.id, (node) => {
+        const prev = node.data as ConditionNodeData;
+        return {
           branches: {
-            ...data.branches,
-            elseIf: data.branches.elseIf?.map((item, i) =>
+            ...prev.branches,
+            elseIf: prev.branches.elseIf?.map((item, i) =>
               i == index ? branch : item,
             ) ?? [branch],
           },
-        },
-      };
-    });
-  };
+        };
+      });
+    },
+    [data.id],
+  );
 
-  const addElseIfBranch = () => {
-    setNode((prev) => {
-      const data = prev.data as ConditionNodeData;
+  const addElseIfBranch = useCallback(() => {
+    updateNodeData(data.id, (node) => {
+      const prev = node.data as ConditionNodeData;
       return {
-        data: {
-          ...data,
-          branches: {
-            ...data.branches,
-            elseIf: [
-              ...(data.branches.elseIf ?? []),
-              {
-                id: generateUUID(),
-                type: "elseIf",
-                conditions: [],
-                logicalOperator: "AND",
-              },
-            ],
-          },
+        branches: {
+          ...prev.branches,
+          elseIf: [
+            ...(prev.branches.elseIf ?? []),
+            {
+              id: generateUUID(),
+              type: "elseIf",
+              conditions: [],
+              logicalOperator: "AND",
+            },
+          ],
         },
       };
     });
-  };
+  }, [data.id]);
 
-  const removeElseIfBranch = (index: number) => {
-    const data = node.data as ConditionNodeData;
-    const connectedEdges = edges.filter(
-      (edge) => edge.sourceHandle == data.branches.elseIf![index].id,
-    );
-    deleteEdges(connectedEdges.map((edge) => edge.id));
-    setNode((prev) => {
-      const data = prev.data as ConditionNodeData;
-      return {
-        data: {
-          ...data,
+  const removeElseIfBranch = useCallback(
+    (index: number) => {
+      const edges = getEdges();
+      const connectedEdges = edges
+        .filter((edge) => edge.sourceHandle == data.branches.elseIf![index].id)
+        .map((edge) => edge.id);
+      if (connectedEdges.length) {
+        setEdges(edges.filter((edge) => !connectedEdges.includes(edge.id)));
+      }
+      updateNodeData(data.id, (node) => {
+        const prev = node.data as ConditionNodeData;
+        return {
           branches: {
-            ...data.branches,
-            elseIf: data.branches.elseIf?.filter((_, i) => i !== index),
+            ...prev.branches,
+            elseIf: prev.branches.elseIf?.filter((_, i) => i !== index),
           },
-        },
-      };
-    });
-  };
+        };
+      });
+    },
+    [data.id],
+  );
 
   return (
     <div className="flex flex-col gap-2 text-sm h-full">
       <div className="flex flex-col gap-2 px-4">
         <ConditionBranchItem
-          currentNodeId={node.data.id}
-          nodes={nodes}
+          currentNodeId={data.id}
           caseNumber={1}
-          edges={edges}
-          branch={node.data.branches.if}
+          branch={data.branches.if}
           onChange={updateIfBranch}
           type={"if"}
         />
       </div>
       <Separator className="my-2" />
       <div className="flex flex-col gap-2 px-4">
-        {!node.data.branches.elseIf?.length && (
+        {!data.branches.elseIf?.length && (
           <>
             <p className="font-bold text-xs mb-2 text-blue-500">ELSE IF</p>
             <p className="text-xs ml-12 text-muted-foreground">
@@ -144,14 +138,12 @@ export function ConditionNodeDataConfig({
           </>
         )}
         <div className="flex flex-col">
-          {node.data.branches.elseIf?.map((branch, i) => (
+          {data.branches.elseIf?.map((branch, i) => (
             <div key={i}>
               {i > 0 && <Separator className="my-2" />}
               <ConditionBranchItem
-                currentNodeId={node.data.id}
+                currentNodeId={data.id}
                 caseNumber={i + 2}
-                nodes={nodes}
-                edges={edges}
                 branch={branch}
                 onChange={(branch) => updateElseIfBranch(i, branch)}
                 onDelete={() => removeElseIfBranch(i)}
@@ -174,7 +166,7 @@ export function ConditionNodeDataConfig({
         <div className="font-bold text-xs flex mb-2">
           <p className="w-12 text-blue-500">ELSE</p>
           <span className="ml-1 text-muted-foreground">
-            CASE {(node.data.branches.elseIf?.length ?? 0) + 2}
+            CASE {(data.branches.elseIf?.length ?? 0) + 2}
           </span>
         </div>
         <p className="text-xs ml-12 text-muted-foreground ">
@@ -184,11 +176,10 @@ export function ConditionNodeDataConfig({
     </div>
   );
 }
+ConditionNodeDataConfig.displayName = "ConditionNodeDataConfig";
 
 interface ConditionBranchProps {
   currentNodeId: string;
-  nodes: UINode[];
-  edges: Edge[];
   branch: ConditionBranch;
   onChange: (branch: ConditionBranch) => void;
   caseNumber: number;
@@ -198,51 +189,61 @@ interface ConditionBranchProps {
 
 function ConditionBranchItem({
   currentNodeId,
-  nodes,
-  edges,
   branch,
   onChange,
   caseNumber,
   onDelete,
   type,
 }: ConditionBranchProps) {
-  const addCondition = (source: OutputSchemaSourceKey) => {
-    const node = nodes.find((node) => node.data.id === source.nodeId)!;
+  const { getNode } = useReactFlow<UINode>();
+  const nodes = useNodes() as UINode[];
 
-    const sourceSchema = findJsonSchemaByPath(
-      node.data.outputSchema,
-      source.path,
-    );
-    onChange({
-      ...branch,
-      conditions: [
-        ...branch.conditions,
-        {
-          source,
-          operator: getFirstConditionOperator(
-            sourceSchema?.type as "string" | "number" | "boolean",
-          ),
-          value: "",
-        },
-      ],
-    });
-  };
+  const addCondition = useCallback(
+    (source: OutputSchemaSourceKey) => {
+      const node = getNode(source.nodeId)!;
 
-  const updateCondition = (index: number, condition: ConditionRule) => {
-    onChange({
-      ...branch,
-      conditions: branch.conditions.map((item, i) =>
-        i == index ? condition : item,
-      ),
-    });
-  };
+      const sourceSchema = findJsonSchemaByPath(
+        node.data.outputSchema,
+        source.path,
+      );
+      onChange({
+        ...branch,
+        conditions: [
+          ...branch.conditions,
+          {
+            source,
+            operator: getFirstConditionOperator(
+              sourceSchema?.type as "string" | "number" | "boolean",
+            ),
+            value: "",
+          },
+        ],
+      });
+    },
+    [branch, onChange],
+  );
 
-  const removeCondition = (index: number) => {
-    onChange({
-      ...branch,
-      conditions: branch.conditions.filter((_, i) => i !== index),
-    });
-  };
+  const updateCondition = useCallback(
+    (index: number, condition: ConditionRule) => {
+      onChange({
+        ...branch,
+        conditions: branch.conditions.map((item, i) =>
+          i == index ? condition : item,
+        ),
+      });
+    },
+    [branch, onChange],
+  );
+
+  const removeCondition = useCallback(
+    (index: number) => {
+      onChange({
+        ...branch,
+        conditions: branch.conditions.filter((_, i) => i !== index),
+      });
+    },
+    [branch, onChange],
+  );
 
   return (
     <div className="flex flex-col gap-1 relative">
@@ -286,7 +287,6 @@ function ConditionBranchItem({
                   <ConditionRuleItem
                     currentNodeId={currentNodeId}
                     nodes={nodes}
-                    edges={edges}
                     item={condition}
                     onChange={(condition) => updateCondition(i, condition)}
                   />
@@ -309,8 +309,6 @@ function ConditionBranchItem({
       <div className="flex items-center">
         <VariableSelect
           currentNodeId={currentNodeId}
-          nodes={nodes}
-          edges={edges}
           onChange={(source) => {
             addCondition(source);
           }}
@@ -342,7 +340,6 @@ function ConditionBranchItem({
 interface ConditionRuleProps {
   currentNodeId: string;
   nodes: UINode[];
-  edges: Edge[];
   item: ConditionRule;
   onChange: (item: ConditionRule) => void;
 }
@@ -350,7 +347,6 @@ interface ConditionRuleProps {
 function ConditionRuleItem({
   currentNodeId,
   nodes,
-  edges,
   item,
   onChange,
 }: ConditionRuleProps) {
@@ -392,8 +388,6 @@ function ConditionRuleItem({
       <div className="flex items-center">
         <VariableSelect
           currentNodeId={currentNodeId}
-          nodes={nodes}
-          edges={edges}
           onChange={(source) => {
             onChange({
               ...item,

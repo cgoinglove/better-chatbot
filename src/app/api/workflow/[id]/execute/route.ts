@@ -1,6 +1,7 @@
 import { getSession } from "auth/server";
 import { createWorkflowExecutor } from "lib/ai/workflow/executor/workflow-executor";
 import { workflowRepository } from "lib/db/repository";
+import logger from "logger";
 
 export async function POST(
   request: Request,
@@ -50,13 +51,17 @@ export async function POST(
       request.signal.addEventListener("abort", async () => {
         isAborted = true;
         void app.exit();
+        logger.debug("Workflow execution aborted");
         controller.close();
       });
 
       // Start the workflow
-      app.run().catch((error) => {
-        console.error("Workflow execution error:", error);
-        controller.error(error);
+      app.run().then((result) => {
+        if (!result.isOk) {
+          logger.error("Workflow execution error:", result.error);
+          controller.error(result.error);
+          controller.close();
+        }
       });
     },
   });

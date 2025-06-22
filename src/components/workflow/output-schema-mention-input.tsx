@@ -184,8 +184,6 @@ export function OutputSchemaMentionInput({
           <DropdownMenuContent ref={mentionRef}>
             <VariableSelectContent
               currentNodeId={currentNodeId}
-              nodes={nodes}
-              edges={edges}
               onChange={(item) => {
                 editor
                   ?.chain()

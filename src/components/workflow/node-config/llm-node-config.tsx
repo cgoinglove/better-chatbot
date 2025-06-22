@@ -1,7 +1,5 @@
-import { Edge } from "@xyflow/react";
 import { LLMNodeData, UINode } from "lib/ai/workflow/workflow.interface";
 
-import { NodeKind } from "lib/ai/workflow/workflow.interface";
 import { SelectModel } from "../../select-model";
 import { Button } from "ui/button";
 import {
@@ -14,56 +12,63 @@ import { Select, SelectTrigger, SelectContent, SelectItem } from "ui/select";
 import { OutputSchemaMentionInput } from "../output-schema-mention-input";
 import { Label } from "ui/label";
 import { Separator } from "ui/separator";
+import { memo, useCallback, useEffect, useMemo } from "react";
+import { appStore } from "@/app/store";
+import { Edge, useEdges, useNodes, useReactFlow } from "@xyflow/react";
 
-export function LLMNodeDataConfig({
-  node,
-  nodes,
-  edges,
-  setNode,
+export const LLMNodeDataConfig = memo(function ({
+  data,
 }: {
-  node: UINode<NodeKind.LLM>;
-  nodes: UINode[];
-  edges: Edge[];
-  setNode: (node: Mutate<UINode>) => void;
+  data: LLMNodeData;
 }) {
-  const model = node.data.model;
+  const { updateNodeData } = useReactFlow();
+  const nodes = useNodes() as UINode[];
+  const edges = useEdges() as Edge[];
 
-  const updateMessage = (
-    index: number,
-    message: LLMNodeData["messages"][number],
-  ) => {
-    setNode((prev) => ({
-      data: {
-        ...prev.data,
-        messages: (prev.data as LLMNodeData).messages.map((m, i) =>
-          i === index ? message : m,
-        ),
-      },
-    }));
-  };
+  const model = useMemo(() => {
+    return data.model || appStore.getState().chatModel!;
+  }, [data.model]);
 
-  const removeMessage = (index: number) => {
-    setNode((prev) => ({
-      data: {
-        ...prev.data,
-        messages: (prev.data as LLMNodeData).messages.filter(
-          (_, i) => i !== index,
-        ),
-      },
-    }));
-  };
+  const updateMessage = useCallback(
+    (index: number, message: LLMNodeData["messages"][number]) => {
+      updateNodeData(data.id, (node) => {
+        const prev = node.data as LLMNodeData;
+        return {
+          messages: prev.messages.map((m, i) => (i === index ? message : m)),
+        };
+      });
+    },
+    [data.id],
+  );
 
-  const addMessage = () => {
-    setNode((prev) => ({
-      data: {
-        ...prev.data,
-        messages: [
-          ...(prev.data as LLMNodeData).messages,
-          { role: "assistant" },
-        ],
-      },
-    }));
-  };
+  const removeMessage = useCallback(
+    (index: number) => {
+      updateNodeData(data.id, (node) => {
+        const prev = node.data as LLMNodeData;
+        return {
+          messages: prev.messages.filter((_, i) => i !== index),
+        };
+      });
+    },
+    [data.id],
+  );
+
+  const addMessage = useCallback(() => {
+    updateNodeData(data.id, (node) => {
+      const prev = node.data as LLMNodeData;
+      return {
+        messages: [...prev.messages, { role: "assistant" }],
+      };
+    });
+  }, [data.id]);
+
+  useEffect(() => {
+    if (!data.model) {
+      updateNodeData(data.id, {
+        model: appStore.getState().chatModel!,
+      });
+    }
+  }, []);
 
   return (
     <div className="flex flex-col gap-2 text-sm h-full px-4 ">
@@ -71,9 +76,9 @@ export function LLMNodeDataConfig({
       <SelectModel
         defaultModel={model}
         onSelect={(model) => {
-          setNode((prev) => ({
-            data: { ...prev.data, model },
-          }));
+          updateNodeData(data.id, {
+            model,
+          });
         }}
       >
         <Button
@@ -92,13 +97,13 @@ export function LLMNodeDataConfig({
         LLM Response Schema
       </Label>
       <div className="flex items-center gap-2 bg-secondary rounded-md p-2">
-        {Object.keys(node.data.outputSchema.properties).map((key) => {
+        {Object.keys(data.outputSchema.properties).map((key) => {
           return (
             <div key={key} className="flex items-center text-xs">
               <VariableIcon className="size-3.5 text-blue-500" />
               <span className="font-semibold">{key}</span>
               <span className="text-muted-foreground ml-2">
-                {node.data.outputSchema.properties[key].type}
+                {data.outputSchema.properties[key].type}
               </span>
             </div>
           );
@@ -107,7 +112,7 @@ export function LLMNodeDataConfig({
       <Separator className="my-4" />
       <Label className="text-sm mt-1 text-muted-foreground">Messages</Label>
       <div className="flex flex-col gap-2">
-        {node.data.messages.map((message, index) => {
+        {data.messages.map((message, index) => {
           return (
             <div key={index} className="w-full bg-secondary rounded-md p-2">
               <div className="flex items-center gap-2">
@@ -139,7 +144,7 @@ export function LLMNodeDataConfig({
                 </Button>
               </div>
               <OutputSchemaMentionInput
-                currentNodeId={node.data.id}
+                currentNodeId={data.id}
                 nodes={nodes}
                 edges={edges}
                 content={message.content}
@@ -165,9 +170,12 @@ export function LLMNodeDataConfig({
       </div>
     </div>
   );
-}
+});
+LLMNodeDataConfig.displayName = "LLMNodeDataConfig";
 
-export function LLMNodeDataStack({ data }: { data: LLMNodeData }) {
+export const LLMNodeDataStack = memo(function ({
+  data,
+}: { data: LLMNodeData }) {
   if (!data.model) return null;
   return (
     <div className="flex flex-col gap-1 px-4 mt-4">
@@ -176,4 +184,5 @@ export function LLMNodeDataStack({ data }: { data: LLMNodeData }) {
       </div>
     </div>
   );
-}
+});
+LLMNodeDataStack.displayName = "LLMNodeDataStack";

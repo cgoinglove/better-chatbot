@@ -10,7 +10,7 @@ import { exclude, generateUUID } from "lib/utils";
 import { DBEdge, DBNode } from "app-types/workflow";
 import { Edge } from "@xyflow/react";
 
-export const defaultJsonSchema: ObjectJsonSchema7 = {
+export const defaultObjectJsonSchema: ObjectJsonSchema7 = {
   type: "object",
   properties: {},
 };
@@ -33,7 +33,7 @@ export function generateUINode(
       kind: kind as any,
       name: option?.name ?? kind.toUpperCase(),
       id,
-      outputSchema: { ...defaultJsonSchema },
+      outputSchema: { ...defaultObjectJsonSchema },
       runtime: {
         isNew: true,
       },

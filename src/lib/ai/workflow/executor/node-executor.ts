@@ -79,7 +79,6 @@ export const llmNodeExecutor: NodeExecutor<LLMNodeData> = async ({
     model,
     messages,
   });
-  console.dir(messages, { depth: null });
   return {
     chat_response: response.text,
   };

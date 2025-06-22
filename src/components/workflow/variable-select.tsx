@@ -1,6 +1,6 @@
 "use client";
 
-import { Edge } from "@xyflow/react";
+import { useReactFlow } from "@xyflow/react";
 import { UINode } from "lib/ai/workflow/workflow.interface";
 import { ChevronRightIcon, SearchIcon, VariableIcon } from "lucide-react";
 import { ReactNode, useMemo, useState } from "react";
@@ -25,8 +25,6 @@ import { cn } from "lib/utils";
 
 interface VariableSelectProps {
   currentNodeId: string;
-  nodes: UINode[];
-  edges: Edge[];
   allowedTypes?: string[];
   children: React.ReactNode;
   onChange: (item: {
@@ -39,8 +37,6 @@ interface VariableSelectProps {
 
 export function VariableSelect({
   currentNodeId,
-  nodes,
-  edges,
   onChange,
   children,
   allowedTypes,
@@ -52,8 +48,6 @@ export function VariableSelect({
       <DropdownMenuContent className="w-72">
         <VariableSelectContent
           currentNodeId={currentNodeId}
-          nodes={nodes}
-          edges={edges}
           allowedTypes={allowedTypes}
           onChange={(item) => {
             onChange(item);
@@ -67,12 +61,13 @@ export function VariableSelect({
 
 export function VariableSelectContent({
   currentNodeId,
-  nodes,
-  edges,
   onChange,
   allowedTypes,
 }: Omit<VariableSelectProps, "children">) {
   const [query, setQuery] = useState("");
+  const { getNodes, getEdges } = useReactFlow<UINode>();
+  const nodes = getNodes();
+  const edges = getEdges();
 
   const accessibleSchemas = useMemo(() => {
     const accessibleNodes = findAccessibleNodeIds({

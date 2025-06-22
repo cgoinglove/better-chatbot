@@ -15,20 +15,21 @@ import { createAppendNode } from "./create-append-node";
 
 interface NextNodeInfoProps {
   node: UINode;
-  nodes: UINode[];
-  edges: Edge[];
   onSelectNode(nodeId: string): void;
-  onDisconnected(edge: Edge): void;
 }
 
-export function NextNodeInfo({
-  node,
-  nodes,
-  edges,
-  onDisconnected,
-  onSelectNode,
-}: NextNodeInfoProps) {
-  const { addNodes, addEdges, updateNode } = useReactFlow();
+export function NextNodeInfo({ node, onSelectNode }: NextNodeInfoProps) {
+  const { addNodes, addEdges, updateNode, getEdges, getNodes, setEdges } =
+    useReactFlow();
+  const nodes = getNodes() as UINode[];
+  const edges = getEdges();
+  const onDisconnected = useCallback(
+    (edge: Edge) => {
+      setEdges(edges.filter((e) => e.id !== edge.id));
+    },
+    [edges],
+  );
+
   const nextNodes = useMemo(() => {
     const connectedEdges = edges.filter((edge) => edge.source === node.id);
 

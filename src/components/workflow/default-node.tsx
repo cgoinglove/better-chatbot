@@ -157,7 +157,7 @@ export const DefaultNode = memo(function DefaultNode({
           <div>
             {data.kind === NodeKind.Start && <OutputSchemaStack data={data} />}
             {data.kind === NodeKind.End && (
-              <EndNodeDataOutputStack data={data} nodes={nodes} />
+              <EndNodeDataOutputStack data={data} />
             )}
             {data.kind === NodeKind.LLM && <LLMNodeDataStack data={data} />}
             {data.kind === NodeKind.Condition && (
