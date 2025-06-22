@@ -19,7 +19,7 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const { nodes, edges } = await request.json();
+  const { nodes, edges, deleteNodes, deleteEdges } = await request.json();
   const { id } = await params;
   const session = await getSession();
 
@@ -32,6 +32,8 @@ export async function POST(
     workflowId: id,
     nodes,
     edges,
+    deleteNodes,
+    deleteEdges,
   });
 
   return Response.json({ success: true });

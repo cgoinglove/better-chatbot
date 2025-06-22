@@ -6,17 +6,22 @@ export function VariableMentionItem({
   path,
   notFound,
   onRemove,
+  className,
+  type,
 }: {
   nodeName: string;
   path: string[];
   notFound?: boolean;
-  onRemove: () => void;
+  onRemove?: () => void;
+  className?: string;
+  type?: string;
 }) {
   return (
     <div
       className={cn(
         notFound ? "hover:border-destructive" : "hover:border-blue-500",
         "border max-w-40 gap-1 flex items-center text-xs px-2 rounded-sm bg-background",
+        className,
       )}
     >
       {notFound ? (
@@ -24,7 +29,9 @@ export function VariableMentionItem({
       ) : (
         <VariableIcon className="text-blue-500 size-2.5" />
       )}
-
+      {type ? (
+        <span className="text-muted-foreground text-xs">{type}</span>
+      ) : null}
       <span>{nodeName}/</span>
 
       <span
@@ -35,10 +42,12 @@ export function VariableMentionItem({
       >
         {path.join(".")}
       </span>
-      <XIcon
-        className="text-muted-foreground size-2.5 cursor-pointer"
-        onClick={onRemove}
-      />
+      {onRemove ? (
+        <XIcon
+          className="text-muted-foreground size-2.5 cursor-pointer"
+          onClick={onRemove}
+        />
+      ) : null}
     </div>
   );
 }

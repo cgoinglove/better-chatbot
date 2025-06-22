@@ -32,6 +32,7 @@ import {
 } from "ui/dropdown-menu";
 import { NodeContextMenuContent } from "./node-context-menu-content";
 import { NextNodeInfo } from "./next-node-info";
+import { ConditionNodeConfig } from "./condition-node-config";
 
 export const WorkflowPanel = memo(function WorkflowPanel({
   nodes,
@@ -50,11 +51,9 @@ export const WorkflowPanel = memo(function WorkflowPanel({
     return nodes.findLast((node) => node.selected);
   }, [nodes]);
 
-  const unLink = useCallback((source: string, target: string) => {
+  const unLink = useCallback((edge: Edge) => {
     setEdges((edges) => {
-      const edge = edges.find((e) => e.source == source && e.target == target);
-      if (!edge) return edges;
-      return edges.filter((e) => e != edge);
+      return edges.filter((e) => e.id !== edge.id);
     });
   }, []);
 
@@ -144,7 +143,7 @@ export const WorkflowPanel = memo(function WorkflowPanel({
           </div>
 
           <Separator className="my-6" />
-          <div className="px-4 flex-1">
+          <div className="flex-1">
             {selectedNode.data.runtime?.isRunTab ? (
               <NodeRun />
             ) : selectedNode.data.kind === NodeKind.Start ? (
@@ -166,8 +165,21 @@ export const WorkflowPanel = memo(function WorkflowPanel({
                 edges={edges}
                 setNode={(partial) => updateNode(selectedNode.data.id, partial)}
               />
+            ) : selectedNode.data.kind === NodeKind.Condition ? (
+              <ConditionNodeConfig
+                deleteEdges={(targets) => {
+                  targets.length &&
+                    setEdges((edges) => {
+                      return edges.filter((e) => !targets.includes(e.id));
+                    });
+                }}
+                node={selectedNode as UINode<NodeKind.Condition>}
+                nodes={nodes}
+                edges={edges}
+                setNode={(partial) => updateNode(selectedNode.data.id, partial)}
+              />
             ) : selectedNode.data.kind === NodeKind.Information ? (
-              <div className="h-full flex flex-col gap-2">
+              <div className="h-full flex flex-col gap-2 px-4">
                 <Label className="text-muted-foreground text-xs">
                   Description
                 </Label>
@@ -186,20 +198,23 @@ export const WorkflowPanel = memo(function WorkflowPanel({
               </div>
             ) : null}
           </div>
-          <Separator className="my-6" />
-          {selectedNode.data.kind !== NodeKind.End && (
-            <div className="px-4 ">
-              <NextNodeInfo
-                edges={edges}
-                nodes={nodes}
-                node={selectedNode}
-                onSelectNode={(id) => {
-                  updateNode(selectedNode.id, { selected: false });
-                  nextTick().then(() => updateNode(id, { selected: true }));
-                }}
-                onDisconnected={(id) => unLink(selectedNode.data.id, id)}
-              />
-            </div>
+
+          {![NodeKind.End].includes(selectedNode.data.kind) && (
+            <>
+              <Separator className="my-6" />
+              <div className="px-4 ">
+                <NextNodeInfo
+                  edges={edges}
+                  nodes={nodes}
+                  node={selectedNode}
+                  onSelectNode={(id) => {
+                    updateNode(selectedNode.id, { selected: false });
+                    nextTick().then(() => updateNode(id, { selected: true }));
+                  }}
+                  onDisconnected={unLink}
+                />
+              </div>
+            </>
           )}
         </div>
       )}

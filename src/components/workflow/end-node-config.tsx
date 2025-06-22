@@ -95,7 +95,7 @@ export function EndNodeConfig({
   }, []);
 
   return (
-    <div className="flex flex-col gap-2 text-sm ">
+    <div className="flex flex-col gap-2 text-sm px-4 ">
       <div className="flex items-center justify-between">
         <Label className="text-sm text-muted-foreground">
           Output Variables
@@ -127,10 +127,6 @@ export function EndNodeConfig({
                 currentNodeId={data.id}
                 nodes={nodes}
                 edges={edges}
-                item={{
-                  nodeId: item.nodeId ?? "",
-                  path: item.path,
-                }}
                 onChange={(item) => {
                   updateOutputVariable(index, {
                     source: {

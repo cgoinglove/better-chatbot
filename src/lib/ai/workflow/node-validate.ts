@@ -1,6 +1,7 @@
 import { Edge } from "@xyflow/react";
 import { JSONSchema7 } from "json-schema";
 import {
+  ConditionNode,
   EndNode,
   LLMNode,
   NodeKind,
@@ -161,4 +162,13 @@ export const llmNodeValidate: NodeValidate<LLMNode> = ({ node }) => {
   });
   if (node.messages.length === 0)
     throw new Error("LLM node must have a message");
+};
+
+export const conditionNodeValidate: NodeValidate<ConditionNode> = ({
+  node,
+}) => {
+  [node.branches.if, ...(node.branches.elseIf ?? [])].forEach((branch) => {
+    if (!branch.conditions?.length)
+      throw new Error("Condition node must have a condition");
+  });
 };

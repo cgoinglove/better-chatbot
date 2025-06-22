@@ -1,5 +1,5 @@
 {
-  "id": "56fcf03a-79d3-4d16-aebf-cadf96d9fd66",
+  "id": "f851339d-0e98-4654-b431-965696a48733",
   "prevId": "68700e3d-4425-4db3-9616-34aa9acbab60",
   "version": "7",
   "dialect": "postgresql",
@@ -796,13 +796,7 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "workflow_edge_workflow_id_source_target_unique": {
-          "name": "workflow_edge_workflow_id_source_target_unique",
-          "nullsNotDistinct": false,
-          "columns": ["workflow_id", "source", "target"]
-        }
-      },
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false

@@ -1,6 +1,7 @@
 import { Node } from "@xyflow/react";
 import { ChatModel } from "app-types/chat";
 import { ObjectJsonSchema7, TipTapMentionJsonContent } from "app-types/util";
+import { ConditionBranches } from "./condition";
 
 export enum NodeKind {
   Start = "start",
@@ -56,7 +57,18 @@ export type LLMNode = BaseWorkflowNode<{
   }[];
 };
 
-export type WorkflowNode = StartNode | EndNode | LLMNode | InformationNode;
+export type ConditionNode = BaseWorkflowNode<{
+  kind: NodeKind.Condition;
+}> & {
+  branches: ConditionBranches; // if-elseIf-else structure
+};
+
+export type WorkflowNode =
+  | StartNode
+  | EndNode
+  | LLMNode
+  | InformationNode
+  | ConditionNode;
 
 export type NodeRuntimeField = {
   status?: "running" | "success" | "fail" | "idle";

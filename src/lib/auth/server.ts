@@ -20,7 +20,7 @@ import { and, eq, isNotNull, isNull } from "drizzle-orm";
 import { compare } from "bcrypt-ts";
 import { toAny } from "lib/utils";
 import logger from "logger";
-import { redirect } from "next/navigation";
+import { UnauthorizedError } from "lib/errors";
 
 export const auth = betterAuth({
   plugins: [nextCookies()],
@@ -95,9 +95,9 @@ export const getSession = async () => {
       logger.error(e);
       return null;
     });
-
   if (!session) {
-    return redirect("/sign-in");
+    logger.error("No session found");
+    throw new UnauthorizedError();
   }
   return session;
 };

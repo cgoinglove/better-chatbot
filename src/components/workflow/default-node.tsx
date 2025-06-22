@@ -5,7 +5,7 @@ import { NodeKind, UINode } from "lib/ai/workflow/interface";
 import { cn, generateUniqueKey, generateUUID } from "lib/utils";
 import { PlusIcon } from "lucide-react";
 
-import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import { NodeSelect } from "./node-select";
 import { NodeIcon } from "./node-icon";
 
@@ -21,6 +21,7 @@ import { EndNodeOutputStack } from "./end-node-config";
 import { LLMNodeStack } from "./llm-node-config";
 import { NodeContextMenuContent } from "./node-context-menu-content";
 import { generateUINode } from "./shared";
+import { ConditionNodeOutputStack } from "./condition-node-config";
 
 type Props = NodeProps<UINode>;
 
@@ -46,12 +47,6 @@ export const DefaultNode = memo(function DefaultNode({
   const update = useUpdate();
   const edges = getEdges();
   const nodes = getNodes() as UINode[];
-
-  const { rightCount } = useMemo(() => {
-    return {
-      rightCount: edges.filter((edge) => edge.source === id).length,
-    };
-  }, [edges, id, nodes]);
 
   const appendNode = useCallback(
     (kind: NodeKind) => {
@@ -119,6 +114,7 @@ export const DefaultNode = memo(function DefaultNode({
             selected && "border-blue-500 bg-secondary!",
             data.kind === NodeKind.Information &&
               "bg-primary-foreground text-primary rounded-none border-card",
+            data.kind === NodeKind.Condition && "w-52",
           )}
         >
           <div className="flex items-center gap-2 relative px-4">
@@ -135,24 +131,30 @@ export const DefaultNode = memo(function DefaultNode({
             )}
             <NodeIcon type={data.kind} />
             <div className="font-bold truncate">{data.name}</div>
-            {![NodeKind.Information, NodeKind.End].includes(data.kind) && (
+            {![NodeKind.Information, NodeKind.End, NodeKind.Condition].includes(
+              data.kind,
+            ) && (
               <Handle
                 type="source"
                 onConnect={() => update()}
                 position={Position.Right}
-                className={cn(
-                  !selected && !rightCount && "opacity-0",
-                  "-right-[5px]! z-10 group-hover:opacity-100 border-none! bg-blue-500! h-4! rounded-l-none! rounded-r-xs! ",
-                  "group-hover:w-4! group-hover:rounded-full! group-hover:h-4! group-hover:-right-0!",
-                  selected && "w-4! rounded-full! -right-0!",
-                )}
+                className="z-10 border-none! -right-0! bg-transparent! w-4! h-4!"
                 id="right"
                 isConnectable={isConnectable}
                 onMouseUp={() => {
                   setOpenNodeSelect(true);
                 }}
               >
-                <div className="pointer-events-none">
+                <div className={cn("pointer-events-none relative")}>
+                  <div
+                    className={cn(
+                      "flex w-full h-full z-20 pl-2.5",
+                      "group-hover:hidden",
+                      selected && "hidden",
+                    )}
+                  >
+                    <div className="h-4 w-1.5 bg-blue-500 rounded-r-xs"></div>
+                  </div>
                   <NodeSelect
                     onChange={appendNode}
                     open={openNodeSelect}
@@ -160,12 +162,15 @@ export const DefaultNode = memo(function DefaultNode({
                       setOpenNodeSelect(open);
                     }}
                   >
-                    <PlusIcon
+                    <div
                       className={cn(
-                        "size-4 text-white hidden group-hover:block",
-                        selected && "block",
+                        "items-center justify-center bg-blue-500 rounded-full w-5 h-5 hidden translate-x -translate-y-0.5",
+                        "group-hover:flex",
+                        selected && "flex",
                       )}
-                    />
+                    >
+                      <PlusIcon className={"size-4 text-white stroke-4"} />
+                    </div>
                   </NodeSelect>
                 </div>
               </Handle>
@@ -177,6 +182,9 @@ export const DefaultNode = memo(function DefaultNode({
               <EndNodeOutputStack data={data} nodes={nodes} />
             )}
             {data.kind === NodeKind.LLM && <LLMNodeStack data={data} />}
+            {data.kind === NodeKind.Condition && (
+              <ConditionNodeOutputStack data={data} />
+            )}
             {data.description && (
               <div className="px-4 mt-2">
                 <div className="text-xs text-muted-foreground">

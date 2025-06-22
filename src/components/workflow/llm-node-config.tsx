@@ -61,7 +61,7 @@ export function LLMNodeConfig({
   };
 
   return (
-    <div className="flex flex-col gap-2 text-sm h-full ">
+    <div className="flex flex-col gap-2 text-sm h-full px-4 ">
       <Label className="text-sm text-muted-foreground">Model</Label>
       <SelectModel
         defaultModel={model}

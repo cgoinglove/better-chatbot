@@ -52,6 +52,7 @@ export default function Workflow({
   const save = () => {
     const processId = generateUUID();
     setProcessingIds((prev) => [...prev, processId]);
+
     safe()
       .map(() =>
         extractWorkflowDiff(snapshot.current, {
@@ -69,11 +70,13 @@ export default function Workflow({
           return fetch(`/api/workflow/${workflowId}`, {
             method: "POST",
             body: JSON.stringify({
-              nodes,
-              edges,
+              nodes: diff.updateNodes,
+              edges: diff.updateEdges,
+              deleteNodes: diff.deleteNodes,
+              deleteEdges: diff.deleteEdges,
             }),
           }).then((res) => {
-            if (res.status > 300) {
+            if (res.status >= 400) {
               throw new Error(String(res.statusText || res.status || "Error"));
             }
           });
@@ -153,6 +156,9 @@ export default function Workflow({
       const isConnected =
         activeNodeIds.includes(edge.source) ||
         activeNodeIds.includes(edge.target);
+      const isConditionEdge = Boolean(
+        edge.sourceHandle && edge.sourceHandle != "right",
+      );
       return {
         ...edge,
         style: {
@@ -161,12 +167,18 @@ export default function Workflow({
           strokeWidth: 2,
           transition: "stroke 0.3s",
         },
+        animated: isConditionEdge,
       };
     });
   }, [edges, activeNodeIds]);
 
   useEffect(() => {
-    debounce(save, 10000); // auto save 10s
+    const debounceDelay =
+      snapshot.current.nodes.length !== nodes.length ||
+      snapshot.current.edges.length !== edges.length
+        ? 100
+        : 10000;
+    debounce(save, debounceDelay);
   }, [nodes, edges]);
 
   useEffect(() => {
@@ -198,7 +210,7 @@ export default function Workflow({
         onNodeMouseLeave={onNodeMouseLeave}
         fitViewOptions={{
           duration: 500,
-          padding: 8,
+          padding: 1,
         }}
       >
         <Background gap={12} size={0.6} />

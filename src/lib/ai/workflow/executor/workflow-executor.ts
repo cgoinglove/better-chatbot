@@ -1,7 +1,7 @@
 import { Edge } from "@xyflow/react";
 import { NodeKind, WorkflowNode } from "../interface";
-import { createWorkflowStore } from "./workflow-store";
-import { createStateGraph } from "ts-edge";
+import { createWorkflowStore, WorkflowRuntimeState } from "./workflow-store";
+import { createStateGraph, StateGraphRegistry } from "ts-edge";
 import {
   endNodeExecutor,
   llmNodeExecutor,
@@ -31,7 +31,10 @@ export const createWorkflowExecutor = (workflow: {
 }) => {
   const store = createWorkflowStore(workflow.id);
 
-  const graph = createStateGraph(store);
+  const graph = createStateGraph(store) as StateGraphRegistry<
+    WorkflowRuntimeState,
+    string
+  >;
 
   workflow.nodes.forEach((node) => {
     graph.addNode({
@@ -58,8 +61,14 @@ export const createWorkflowExecutor = (workflow: {
       },
     });
 
-    const targetEdges = workflow.edges.filter((edge) => edge.target == node.id);
+    const targetEdges = workflow.edges
+      .filter((edge) => edge.source == node.id)
+      .map((v) => v.target);
 
     if (targetEdges.length) toAny(graph.edge)(node.id, targetEdges);
   });
+
+  return graph.compile(
+    workflow.nodes.find((node) => node.kind == NodeKind.Start)!.id,
+  );
 };

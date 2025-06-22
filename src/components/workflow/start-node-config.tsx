@@ -53,7 +53,7 @@ export function StartNodeConfig({
   }, []);
 
   return (
-    <div className="flex flex-col gap-2 text-sm">
+    <div className="flex flex-col gap-2 text-sm px-4 ">
       <div className="flex items-center justify-between">
         <Label className="text-sm text-muted-foreground">Input Fields</Label>
         <EditJsonSchemaFieldPopup onChange={addField}>

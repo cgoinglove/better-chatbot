@@ -47,6 +47,21 @@ export function generateUINode(
         role: "system",
       },
     ];
+  } else if (node.data.kind === NodeKind.Condition) {
+    node.data.branches = {
+      if: {
+        id: "if",
+        logicalOperator: "AND",
+        type: "if",
+        conditions: [],
+      },
+      else: {
+        id: "else",
+        logicalOperator: "AND",
+        type: "else",
+        conditions: [],
+      },
+    };
   }
 
   return node;

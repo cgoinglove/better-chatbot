@@ -1,25 +1,12 @@
 import { Edge } from "@xyflow/react";
-import { NodeKind, UINode } from "./interface";
+import { UINode } from "./interface";
 import equal from "fast-deep-equal";
+import { exclude } from "lib/utils";
 
 function normalizeNode(node: UINode) {
-  let nodeDataByKind: any[] = [];
-
-  switch (node.data.kind) {
-    case NodeKind.LLM: {
-      nodeDataByKind = [node.data.model, node.data.messages];
-      break;
-    }
-    case NodeKind.End: {
-      nodeDataByKind = [node.data.outputData];
-      break;
-    }
-  }
-
   return {
     id: node.id,
-    data: nodeDataByKind,
-    outputSchema: { ...node.data.outputSchema },
+    data: exclude(node.data, ["id", "runtime", "description", "name"]),
     name: node.data.name || "",
     description: node.data.description || "",
     position: { ...node.position },
@@ -30,6 +17,8 @@ function normalizeEdge(edge: Edge) {
     id: edge.id,
     source: edge.source,
     target: edge.target,
+    targetHandle: edge.targetHandle ?? "",
+    sourceHandle: edge.sourceHandle ?? "",
   };
 }
 
@@ -54,7 +43,6 @@ export function extractWorkflowDiff(
     } else if (!equal(normalizeNode(node), normalizeNode(newNode))) {
       updateNodes.push(newNode);
     }
-
     newNodes.delete(node.id);
   });
 

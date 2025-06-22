@@ -13,7 +13,6 @@ import { NodeIcon } from "./node-icon";
 const unSupportedKinds: NodeKind[] = [
   NodeKind.Code,
   NodeKind.Http,
-  NodeKind.Condition,
   NodeKind.Tool,
 ];
 

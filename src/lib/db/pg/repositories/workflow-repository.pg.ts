@@ -86,8 +86,34 @@ export const pgWorkflowRepository: WorkflowRepository = {
 
     return row as WorkflowDB;
   },
-  async saveStructure({ workflowId, nodes, edges }) {
+  async saveStructure({ workflowId, nodes, edges, deleteNodes, deleteEdges }) {
     await pgDb.transaction(async (tx) => {
+      const deletePromises: Promise<any>[] = [];
+      if (deleteNodes?.length) {
+        const deleteNodePromises = tx.delete(WorkflowNodeSchema).where(
+          and(
+            eq(WorkflowNodeSchema.workflowId, workflowId),
+            inArray(
+              WorkflowNodeSchema.id,
+              deleteNodes.map((node) => node.id),
+            ),
+          ),
+        );
+        deletePromises.push(deleteNodePromises);
+      }
+      if (deleteEdges?.length) {
+        const deleteEdgePromises = tx.delete(WorkflowEdgeSchema).where(
+          and(
+            eq(WorkflowEdgeSchema.workflowId, workflowId),
+            inArray(
+              WorkflowEdgeSchema.id,
+              deleteEdges.map((edge) => edge.id),
+            ),
+          ),
+        );
+        deletePromises.push(deleteEdgePromises);
+      }
+      await Promise.all(deletePromises);
       if (nodes?.length) {
         await tx
           .insert(WorkflowNodeSchema)
@@ -116,36 +142,16 @@ export const pgWorkflowRepository: WorkflowRepository = {
               id: edge.id,
               source: edge.source,
               target: edge.target,
+              uiConfig: {
+                sourceHandle: edge.sourceHandle,
+                targetHandle: edge.targetHandle,
+              },
             }) as WorkflowEdgeDB,
         );
         await tx
           .insert(WorkflowEdgeSchema)
           .values(dbEdges)
           .onConflictDoNothing();
-      }
-    });
-  },
-  async deleteStructure({ workflowId, nodeIds, edgeIds }) {
-    await pgDb.transaction(async (tx) => {
-      if (nodeIds?.length) {
-        await tx
-          .delete(WorkflowNodeSchema)
-          .where(
-            and(
-              eq(WorkflowNodeSchema.workflowId, workflowId),
-              inArray(WorkflowNodeSchema.id, nodeIds),
-            ),
-          );
-      }
-      if (edgeIds?.length) {
-        await tx
-          .delete(WorkflowEdgeSchema)
-          .where(
-            and(
-              eq(WorkflowEdgeSchema.workflowId, workflowId),
-              inArray(WorkflowEdgeSchema.id, edgeIds),
-            ),
-          );
       }
     });
   },
@@ -172,6 +178,8 @@ export const pgWorkflowRepository: WorkflowRepository = {
           id: edge.id,
           source: edge.source,
           target: edge.target,
+          targetHandle: edge.uiConfig?.targetHandle ?? "",
+          sourceHandle: edge.uiConfig?.sourceHandle ?? "",
         };
         return uiEdge;
       }),

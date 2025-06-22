@@ -46,6 +46,8 @@ export type WorkflowEdgeDB = {
   source: string;
   target: string;
   uiConfig: {
+    sourceHandle?: string;
+    targetHandle?: string;
     [key: string]: any;
   };
   createdAt: Date;
@@ -68,15 +70,12 @@ export interface WorkflowRepository {
   ): Promise<WorkflowDB>;
   saveStructure(data: {
     workflowId: string;
-
     nodes?: UINode[];
     edges?: Edge[];
+    deleteNodes?: UINode[];
+    deleteEdges?: Edge[];
   }): Promise<void>;
-  deleteStructure(data: {
-    workflowId: string;
-    nodeIds?: string[];
-    edgeIds?: string[];
-  }): Promise<void>;
+
   selectStructureById(id: string): Promise<
     | null
     | (WorkflowDB & {

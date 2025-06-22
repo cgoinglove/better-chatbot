@@ -21,15 +21,13 @@ import { Input } from "ui/input";
 
 import { JSONSchema7 } from "json-schema";
 import { findAccessibleNodeIds } from "lib/ai/workflow/shared";
+import { cn } from "lib/utils";
 
 interface VariableSelectProps {
   currentNodeId: string;
   nodes: UINode[];
   edges: Edge[];
-  item?: {
-    nodeId: string;
-    path: string[];
-  };
+  allowedTypes?: string[];
   children: React.ReactNode;
   onChange: (item: {
     nodeId: string;
@@ -43,9 +41,9 @@ export function VariableSelect({
   currentNodeId,
   nodes,
   edges,
-  item,
   onChange,
   children,
+  allowedTypes,
 }: VariableSelectProps) {
   const [open, setOpen] = useState(false);
   return (
@@ -56,7 +54,7 @@ export function VariableSelect({
           currentNodeId={currentNodeId}
           nodes={nodes}
           edges={edges}
-          item={item}
+          allowedTypes={allowedTypes}
           onChange={(item) => {
             onChange(item);
             setOpen(false);
@@ -72,6 +70,7 @@ export function VariableSelectContent({
   nodes,
   edges,
   onChange,
+  allowedTypes,
 }: Omit<VariableSelectProps, "children">) {
   const [query, setQuery] = useState("");
 
@@ -107,6 +106,7 @@ export function VariableSelectContent({
                 key={key}
                 name={key}
                 schema={schema}
+                allowedTypes={allowedTypes}
                 path={[]}
                 onChange={(path) => {
                   onChange({
@@ -173,17 +173,29 @@ function SchemaItem({
   schema,
   path,
   onChange,
+  allowedTypes,
 }: {
   name: string;
   schema: JSONSchema7;
   path: string[];
+
+  allowedTypes?: string[];
   onChange: (path: string[]) => void;
 }) {
+  const disabled = useMemo(() => {
+    return (
+      allowedTypes?.length && !allowedTypes.includes(schema.type as string)
+    );
+  }, [allowedTypes, schema.type]);
+
   if (schema.type === "object") {
     return (
       <DropdownMenuSub>
         <DropdownMenuSubTrigger
-          onClick={() => onChange([...path, name])}
+          onClick={() => {
+            if (disabled) return;
+            onChange([...path, name]);
+          }}
           icon={
             <>
               <span className="text-xs text-muted-foreground ml-auto">
@@ -195,7 +207,14 @@ function SchemaItem({
           className="text-xs text-muted-foreground flex items-center gap-1"
         >
           <VariableIcon className="size-4 text-blue-500" />
-          <span className="text-foreground ml-1">{name}</span>
+          <span
+            className={cn(
+              "text-foreground ml-1",
+              disabled && "text-muted-foreground",
+            )}
+          >
+            {name}
+          </span>
         </DropdownMenuSubTrigger>
         <DropdownMenuPortal>
           <DropdownMenuSubContent className="md:max-h-96 overflow-y-auto">
@@ -204,6 +223,7 @@ function SchemaItem({
                 <SchemaItem
                   key={key}
                   name={key}
+                  allowedTypes={allowedTypes}
                   schema={schema as JSONSchema7}
                   path={[...path, name]}
                   onChange={onChange}
@@ -217,7 +237,13 @@ function SchemaItem({
   }
 
   return (
-    <DropdownMenuItem onClick={() => onChange([...path, name])}>
+    <DropdownMenuItem
+      disabled={!!disabled}
+      onClick={() => {
+        if (disabled) return;
+        onChange([...path, name]);
+      }}
+    >
       <VariableIcon className="size-4 text-blue-500" />
       <span>{name}</span>
       <span className="text-xs text-muted-foreground ml-auto">

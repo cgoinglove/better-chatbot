@@ -5,8 +5,7 @@ CREATE TABLE IF NOT EXISTS "workflow_edge" (
 	"source" uuid NOT NULL,
 	"target" uuid NOT NULL,
 	"ui_config" json DEFAULT '{}'::json,
-	"created_at" timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
-	CONSTRAINT "workflow_edge_workflow_id_source_target_unique" UNIQUE("workflow_id","source","target")
+	"created_at" timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "workflow_node" (

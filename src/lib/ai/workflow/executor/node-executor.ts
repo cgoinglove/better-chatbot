@@ -25,7 +25,10 @@ export const endNodeExecutor: NodeExecutor<EndNode> = ({ node, state }) => {
   }, {} as object);
 };
 
-export const llmNodeExecutor: NodeExecutor<LLMNode> = ({ node, state }) => {
+export const llmNodeExecutor: NodeExecutor<LLMNode> = async ({
+  node,
+  state,
+}) => {
   const model = customModelProvider.getModel(node.model);
   const messages: Omit<Message, "id">[] = node.messages.map((message) => {
     const text =
@@ -69,8 +72,13 @@ export const llmNodeExecutor: NodeExecutor<LLMNode> = ({ node, state }) => {
       ],
     };
   });
-  return generateText({
+
+  const response = await generateText({
     model,
     messages,
-  }).then((res) => res.text);
+  });
+
+  return {
+    chat_response: response.text,
+  };
 };
