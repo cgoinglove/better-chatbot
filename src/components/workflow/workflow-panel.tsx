@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator";
 
 import { NodeKind, UINode } from "lib/ai/workflow/workflow.interface";
 import { NodeIcon } from "./node-icon";
-import { fetcher, nextTick } from "lib/utils";
+import { fetcher, nextTick, wait } from "lib/utils";
 import {
   Loader,
   LockIcon,
@@ -44,6 +44,10 @@ import {
 } from "ui/select";
 import { useObjectState } from "@/hooks/use-object-state";
 import { FlipWords } from "ui/flip-words";
+import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
+import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
+import { toast } from "sonner";
+import { allNodeValidate } from "lib/ai/workflow/node-validate";
 
 export const WorkflowPanel = memo(
   function WorkflowPanel({
@@ -51,19 +55,51 @@ export const WorkflowPanel = memo(
     isProcessing,
     workflowId,
     onSave,
+    startProcessing,
   }: {
     selectedNode?: UINode;
     workflowId: string;
+    startProcessing: () => () => void;
     onSave: () => void;
     isProcessing: boolean;
   }) {
     const [showExecutePanel, setShowExecutePanel] = useState(true);
 
-    useSWR(`/api/workflow/${workflowId}`, fetcher);
+    const { data: workflow } = useSWR(`/api/workflow/${workflowId}`, fetcher);
+
+    const handleRun = (input: Record<string, any>) => {
+      console.log({ input });
+      const stop = startProcessing();
+      wait(8000).then(() => stop());
+    };
 
     return (
       <div className="min-h-0 flex flex-col items-end">
         <div className="flex items-center gap-2 mb-2">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div
+                style={{
+                  backgroundColor: workflow?.icon.style?.backgroundColor,
+                }}
+                className="transition-colors hover:bg-secondary! group items-center justify-center flex w-8 h-8 rounded-md ring ring-background hover:ring-ring"
+              >
+                <Avatar className="size-6">
+                  <AvatarImage
+                    src={workflow?.icon.value}
+                    className="group-hover:scale-110  transition-transform"
+                  />
+                  <AvatarFallback></AvatarFallback>
+                </Avatar>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              <p>{workflow?.name}</p>
+            </TooltipContent>
+          </Tooltip>
+          <div className="h-6">
+            <Separator orientation="vertical" />
+          </div>
           <Button
             variant="secondary"
             onClick={() => setShowExecutePanel(!showExecutePanel)}
@@ -71,9 +107,7 @@ export const WorkflowPanel = memo(
             <PlayIcon />
             Execute
           </Button>
-          <div className="h-6">
-            <Separator orientation="vertical" />
-          </div>
+
           <Button
             disabled={isProcessing}
             onClick={onSave}
@@ -96,7 +130,11 @@ export const WorkflowPanel = memo(
         <div className="flex gap-2">
           {selectedNode && <NodeDetailPanel node={selectedNode} />}
           {showExecutePanel && (
-            <ExecutePanel close={() => setShowExecutePanel(false)} />
+            <ExecutePanel
+              onRun={handleRun}
+              isProcessing={isProcessing}
+              close={() => setShowExecutePanel(false)}
+            />
           )}
         </div>
       </div>
@@ -118,10 +156,15 @@ export const WorkflowPanel = memo(
 
 function ExecutePanel({
   close,
+  isProcessing,
+  onRun,
 }: {
   close: () => void;
+  isProcessing: boolean;
+  onRun(input: Record<string, any>): void;
 }) {
-  const nodes = useNodes<UINode>();
+  const { getEdges, getNodes, updateNode } = useReactFlow<UINode>();
+  const nodes = getNodes();
 
   const [inputs, setInputs] = useObjectState({} as Record<string, any>);
 
@@ -136,6 +179,29 @@ function ExecutePanel({
   const inputSchemaIterator = useMemo(() => {
     return Object.entries(inputSchema.properties ?? {});
   }, [inputSchema]);
+
+  const handleClick = () => {
+    const failSchema = inputSchemaIterator.find(([key]) => {
+      if (inputSchema.required?.includes(key) && inputs[key] === undefined)
+        return true;
+    });
+    if (failSchema) {
+      return toast.warning(`${failSchema[0]} is Empty`);
+    }
+
+    const validateResult = allNodeValidate({
+      nodes,
+      edges: getEdges(),
+    });
+
+    if (validateResult !== true) {
+      if (validateResult.node) {
+        updateNode(validateResult.node.id, { selected: true });
+      }
+      return toast.warning(validateResult.errorMessage);
+    }
+    onRun(inputs);
+  };
 
   return (
     <div className="fade-300 w-sm h-[85vh] space-y-4 bg-card border rounded-lg shadow-lg overflow-y-auto py-4">
@@ -198,7 +264,7 @@ function ExecutePanel({
                       setInputs({ ...inputs, [key]: value })
                     }
                   >
-                    <SelectTrigger id={key || String(i)} className="min-w-40">
+                    <SelectTrigger id={key || String(i)} className="min-w-46">
                       <SelectValue
                         placeholder={schema.description || "option"}
                       />
@@ -226,7 +292,17 @@ function ExecutePanel({
             );
           })
         )}
-        <Button className="font-bold w-full">Run Workflow</Button>
+        <Button
+          disabled={isProcessing}
+          className="font-bold w-full"
+          onClick={handleClick}
+        >
+          {isProcessing ? (
+            <Loader className="size-3.5 animate-spin" />
+          ) : (
+            "Run Workflow"
+          )}
+        </Button>
       </div>
     </div>
   );

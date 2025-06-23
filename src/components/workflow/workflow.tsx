@@ -57,13 +57,20 @@ export default function Workflow({
 
   const snapshot = useRef({ nodes: initialNodes, edges: initialEdges });
 
+  const startProcessing = useCallback(() => {
+    const processId = generateUUID();
+    setProcessingIds((prev) => [...prev, processId]);
+    return () => {
+      setProcessingIds((prev) => prev.filter((id) => id !== processId));
+    };
+  }, []);
+
   const isProcessing = useMemo(() => {
     return processingIds.length > 0;
   }, [processingIds]);
 
   const save = () => {
-    const processId = generateUUID();
-    setProcessingIds((prev) => [...prev, processId]);
+    const stop = startProcessing();
     safe()
       .map(() => saveWorkflow(workflowId, snapshot.current, { nodes, edges }))
       .ifOk(() => {
@@ -75,9 +82,7 @@ export default function Workflow({
       .ifFail(() => {
         window.location.reload();
       })
-      .watch(() =>
-        setProcessingIds((prev) => prev.filter((id) => id !== processId)),
-      );
+      .watch(stop);
   };
 
   const selectedNode = useMemo(() => {
@@ -213,6 +218,7 @@ export default function Workflow({
           <WorkflowPanel
             onSave={save}
             isProcessing={isProcessing}
+            startProcessing={startProcessing}
             selectedNode={selectedNode}
             workflowId={workflowId}
           />

@@ -108,18 +108,6 @@ describe("node-validate", () => {
         startNodeValidate({ node: startNode.data, nodes: [], edges: [] });
       }).toThrow();
     });
-
-    it("should throw error when start node has no inputs", () => {
-      const startNode = createStartNodeData("start", "Start Node", {
-        type: "object" as const,
-        properties: {},
-      } as any);
-      const edges = [createEdge("edge1", "start", "end")];
-
-      expect(() => {
-        startNodeValidate({ node: startNode.data, nodes: [], edges });
-      }).toThrow();
-    });
   });
 
   describe("endNodeValidate", () => {

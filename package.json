@@ -110,7 +110,6 @@
     "tw-animate-css": "^1.3.4",
     "vaul": "^1.1.2",
     "zod": "^3.25.64",
-    "zod-to-json-schema": "^3.24.5",
     "zustand": "^5.0.5"
   },
   "devDependencies": {
