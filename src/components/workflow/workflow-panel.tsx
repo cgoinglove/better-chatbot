@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
 
 import { Textarea } from "@/components/ui/textarea";
@@ -9,7 +9,8 @@ import { Separator } from "@/components/ui/separator";
 
 import { NodeKind, UINode } from "lib/ai/workflow/workflow.interface";
 import { NodeIcon } from "./node-icon";
-import { fetcher, nextTick, wait } from "lib/utils";
+import { nextTick } from "lib/utils";
+import { decodeWorkflowEvents } from "lib/ai/workflow/shared.workflow";
 import {
   Loader,
   LockIcon,
@@ -21,7 +22,7 @@ import { Button } from "ui/button";
 import { StartNodeDataConfig } from "./node-config/start-node-config";
 import { EndNodeDataConfig } from "./node-config/end-node-config";
 import { Label } from "ui/label";
-import { useNodes, useReactFlow } from "@xyflow/react";
+import { useReactFlow } from "@xyflow/react";
 import { NodeRun } from "./node-run";
 import { LLMNodeDataConfig } from "./node-config/llm-node-config";
 import {
@@ -33,7 +34,7 @@ import { NodeContextMenuContent } from "./node-context-menu-content";
 import { NextNodeInfo } from "./next-node-info";
 import { ConditionNodeDataConfig } from "./node-config/condition-node-config";
 import equal from "fast-deep-equal";
-import useSWR from "swr";
+
 import { Switch } from "ui/switch";
 import {
   Select,
@@ -48,30 +49,86 @@ import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { toast } from "sonner";
 import { allNodeValidate } from "lib/ai/workflow/node-validate";
+import { DBWorkflow } from "app-types/workflow";
 
 export const WorkflowPanel = memo(
   function WorkflowPanel({
     selectedNode,
     isProcessing,
-    workflowId,
     onSave,
-    startProcessing,
+    addProcess,
+    workflow,
   }: {
     selectedNode?: UINode;
-    workflowId: string;
-    startProcessing: () => () => void;
+    addProcess: () => () => void;
     onSave: () => void;
     isProcessing: boolean;
+    workflow: DBWorkflow;
   }) {
     const [showExecutePanel, setShowExecutePanel] = useState(true);
 
-    const { data: workflow } = useSWR(`/api/workflow/${workflowId}`, fetcher);
+    const handleRun = useCallback(
+      async (input: Record<string, any>) => {
+        const stop = addProcess();
+        const abortController = new AbortController();
+        try {
+          const response = await fetch(`/api/workflow/${workflow.id}/execute`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ input }),
+            signal: abortController.signal,
+          });
 
-    const handleRun = (input: Record<string, any>) => {
-      console.log({ input });
-      const stop = startProcessing();
-      wait(8000).then(() => stop());
-    };
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const reader = response.body?.getReader();
+          if (!reader) {
+            throw new Error("No readable stream available");
+          }
+
+          const decoder = new TextDecoder();
+          let buffer = "";
+
+          try {
+            while (true) {
+              const { done, value } = await reader.read();
+
+              if (done) {
+                break;
+              }
+
+              buffer += decoder.decode(value, { stream: true });
+              const { events, remainingBuffer } = decodeWorkflowEvents(buffer);
+              buffer = remainingBuffer;
+
+              for (const event of events) {
+                console.log("Workflow event:", event);
+
+                if (event.eventType === "WORKFLOW_END") {
+                  stop();
+                  return;
+                }
+              }
+            }
+          } finally {
+            reader.releaseLock();
+            stop();
+          }
+        } catch (error) {
+          if (error instanceof Error && error.name === "AbortError") {
+            console.log("Workflow execution was aborted");
+          } else {
+            console.error("Workflow execution error:", error);
+          }
+          stop();
+        }
+      },
+      [workflow.id],
+    );
 
     return (
       <div className="min-h-0 flex flex-col items-end">
@@ -80,13 +137,13 @@ export const WorkflowPanel = memo(
             <TooltipTrigger asChild>
               <div
                 style={{
-                  backgroundColor: workflow?.icon.style?.backgroundColor,
+                  backgroundColor: workflow.icon?.style?.backgroundColor,
                 }}
                 className="transition-colors hover:bg-secondary! group items-center justify-center flex w-8 h-8 rounded-md ring ring-background hover:ring-ring"
               >
                 <Avatar className="size-6">
                   <AvatarImage
-                    src={workflow?.icon.value}
+                    src={workflow.icon?.value}
                     className="group-hover:scale-110  transition-transform"
                   />
                   <AvatarFallback></AvatarFallback>

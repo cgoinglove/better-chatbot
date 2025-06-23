@@ -15,6 +15,7 @@ import { Separator } from "ui/separator";
 import { memo, useCallback, useEffect, useMemo } from "react";
 import { appStore } from "@/app/store";
 import { Edge, useEdges, useNodes, useReactFlow } from "@xyflow/react";
+import { useWorkflowStore } from "@/app/store/workflow.store";
 
 export const LLMNodeDataConfig = memo(function ({
   data,
@@ -22,6 +23,7 @@ export const LLMNodeDataConfig = memo(function ({
   data: LLMNodeData;
 }) {
   const { updateNodeData } = useReactFlow();
+  const isProcessing = useWorkflowStore((state) => state.processIds.length > 0);
   const nodes = useNodes() as UINode[];
   const edges = useEdges() as Edge[];
 
@@ -148,6 +150,7 @@ export const LLMNodeDataConfig = memo(function ({
                 nodes={nodes}
                 edges={edges}
                 content={message.content}
+                editable={!isProcessing}
                 onChange={(content) => {
                   updateMessage(index, {
                     ...message,

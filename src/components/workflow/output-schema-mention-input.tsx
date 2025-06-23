@@ -33,6 +33,7 @@ interface OutputSchemaMentionInputProps {
   content?: TipTapMentionJsonContent;
   onChange: (content: TipTapMentionJsonContent) => void;
   placeholder?: string;
+  editable?: boolean;
 }
 
 export function OutputSchemaMentionInput({
@@ -41,6 +42,7 @@ export function OutputSchemaMentionInput({
   edges,
   content,
   onChange,
+  editable,
 }: OutputSchemaMentionInputProps) {
   const [suggestion, setSuggestion] = useState<{
     top: number;
@@ -62,6 +64,7 @@ export function OutputSchemaMentionInput({
 
   const editorConfig = useMemo<UseEditorOptions>(
     () => ({
+      editable,
       immediatelyRender: false,
       extensions: [
         StarterKit.configure({

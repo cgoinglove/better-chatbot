@@ -12,6 +12,9 @@ import { toAny } from "lib/utils";
 import { addEdgeBranchLabel } from "./add-edge-branch-label";
 import { DBEdge, DBNode } from "app-types/workflow";
 import { convertDBNodeToUINode } from "../shared.workflow";
+import globalLogger from "logger";
+import { ConsolaInstance } from "consola";
+import { colorize } from "consola/utils";
 
 function getExecutorByKind(kind: NodeKind): NodeExecutor {
   switch (kind) {
@@ -35,8 +38,18 @@ function getExecutorByKind(kind: NodeKind): NodeExecutor {
 export const createWorkflowExecutor = (workflow: {
   nodes: DBNode[];
   edges: DBEdge[];
+  logger?: ConsolaInstance;
 }) => {
   const store = createWorkflowStore();
+  const logger =
+    workflow.logger ??
+    globalLogger.withDefaults({
+      message: colorize("cyan", `Workflow Executor:`),
+    });
+
+  const nodeNameByNodeId = new Map<string, string>(
+    workflow.nodes.map((node) => [node.id, node.name]),
+  );
 
   const graph = createStateGraph(store) as StateGraphRegistry<
     WorkflowRuntimeState,
@@ -50,7 +63,9 @@ export const createWorkflowExecutor = (workflow: {
     metadata: {
       description: "Noop sink node used to silently terminate excess branches",
     },
-    execute() {},
+    execute() {
+      logger.debug("Noop sink node used to silently terminate excess branches");
+    },
   });
 
   graph.addNode(skipNode);
@@ -116,6 +131,28 @@ export const createWorkflowExecutor = (workflow: {
   app.subscribe((event) => {
     if (event.eventType == "WORKFLOW_START") {
       needTable = buildNeedTable(workflow.edges);
+      logger.debug(
+        `[${event.eventType}] ${workflow.nodes.length} nodes, ${workflow.edges.length} edges`,
+      );
+    } else if (event.eventType == "WORKFLOW_END") {
+      const duration = ((event.endedAt - event.startedAt) / 1000).toFixed(2);
+      const color = event.isOk ? "green" : "red";
+      logger.debug(
+        `[${event.eventType}] ${colorize(color, event.isOk ? "SUCCESS" : "FAILED")} ${duration}s`,
+      );
+      if (!event.isOk) {
+        logger.error(event.error);
+      }
+    } else if (event.eventType == "NODE_START") {
+      logger.debug(
+        `[${event.eventType}] ${nodeNameByNodeId.get(event.node.name)}`,
+      );
+    } else if (event.eventType == "NODE_END") {
+      const duration = ((event.endedAt - event.startedAt) / 1000).toFixed(2);
+      const color = event.isOk ? "green" : "red";
+      logger.debug(
+        `[${event.eventType}] ${nodeNameByNodeId.get(event.node.name)} ${colorize(color, event.isOk ? "SUCCESS" : "FAILED")} ${duration}s`,
+      );
     }
   });
 

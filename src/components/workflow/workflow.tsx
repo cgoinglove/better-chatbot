@@ -1,5 +1,6 @@
 "use client";
 
+import { useWorkflowStore } from "@/app/store/workflow.store";
 import { DefaultNode } from "@/components/workflow/default-node";
 import { WorkflowPanel } from "@/components/workflow/workflow-panel";
 import {
@@ -19,6 +20,7 @@ import {
   Connection,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
+import { DBWorkflow } from "app-types/workflow";
 import { extractWorkflowDiff } from "lib/ai/workflow/extract-workflow-diff";
 import {
   convertUIEdgeToDBEdge,
@@ -26,8 +28,9 @@ import {
 } from "lib/ai/workflow/shared.workflow";
 import { NodeKind, UINode } from "lib/ai/workflow/workflow.interface";
 import { wouldCreateCycle } from "lib/ai/workflow/would-create-cycle";
-import { createDebounce, generateUUID } from "lib/utils";
+import { createDebounce, fetcher, generateUUID } from "lib/utils";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import useSWR from "swr";
 import { safe } from "ts-safe";
 
 const nodeTypes = {
@@ -50,27 +53,29 @@ export default function Workflow({
   initialNodes: UINode[];
   initialEdges: Edge[];
 }) {
+  const { init, addProcess, processIds } = useWorkflowStore();
   const [nodes, setNodes] = useState<UINode[]>(initialNodes);
   const [edges, setEdges] = useState<Edge[]>(initialEdges);
-  const [processingIds, setProcessingIds] = useState<string[]>([]);
+
+  const isProcessing = useMemo(
+    () => processIds.length > 0,
+    [processIds.length],
+  );
+  const { data: workflow } = useSWR<DBWorkflow>(
+    `/api/workflow/${workflowId}`,
+    fetcher,
+    {
+      onSuccess: (workflow) => {
+        init(workflow);
+      },
+    },
+  );
   const [activeNodeIds, setActiveNodeIds] = useState<string[]>([]);
 
   const snapshot = useRef({ nodes: initialNodes, edges: initialEdges });
 
-  const startProcessing = useCallback(() => {
-    const processId = generateUUID();
-    setProcessingIds((prev) => [...prev, processId]);
-    return () => {
-      setProcessingIds((prev) => prev.filter((id) => id !== processId));
-    };
-  }, []);
-
-  const isProcessing = useMemo(() => {
-    return processingIds.length > 0;
-  }, [processingIds]);
-
   const save = () => {
-    const stop = startProcessing();
+    const stop = addProcess();
     safe()
       .map(() => saveWorkflow(workflowId, snapshot.current, { nodes, edges }))
       .ifOk(() => {
@@ -91,7 +96,16 @@ export default function Workflow({
 
   const onNodesChange: OnNodesChange = useCallback(
     (changes) => {
-      if (isProcessing) return;
+      if (isProcessing) {
+        const allowedChanges = changes.filter(
+          (change) => change.type === "select",
+        );
+
+        if (allowedChanges.length > 0) {
+          setNodes((nds) => applyNodeChanges(allowedChanges, nds) as UINode[]);
+        }
+        return;
+      }
       setNodes((nds) => applyNodeChanges(changes, nds) as UINode[]);
     },
     [isProcessing],
@@ -194,6 +208,10 @@ export default function Workflow({
     });
   }, []);
 
+  useEffect(() => {
+    init(workflow);
+  }, [workflow]);
+
   return (
     <div className="w-full h-full relative">
       <ReactFlow
@@ -215,13 +233,15 @@ export default function Workflow({
       >
         <Background gap={12} size={0.6} />
         <Panel position="top-right" className="z-20!">
-          <WorkflowPanel
-            onSave={save}
-            isProcessing={isProcessing}
-            startProcessing={startProcessing}
-            selectedNode={selectedNode}
-            workflowId={workflowId}
-          />
+          {workflow && (
+            <WorkflowPanel
+              onSave={save}
+              addProcess={addProcess}
+              selectedNode={selectedNode}
+              workflow={workflow}
+              isProcessing={isProcessing}
+            />
+          )}
         </Panel>
         <Panel
           position="top-left"

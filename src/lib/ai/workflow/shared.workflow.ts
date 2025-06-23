@@ -9,6 +9,7 @@ import {
 import { exclude, generateUUID } from "lib/utils";
 import { DBEdge, DBNode } from "app-types/workflow";
 import { Edge } from "@xyflow/react";
+import { GraphEvent } from "ts-edge";
 
 export const defaultObjectJsonSchema: ObjectJsonSchema7 = {
   type: "object",
@@ -194,4 +195,39 @@ export function convertDBEdgeToUIEdge(edge: DBEdge): Edge {
     target: edge.target,
     ...edge.uiConfig,
   };
+}
+
+// Workflow Stream Processing Functions
+export const WORKFLOW_STREAM_DELIMITER = "\n";
+export const WORKFLOW_STREAM_PREFIX = "WF_EVENT:";
+
+export function encodeWorkflowEvent(event: GraphEvent): string {
+  const eventData = {
+    timestamp: Date.now(),
+    ...event,
+  };
+  return `${WORKFLOW_STREAM_PREFIX}${JSON.stringify(eventData)}${WORKFLOW_STREAM_DELIMITER}`;
+}
+
+export function decodeWorkflowEvents(buffer: string): {
+  events: GraphEvent[];
+  remainingBuffer: string;
+} {
+  const lines = buffer.split(WORKFLOW_STREAM_DELIMITER);
+  const remainingBuffer = lines.pop() || "";
+  const events: GraphEvent[] = [];
+
+  for (const line of lines) {
+    if (line.startsWith(WORKFLOW_STREAM_PREFIX)) {
+      try {
+        const eventJson = line.slice(WORKFLOW_STREAM_PREFIX.length);
+        const event = JSON.parse(eventJson);
+        events.push(event);
+      } catch (error) {
+        console.error("Failed to parse workflow event:", line, error);
+      }
+    }
+  }
+
+  return { events, remainingBuffer };
 }
