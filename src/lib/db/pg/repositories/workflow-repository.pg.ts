@@ -18,6 +18,13 @@ import {
 } from "lib/ai/workflow/shared.workflow";
 
 export const pgWorkflowRepository: WorkflowRepository = {
+  async selectById(id) {
+    const [workflow] = await pgDb
+      .select()
+      .from(WorkflowSchema)
+      .where(eq(WorkflowSchema.id, id));
+    return workflow as DBWorkflow;
+  },
   async checkAccess(workflowId, userId) {
     const [workflow] = await pgDb
       .select({

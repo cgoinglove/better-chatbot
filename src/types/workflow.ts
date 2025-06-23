@@ -51,6 +51,7 @@ export interface WorkflowRepository {
   delete(id: string): Promise<void>;
   selectByUserId(userId: string): Promise<DBWorkflow[]>;
   checkAccess(workflowId: string, userId: string): Promise<boolean>;
+  selectById(id: string): Promise<DBWorkflow | null>;
   save(
     workflow: PartialBy<
       DBWorkflow,

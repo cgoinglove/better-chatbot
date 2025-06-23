@@ -33,18 +33,15 @@ export function NextNodeInfo({ node, onSelectNode }: NextNodeInfoProps) {
   const nextNodes = useMemo(() => {
     const connectedEdges = edges.filter((edge) => edge.source === node.id);
 
-    const nextNodes = nodes
-      .filter((node) => connectedEdges.some((edge) => edge.target === node.id))
-      .map((n) => {
-        return {
-          node: n,
-          edge: connectedEdges.find(
-            (edge) => edge.target === n.id && edge.source === node.id,
-          )!,
-        };
-      });
+    const nextNodes = connectedEdges.map((edge) => {
+      return {
+        node: nodes.find((n) => n.id === edge.target)!,
+        edge,
+      };
+    });
     return nextNodes;
   }, [edges, nodes]);
+
   const update = useUpdate();
   const appendNode = useCallback(
     (kind: NodeKind, partialEdge?: Partial<Edge>) => {

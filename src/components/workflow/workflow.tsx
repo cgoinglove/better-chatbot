@@ -214,6 +214,7 @@ export default function Workflow({
             onSave={save}
             isProcessing={isProcessing}
             selectedNode={selectedNode}
+            workflowId={workflowId}
           />
         </Panel>
         <Panel
@@ -243,7 +244,7 @@ function saveWorkflow(
     diff.updateEdges.length ||
     diff.updateNodes.length
   ) {
-    return fetch(`/api/workflow/${workflowId}`, {
+    return fetch(`/api/workflow/${workflowId}/structure`, {
       method: "POST",
       body: JSON.stringify({
         nodes: diff.updateNodes.map((node) =>

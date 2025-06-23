@@ -112,7 +112,7 @@ export function ConditionNodeDataConfig({
         };
       });
     },
-    [data.id],
+    [data.id, data.branches.elseIf?.length],
   );
 
   return (

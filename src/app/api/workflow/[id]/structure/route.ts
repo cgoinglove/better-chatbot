@@ -11,20 +11,30 @@ export async function GET(
   if (!hasAccess) {
     return new Response("Unauthorized", { status: 401 });
   }
-  const workflow = await workflowRepository.selectById(id);
+  const workflow = await workflowRepository.selectStructureById(id);
   return Response.json(workflow);
 }
 
-export async function DELETE(
-  _: Request,
+export async function POST(
+  request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const { nodes, edges, deleteNodes, deleteEdges } = await request.json();
   const { id } = await params;
   const session = await getSession();
+
   const hasAccess = await workflowRepository.checkAccess(id, session.user.id);
   if (!hasAccess) {
     return new Response("Unauthorized", { status: 401 });
   }
-  await workflowRepository.delete(id);
-  return Response.json({ message: "Workflow deleted" });
+
+  await workflowRepository.saveStructure({
+    workflowId: id,
+    nodes,
+    edges,
+    deleteNodes,
+    deleteEdges,
+  });
+
+  return Response.json({ success: true });
 }

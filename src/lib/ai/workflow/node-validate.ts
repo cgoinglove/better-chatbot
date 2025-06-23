@@ -113,9 +113,7 @@ export const startNodeValidate: NodeValidate<StartNodeData> = ({
   const outputKeys = Array.from(
     Object.keys(node.outputSchema.properties ?? {}),
   );
-  if (outputKeys.length === 0) {
-    throw new Error("Start node must have an Inputs");
-  }
+
   outputKeys.forEach((key) => {
     validateSchema(key, node.outputSchema.properties![key] as JSONSchema7);
   });

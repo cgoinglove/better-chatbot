@@ -1,6 +1,6 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
 
 import { Textarea } from "@/components/ui/textarea";
@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator";
 
 import { NodeKind, UINode } from "lib/ai/workflow/workflow.interface";
 import { NodeIcon } from "./node-icon";
-import { nextTick } from "lib/utils";
+import { fetcher, nextTick } from "lib/utils";
 import {
   Loader,
   LockIcon,
@@ -21,7 +21,7 @@ import { Button } from "ui/button";
 import { StartNodeDataConfig } from "./node-config/start-node-config";
 import { EndNodeDataConfig } from "./node-config/end-node-config";
 import { Label } from "ui/label";
-import { useReactFlow } from "@xyflow/react";
+import { useNodes, useReactFlow } from "@xyflow/react";
 import { NodeRun } from "./node-run";
 import { LLMNodeDataConfig } from "./node-config/llm-node-config";
 import {
@@ -32,45 +32,205 @@ import {
 import { NodeContextMenuContent } from "./node-context-menu-content";
 import { NextNodeInfo } from "./next-node-info";
 import { ConditionNodeDataConfig } from "./node-config/condition-node-config";
+import equal from "fast-deep-equal";
+import useSWR from "swr";
+import { Switch } from "ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "ui/select";
+import { useObjectState } from "@/hooks/use-object-state";
+import { FlipWords } from "ui/flip-words";
 
-export const WorkflowPanel = memo(function WorkflowPanel({
-  selectedNode,
-  isProcessing,
-  onSave,
-}: {
-  selectedNode?: UINode;
-  onSave: () => void;
-  isProcessing: boolean;
-}) {
-  return (
-    <div className="min-h-0 flex flex-col items-end">
-      <div className="flex items-center gap-2 mb-2">
-        <Button variant="secondary">
-          <PlayIcon />
-          Execute
-        </Button>
-        <div className="h-6">
-          <Separator orientation="vertical" />
+export const WorkflowPanel = memo(
+  function WorkflowPanel({
+    selectedNode,
+    isProcessing,
+    workflowId,
+    onSave,
+  }: {
+    selectedNode?: UINode;
+    workflowId: string;
+    onSave: () => void;
+    isProcessing: boolean;
+  }) {
+    const [showExecutePanel, setShowExecutePanel] = useState(true);
+
+    useSWR(`/api/workflow/${workflowId}`, fetcher);
+
+    return (
+      <div className="min-h-0 flex flex-col items-end">
+        <div className="flex items-center gap-2 mb-2">
+          <Button
+            variant="secondary"
+            onClick={() => setShowExecutePanel(!showExecutePanel)}
+          >
+            <PlayIcon />
+            Execute
+          </Button>
+          <div className="h-6">
+            <Separator orientation="vertical" />
+          </div>
+          <Button
+            disabled={isProcessing}
+            onClick={onSave}
+            variant="default"
+            className="w-16"
+          >
+            {isProcessing ? (
+              <Loader className="size-3.5 animate-spin" />
+            ) : (
+              "Save"
+            )}
+          </Button>
+          <div className="h-6">
+            <Separator orientation="vertical" />
+          </div>
+          <Button variant="secondary" size="icon" disabled>
+            <LockIcon />
+          </Button>
         </div>
-        <Button
-          disabled={isProcessing}
-          onClick={onSave}
-          variant="default"
-          className="w-16"
-        >
-          {isProcessing ? <Loader className="size-3.5 animate-spin" /> : "Save"}
-        </Button>
-        <div className="h-6">
-          <Separator orientation="vertical" />
+        <div className="flex gap-2">
+          {selectedNode && <NodeDetailPanel node={selectedNode} />}
+          {showExecutePanel && (
+            <ExecutePanel close={() => setShowExecutePanel(false)} />
+          )}
         </div>
-        <Button variant="secondary" size="icon" disabled>
-          <LockIcon />
-        </Button>
       </div>
-      {selectedNode && <NodeDetailPanel node={selectedNode} />}
+    );
+  },
+  (prev, next) => {
+    if (prev.isProcessing !== next.isProcessing) {
+      return false;
+    }
+    if (Boolean(prev.selectedNode) !== Boolean(next.selectedNode)) {
+      return false;
+    }
+    if (!equal(prev.selectedNode?.data, next.selectedNode?.data)) {
+      return false;
+    }
+    return true;
+  },
+);
+
+function ExecutePanel({
+  close,
+}: {
+  close: () => void;
+}) {
+  const nodes = useNodes<UINode>();
+
+  const [inputs, setInputs] = useObjectState({} as Record<string, any>);
+
+  const startNodeData = useMemo(() => {
+    return nodes.find((node) => node.data.kind === NodeKind.Start)!.data;
+  }, [nodes]);
+
+  const inputSchema = useMemo(() => {
+    return startNodeData.outputSchema;
+  }, [startNodeData]);
+
+  const inputSchemaIterator = useMemo(() => {
+    return Object.entries(inputSchema.properties ?? {});
+  }, [inputSchema]);
+
+  return (
+    <div className="fade-300 w-sm h-[85vh] space-y-4 bg-card border rounded-lg shadow-lg overflow-y-auto py-4">
+      <div className="flex items-center justify-between px-4">
+        <div className="flex items-center gap-2 w-full h-9">
+          <span className="font-semibold">Run</span>
+          <div
+            className="p-1 rounded hover:bg-secondary cursor-pointer ml-auto"
+            onClick={close}
+          >
+            <XIcon className="size-3.5" />
+          </div>
+        </div>
+      </div>
+      <Separator className="my-6" />
+      <div className="px-4 flex flex-col gap-4">
+        {inputSchemaIterator.length == 0 ? (
+          <div className="flex items-center justify-center h-40">
+            <FlipWords
+              className="text-sm text-muted-foreground"
+              words={["No input required for this workflow"]}
+            />
+          </div>
+        ) : (
+          inputSchemaIterator.map(([key, schema], i) => {
+            return (
+              <div key={key ?? i}>
+                <Label
+                  className="mb-2 text-sm font-semibold ml-0.5 gap-0.5"
+                  htmlFor={key || String(i)}
+                >
+                  {key || "undefined"}
+                  {inputSchema.required?.includes(key) && (
+                    <span className="text-xs text-destructive">*</span>
+                  )}
+                </Label>
+
+                {schema.type == "number" ? (
+                  <Input
+                    id={key || String(i)}
+                    type="number"
+                    placeholder={schema.description || "number"}
+                    value={inputs[key]}
+                    onChange={(e) =>
+                      setInputs({ ...inputs, [key]: e.target.value })
+                    }
+                  />
+                ) : schema.type == "boolean" ? (
+                  <Switch
+                    id={key || String(i)}
+                    checked={inputs[key]}
+                    onCheckedChange={(checked) =>
+                      setInputs({ ...inputs, [key]: checked })
+                    }
+                  />
+                ) : schema.type == "string" && schema.enum ? (
+                  <Select
+                    defaultValue={inputs[key]}
+                    onValueChange={(value) =>
+                      setInputs({ ...inputs, [key]: value })
+                    }
+                  >
+                    <SelectTrigger id={key || String(i)} className="min-w-40">
+                      <SelectValue
+                        placeholder={schema.description || "option"}
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(schema.enum as string[]).map((item, i) => (
+                        <SelectItem key={item ?? i} value={item}>
+                          {item}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : schema.type == "string" ? (
+                  <Textarea
+                    id={key || String(i)}
+                    value={inputs[key]}
+                    className="resize-none max-h-28 overflow-y-auto"
+                    placeholder={schema.description || "string"}
+                    onChange={(e) =>
+                      setInputs({ ...inputs, [key]: e.target.value })
+                    }
+                  />
+                ) : null}
+              </div>
+            );
+          })
+        )}
+        <Button className="font-bold w-full">Run Workflow</Button>
+      </div>
     </div>
   );
-});
+}
 
 function NodeDetailPanel({ node }: { node: UINode }) {
   const { updateNodeData, updateNode } = useReactFlow();
