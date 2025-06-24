@@ -3,7 +3,7 @@
 import { appStore } from "@/app/store";
 import { useChatModels } from "@/hooks/queries/use-chat-models";
 import { ChatModel } from "app-types/chat";
-import { ChevronDown, ChevronDownIcon } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { Fragment, PropsWithChildren, useEffect, useState } from "react";
 import { Button } from "ui/button";
 

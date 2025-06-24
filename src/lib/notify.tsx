@@ -119,7 +119,11 @@ export const notify = {
                 <Button variant={"ghost"} onClick={() => close()}>
                   Cancel
                 </Button>
-                <Button variant={"secondary"} onClick={() => close(text)}>
+                <Button
+                  disabled={!text.trim()}
+                  variant={"secondary"}
+                  onClick={() => close(text)}
+                >
                   Confirm
                 </Button>
               </DialogFooter>

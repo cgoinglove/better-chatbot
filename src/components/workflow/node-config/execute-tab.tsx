@@ -4,7 +4,7 @@ import { useReactFlow } from "@xyflow/react";
 import { useObjectState } from "@/hooks/use-object-state";
 import { UINode } from "lib/ai/workflow/workflow.interface";
 import { cn, createDebounce } from "lib/utils";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { GraphEndEvent } from "ts-edge";
 import { allNodeValidate } from "lib/ai/workflow/node-validate";
 import { toast } from "sonner";
@@ -12,9 +12,10 @@ import { decodeWorkflowEvents } from "lib/ai/workflow/shared.workflow";
 import { Alert, AlertDescription, AlertTitle } from "ui/alert";
 import {
   AlertTriangleIcon,
-  Check,
   Loader,
   Loader2,
+  Copy,
+  Check,
   WandSparklesIcon,
   XIcon,
 } from "lucide-react";
@@ -39,6 +40,8 @@ import { generateObjectAction } from "@/app/api/chat/actions";
 import { appStore } from "@/app/store";
 import { notify } from "lib/notify";
 import { SelectModel } from "@/components/select-model";
+import { JsonViewPopup } from "@/components/json-view-popup";
+import { useCopy } from "@/hooks/use-copy";
 
 const debounce = createDebounce();
 
@@ -83,6 +86,7 @@ export function ExecuteTab({
   const [isRunning, setIsRunning] = useState(false);
   const [histories, setHistories] = useState<NodeRuntimeHistory[]>([]);
   const [result, setResult] = useState<GraphEndEvent | undefined>();
+  const { copied, copy } = useCopy();
 
   const isProcessing = useMemo(
     () => Boolean(processIds.length),
@@ -92,6 +96,7 @@ export function ExecuteTab({
   const { getEdges, getNodes, fitView, getNode, updateNodeData, setNodes } =
     useReactFlow<UINode>();
   const nodes = getNodes();
+  const historyRef = useRef<HTMLDivElement>(null);
 
   const [query, setQuery] = useObjectState({} as Record<string, any>);
 
@@ -222,6 +227,17 @@ user-prompt: ${result}
       const abortController = new AbortController();
       setHistories([]);
       setIsRunning(true);
+      setNodes((nds) => {
+        return nds.map((node) => {
+          if (node.data.runtime?.status) {
+            return {
+              ...node,
+              data: { ...node.data, runtime: { status: undefined } },
+            };
+          }
+          return node;
+        });
+      });
       try {
         const response = await fetch(`/api/workflow/${workflow!.id}/execute`, {
           method: "POST",
@@ -267,6 +283,10 @@ user-prompt: ${result}
                   break;
                 case "NODE_START": {
                   fitviewWithDebounce(event.node.name);
+                  historyRef.current?.scrollTo({
+                    top: historyRef.current?.scrollHeight,
+                    behavior: "smooth",
+                  });
                   updateNodeData(event.node.name, {
                     runtime: { status: "running" },
                   });
@@ -337,6 +357,12 @@ user-prompt: ${result}
     [workflow!.id],
   );
 
+  const latstNodeValue = useMemo(() => {
+    const lastNode = histories.at(-1);
+    if (!lastNode) return undefined;
+    return lastNode.result;
+  }, [histories]);
+
   const resultView = useMemo(() => {
     if (isRunning) return;
     if (result?.isOk === false)
@@ -349,10 +375,13 @@ user-prompt: ${result}
           </AlertDescription>
         </Alert>
       );
-    const lastNode = histories.at(-1);
-    if (!lastNode) return null;
-    return <JsonView data={lastNode.result?.output} />;
-  }, [isRunning, result]);
+
+    return (
+      <div className="p-2">
+        <JsonView data={latstNodeValue?.output} />
+      </div>
+    );
+  }, [isRunning, result, latstNodeValue]);
   return (
     <div className="fade-300 w-sm h-[85vh] bg-card border rounded-lg shadow-lg overflow-y-auto py-4">
       <div className="flex flex-col px-4">
@@ -492,62 +521,77 @@ user-prompt: ${result}
         </div>
       ) : tab == tabs[1].value ? (
         <div>
-          <div className="flex flex-col px-4 h-96 overflow-y-auto">
+          <div
+            className="flex flex-col px-4 h-[30vh] overflow-y-auto"
+            ref={historyRef}
+          >
             {histories.map((history, i) => {
               return (
-                <div
-                  key={i}
-                  className={cn(
-                    "flex items-center gap-2 text-sm rounded-sm px-2 py-1.5 relative",
-                    history.status != "running" &&
-                      "cursor-pointer hover:bg-secondary",
-                    history.status == "fail" && "text-destructive",
-                  )}
-                >
-                  {i != 0 && (
-                    <div className="absolute left-4.5 -top-1.5 w-px h-3">
-                      <Separator orientation="vertical" />
-                    </div>
-                  )}
-                  <div className="border rounded overflow-hidden">
-                    <NodeIcon
-                      type={history.kind}
-                      iconClassName="size-3"
-                      className="rounded-none"
-                    />
-                  </div>
-                  {history.status == "running" ? (
-                    <TextShimmer className="font-semibold">
-                      {`${history.name} Running...`}
-                    </TextShimmer>
-                  ) : (
-                    <span className="font-semibold">{history.name}</span>
-                  )}
-                  <span
+                <JsonViewPopup data={history.result} key={i}>
+                  <div
                     className={cn(
-                      "ml-auto text-xs",
-                      history.status != "fail" && "text-muted-foreground",
+                      "flex items-center gap-2 text-sm rounded-sm px-2 py-1.5 relative",
+                      history.status != "running" &&
+                        "cursor-pointer hover:bg-secondary",
+                      history.status == "fail" && "text-destructive",
                     )}
                   >
-                    {history.status != "running" &&
-                      ((history.endedAt! - history.startedAt!) / 1000).toFixed(
-                        2,
+                    {i != 0 && (
+                      <div className="absolute left-4.5 -top-1.5 w-px h-3">
+                        <Separator orientation="vertical" />
+                      </div>
+                    )}
+                    <div className="border rounded overflow-hidden">
+                      <NodeIcon
+                        type={history.kind}
+                        iconClassName="size-3"
+                        className="rounded-none"
+                      />
+                    </div>
+                    {history.status == "running" ? (
+                      <TextShimmer className="font-semibold">
+                        {`${history.name} Running...`}
+                      </TextShimmer>
+                    ) : (
+                      <span className="font-semibold">{history.name}</span>
+                    )}
+                    <span
+                      className={cn(
+                        "ml-auto text-xs",
+                        history.status != "fail" && "text-muted-foreground",
                       )}
-                  </span>
-                  {history.status == "success" ? (
-                    <Check className="size-3" />
-                  ) : history.status == "fail" ? (
-                    <XIcon className="size-3" />
-                  ) : (
-                    <Loader2 className="size-3 animate-spin" />
-                  )}
-                </div>
+                    >
+                      {history.status != "running" &&
+                        (
+                          (history.endedAt! - history.startedAt!) /
+                          1000
+                        ).toFixed(2)}
+                    </span>
+                    {history.status == "success" ? (
+                      <Check className="size-3" />
+                    ) : history.status == "fail" ? (
+                      <XIcon className="size-3" />
+                    ) : (
+                      <Loader2 className="size-3 animate-spin" />
+                    )}
+                  </div>
+                </JsonViewPopup>
               );
             })}
           </div>
           <Separator />
           <div className="px-4 py-4">
-            <p className="font-semibold text-sm mb-4">Result</p>
+            <div className="flex items-center gap-2 mb-4">
+              <p className="font-semibold text-sm">Result</p>
+              <Button
+                variant={"ghost"}
+                size={"sm"}
+                className="ml-auto"
+                onClick={() => copy(JSON.stringify(latstNodeValue?.output))}
+              >
+                {copied ? <Check /> : <Copy />}
+              </Button>
+            </div>
             {resultView}
           </div>
         </div>

@@ -101,10 +101,13 @@ export const LLMNodeDataConfig = memo(function ({
       <Label className="text-sm mt-1 text-muted-foreground">
         LLM Response Schema
       </Label>
-      <div className="flex items-center gap-2 bg-secondary rounded-md p-2">
+      <div className="flex items-center gap-1">
         {Object.keys(data.outputSchema.properties).map((key) => {
           return (
-            <div key={key} className="flex items-center text-xs">
+            <div
+              key={key}
+              className="flex items-center text-xs px-1.5 py-0.5 bg-secondary rounded-md"
+            >
               <VariableIcon className="size-3.5 text-blue-500" />
               <span className="font-semibold">{key}</span>
               <span className="text-muted-foreground ml-2">

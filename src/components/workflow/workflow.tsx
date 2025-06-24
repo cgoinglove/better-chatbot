@@ -186,6 +186,24 @@ export default function Workflow({
     [isProcessing, edges],
   );
 
+  const { errorIds, runningIds } = useMemo(() => {
+    return nodes.reduce(
+      (acc, prev) => {
+        if (prev.data.runtime?.status === "fail") {
+          acc.errorIds.push(prev.id);
+        }
+        if (
+          prev.data.runtime?.status === "running" ||
+          prev.data.runtime?.status === "success"
+        ) {
+          acc.runningIds.push(prev.id);
+        }
+        return acc;
+      },
+      { errorIds: [] as string[], runningIds: [] as string[] },
+    );
+  }, [nodes]);
+
   const styledEdges = useMemo(() => {
     return edges.map((edge) => {
       const isConnected =
@@ -194,18 +212,26 @@ export default function Workflow({
       const isConditionEdge = Boolean(
         edge.sourceHandle && edge.sourceHandle != "right",
       );
+      const isErrorEdge = errorIds.includes(edge.target);
+      const isRunningEdge = runningIds.includes(edge.target);
       return {
         ...edge,
         style: {
           ...edge.style,
-          stroke: isConnected ? "oklch(62.3% 0.214 259.815)" : undefined,
+          stroke: isErrorEdge
+            ? "var(--destructive)"
+            : isRunningEdge
+              ? "#05df72"
+              : isConnected
+                ? "oklch(62.3% 0.214 259.815)"
+                : undefined,
           strokeWidth: 2,
           transition: "stroke 0.3s",
         },
         animated: isConditionEdge,
       };
     });
-  }, [edges, activeNodeIds]);
+  }, [edges, activeNodeIds, errorIds, runningIds]);
 
   useEffect(() => {
     const debounceDelay =
@@ -232,11 +258,13 @@ export default function Workflow({
   }, [workflow]);
 
   return (
-    <div className="w-full h-full relative">
+    <div className="w-full h-full relative text-de text-gree-4">
       <ReactFlow
         fitView
         deleteKeyCode={null}
         nodes={nodes}
+        maxZoom={1.4}
+        minZoom={0.1}
         edges={styledEdges}
         multiSelectionKeyCode={null}
         id={workflowId}
@@ -255,7 +283,6 @@ export default function Workflow({
           {workflow && (
             <WorkflowPanel
               onSave={save}
-              addProcess={addProcess}
               selectedNode={selectedNode}
               workflow={workflow}
               isProcessing={isProcessing}

@@ -25,11 +25,10 @@ export const WorkflowPanel = memo(
     selectedNode,
     isProcessing,
     onSave,
-    addProcess,
+
     workflow,
   }: {
     selectedNode?: UINode;
-    addProcess: () => () => void;
     onSave: () => void;
     isProcessing: boolean;
     workflow: DBWorkflow;
@@ -98,7 +97,7 @@ export const WorkflowPanel = memo(
           <div className="h-6">
             <Separator orientation="vertical" />
           </div>
-          <Button variant="secondary" size="icon" onClick={addProcess}>
+          <Button variant="secondary" size="icon" disabled>
             <LockIcon />
           </Button>
         </div>
