@@ -11,7 +11,7 @@ export interface WorkflowRuntimeState {
   getOutput<T>(key: OutputSchemaSourceKey): undefined | T;
 }
 
-export const createWorkflowStore = () => {
+export const createGraphStore = () => {
   return graphStore<WorkflowRuntimeState>((set, get) => {
     return {
       input: {},

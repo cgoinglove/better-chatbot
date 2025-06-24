@@ -18,7 +18,8 @@ import { useMemo } from "react";
 export function NodeIcon({
   type,
   className,
-}: { type: NodeKind; className?: string }) {
+  iconClassName,
+}: { type: NodeKind; className?: string; iconClassName?: string }) {
   const Icon = useMemo(() => {
     switch (type) {
       case NodeKind.Start:
@@ -62,7 +63,7 @@ export function NodeIcon({
         className,
       )}
     >
-      <Icon className="size-4 text-white" />
+      <Icon className={cn("size-4 text-white", iconClassName)} />
     </div>
   );
 }

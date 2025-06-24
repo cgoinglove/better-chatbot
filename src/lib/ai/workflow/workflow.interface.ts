@@ -71,10 +71,7 @@ export type WorkflowNodeData =
   | ConditionNodeData;
 
 export type NodeRuntimeField = {
-  status?: "running" | "success" | "fail" | "idle";
   isNew?: boolean;
-  result?: any;
-  isRunTab?: boolean;
 };
 
 export type UINode<Kind extends NodeKind = NodeKind> = Node<

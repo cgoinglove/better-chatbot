@@ -70,8 +70,6 @@ export async function POST(
         .then((result) => {
           if (!result.isOk) {
             logger.error("Workflow execution error:", result.error);
-            controller.error(result.error);
-            controller.close();
           }
         });
     },

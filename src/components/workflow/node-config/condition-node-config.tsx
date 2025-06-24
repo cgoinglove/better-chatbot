@@ -434,7 +434,7 @@ function ConditionRuleItem({
         <>
           <Separator className="my-1" />
           <input
-            value={isNull(item.value) ? undefined : String(item.value)}
+            value={isNull(item.value) ? undefined : String(item.value || "")}
             autoFocus
             className="text-xs py-1 px-2 focus:outline-none"
             placeholder="...value"

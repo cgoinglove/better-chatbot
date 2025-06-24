@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { createWorkflowStore } from "./workflow-store";
+import { createGraphStore } from "./graph-store";
 
 describe("workflow-store", () => {
   it("source", () => {
-    const store = createWorkflowStore();
+    const store = createGraphStore();
     const context = store();
 
     expect(context.outputs).toEqual({});

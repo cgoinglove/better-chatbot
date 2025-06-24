@@ -7,10 +7,9 @@ import {
   StartNodeData,
   WorkflowNodeData,
 } from "../workflow.interface";
-import { WorkflowRuntimeState } from "./workflow-store";
+import { WorkflowRuntimeState } from "./graph-store";
 import { generateText, Message } from "ai";
 import { checkConditionBranch } from "../condition";
-import { wait } from "lib/utils";
 
 export type NodeExecutor<T extends WorkflowNodeData = any> = (input: {
   node: T;

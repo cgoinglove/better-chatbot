@@ -1,6 +1,6 @@
 import { tool as createTool } from "ai";
 import { z } from "zod";
-import { wait } from "lib/utils";
+
 export const createPieChartTool = createTool({
   description: "Create a pie chart",
   parameters: z.object({
@@ -10,7 +10,6 @@ export const createPieChartTool = createTool({
     unit: z.string().optional(),
   }),
   execute: async () => {
-    await wait(1000);
     return "Success";
   },
 });

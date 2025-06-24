@@ -32,11 +32,14 @@ export const LLMNodeDataConfig = memo(function ({
   }, [data.model]);
 
   const updateMessage = useCallback(
-    (index: number, message: LLMNodeData["messages"][number]) => {
+    (index: number, message: Partial<LLMNodeData["messages"][number]>) => {
       updateNodeData(data.id, (node) => {
         const prev = node.data as LLMNodeData;
         return {
-          messages: prev.messages.map((m, i) => (i === index ? message : m)),
+          messages: prev.messages.map((m, i) => {
+            if (i !== index) return m;
+            return { ...m, ...message };
+          }),
         };
       });
     },
@@ -59,7 +62,7 @@ export const LLMNodeDataConfig = memo(function ({
     updateNodeData(data.id, (node) => {
       const prev = node.data as LLMNodeData;
       return {
-        messages: [...prev.messages, { role: "assistant" }],
+        messages: [...prev.messages, { role: "user" }],
       };
     });
   }, [data.id]);
@@ -122,7 +125,6 @@ export const LLMNodeDataConfig = memo(function ({
                   value={message.role}
                   onValueChange={(value) => {
                     updateMessage(index, {
-                      ...message,
                       role: value as "user" | "assistant" | "system",
                     });
                   }}
@@ -153,7 +155,6 @@ export const LLMNodeDataConfig = memo(function ({
                 editable={!isProcessing}
                 onChange={(content) => {
                   updateMessage(index, {
-                    ...message,
                     content,
                   });
                 }}

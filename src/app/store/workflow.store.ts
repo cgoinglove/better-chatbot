@@ -5,7 +5,6 @@ import { create } from "zustand";
 export interface WorkflowState {
   workflow?: DBWorkflow;
   processIds: string[];
-  //   status: "ready" | "running" | "paused" |"error"|"success";
 }
 
 export interface WorkflowDispatch {
@@ -20,7 +19,7 @@ const initialState: WorkflowState = {
 export const useWorkflowStore = create<WorkflowState & WorkflowDispatch>(
   (set) => ({
     ...initialState,
-    init: (workflow) => set({ workflow }),
+    init: (workflow) => set({ ...initialState, workflow }),
     addProcess: () => {
       const processId = generateUUID();
       set((state) => ({

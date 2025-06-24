@@ -1,5 +1,5 @@
 import { NodeKind } from "../workflow.interface";
-import { createWorkflowStore, WorkflowRuntimeState } from "./workflow-store";
+import { createGraphStore, WorkflowRuntimeState } from "./graph-store";
 import { createStateGraph, graphNode, StateGraphRegistry } from "ts-edge";
 import {
   conditionNodeExecutor,
@@ -40,7 +40,7 @@ export const createWorkflowExecutor = (workflow: {
   edges: DBEdge[];
   logger?: ConsolaInstance;
 }) => {
-  const store = createWorkflowStore();
+  const store = createGraphStore();
   const logger =
     workflow.logger ??
     globalLogger.withDefaults({

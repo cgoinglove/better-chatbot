@@ -1,6 +1,6 @@
 import { tool as createTool } from "ai";
 import { z } from "zod";
-import { wait } from "lib/utils";
+
 export const createLineChartTool = createTool({
   description: "Create a line chart with multiple data series",
   parameters: z.object({
@@ -22,7 +22,6 @@ export const createLineChartTool = createTool({
     yAxisLabel: z.string().optional().describe("Label for Y-axis"),
   }),
   execute: async () => {
-    await wait(1000);
     return "Success";
   },
 });
