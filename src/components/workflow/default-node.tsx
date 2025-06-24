@@ -78,6 +78,8 @@ export const DefaultNode = memo(function DefaultNode({
       if (node) {
         fitView({
           nodes: [node],
+          duration: 500,
+          maxZoom: 1.2,
         });
       }
     }

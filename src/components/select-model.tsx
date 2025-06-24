@@ -3,7 +3,9 @@
 import { appStore } from "@/app/store";
 import { useChatModels } from "@/hooks/queries/use-chat-models";
 import { ChatModel } from "app-types/chat";
+import { ChevronDown, ChevronDownIcon } from "lucide-react";
 import { Fragment, PropsWithChildren, useEffect, useState } from "react";
+import { Button } from "ui/button";
 
 import {
   Command,
@@ -33,7 +35,22 @@ export const SelectModel = (props: PropsWithChildren<SelectModelProps>) => {
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>{props.children || "model"}</PopoverTrigger>
+      <PopoverTrigger asChild>
+        {props.children || (
+          <Button
+            variant={"secondary"}
+            size={"sm"}
+            className="data-[state=open]:bg-input! hover:bg-input! "
+          >
+            <p className="mr-auto">
+              {model?.model ?? (
+                <span className="text-muted-foreground">model</span>
+              )}
+            </p>
+            <ChevronDown className="size-3" />
+          </Button>
+        )}
+      </PopoverTrigger>
       <PopoverContent className="p-0 w-[280px]" align={props.align || "end"}>
         <Command
           className="rounded-lg relative shadow-md h-80"

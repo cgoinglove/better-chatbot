@@ -16,7 +16,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 
 import { DBWorkflow } from "app-types/workflow";
 
-import { SelectNodeConfigTab } from "./select-node-config-tab";
+import { SelectedNodeConfigTab } from "./selected-node-config-tab";
 import { ExecuteTab } from "./node-config/execute-tab";
 import { useReactFlow } from "@xyflow/react";
 
@@ -103,7 +103,7 @@ export const WorkflowPanel = memo(
           </Button>
         </div>
         <div className="flex gap-2">
-          {selectedNode && <SelectNodeConfigTab node={selectedNode} />}
+          {selectedNode && <SelectedNodeConfigTab node={selectedNode} />}
           {showExecutePanel && (
             <ExecuteTab
               close={() => {

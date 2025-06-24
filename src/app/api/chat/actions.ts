@@ -5,6 +5,7 @@ import {
   generateText,
   jsonSchema,
   LanguageModel,
+  UIMessage,
   type Message,
 } from "ai";
 
@@ -28,6 +29,9 @@ import { CacheKeys } from "lib/cache/cache-keys";
 import { getSession } from "auth/server";
 import logger from "logger";
 import { redirect } from "next/navigation";
+import { JSONSchema7 } from "json-schema";
+import { ObjectJsonSchema7 } from "app-types/util";
+import { jsonSchemaToZod } from "lib/json-schema-to-zod";
 
 export async function getUserId() {
   const session = await getSession();
@@ -286,4 +290,22 @@ export async function rememberMcpServerCustomizationsAction(userId: string) {
 
   serverCache.set(key, prompts, 1000 * 60 * 30); // 30 minutes
   return prompts;
+}
+
+export async function generateObjectAction({
+  model,
+  messages,
+  schema,
+}: {
+  model?: ChatModel;
+  messages: Omit<UIMessage, "id">[];
+  schema: JSONSchema7 | ObjectJsonSchema7;
+}) {
+  console.log(messages);
+  const result = await generateObject({
+    model: customModelProvider.getModel(model),
+    messages,
+    schema: jsonSchemaToZod(schema),
+  });
+  return result.object;
 }

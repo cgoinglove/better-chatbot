@@ -19,7 +19,7 @@ import { Label } from "ui/label";
 import { NextNodeInfo } from "./next-node-info";
 import { nextTick } from "lib/utils";
 
-export function SelectNodeConfigTab({ node }: { node: UINode }) {
+export function SelectedNodeConfigTab({ node }: { node: UINode }) {
   const { updateNodeData, updateNode, setNodes } = useReactFlow();
 
   return (
@@ -110,7 +110,7 @@ export function SelectNodeConfigTab({ node }: { node: UINode }) {
         ) : null}
       </div>
 
-      {![NodeKind.End].includes(node.data.kind) && (
+      {![NodeKind.End, NodeKind.Information].includes(node.data.kind) && (
         <>
           <Separator className="my-6" />
           <div className="px-4 ">

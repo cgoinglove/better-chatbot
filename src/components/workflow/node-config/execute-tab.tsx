@@ -10,7 +10,14 @@ import { allNodeValidate } from "lib/ai/workflow/node-validate";
 import { toast } from "sonner";
 import { decodeWorkflowEvents } from "lib/ai/workflow/shared.workflow";
 import { Alert, AlertDescription, AlertTitle } from "ui/alert";
-import { AlertTriangleIcon, Check, Loader, Loader2, XIcon } from "lucide-react";
+import {
+  AlertTriangleIcon,
+  Check,
+  Loader,
+  Loader2,
+  WandSparklesIcon,
+  XIcon,
+} from "lucide-react";
 import JsonView from "ui/json-view";
 import { Button } from "ui/button";
 import { Separator } from "ui/separator";
@@ -28,6 +35,10 @@ import {
 import { Textarea } from "ui/textarea";
 import { NodeIcon } from "../node-icon";
 import { TextShimmer } from "ui/text-shimmer";
+import { generateObjectAction } from "@/app/api/chat/actions";
+import { appStore } from "@/app/store";
+import { notify } from "lib/notify";
+import { SelectModel } from "@/components/select-model";
 
 const debounce = createDebounce();
 
@@ -96,6 +107,65 @@ export function ExecuteTab({
     return Object.entries(inputSchema.properties ?? {});
   }, [inputSchema]);
 
+  const handleGenerateInputWithAI = useCallback(async () => {
+    let model = appStore.getState().chatModel;
+    const result = await notify.prompt({
+      title: "Generate Input With AI",
+      description: (
+        <div className="flex items-center gap-2">
+          <p className="mr-auto">
+            Write a prompt to generate input for the workflow
+          </p>
+          <SelectModel
+            onSelect={(m) => {
+              model = m;
+            }}
+          />
+        </div>
+      ),
+    });
+    if (!result) return;
+    toast.promise(
+      generateObjectAction({
+        model,
+        messages: [
+          {
+            role: "system",
+            content: "",
+            parts: [
+              {
+                type: "text",
+                text: `You are a parameter generator for tool execution.
+Analyze the user's request and generate creative JSON data that matches the provided schema.
+If information cannot be inferred from the user's question, use your creativity to generate engaging data.
+Fill all required fields and return only valid JSON without explanations.
+
+tool-name: ${workflow!.name}
+${workflow!.description ? `tool-description: ${workflow!.description}` : ""}
+
+user-prompt: ${result}
+`,
+              },
+            ],
+          },
+          {
+            role: "user",
+            content: "",
+            parts: [{ type: "text", text: result }],
+          },
+        ],
+        schema: inputSchema,
+      }).then((res) => {
+        setQuery(res);
+      }),
+      {
+        loading: "Generating input with AI...",
+        success: "Input generated successfully",
+        error: "Failed to generate input",
+      },
+    );
+  }, []);
+
   const handleClick = () => {
     const failSchema = inputSchemaIterator.find(([key]) => {
       if (inputSchema.required?.includes(key) && query[key] === undefined)
@@ -141,6 +211,7 @@ export function ExecuteTab({
       fitView({
         duration: 300,
         nodes: fitviewNodes,
+        maxZoom: 1.8,
       });
     }, 300);
   }, []);
@@ -286,7 +357,7 @@ export function ExecuteTab({
     <div className="fade-300 w-sm h-[85vh] bg-card border rounded-lg shadow-lg overflow-y-auto py-4">
       <div className="flex flex-col px-4">
         <div className="flex items-center gap-2 w-full h-9">
-          <span className="font-semibold">Run</span>
+          <span className="font-semibold">Test Run</span>
           <div
             className={cn(
               "p-1 rounded hover:bg-secondary cursor-pointer ml-auto",
@@ -313,7 +384,7 @@ export function ExecuteTab({
           </Button>
         ))}
       </div>
-      <Separator className="mb-6" />
+      <Separator className="mb-4" />
 
       {tab == tabs[0].value ? (
         <div className="px-4 flex flex-col gap-4">
@@ -325,74 +396,87 @@ export function ExecuteTab({
               />
             </div>
           ) : (
-            inputSchemaIterator.map(([key, schema], i) => {
-              return (
-                <div key={key ?? i}>
-                  <Label
-                    className="mb-2 text-sm font-semibold ml-0.5 gap-0.5"
-                    htmlFor={key || String(i)}
-                  >
-                    {key || "undefined"}
-                    {inputSchema.required?.includes(key) && (
-                      <span className="text-xs text-destructive">*</span>
-                    )}
-                  </Label>
-                  {schema.type == "number" ? (
-                    <Input
-                      disabled={isProcessing}
-                      id={key || String(i)}
-                      type="number"
-                      placeholder={schema.description || "number"}
-                      defaultValue={query[key] || undefined}
-                      onChange={(e) =>
-                        setQuery({ ...query, [key]: Number(e.target.value) })
-                      }
-                    />
-                  ) : schema.type == "boolean" ? (
-                    <Switch
-                      disabled={isProcessing}
-                      id={key || String(i)}
-                      checked={query[key]}
-                      onCheckedChange={(checked) =>
-                        setQuery({ ...query, [key]: checked })
-                      }
-                    />
-                  ) : schema.type == "string" && schema.enum ? (
-                    <Select
-                      disabled={isProcessing}
-                      defaultValue={query[key]}
-                      onValueChange={(value) =>
-                        setQuery({ ...query, [key]: value })
-                      }
+            <>
+              <div
+                tabIndex={1}
+                onClick={handleGenerateInputWithAI}
+                className="hover:bg-secondary rounded-sm px-2 py-1 flex items-center gap-2 ml-auto text-xs font-semibold cursor-pointer hover:text-primary transition-colors"
+              >
+                Generate Input With AI
+                <WandSparklesIcon className="size-3" />
+              </div>
+              {inputSchemaIterator.map(([key, schema], i) => {
+                return (
+                  <div key={key ?? i}>
+                    <Label
+                      className="mb-2 text-sm font-semibold ml-0.5 gap-0.5"
+                      htmlFor={key || String(i)}
                     >
-                      <SelectTrigger id={key || String(i)} className="min-w-46">
-                        <SelectValue
-                          placeholder={schema.description || "option"}
-                        />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {(schema.enum as string[]).map((item, i) => (
-                          <SelectItem key={item ?? i} value={item}>
-                            {item}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ) : schema.type == "string" ? (
-                    <Textarea
-                      disabled={isProcessing}
-                      id={key || String(i)}
-                      value={query[key]}
-                      className="resize-none max-h-28 overflow-y-auto"
-                      placeholder={schema.description || "string"}
-                      onChange={(e) =>
-                        setQuery({ ...query, [key]: e.target.value })
-                      }
-                    />
-                  ) : null}
-                </div>
-              );
-            })
+                      {key || "undefined"}
+                      {inputSchema.required?.includes(key) && (
+                        <span className="text-xs text-destructive">*</span>
+                      )}
+                    </Label>
+                    {schema.type == "number" ? (
+                      <Input
+                        disabled={isProcessing}
+                        id={key || String(i)}
+                        type="number"
+                        placeholder={schema.description || "number"}
+                        defaultValue={query[key] || undefined}
+                        onChange={(e) =>
+                          setQuery({ ...query, [key]: Number(e.target.value) })
+                        }
+                      />
+                    ) : schema.type == "boolean" ? (
+                      <Switch
+                        disabled={isProcessing}
+                        id={key || String(i)}
+                        checked={query[key]}
+                        onCheckedChange={(checked) =>
+                          setQuery({ ...query, [key]: checked })
+                        }
+                      />
+                    ) : schema.type == "string" && schema.enum ? (
+                      <Select
+                        disabled={isProcessing}
+                        defaultValue={query[key]}
+                        onValueChange={(value) =>
+                          setQuery({ ...query, [key]: value })
+                        }
+                      >
+                        <SelectTrigger
+                          id={key || String(i)}
+                          className="min-w-46"
+                        >
+                          <SelectValue
+                            placeholder={schema.description || "option"}
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {(schema.enum as string[]).map((item, i) => (
+                            <SelectItem key={item ?? i} value={item}>
+                              {item}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : schema.type == "string" ? (
+                      <Textarea
+                        disabled={isProcessing}
+                        id={key || String(i)}
+                        value={query[key]}
+                        className="resize-none max-h-28 overflow-y-auto"
+                        placeholder={schema.description || "string"}
+                        onChange={(e) =>
+                          setQuery({ ...query, [key]: e.target.value })
+                        }
+                      />
+                    ) : null}
+                  </div>
+                );
+              })}
+            </>
           )}
           <Button
             disabled={isProcessing}
