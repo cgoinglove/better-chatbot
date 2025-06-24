@@ -3,7 +3,10 @@ import { createGraphStore } from "./graph-store";
 
 describe("workflow-store", () => {
   it("source", () => {
-    const store = createGraphStore();
+    const store = createGraphStore({
+      nodes: [],
+      edges: [],
+    });
     const context = store();
 
     expect(context.outputs).toEqual({});

@@ -72,6 +72,7 @@ export type WorkflowNodeData =
 
 export type NodeRuntimeField = {
   isNew?: boolean;
+  status?: "fail" | "running" | "success";
 };
 
 export type UINode<Kind extends NodeKind = NodeKind> = Node<

@@ -10,7 +10,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const { input } = await request.json();
+  const { query } = await request.json();
   const session = await getSession();
   const hasAccess = await workflowRepository.checkAccess(id, session.user.id);
   if (!hasAccess) {
@@ -38,6 +38,12 @@ export async function POST(
       // Subscribe to workflow events
       app.subscribe((evt) => {
         if (isAborted) return;
+        if (
+          (evt.eventType == "NODE_START" || evt.eventType == "NODE_END") &&
+          evt.node.name == "SKIP"
+        ) {
+          return;
+        }
         try {
           // Use custom encoding instead of SSE format
           const data = encodeWorkflowEvent(evt);
@@ -62,9 +68,10 @@ export async function POST(
       // Start the workflow
       app
         .run(
-          { input },
+          { query },
           {
             disableHistory: true,
+            timeout: 1000 * 60 * 5,
           },
         )
         .then((result) => {

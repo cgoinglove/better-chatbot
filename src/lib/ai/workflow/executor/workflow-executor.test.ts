@@ -17,19 +17,30 @@ vi.mock("./node-executor", async (importOriginal) => {
   return {
     ...actual,
     startNodeExecutor: vi.fn().mockImplementation(() => {
-      // Return the test input data instead of empty state.input
-      return testInputData;
+      // Return the test input data in output field
+      return {
+        output: testInputData,
+      };
     }),
     endNodeExecutor: vi.fn().mockImplementation(({ node, state }) => {
-      return node.outputData.reduce((acc, cur) => {
-        if (cur.source) {
-          acc[cur.key] = state.getOutput(cur.source);
-        }
-        return acc;
-      }, {} as object);
+      return {
+        output: node.outputData.reduce((acc, cur) => {
+          if (cur.source) {
+            acc[cur.key] = state.getOutput(cur.source);
+          }
+          return acc;
+        }, {} as object),
+      };
     }),
     llmNodeExecutor: vi.fn().mockResolvedValue({
-      chat_response: "mock llm response",
+      input: {
+        chatModel: { provider: "openai", name: "gpt-4", id: "gpt-4" },
+        messages: [],
+      },
+      output: {
+        totalTokens: 100,
+        answer: "mock llm response",
+      },
     }),
     // Keep conditionNodeExecutor as real implementation for proper testing
     conditionNodeExecutor: actual.conditionNodeExecutor,

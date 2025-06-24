@@ -97,13 +97,32 @@ export default function Workflow({
   const onNodesChange: OnNodesChange = useCallback(
     (changes) => {
       if (isProcessing) {
-        const allowedChanges = changes.filter(
-          (change) => change.type === "select",
-        );
-
-        if (allowedChanges.length > 0) {
-          setNodes((nds) => applyNodeChanges(allowedChanges, nds) as UINode[]);
-        }
+        setNodes((nds) => {
+          let updatedNodes = nds;
+          changes.forEach((change) => {
+            if (change.type === "select") {
+              updatedNodes = applyNodeChanges(
+                [change],
+                updatedNodes,
+              ) as UINode[];
+            } else if (change.type === "replace" && "item" in change) {
+              const newNode = change.item as UINode;
+              updatedNodes = updatedNodes.map((node) => {
+                if (node.id === change.id) {
+                  return {
+                    ...node,
+                    data: {
+                      ...node.data,
+                      runtime: newNode.data.runtime,
+                    },
+                  };
+                }
+                return node;
+              });
+            }
+          });
+          return updatedNodes;
+        });
         return;
       }
       setNodes((nds) => applyNodeChanges(changes, nds) as UINode[]);

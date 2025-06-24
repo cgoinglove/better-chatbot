@@ -27,7 +27,12 @@ function getExecutorByKind(kind: NodeKind): NodeExecutor {
     case NodeKind.Condition:
       return conditionNodeExecutor;
     case "NOOP" as any:
-      return () => {};
+      return () => {
+        return {
+          input: {},
+          output: {},
+        };
+      };
   }
   return () => {
     console.warn(`Undefined '${kind}' Node Executor`);
@@ -40,7 +45,10 @@ export const createWorkflowExecutor = (workflow: {
   edges: DBEdge[];
   logger?: ConsolaInstance;
 }) => {
-  const store = createGraphStore();
+  const store = createGraphStore({
+    nodes: workflow.nodes,
+    edges: workflow.edges,
+  });
   const logger =
     workflow.logger ??
     globalLogger.withDefaults({
@@ -78,35 +86,33 @@ export const createWorkflowExecutor = (workflow: {
       },
       async execute(state) {
         const executor = getExecutorByKind(node.kind as NodeKind);
-        const output = await executor({
+        const result = await executor({
           node: convertDBNodeToUINode(node).data,
           state,
         });
 
-        if (output) {
+        if (result?.output) {
           state.setOutput(
             {
               nodeId: node.id,
               path: [],
             },
-            output,
+            result.output,
           );
+        }
+        if (result?.input) {
+          state.setInput(node.id, result.input);
         }
       },
     });
     if (node.kind === NodeKind.Condition) {
       graph.dynamicEdge(node.id, (state) => {
-        const branch = state.getOutput({
+        const next = state.getOutput({
           nodeId: node.id,
-          path: ["branch"],
-        });
-
-        if (!branch) return;
-
-        const next = workflow.edges
-          .filter((edge) => edge.uiConfig.sourceHandle == branch)
-          .map((edge) => edge.target);
-        return next;
+          path: ["nextNodes"],
+        }) as DBNode[];
+        if (!next) return;
+        return next.map((node) => node.id);
       });
     } else {
       const targetEdges = workflow.edges

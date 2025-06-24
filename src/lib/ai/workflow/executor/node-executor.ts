@@ -14,17 +14,28 @@ import { checkConditionBranch } from "../condition";
 export type NodeExecutor<T extends WorkflowNodeData = any> = (input: {
   node: T;
   state: WorkflowRuntimeState;
-}) => any; // Node OutputSchema Type
-
+}) =>
+  | Promise<{
+      input?: any;
+      output?: any;
+    }>
+  | {
+      input?: any;
+      output?: any;
+    };
 export const startNodeExecutor: NodeExecutor<StartNodeData> = ({ state }) => {
-  return state.input;
+  return {
+    output: state.query,
+  };
 };
 
 export const endNodeExecutor: NodeExecutor<EndNodeData> = ({ node, state }) => {
-  return node.outputData.reduce((acc, cur) => {
-    acc[cur.key] = state.getOutput(cur.source!);
-    return acc;
-  }, {} as object);
+  return {
+    output: node.outputData.reduce((acc, cur) => {
+      acc[cur.key] = state.getOutput(cur.source!);
+      return acc;
+    }, {} as object),
+  };
 };
 
 export const llmNodeExecutor: NodeExecutor<LLMNodeData> = async ({
@@ -78,9 +89,17 @@ export const llmNodeExecutor: NodeExecutor<LLMNodeData> = async ({
   const response = await generateText({
     model,
     messages,
+    maxSteps: 1,
   });
   return {
-    chat_response: response.text,
+    input: {
+      chatModel: node.model,
+      messages,
+    },
+    output: {
+      totalTokens: response.usage.totalTokens,
+      answer: response.text,
+    },
   };
 };
 
@@ -88,18 +107,21 @@ export const conditionNodeExecutor: NodeExecutor<ConditionNodeData> = async ({
   node,
   state,
 }) => {
-  const okBranch = [node.branches.if, ...(node.branches.elseIf || [])].find(
-    (branch) => {
+  const okBranch =
+    [node.branches.if, ...(node.branches.elseIf || [])].find((branch) => {
       return checkConditionBranch(branch, state.getOutput);
-    },
-  );
+    }) || node.branches.else;
 
-  if (okBranch) {
-    return {
-      branch: okBranch.id,
-    };
-  }
+  const nextNodes = state.edges
+    .filter((edge) => edge.uiConfig.sourceHandle === okBranch.id)
+    .map((edge) => state.nodes.find((node) => node.id === edge.target)!)
+    .filter(Boolean);
+
   return {
-    branch: node.branches.else.id,
+    output: {
+      type: okBranch.type,
+      branch: okBranch.id,
+      nextNodes,
+    },
   };
 };

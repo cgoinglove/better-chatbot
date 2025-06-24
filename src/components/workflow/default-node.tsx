@@ -89,10 +89,13 @@ export const DefaultNode = memo(function DefaultNode({
         <div
           className={cn(
             "fade-300 group py-4 w-72 relative bg-secondary border-2 hover:bg-input rounded-lg flex flex-col cursor-grab transition-colors",
-            selected && "border-blue-500 bg-secondary!",
             data.kind === NodeKind.Information &&
               "bg-primary-foreground text-primary rounded-none border-card",
             data.kind === NodeKind.Condition && "w-52",
+            data.runtime?.status === "fail" && "border-destructive",
+            ["success", "running"].includes(data.runtime?.status ?? "") &&
+              "border-green-400",
+            selected && "border-blue-500 bg-secondary!",
           )}
         >
           <div className="flex items-center gap-2 relative px-4">

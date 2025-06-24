@@ -46,8 +46,11 @@ export function generateUINode(
     node.data.outputData = [];
   } else if (node.data.kind === NodeKind.LLM) {
     node.data.outputSchema.properties = {
-      chat_response: {
+      answer: {
         type: "string",
+      },
+      totalTokens: {
+        type: "number",
       },
     };
     node.data.messages = [
