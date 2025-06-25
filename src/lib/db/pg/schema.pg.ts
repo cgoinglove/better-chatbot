@@ -165,7 +165,9 @@ export const WorkflowSchema = pgTable("workflow", {
   icon: json("icon").$type<DBWorkflow["icon"]>(),
   description: text("description"),
   isPublished: boolean("is_published").notNull().default(false),
-  visibility: varchar("visibility", { enum: ["public", "private"] })
+  visibility: varchar("visibility", {
+    enum: ["public", "private", "collaborative"],
+  })
     .notNull()
     .default("private"),
   userId: uuid("user_id")

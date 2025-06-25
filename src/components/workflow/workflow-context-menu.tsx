@@ -15,7 +15,10 @@ import { mutate } from "swr";
 
 interface WorkflowContextMenuProps {
   children: React.ReactNode;
-  workflow: DBWorkflow;
+  workflow: Pick<
+    DBWorkflow,
+    "id" | "name" | "description" | "icon" | "isPublished" | "visibility"
+  >;
 }
 
 export function WorkflowContextMenu(props: WorkflowContextMenuProps) {

@@ -85,7 +85,7 @@ export function EditWorkflowPopup({
   onOpenChange,
 }: {
   children?: React.ReactNode;
-  defaultValue?: DBWorkflow;
+  defaultValue?: Pick<DBWorkflow, "id" | "name" | "description" | "icon">;
   submitAfterRoute?: boolean;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;

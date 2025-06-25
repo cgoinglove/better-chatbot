@@ -1,6 +1,7 @@
-import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, or, sql } from "drizzle-orm";
 import { pgDb } from "../db.pg";
 import {
+  UserSchema,
   WorkflowEdgeSchema,
   WorkflowNodeDataSchema,
   WorkflowSchema,
@@ -10,6 +11,7 @@ import {
   DBEdge,
   DBNode,
   WorkflowRepository,
+  WorkflowSummary,
 } from "app-types/workflow";
 import { NodeKind } from "lib/ai/workflow/workflow.interface";
 import {
@@ -18,6 +20,30 @@ import {
 } from "lib/ai/workflow/shared.workflow";
 
 export const pgWorkflowRepository: WorkflowRepository = {
+  async selectAll(userId) {
+    const rows = await pgDb
+      .select({
+        id: WorkflowSchema.id,
+        name: WorkflowSchema.name,
+        description: WorkflowSchema.description,
+        icon: WorkflowSchema.icon,
+        visibility: WorkflowSchema.visibility,
+        isPublished: WorkflowSchema.isPublished,
+        userName: UserSchema.name,
+        userAvatar: UserSchema.image,
+        updatedAt: WorkflowSchema.updatedAt,
+      })
+      .from(WorkflowSchema)
+      .innerJoin(UserSchema, eq(WorkflowSchema.userId, UserSchema.id))
+      .where(
+        or(
+          inArray(WorkflowSchema.visibility, ["public", "collaborative"]),
+          eq(WorkflowSchema.userId, userId),
+        ),
+      )
+      .orderBy(desc(WorkflowSchema.updatedAt));
+    return rows as WorkflowSummary[];
+  },
   async selectById(id) {
     const [workflow] = await pgDb
       .select()
@@ -25,7 +51,8 @@ export const pgWorkflowRepository: WorkflowRepository = {
       .where(eq(WorkflowSchema.id, id));
     return workflow as DBWorkflow;
   },
-  async checkAccess(workflowId, userId) {
+
+  async checkAccess(workflowId, userId, readOnly = true) {
     const [workflow] = await pgDb
       .select({
         visibility: WorkflowSchema.visibility,
@@ -39,6 +66,7 @@ export const pgWorkflowRepository: WorkflowRepository = {
     if (workflow.visibility === "private" && workflow.userId !== userId) {
       return false;
     }
+    if (workflow.visibility == "public" && !readOnly) return false;
     return true;
   },
   async delete(id) {

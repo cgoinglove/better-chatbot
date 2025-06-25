@@ -11,7 +11,7 @@ export type DBWorkflow = {
   name: string;
   description?: string;
   isPublished: boolean;
-  visibility: "public" | "private";
+  visibility: "public" | "private" | "collaborative";
   userId: string;
   createdAt: Date;
   updatedAt: Date;
@@ -47,10 +47,26 @@ export type DBEdge = {
   createdAt: Date;
 };
 
+export type WorkflowSummary = {
+  id: string;
+  name: string;
+  description?: string;
+  icon?: WorkflowIcon;
+  visibility: "public" | "private" | "collaborative";
+  isPublished: boolean;
+  userName: string;
+  userAvatar?: string;
+  updatedAt: Date;
+};
 export interface WorkflowRepository {
   delete(id: string): Promise<void>;
   selectByUserId(userId: string): Promise<DBWorkflow[]>;
-  checkAccess(workflowId: string, userId: string): Promise<boolean>;
+  selectAll(userId: string): Promise<WorkflowSummary[]>;
+  checkAccess(
+    workflowId: string,
+    userId: string,
+    readOnly?: boolean,
+  ): Promise<boolean>;
   selectById(id: string): Promise<DBWorkflow | null>;
   save(
     workflow: PartialBy<

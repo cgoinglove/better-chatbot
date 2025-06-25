@@ -23,7 +23,11 @@ export async function POST(
   const { id } = await params;
   const session = await getSession();
 
-  const hasAccess = await workflowRepository.checkAccess(id, session.user.id);
+  const hasAccess = await workflowRepository.checkAccess(
+    id,
+    session.user.id,
+    false,
+  );
   if (!hasAccess) {
     return new Response("Unauthorized", { status: 401 });
   }

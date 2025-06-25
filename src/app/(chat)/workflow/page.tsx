@@ -13,11 +13,16 @@ import useSWR from "swr";
 import { fetcher } from "lib/utils";
 import { Skeleton } from "ui/skeleton";
 import { BackgroundPaths } from "ui/background-paths";
+import { WorkflowSummary } from "app-types/workflow";
 
 export default function WorkflowPage() {
-  const { data: workflows, isLoading } = useSWR("/api/workflow", fetcher, {
-    fallbackData: [],
-  });
+  const { data: workflows, isLoading } = useSWR<WorkflowSummary[]>(
+    "/api/workflow",
+    fetcher,
+    {
+      fallbackData: [],
+    },
+  );
 
   return (
     <div className="w-full flex flex-col gap-4 p-8">
@@ -50,7 +55,7 @@ export default function WorkflowPage() {
                   className="w-full lg:w-sm xl:w-xs h-[190px]"
                 />
               ))
-          : workflows.map((workflow) => (
+          : workflows?.map((workflow) => (
               <Link href={`/workflow/${workflow.id}`} key={workflow.id}>
                 <Card className="w-full lg:w-sm xl:w-xs cursor-pointer hover:bg-input transition-colors group">
                   <CardHeader className="flex flex-row items-center gap-4">
@@ -78,6 +83,15 @@ export default function WorkflowPage() {
                               <LockKeyholeIcon className="size-2.5" />
                             )}
                           </p>
+                        </div>
+                        <div className="ml-auto flex items-center gap-1.5 mt-auto">
+                          <span className="text-xs text-muted-foreground font-medium">
+                            {workflow.userName}
+                          </span>
+                          <Avatar className="size-4 rounded-full ring">
+                            <AvatarImage src={workflow.userAvatar} />
+                            <AvatarFallback>{workflow.userName}</AvatarFallback>
+                          </Avatar>
                         </div>
                       </CardTitle>
                       <CardDescription className="mt-4 text-xs h-12 line-clamp-3 overflow-hidden whitespace-pre-wrap break-words">
