@@ -11,7 +11,6 @@ import { useState } from "react";
 import { safe } from "ts-safe";
 
 import { toast } from "sonner";
-import { handleErrorWithToast } from "ui/shared-toast";
 import { mutate } from "swr";
 
 interface WorkflowContextMenuProps {
@@ -31,7 +30,6 @@ export function WorkflowContextMenu(props: WorkflowContextMenuProps) {
         }),
       )
         .ifOk(() => {
-          toast.success("Workflow deleted");
           mutate("/api/workflow");
           setOpen(false);
         })

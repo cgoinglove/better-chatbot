@@ -1,22 +1,28 @@
 "use client";
 
 import {
-  InputNodeData,
   ToolNodeData,
+  UINode,
   WorkflowNodeData,
+  WorkflowToolKey,
 } from "lib/ai/workflow/workflow.interface";
-import { memo, useCallback } from "react";
-import {
-  Feild,
-  EditJsonSchemaFieldPopup,
-  getFieldKey,
-} from "../../edit-json-schema-field-popup";
-import { PlusIcon, TrashIcon, VariableIcon } from "lucide-react";
-import { PencilIcon } from "lucide-react";
-import { objectFlow } from "lib/utils";
+import { memo, useEffect, useMemo } from "react";
+import { getFieldKey } from "../../edit-json-schema-field-popup";
+import { ChevronDown, VariableIcon } from "lucide-react";
+
+import { useEdges, useNodes, useReactFlow } from "@xyflow/react";
+import { selectMcpClientsAction } from "@/app/api/mcp/actions";
+import useSWR from "swr";
+import { handleErrorWithToast } from "ui/shared-toast";
+import { appStore } from "@/app/store";
+
+import { WorkflowToolSelect } from "../workflow-tool-select";
+import { isString, toAny } from "lib/utils";
+import { Separator } from "ui/separator";
+import { SelectModel } from "@/components/select-model";
 import { Button } from "ui/button";
-import { Label } from "ui/label";
-import { useReactFlow } from "@xyflow/react";
+import { OutputSchemaMentionInput } from "../output-schema-mention-input";
+import { useWorkflowStore } from "@/app/store/workflow.store";
 
 export const ToolNodeDataConfig = memo(function ({
   data,
@@ -24,124 +30,133 @@ export const ToolNodeDataConfig = memo(function ({
   data: ToolNodeData;
 }) {
   const { updateNodeData } = useReactFlow();
+  const nodes = useNodes() as UINode[];
+  const edges = useEdges();
+  const isProcessing = useWorkflowStore((state) => state.processIds.length > 0);
 
-  const checkRequired = useCallback(
-    (key: string) => {
-      return data.outputSchema.required?.includes(key);
+  const { data: mcpList } = useSWR("mcp-list", selectMcpClientsAction, {
+    refreshInterval: 1000 * 60 * 1,
+    fallbackData: [],
+    onError: handleErrorWithToast,
+    onSuccess: (data) => {
+      appStore.setState({ mcpList: data });
     },
-    [data.outputSchema],
-  );
+  });
 
-  const addField = useCallback(
-    (field: Feild) => {
-      updateNodeData(data.id, (node) => {
-        const prev = node.data as InputNodeData;
-        const outputSchema = {
-          ...prev,
-          properties: {
-            ...prev.outputSchema.properties,
-            [field.key]: {
-              type: field.type,
-              enum:
-                field.type == "string" && field.enum ? field.enum : undefined,
-              description: field.description,
-            },
-          },
-          default: field.defaultValue,
-          required: !field.required
-            ? prev.outputSchema.required?.filter((k) => k != field.key)
-            : [...(prev.outputSchema.required ?? []), field.key],
-        };
-
+  const toolList = useMemo<WorkflowToolKey[]>(() => {
+    const mcpTools: WorkflowToolKey[] = mcpList.flatMap((mcp) => {
+      return mcp.toolInfo.map((tool) => {
         return {
-          outputSchema,
+          type: "mcp-tool",
+          serverId: mcp.id,
+          serverName: mcp.name,
+          id: tool.name,
+          description: tool.description,
+          parameterSchema: tool.inputSchema,
         };
       });
-    },
-    [data.id],
-  );
+    });
+    return mcpTools;
+  }, [mcpList]);
 
-  const removeField = useCallback(
-    (key: string) => {
-      updateNodeData(data.id, (node) => {
-        const prev = node.data as InputNodeData;
-        const outputSchema = {
-          ...prev,
-          properties: objectFlow(prev.outputSchema.properties).filter(
-            (_, k) => k != key,
-          ),
-          required: prev.outputSchema.required?.filter((k) => k != key),
-        };
-        return {
-          outputSchema,
-        };
+  useEffect(() => {
+    if (!data.model) {
+      updateNodeData(data.id, {
+        model: appStore.getState().chatModel!,
       });
-    },
-    [data.outputSchema],
-  );
+    }
+  }, []);
 
   return (
-    <div className="flex flex-col gap-2 text-sm px-4 ">
-      <div className="flex items-center justify-between">
-        <Label className="text-sm text-muted-foreground">Input Fields</Label>
-        <EditJsonSchemaFieldPopup onChange={addField}>
-          <div className="p-1 hover:bg-secondary rounded cursor-pointer">
-            <PlusIcon className="size-3" />
-          </div>
-        </EditJsonSchemaFieldPopup>
-      </div>
-      <div className="flex flex-col gap-1">
-        {Object.entries(data.outputSchema.properties ?? {}).map(
-          ([key, value]) => (
-            <div
-              key={key}
-              className="flex items-center gap-1 py-1 px-2 bg-secondary rounded group/item border cursor-pointer"
-            >
-              <VariableIcon className="size-3 text-blue-500" />
+    <div className="flex flex-col gap-2 text-sm px-4">
+      <p className="text-sm font-semibold">Tool</p>
+      <WorkflowToolSelect
+        tools={toolList}
+        onChange={(tool) => {
+          updateNodeData(data.id, { tool });
+        }}
+        tool={data.tool}
+      />
+      <p className="text-sm font-semibold my-2">Description & Schema</p>
+      {data.tool?.description ||
+      Object.keys(data.tool?.parameterSchema?.properties || {}).length > 0 ? (
+        <div className="text-xs p-2 bg-background border rounded-md">
+          <p>{data.tool?.description}</p>
+          {Object.keys(data.tool?.parameterSchema?.properties || {}).length >
+            0 && (
+            <div className="flex items-center flex-wrap gap-1 mt-2">
+              {Object.keys(data.tool?.parameterSchema?.properties || {}).map(
+                (key) => {
+                  const isRequired =
+                    data.tool?.parameterSchema?.required?.includes(key);
+                  return (
+                    <div
+                      key={key}
+                      className="mb-0.5 flex items-center text-xs px-1.5 py-0.5 bg-secondary rounded-md"
+                    >
+                      <VariableIcon className="size-3.5 text-blue-500" />
+                      {isRequired && (
+                        <span className="text-destructive">*</span>
+                      )}
+                      <span className="font-semibold">{key}</span>
 
-              <span>{key}</span>
-              <div className="flex-1" />
-
-              <span className="block group-hover/item:hidden text-xs text-muted-foreground">
-                <span className="text-[10px] text-destructive">
-                  {checkRequired(key) ? "*" : " "}
-                </span>
-                {getFieldKey(value)}
-              </span>
-              <div className="hidden group-hover/item:flex items-center gap-1">
-                <EditJsonSchemaFieldPopup
-                  editAbleKey={false}
-                  field={{
-                    key,
-                    type: value.type as any,
-                    description: value.description,
-                    enum: value.enum as string[],
-                    required: checkRequired(key),
-                  }}
-                  onChange={addField}
-                >
-                  <div className="p-1 text-muted-foreground rounded cursor-pointer hover:bg-input">
-                    <PencilIcon className="size-3" />
-                  </div>
-                </EditJsonSchemaFieldPopup>
-                <div
-                  onClick={() => removeField(key)}
-                  className="p-1 text-destructive rounded cursor-pointer hover:bg-destructive/10"
-                >
-                  <TrashIcon className="size-3" />
-                </div>
-              </div>
+                      <span className="text-muted-foreground ml-2">
+                        {isString(data.tool?.parameterSchema?.properties?.[key])
+                          ? data.tool?.parameterSchema?.properties?.[key]
+                          : toAny(data.tool?.parameterSchema?.properties?.[key])
+                              ?.type || "unknown"}
+                      </span>
+                    </div>
+                  );
+                },
+              )}
             </div>
-          ),
-        )}
-        <EditJsonSchemaFieldPopup onChange={addField}>
+          )}
+        </div>
+      ) : (
+        <div className="text-xs text-muted-foreground text-center py-2 border rounded-md">
+          No description And schema
+        </div>
+      )}
+
+      <Separator className="my-4" />
+      <div className="flex items-center gap-2">
+        <p className="text-sm font-semibold my-2">Message</p>
+        <SelectModel
+          defaultModel={data.model}
+          onSelect={(model) => {
+            updateNodeData(data.id, {
+              model,
+            });
+          }}
+        >
           <Button
-            variant="ghost"
-            className="w-full mt-1 border-dashed border text-muted-foreground"
+            variant={"outline"}
+            size={"sm"}
+            className="data-[state=open]:bg-input! hover:bg-input! ml-auto"
           >
-            <PlusIcon /> Add Input
+            <p className="mr-auto">
+              {data.model?.model ?? (
+                <span className="text-muted-foreground">model</span>
+              )}
+            </p>
+            <ChevronDown className="size-3" />
           </Button>
-        </EditJsonSchemaFieldPopup>
+        </SelectModel>
+      </div>
+      <div className="w-full bg-secondary rounded-md p-2 min-h-20">
+        <OutputSchemaMentionInput
+          currentNodeId={data.id}
+          nodes={nodes}
+          edges={edges}
+          content={data.message}
+          editable={!isProcessing}
+          onChange={(content) => {
+            updateNodeData(data.id, {
+              message: content,
+            });
+          }}
+        />
       </div>
     </div>
   );

@@ -183,7 +183,11 @@ function SchemaItem({
     );
   }, [allowedTypes, schema.type]);
 
-  if (schema.type === "object") {
+  if (
+    schema.type === "object" &&
+    schema.properties &&
+    Object.keys(schema.properties).length > 0
+  ) {
     return (
       <DropdownMenuSub>
         <DropdownMenuSubTrigger

@@ -101,7 +101,7 @@ export const LLMNodeDataConfig = memo(function ({
       <Label className="text-sm mt-1 text-muted-foreground">
         LLM Response Schema
       </Label>
-      <div className="flex items-center gap-1">
+      <div className="flex items-center flex-wrap gap-1">
         {Object.keys(data.outputSchema.properties).map((key) => {
           return (
             <div

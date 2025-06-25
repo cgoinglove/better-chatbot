@@ -61,24 +61,11 @@ export type NoteNodeData = BaseWorkflowNodeDataData<{
   kind: NodeKind.Note;
 }>;
 
-export type ToolParameterOption =
-  | {
-      type: "direct";
-      input?: Record<string, string | OutputSchemaSourceKey>;
-    }
-  | {
-      type: "chat";
-      model: ChatModel;
-      messages: {
-        role: "user" | "assistant" | "system";
-        content?: TipTapMentionJsonContent;
-      }[];
-    };
-
 export type ToolNodeData = BaseWorkflowNodeDataData<{
   kind: NodeKind.Tool;
   tool?: WorkflowToolKey;
-  parameterOption: ToolParameterOption;
+  model: ChatModel;
+  message?: TipTapMentionJsonContent;
 }>;
 
 export type LLMNodeData = BaseWorkflowNodeDataData<{

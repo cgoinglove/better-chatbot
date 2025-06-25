@@ -188,7 +188,8 @@ export const conditionNodeValidate: NodeValidate<ConditionNodeData> = ({
   [node.branches.if, ...(node.branches.elseIf ?? [])].forEach(branchValidate);
 };
 
-export const toolNodeValidate: NodeValidate<ToolNodeData> = ({
-  node,
-  nodes,
-}) => {};
+export const toolNodeValidate: NodeValidate<ToolNodeData> = ({ node }) => {
+  if (!node.tool) throw new Error("Tool node must have a tool");
+  if (!node.model) throw new Error("Tool node must have a model");
+  if (!node.message) throw new Error("Tool node must have a message");
+};

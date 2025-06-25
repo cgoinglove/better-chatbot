@@ -3,7 +3,6 @@ import {
   ConditionNodeData,
   OutputNodeData,
   LLMNodeData,
-  OutputSchemaSourceKey,
   InputNodeData,
   WorkflowNodeData,
   ToolNodeData,
@@ -11,6 +10,10 @@ import {
 import { WorkflowRuntimeState } from "./graph-store";
 import { generateText, Message } from "ai";
 import { checkConditionBranch } from "../condition";
+import { convertTiptapJsonToAiMessage } from "../shared.workflow";
+import { jsonSchemaToZod } from "lib/json-schema-to-zod";
+import { callMcpToolAction } from "@/app/api/mcp/actions";
+import { toAny } from "lib/utils";
 
 export type NodeExecutor<T extends WorkflowNodeData = any> = (input: {
   node: T;
@@ -47,48 +50,13 @@ export const llmNodeExecutor: NodeExecutor<LLMNodeData> = async ({
   state,
 }) => {
   const model = customModelProvider.getModel(node.model);
-  const messages: Omit<Message, "id">[] = node.messages.map((message) => {
-    const text =
-      message.content?.content?.[0].content
-        .reduce((prev, part) => {
-          let data = "";
-
-          switch (part.type) {
-            case "text":
-              {
-                data += ` ${part.text}`;
-              }
-              break;
-            case "mention":
-              {
-                const key = JSON.parse(
-                  part.attrs.label,
-                ) as OutputSchemaSourceKey;
-                const mentionItem = state.getOutput(key) || "";
-                if (typeof mentionItem == "object") {
-                  data +=
-                    "\n```json\n" +
-                    JSON.stringify(mentionItem, null, 2) +
-                    "\n```\n";
-                } else data += ` \`${String(mentionItem)}\``;
-              }
-              break;
-          }
-          return prev + data;
-        }, "")
-        .trim() || "";
-
-    return {
+  const messages: Omit<Message, "id">[] = node.messages.map((message) =>
+    convertTiptapJsonToAiMessage({
       role: message.role,
-      content: "",
-      parts: [
-        {
-          type: "text",
-          text,
-        },
-      ],
-    };
-  });
+      getOutput: state.getOutput,
+      json: message.content,
+    }),
+  );
 
   const response = await generateText({
     model,
@@ -130,4 +98,68 @@ export const conditionNodeExecutor: NodeExecutor<ConditionNodeData> = async ({
   };
 };
 
-export const toolNodeExecutor: NodeExecutor<ToolNodeData> = async () => {};
+export const toolNodeExecutor: NodeExecutor<ToolNodeData> = async ({
+  node,
+  state,
+}) => {
+  const result: {
+    input: any;
+    output: any;
+  } = {
+    input: undefined,
+    output: undefined,
+  };
+
+  if (!node.tool) throw new Error("Tool not found");
+
+  if (!node.tool?.parameterSchema) {
+    result.input = {
+      parameter: undefined,
+    };
+  } else {
+    const prompt: string | undefined = node.message
+      ? toAny(
+          convertTiptapJsonToAiMessage({
+            role: "user",
+            getOutput: state.getOutput,
+            json: node.message,
+          }),
+        ).parts[0]?.text
+      : undefined;
+    const response = await generateText({
+      model: customModelProvider.getModel(node.model),
+      maxSteps: 1,
+      toolChoice: "required",
+      prompt,
+      tools: {
+        [node.tool.id]: {
+          description: node.tool.description,
+          parameters: jsonSchemaToZod(node.tool.parameterSchema),
+        },
+      },
+    });
+
+    result.input = {
+      parameter: response.toolCalls.find((call) => call.args)?.args,
+      prompt,
+    };
+  }
+
+  if (node.tool.type == "mcp-tool") {
+    result.output = {
+      tool_result: await callMcpToolAction(
+        node.tool.serverId,
+        node.tool.id,
+        result.input.parameter,
+      ),
+    };
+  } else {
+    result.output = {
+      tool_result: {
+        error: `Not implemented "${node.tool.type}"`,
+      },
+    };
+  }
+
+  return result;
+};

@@ -115,26 +115,31 @@ export function EditWorkflowPopup({
 
   const handleSubmit = async () => {
     setLoading(true);
-
-    await safe(() => zodSchema.parse(config))
-      .map(async (body) => {
-        const response = await fetch("/api/workflow", {
-          method: "POST",
-          body: JSON.stringify(body),
-        });
-        const data = await response.json();
-        return data as DBWorkflow;
-      })
-      .ifOk((workflow) => {
-        toast.success("success");
-        mutate("/api/workflow");
-        if (submitAfterRoute) {
-          router.push(`/workflow/${workflow.id}`);
-        }
-        onOpenChange?.(false);
-      })
-      .ifFail(handleErrorWithToast)
-      .watch(() => setLoading(false));
+    toast.promise(
+      safe(() => zodSchema.parse(config))
+        .map(async (body) => {
+          const response = await fetch("/api/workflow", {
+            method: "POST",
+            body: JSON.stringify(body),
+          });
+          const data = await response.json();
+          return data as DBWorkflow;
+        })
+        .ifOk((workflow) => {
+          mutate("/api/workflow");
+          if (submitAfterRoute) {
+            router.push(`/workflow/${workflow.id}`);
+          }
+          onOpenChange?.(false);
+        })
+        .ifFail(handleErrorWithToast)
+        .watch(() => setLoading(false))
+        .unwrap(),
+      {
+        success: "Workflow created",
+        loading: "Saving...",
+      },
+    );
   };
 
   return (

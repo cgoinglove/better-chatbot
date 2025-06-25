@@ -1,4 +1,4 @@
-import { ObjectJsonSchema7 } from "app-types/util";
+import { ObjectJsonSchema7, TipTapMentionJsonContent } from "app-types/util";
 import { JSONSchema7 } from "json-schema";
 import {
   NodeKind,
@@ -10,6 +10,7 @@ import { exclude, generateUUID } from "lib/utils";
 import { DBEdge, DBNode } from "app-types/workflow";
 import { Edge } from "@xyflow/react";
 import { GraphEvent } from "ts-edge";
+import { Message } from "ai";
 
 export const defaultObjectJsonSchema: ObjectJsonSchema7 = {
   type: "object",
@@ -71,6 +72,12 @@ export function generateUINode(
         logicalOperator: "AND",
         type: "else",
         conditions: [],
+      },
+    };
+  } else if (node.data.kind === NodeKind.Tool) {
+    node.data.outputSchema.properties = {
+      tool_result: {
+        type: "object",
       },
     };
   }
@@ -233,4 +240,60 @@ export function decodeWorkflowEvents(buffer: string): {
   }
 
   return { events, remainingBuffer };
+}
+
+export function convertTiptapJsonToAiMessage({
+  role,
+  getOutput,
+  json,
+}: {
+  role: "user" | "assistant" | "system";
+  getOutput: (key: OutputSchemaSourceKey) => any;
+  json?: TipTapMentionJsonContent;
+}): Omit<Message, "id"> {
+  if (!json)
+    return {
+      role,
+      content: "",
+      parts: [],
+    };
+
+  const text =
+    json.content?.[0].content
+      .reduce((prev, part) => {
+        let data = "";
+
+        switch (part.type) {
+          case "text":
+            {
+              data += ` ${part.text}`;
+            }
+            break;
+          case "mention":
+            {
+              const key = JSON.parse(part.attrs.label) as OutputSchemaSourceKey;
+              const mentionItem = getOutput(key) || "";
+              if (typeof mentionItem == "object") {
+                data +=
+                  "\n```json\n" +
+                  JSON.stringify(mentionItem, null, 2) +
+                  "\n```\n";
+              } else data += ` \`${String(mentionItem)}\``;
+            }
+            break;
+        }
+        return prev + data;
+      }, "")
+      .trim() || "";
+
+  return {
+    role,
+    content: "",
+    parts: [
+      {
+        type: "text",
+        text,
+      },
+    ],
+  };
 }
