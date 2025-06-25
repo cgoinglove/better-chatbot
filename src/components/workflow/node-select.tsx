@@ -10,11 +10,7 @@ import {
 } from "ui/dropdown-menu";
 import { NodeIcon } from "./node-icon";
 
-const unSupportedKinds: NodeKind[] = [
-  NodeKind.Code,
-  NodeKind.Http,
-  NodeKind.Tool,
-];
+const unSupportedKinds: NodeKind[] = [NodeKind.Code, NodeKind.Http];
 
 export function NodeSelect({
   children,
@@ -41,7 +37,7 @@ function NodeSelectContent({
   onChange,
 }: { onChange: (nodeKind: NodeKind) => void }) {
   return Object.keys(NodeKind)
-    .filter((key) => NodeKind[key] !== NodeKind.Start)
+    .filter((key) => NodeKind[key] !== NodeKind.Input)
     .sort((a, b) => {
       const aIndex = unSupportedKinds.indexOf(NodeKind[a]);
       const bIndex = unSupportedKinds.indexOf(NodeKind[b]);

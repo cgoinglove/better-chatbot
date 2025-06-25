@@ -14,8 +14,8 @@ export function NodeContextMenuContent({
   const { setEdges, setNodes } = useReactFlow();
 
   const handleDeleteNode = useCallback(() => {
-    if (node.kind === NodeKind.Start) {
-      return toast.warning("Start node cannot be deleted");
+    if (node.kind === NodeKind.Input) {
+      return toast.warning("Input node cannot be deleted");
     }
     setEdges((edges) =>
       edges.filter(

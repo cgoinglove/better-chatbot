@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  StartNodeData,
+  InputNodeData,
   WorkflowNodeData,
 } from "lib/ai/workflow/workflow.interface";
 import { memo, useCallback } from "react";
@@ -17,10 +17,10 @@ import { Button } from "ui/button";
 import { Label } from "ui/label";
 import { useReactFlow } from "@xyflow/react";
 
-export const StartNodeDataConfig = memo(function ({
+export const InputNodeDataConfig = memo(function ({
   data,
 }: {
-  data: StartNodeData;
+  data: InputNodeData;
 }) {
   const { updateNodeData } = useReactFlow();
 
@@ -34,7 +34,7 @@ export const StartNodeDataConfig = memo(function ({
   const addField = useCallback(
     (field: Feild) => {
       updateNodeData(data.id, (node) => {
-        const prev = node.data as StartNodeData;
+        const prev = node.data as InputNodeData;
         const outputSchema = {
           ...prev,
           properties: {
@@ -63,7 +63,7 @@ export const StartNodeDataConfig = memo(function ({
   const removeField = useCallback(
     (key: string) => {
       updateNodeData(data.id, (node) => {
-        const prev = node.data as StartNodeData;
+        const prev = node.data as InputNodeData;
         const outputSchema = {
           ...prev,
           properties: objectFlow(prev.outputSchema.properties).filter(
@@ -145,7 +145,7 @@ export const StartNodeDataConfig = memo(function ({
     </div>
   );
 });
-StartNodeDataConfig.displayName = "StartNodeDataConfig";
+InputNodeDataConfig.displayName = "InputNodeDataConfig";
 
 export const OutputSchemaStack = memo(function ({
   data,

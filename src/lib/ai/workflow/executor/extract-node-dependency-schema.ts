@@ -19,10 +19,10 @@ export function extractNodeDependencySchema({
     return schema;
   }
 
-  if (target.kind === NodeKind.Start) {
+  if (target.kind === NodeKind.Input) {
     return target.outputSchema;
   }
-  if (target.kind === NodeKind.End) {
+  if (target.kind === NodeKind.Output) {
     const properties = target.outputData.reduce(
       (acc, cur) => {
         if (!cur.key) return acc;

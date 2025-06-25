@@ -3,10 +3,11 @@ import { createGraphStore, WorkflowRuntimeState } from "./graph-store";
 import { createStateGraph, graphNode, StateGraphRegistry } from "ts-edge";
 import {
   conditionNodeExecutor,
-  endNodeExecutor,
+  outputNodeExecutor,
   llmNodeExecutor,
   NodeExecutor,
-  startNodeExecutor,
+  inputNodeExecutor,
+  toolNodeExecutor,
 } from "./node-executor";
 import { toAny } from "lib/utils";
 import { addEdgeBranchLabel } from "./add-edge-branch-label";
@@ -18,14 +19,16 @@ import { colorize } from "consola/utils";
 
 function getExecutorByKind(kind: NodeKind): NodeExecutor {
   switch (kind) {
-    case NodeKind.Start:
-      return startNodeExecutor;
-    case NodeKind.End:
-      return endNodeExecutor;
+    case NodeKind.Input:
+      return inputNodeExecutor;
+    case NodeKind.Output:
+      return outputNodeExecutor;
     case NodeKind.LLM:
       return llmNodeExecutor;
     case NodeKind.Condition:
       return conditionNodeExecutor;
+    case NodeKind.Tool:
+      return toolNodeExecutor;
     case "NOOP" as any:
       return () => {
         return {
@@ -126,7 +129,7 @@ export const createWorkflowExecutor = (workflow: {
   let needTable: Record<string, number> = buildNeedTable(workflow.edges);
 
   const app = graph
-    .compile(workflow.nodes.find((node) => node.kind == NodeKind.Start)!.id)
+    .compile(workflow.nodes.find((node) => node.kind == NodeKind.Input)!.id)
     .use(async ({ name: nodeId, input }, next) => {
       if (!(nodeId in needTable)) return;
       const left = --needTable[nodeId];

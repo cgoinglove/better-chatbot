@@ -39,9 +39,9 @@ describe("addEdgeBranchLabel", () => {
 
   it("should add B0 label to single linear path", () => {
     const nodes: DBNode[] = [
-      createNode("start", NodeKind.Start, "Start"),
+      createNode("start", NodeKind.Input, "Start"),
       createNode("llm1", NodeKind.LLM, "LLM1"),
-      createNode("end", NodeKind.End, "End"),
+      createNode("end", NodeKind.Output, "End"),
     ];
 
     const edges: DBEdge[] = [
@@ -57,10 +57,10 @@ describe("addEdgeBranchLabel", () => {
 
   it("should add parallel branch labels for multiple outputs from start", () => {
     const nodes: DBNode[] = [
-      createNode("start", NodeKind.Start, "Start"),
+      createNode("start", NodeKind.Input, "Start"),
       createNode("llm1", NodeKind.LLM, "LLM1"),
       createNode("llm2", NodeKind.LLM, "LLM2"),
-      createNode("end", NodeKind.End, "End"),
+      createNode("end", NodeKind.Output, "End"),
     ];
 
     const edges: DBEdge[] = [
@@ -80,11 +80,11 @@ describe("addEdgeBranchLabel", () => {
 
   it("should handle condition node with single edge per handle", () => {
     const nodes: DBNode[] = [
-      createNode("start", NodeKind.Start, "Start"),
+      createNode("start", NodeKind.Input, "Start"),
       createNode("cond", NodeKind.Condition, "Condition"),
       createNode("llm1", NodeKind.LLM, "LLM1"),
       createNode("llm2", NodeKind.LLM, "LLM2"),
-      createNode("end", NodeKind.End, "End"),
+      createNode("end", NodeKind.Output, "End"),
     ];
 
     const edges: DBEdge[] = [
@@ -106,7 +106,7 @@ describe("addEdgeBranchLabel", () => {
 
   it("should handle condition node with multiple edges per handle", () => {
     const nodes: DBNode[] = [
-      createNode("start", NodeKind.Start, "Start"),
+      createNode("start", NodeKind.Input, "Start"),
       createNode("cond", NodeKind.Condition, "Condition"),
       createNode("llm1", NodeKind.LLM, "LLM1"),
       createNode("llm2", NodeKind.LLM, "LLM2"),
@@ -133,7 +133,7 @@ describe("addEdgeBranchLabel", () => {
 
   it("should handle condition node with default handle", () => {
     const nodes: DBNode[] = [
-      createNode("start", NodeKind.Start, "Start"),
+      createNode("start", NodeKind.Input, "Start"),
       createNode("cond", NodeKind.Condition, "Condition"),
       createNode("llm1", NodeKind.LLM, "LLM1"),
       createNode("llm2", NodeKind.LLM, "LLM2"),
@@ -154,13 +154,13 @@ describe("addEdgeBranchLabel", () => {
 
   it("should handle complex workflow with mixed node types", () => {
     const nodes: DBNode[] = [
-      createNode("start", NodeKind.Start, "Start"),
+      createNode("start", NodeKind.Input, "Start"),
       createNode("llm1", NodeKind.LLM, "LLM1"),
       createNode("cond", NodeKind.Condition, "Condition"),
       createNode("llm2", NodeKind.LLM, "LLM2"),
       createNode("llm3", NodeKind.LLM, "LLM3"),
       createNode("llm4", NodeKind.LLM, "LLM4"),
-      createNode("end", NodeKind.End, "End"),
+      createNode("end", NodeKind.Output, "End"),
     ];
 
     const edges: DBEdge[] = [
@@ -186,12 +186,12 @@ describe("addEdgeBranchLabel", () => {
 
   it("should handle nested parallel branches", () => {
     const nodes: DBNode[] = [
-      createNode("start", NodeKind.Start, "Start"),
+      createNode("start", NodeKind.Input, "Start"),
       createNode("llm1", NodeKind.LLM, "LLM1"),
       createNode("llm2", NodeKind.LLM, "LLM2"),
       createNode("llm3", NodeKind.LLM, "LLM3"),
       createNode("llm4", NodeKind.LLM, "LLM4"),
-      createNode("end", NodeKind.End, "End"),
+      createNode("end", NodeKind.Output, "End"),
     ];
 
     const edges: DBEdge[] = [
@@ -217,10 +217,10 @@ describe("addEdgeBranchLabel", () => {
 
   it("should not overwrite existing labels and handle remaining path correctly", () => {
     const nodes: DBNode[] = [
-      createNode("start", NodeKind.Start, "Start"),
+      createNode("start", NodeKind.Input, "Start"),
       createNode("llm1", NodeKind.LLM, "LLM1"),
       createNode("llm2", NodeKind.LLM, "LLM2"),
-      createNode("end", NodeKind.End, "End"),
+      createNode("end", NodeKind.Output, "End"),
     ];
 
     const edges: DBEdge[] = [
@@ -239,7 +239,7 @@ describe("addEdgeBranchLabel", () => {
   });
 
   it("should handle single node workflow", () => {
-    const nodes: DBNode[] = [createNode("start", NodeKind.Start, "Start")];
+    const nodes: DBNode[] = [createNode("start", NodeKind.Input, "Start")];
     const edges: DBEdge[] = [];
 
     addEdgeBranchLabel(nodes, edges);
@@ -250,7 +250,7 @@ describe("addEdgeBranchLabel", () => {
 
   it("should handle disconnected subgraphs", () => {
     const nodes: DBNode[] = [
-      createNode("start", NodeKind.Start, "Start"),
+      createNode("start", NodeKind.Input, "Start"),
       createNode("llm1", NodeKind.LLM, "LLM1"),
       createNode("isolated", NodeKind.LLM, "Isolated"),
     ];
@@ -267,7 +267,7 @@ describe("addEdgeBranchLabel", () => {
 
   it("should handle condition node with mixed handle types", () => {
     const nodes: DBNode[] = [
-      createNode("start", NodeKind.Start, "Start"),
+      createNode("start", NodeKind.Input, "Start"),
       createNode("cond", NodeKind.Condition, "Condition"),
       createNode("llm1", NodeKind.LLM, "LLM1"),
       createNode("llm2", NodeKind.LLM, "LLM2"),
@@ -294,7 +294,7 @@ describe("addEdgeBranchLabel", () => {
 
   it("should handle workflow with existing labels in the middle of path", () => {
     const nodes: DBNode[] = [
-      createNode("start", NodeKind.Start, "Start"),
+      createNode("start", NodeKind.Input, "Start"),
       createNode("llm1", NodeKind.LLM, "LLM1"),
       createNode("llm2", NodeKind.LLM, "LLM2"),
       createNode("llm3", NodeKind.LLM, "LLM3"),

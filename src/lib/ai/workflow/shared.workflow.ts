@@ -42,7 +42,7 @@ export function generateUINode(
     type: "default",
   };
 
-  if (node.data.kind === NodeKind.End) {
+  if (node.data.kind === NodeKind.Output) {
     node.data.outputData = [];
   } else if (node.data.kind === NodeKind.LLM) {
     node.data.outputSchema.properties = {
@@ -55,7 +55,7 @@ export function generateUINode(
     };
     node.data.messages = [
       {
-        role: "system",
+        role: "user",
       },
     ];
   } else if (node.data.kind === NodeKind.Condition) {

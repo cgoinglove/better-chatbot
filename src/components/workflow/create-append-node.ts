@@ -50,7 +50,7 @@ export function createAppendNode({
   if (kind === NodeKind.LLM) {
     (node.data as LLMNodeData).model = appStore.getState().chatModel! ?? {};
   }
-  if (kind === NodeKind.Information) {
+  if (kind === NodeKind.Note) {
     return {
       node,
     };

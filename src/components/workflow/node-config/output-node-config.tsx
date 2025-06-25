@@ -1,6 +1,6 @@
 "use client";
 
-import { EndNodeData, UINode } from "lib/ai/workflow/workflow.interface";
+import { OutputNodeData, UINode } from "lib/ai/workflow/workflow.interface";
 import { memo, useCallback, useMemo } from "react";
 
 import {
@@ -20,10 +20,10 @@ import { cleanVariableName, generateUniqueKey } from "lib/utils";
 import { Label } from "ui/label";
 import { findJsonSchemaByPath } from "lib/ai/workflow/shared.workflow";
 
-export const EndNodeDataConfig = memo(function ({
+export const OutputNodeDataConfig = memo(function ({
   data,
 }: {
-  data: EndNodeData;
+  data: OutputNodeData;
 }) {
   const { getNodes, updateNodeData } = useReactFlow();
 
@@ -51,7 +51,7 @@ export const EndNodeDataConfig = memo(function ({
       item: { key?: string; source?: { nodeId: string; path: string[] } },
     ) => {
       updateNodeData(data.id, (node) => {
-        const prev = node.data as EndNodeData;
+        const prev = node.data as OutputNodeData;
         return {
           outputData: prev.outputData.map((v, i) =>
             i === index ? { ...v, ...item } : v,
@@ -64,7 +64,7 @@ export const EndNodeDataConfig = memo(function ({
   const deleteOutputVariable = useCallback(
     (index: number) => {
       updateNodeData(data.id, (node) => {
-        const prev = node.data as EndNodeData;
+        const prev = node.data as OutputNodeData;
         return {
           outputData: prev.outputData.filter((_, i) => i !== index),
         };
@@ -76,7 +76,7 @@ export const EndNodeDataConfig = memo(function ({
   const addOutputVariable = useCallback(
     (key: string = "") => {
       updateNodeData(data.id, (node) => {
-        const prev = node.data as EndNodeData;
+        const prev = node.data as OutputNodeData;
         const newKey = generateUniqueKey(
           key,
           prev.outputData.map((v) => v.key),
@@ -170,11 +170,11 @@ export const EndNodeDataConfig = memo(function ({
     </div>
   );
 });
-EndNodeDataConfig.displayName = "EndNodeDataConfig";
+OutputNodeDataConfig.displayName = "OutputNodeDataConfig";
 
-export const EndNodeDataOutputStack = memo(function ({
+export const OutputNodeDataOutputStack = memo(function ({
   data,
-}: { data: EndNodeData }) {
+}: { data: OutputNodeData }) {
   const { getNodes } = useReactFlow();
   const outputVariables = useMemo(() => {
     const nodes = getNodes() as UINode[];
@@ -222,4 +222,4 @@ export const EndNodeDataOutputStack = memo(function ({
     </div>
   );
 });
-EndNodeDataOutputStack.displayName = "EndNodeDataOutputStack";
+OutputNodeDataOutputStack.displayName = "OutputNodeDataOutputStack";

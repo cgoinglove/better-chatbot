@@ -2,13 +2,14 @@ import { Node } from "@xyflow/react";
 import { ChatModel } from "app-types/chat";
 import { ObjectJsonSchema7, TipTapMentionJsonContent } from "app-types/util";
 import { ConditionBranches } from "./condition";
+import { JSONSchema7 } from "json-schema";
 
 export enum NodeKind {
-  Start = "start",
-  End = "end",
+  Input = "input",
+  Output = "output",
   LLM = "llm",
   Tool = "tool",
-  Information = "information",
+  Note = "note",
   Code = "code",
   Http = "http",
   Condition = "condition",
@@ -30,12 +31,25 @@ export type OutputSchemaSourceKey = {
   path: string[];
 };
 
-export type StartNodeData = BaseWorkflowNodeDataData<{
-  kind: NodeKind.Start;
+type MCPTool = {
+  type: "mcp-tool";
+  serverId: string;
+  serverName: string;
+};
+
+export type WorkflowToolKey = {
+  id: string; // tool Name
+  description: string;
+  parameterSchema?: JSONSchema7;
+  returnSchema?: JSONSchema7;
+} & MCPTool;
+
+export type InputNodeData = BaseWorkflowNodeDataData<{
+  kind: NodeKind.Input;
 }>;
 
-export type EndNodeData = BaseWorkflowNodeDataData<{
-  kind: NodeKind.End;
+export type OutputNodeData = BaseWorkflowNodeDataData<{
+  kind: NodeKind.Output;
 }> & {
   outputData: {
     key: string;
@@ -43,8 +57,28 @@ export type EndNodeData = BaseWorkflowNodeDataData<{
   }[];
 };
 
-export type InformationNodeData = BaseWorkflowNodeDataData<{
-  kind: NodeKind.Information;
+export type NoteNodeData = BaseWorkflowNodeDataData<{
+  kind: NodeKind.Note;
+}>;
+
+export type ToolParameterOption =
+  | {
+      type: "direct";
+      input?: Record<string, string | OutputSchemaSourceKey>;
+    }
+  | {
+      type: "chat";
+      model: ChatModel;
+      messages: {
+        role: "user" | "assistant" | "system";
+        content?: TipTapMentionJsonContent;
+      }[];
+    };
+
+export type ToolNodeData = BaseWorkflowNodeDataData<{
+  kind: NodeKind.Tool;
+  tool?: WorkflowToolKey;
+  parameterOption: ToolParameterOption;
 }>;
 
 export type LLMNodeData = BaseWorkflowNodeDataData<{
@@ -64,10 +98,11 @@ export type ConditionNodeData = BaseWorkflowNodeDataData<{
 };
 
 export type WorkflowNodeData =
-  | StartNodeData
-  | EndNodeData
+  | InputNodeData
+  | OutputNodeData
   | LLMNodeData
-  | InformationNodeData
+  | NoteNodeData
+  | ToolNodeData
   | ConditionNodeData;
 
 export type NodeRuntimeField = {

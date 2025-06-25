@@ -2,12 +2,13 @@ import { Edge } from "@xyflow/react";
 import { JSONSchema7 } from "json-schema";
 import {
   ConditionNodeData,
-  EndNodeData,
+  OutputNodeData,
   LLMNodeData,
   NodeKind,
-  StartNodeData,
+  InputNodeData,
   UINode,
   WorkflowNodeData,
+  ToolNodeData,
 } from "lib/ai/workflow/workflow.interface";
 import { cleanVariableName } from "lib/utils";
 import { safe } from "ts-safe";
@@ -52,14 +53,14 @@ export function allNodeValidate({
       node?: UINode;
       errorMessage: string;
     } {
-  if (!nodes.some((n) => n.data.kind === NodeKind.Start)) {
+  if (!nodes.some((n) => n.data.kind === NodeKind.Input)) {
     return {
-      errorMessage: "Start node must be only one",
+      errorMessage: "Input node must be only one",
     };
   }
-  if (!nodes.some((n) => n.data.kind === NodeKind.End)) {
+  if (!nodes.some((n) => n.data.kind === NodeKind.Output)) {
     return {
-      errorMessage: "End node must be only one",
+      errorMessage: "Output node must be only one",
     };
   }
 
@@ -86,29 +87,31 @@ export const nodeValidate: NodeValidate<WorkflowNodeData> = ({
   edges,
 }) => {
   if (
-    node.kind != NodeKind.Information &&
+    node.kind != NodeKind.Note &&
     nodes.filter((n) => n.data.name === node.name).length > 1
   ) {
     throw new Error("Node name must be unique");
   }
   switch (node.kind) {
-    case NodeKind.Start:
-      return startNodeValidate({ node, nodes, edges });
-    case NodeKind.End:
-      return endNodeValidate({ node, nodes, edges });
+    case NodeKind.Input:
+      return inputNodeValidate({ node, nodes, edges });
+    case NodeKind.Output:
+      return outputNodeValidate({ node, nodes, edges });
     case NodeKind.LLM:
       return llmNodeValidate({ node, nodes, edges });
     case NodeKind.Condition:
       return conditionNodeValidate({ node, nodes, edges });
+    case NodeKind.Tool:
+      return toolNodeValidate({ node, nodes, edges });
   }
 };
 
-export const startNodeValidate: NodeValidate<StartNodeData> = ({
+export const inputNodeValidate: NodeValidate<InputNodeData> = ({
   node,
   edges,
 }) => {
   if (!edges.some((e) => e.source === node.id)) {
-    throw new Error("Start node must have an edge");
+    throw new Error("Input node must have an edge");
   }
   const outputKeys = Array.from(
     Object.keys(node.outputSchema.properties ?? {}),
@@ -119,7 +122,7 @@ export const startNodeValidate: NodeValidate<StartNodeData> = ({
   });
 };
 
-export const endNodeValidate: NodeValidate<EndNodeData> = ({
+export const outputNodeValidate: NodeValidate<OutputNodeData> = ({
   node,
   nodes,
   edges,
@@ -150,7 +153,7 @@ export const endNodeValidate: NodeValidate<EndNodeData> = ({
   });
 
   let current: WorkflowNodeData | undefined = node as WorkflowNodeData;
-  while (current && current.kind !== NodeKind.Start) {
+  while (current && current.kind !== NodeKind.Input) {
     const prevNodeId = edges.find((e) => e.target === current!.id)?.source;
     if (!prevNodeId) throw new Error("Prev node must have an edge");
     const prevNode = nodes.find((n) => n.data.id === prevNodeId);
@@ -158,8 +161,8 @@ export const endNodeValidate: NodeValidate<EndNodeData> = ({
     else current = prevNode.data as WorkflowNodeData;
   }
 
-  if (current?.kind !== NodeKind.Start)
-    throw new Error("Prev node must be a start node");
+  if (current?.kind !== NodeKind.Input)
+    throw new Error("Prev node must be a Input node");
 };
 
 export const llmNodeValidate: NodeValidate<LLMNodeData> = ({ node }) => {
@@ -184,3 +187,8 @@ export const conditionNodeValidate: NodeValidate<ConditionNodeData> = ({
   };
   [node.branches.if, ...(node.branches.elseIf ?? [])].forEach(branchValidate);
 };
+
+export const toolNodeValidate: NodeValidate<ToolNodeData> = ({
+  node,
+  nodes,
+}) => {};

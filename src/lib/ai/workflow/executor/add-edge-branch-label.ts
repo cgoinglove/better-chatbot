@@ -3,7 +3,7 @@ import { NodeKind } from "../workflow.interface";
 
 export function addEdgeBranchLabel(nodes: DBNode[], edges: DBEdge[]) {
   const outs = (id: string) => edges.filter((e) => e.source === id);
-  const start = nodes.find((n) => n.kind === NodeKind.Start)!;
+  const start = nodes.find((n) => n.kind === NodeKind.Input)!;
   const q: { id: string; bid: string }[] = [{ id: start.id, bid: "B0" }];
 
   while (q.length) {

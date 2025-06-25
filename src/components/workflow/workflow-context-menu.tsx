@@ -13,7 +13,6 @@ import { safe } from "ts-safe";
 import { toast } from "sonner";
 import { handleErrorWithToast } from "ui/shared-toast";
 import { mutate } from "swr";
-import { Loader2 } from "lucide-react";
 
 interface WorkflowContextMenuProps {
   children: React.ReactNode;
@@ -23,22 +22,25 @@ interface WorkflowContextMenuProps {
 export function WorkflowContextMenu(props: WorkflowContextMenuProps) {
   const [editOpen, setEditOpen] = useState(false);
   const [open, setOpen] = useState(false);
-  const [deleteWorkflow, setDeleteWorkflow] = useState(false);
 
   const handleDeleteWorkflow = async () => {
-    setDeleteWorkflow(true);
-    await safe(() =>
-      fetch(`/api/workflow/${props.workflow.id}`, {
-        method: "DELETE",
-      }),
-    )
-      .ifOk(() => {
-        toast.success("Workflow deleted");
-        mutate("/api/workflow");
-        setOpen(false);
-      })
-      .ifFail(handleErrorWithToast)
-      .watch(() => setDeleteWorkflow(false));
+    toast.promise(
+      safe(() =>
+        fetch(`/api/workflow/${props.workflow.id}`, {
+          method: "DELETE",
+        }),
+      )
+        .ifOk(() => {
+          toast.success("Workflow deleted");
+          mutate("/api/workflow");
+          setOpen(false);
+        })
+        .unwrap(),
+      {
+        success: "Workflow deleted",
+        loading: "Delete...",
+      },
+    );
   };
 
   return (
@@ -59,10 +61,8 @@ export function WorkflowContextMenu(props: WorkflowContextMenuProps) {
               e.stopPropagation();
               handleDeleteWorkflow();
             }}
-            disabled={deleteWorkflow}
           >
             Delete
-            {deleteWorkflow && <Loader2 className="size-4 ml-2 animate-spin" />}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

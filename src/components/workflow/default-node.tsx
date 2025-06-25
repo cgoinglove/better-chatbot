@@ -16,8 +16,8 @@ import {
   ContextMenuTrigger,
 } from "ui/context-menu";
 
-import { OutputSchemaStack } from "./node-config/start-node-config";
-import { EndNodeDataOutputStack } from "./node-config/end-node-config";
+import { OutputSchemaStack } from "./node-config/input-node-config";
+import { OutputNodeDataOutputStack } from "./node-config/output-node-config";
 import { LLMNodeDataStack } from "./node-config/llm-node-config";
 import { NodeContextMenuContent } from "./node-context-menu-content";
 import { ConditionNodeDataOutputStack } from "./node-config/condition-node-config";
@@ -91,7 +91,7 @@ export const DefaultNode = memo(function DefaultNode({
         <div
           className={cn(
             "fade-300 group py-4 w-72 relative bg-secondary border-2 hover:bg-input rounded-lg flex flex-col cursor-grab transition-colors",
-            data.kind === NodeKind.Information &&
+            data.kind === NodeKind.Note &&
               "bg-primary-foreground text-primary rounded-none border-card",
             data.kind === NodeKind.Condition && "w-52",
             data.runtime?.status === "fail" && "border-destructive",
@@ -101,7 +101,7 @@ export const DefaultNode = memo(function DefaultNode({
           )}
         >
           <div className="flex items-center gap-2 relative px-4">
-            {![NodeKind.Information, NodeKind.Start].includes(data.kind) && (
+            {![NodeKind.Note, NodeKind.Input].includes(data.kind) && (
               <Handle
                 id="left"
                 type="target"
@@ -114,7 +114,7 @@ export const DefaultNode = memo(function DefaultNode({
             )}
             <NodeIcon type={data.kind} />
             <div className="font-bold truncate">{data.name}</div>
-            {![NodeKind.Information, NodeKind.End, NodeKind.Condition].includes(
+            {![NodeKind.Note, NodeKind.Output, NodeKind.Condition].includes(
               data.kind,
             ) && (
               <Handle
@@ -160,9 +160,9 @@ export const DefaultNode = memo(function DefaultNode({
             )}
           </div>
           <div>
-            {data.kind === NodeKind.Start && <OutputSchemaStack data={data} />}
-            {data.kind === NodeKind.End && (
-              <EndNodeDataOutputStack data={data} />
+            {data.kind === NodeKind.Input && <OutputSchemaStack data={data} />}
+            {data.kind === NodeKind.Output && (
+              <OutputNodeDataOutputStack data={data} />
             )}
             {data.kind === NodeKind.LLM && <LLMNodeDataStack data={data} />}
             {data.kind === NodeKind.Condition && (

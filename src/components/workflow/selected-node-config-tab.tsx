@@ -11,13 +11,14 @@ import { MoreHorizontalIcon, XIcon } from "lucide-react";
 import { NodeContextMenuContent } from "./node-context-menu-content";
 import { Textarea } from "ui/textarea";
 import { Separator } from "ui/separator";
-import { StartNodeDataConfig } from "./node-config/start-node-config";
-import { EndNodeDataConfig } from "./node-config/end-node-config";
+import { InputNodeDataConfig } from "./node-config/input-node-config";
+import { OutputNodeDataConfig } from "./node-config/output-node-config";
 import { LLMNodeDataConfig } from "./node-config/llm-node-config";
 import { ConditionNodeDataConfig } from "./node-config/condition-node-config";
 import { Label } from "ui/label";
 import { NextNodeInfo } from "./next-node-info";
 import { nextTick } from "lib/utils";
+import { ToolNodeDataConfig } from "./node-config/tool-node-config";
 
 export function SelectedNodeConfigTab({ node }: { node: UINode }) {
   const { updateNodeData, updateNode, setNodes } = useReactFlow();
@@ -64,7 +65,7 @@ export function SelectedNodeConfigTab({ node }: { node: UINode }) {
             </div>
           </div>
         </div>
-        {node.data.kind !== NodeKind.Information && (
+        {node.data.kind !== NodeKind.Note && (
           <Textarea
             className="text-xs bg-transparent rounded-none resize-none overflow-y-auto max-h-14 min-h-6 h-6 mt-2 p-0 border-none"
             value={node.data.description}
@@ -80,15 +81,17 @@ export function SelectedNodeConfigTab({ node }: { node: UINode }) {
 
       <Separator className="my-6" />
       <div className="flex-1">
-        {node.data.kind === NodeKind.Start ? (
-          <StartNodeDataConfig data={node.data} />
-        ) : node.data.kind === NodeKind.End ? (
-          <EndNodeDataConfig data={node.data} />
+        {node.data.kind === NodeKind.Input ? (
+          <InputNodeDataConfig data={node.data} />
+        ) : node.data.kind === NodeKind.Output ? (
+          <OutputNodeDataConfig data={node.data} />
         ) : node.data.kind === NodeKind.LLM ? (
           <LLMNodeDataConfig data={node.data} />
         ) : node.data.kind === NodeKind.Condition ? (
           <ConditionNodeDataConfig data={node.data} />
-        ) : node.data.kind === NodeKind.Information ? (
+        ) : node.data.kind === NodeKind.Tool ? (
+          <ToolNodeDataConfig data={node.data} />
+        ) : node.data.kind === NodeKind.Note ? (
           <div className="h-full flex flex-col gap-2 px-4">
             <Label
               htmlFor="description"
@@ -110,7 +113,7 @@ export function SelectedNodeConfigTab({ node }: { node: UINode }) {
         ) : null}
       </div>
 
-      {![NodeKind.End, NodeKind.Information].includes(node.data.kind) && (
+      {![NodeKind.Output, NodeKind.Note].includes(node.data.kind) && (
         <>
           <Separator className="my-6" />
           <div className="px-4 ">

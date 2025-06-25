@@ -29,7 +29,7 @@ export const WorkflowPanel = memo(
     workflow,
   }: {
     selectedNode?: UINode;
-    onSave: () => void;
+    onSave: () => Promise<void>;
     isProcessing: boolean;
     workflow: DBWorkflow;
   }) {
@@ -109,6 +109,7 @@ export const WorkflowPanel = memo(
                 if (isProcessing) return;
                 setShowExecutePanel(false);
               }}
+              onSave={onSave}
             />
           )}
         </div>

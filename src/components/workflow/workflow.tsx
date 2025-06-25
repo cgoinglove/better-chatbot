@@ -74,9 +74,9 @@ export default function Workflow({
 
   const snapshot = useRef({ nodes: initialNodes, edges: initialEdges });
 
-  const save = () => {
+  const save = async () => {
     const stop = addProcess();
-    safe()
+    await safe()
       .map(() => saveWorkflow(workflowId, snapshot.current, { nodes, edges }))
       .ifOk(() => {
         snapshot.current = {
@@ -87,7 +87,8 @@ export default function Workflow({
       .ifFail(() => {
         window.location.reload();
       })
-      .watch(stop);
+      .watch(stop)
+      .unwrap();
   };
 
   const selectedNode = useMemo(() => {
@@ -245,7 +246,7 @@ export default function Workflow({
   useEffect(() => {
     setNodes((nds) => {
       return nds.map((node) => {
-        if (node.data.kind === NodeKind.Start && !node.selected) {
+        if (node.data.kind === NodeKind.Input && !node.selected) {
           return { ...node, selected: true };
         }
         return node;

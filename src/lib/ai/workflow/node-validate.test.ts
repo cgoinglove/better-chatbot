@@ -3,44 +3,44 @@ import { Edge } from "@xyflow/react";
 import {
   validateSchema,
   allNodeValidate,
-  startNodeValidate,
-  endNodeValidate,
+  inputNodeValidate,
+  outputNodeValidate,
   llmNodeValidate,
 } from "./node-validate";
 import { UINode, NodeKind } from "./workflow.interface";
 
 describe("node-validate", () => {
-  const createStartNodeData = (
+  const createInputNodeData = (
     id: string,
     name: string,
     outputSchema = {
       type: "object" as const,
       properties: { input: { type: "string" as const } },
     },
-  ): UINode<NodeKind.Start> => ({
+  ): UINode<NodeKind.Input> => ({
     id,
     type: "default",
     position: { x: 0, y: 0 },
     data: {
       id,
       name,
-      kind: NodeKind.Start,
+      kind: NodeKind.Input,
       outputSchema,
     },
   });
 
-  const createEndNodeData = (
+  const createOutputNodeData = (
     id: string,
     name: string,
     outputData: any[] = [],
-  ): UINode<NodeKind.End> => ({
+  ): UINode<NodeKind.Output> => ({
     id,
     type: "default",
     position: { x: 0, y: 0 },
     data: {
       id,
       name,
-      kind: NodeKind.End,
+      kind: NodeKind.Output,
       outputSchema: { type: "object", properties: {} },
       outputData,
     },
@@ -91,29 +91,29 @@ describe("node-validate", () => {
     });
   });
 
-  describe("startNodeValidate", () => {
+  describe("inputNodeValidate", () => {
     it("should validate start node with edge and inputs", () => {
-      const startNode = createStartNodeData("start", "Start Node");
+      const startNode = createInputNodeData("start", "Start Node");
       const edges = [createEdge("edge1", "start", "end")];
 
       expect(() => {
-        startNodeValidate({ node: startNode.data, nodes: [], edges });
+        inputNodeValidate({ node: startNode.data, nodes: [], edges });
       }).not.toThrow();
     });
 
     it("should throw error when start node has no edge", () => {
-      const startNode = createStartNodeData("start", "Start Node");
+      const startNode = createInputNodeData("start", "Start Node");
 
       expect(() => {
-        startNodeValidate({ node: startNode.data, nodes: [], edges: [] });
+        inputNodeValidate({ node: startNode.data, nodes: [], edges: [] });
       }).toThrow();
     });
   });
 
-  describe("endNodeValidate", () => {
+  describe("outputNodeValidate", () => {
     it("should validate end node with proper source", () => {
-      const startNode = createStartNodeData("start", "Start Node");
-      const endNode = createEndNodeData("end", "End Node", [
+      const startNode = createInputNodeData("start", "Start Node");
+      const endNode = createOutputNodeData("end", "End Node", [
         {
           key: "result",
           source: { nodeId: "start", path: ["input"] },
@@ -123,18 +123,18 @@ describe("node-validate", () => {
       const edges = [createEdge("edge1", "start", "end")];
 
       expect(() => {
-        endNodeValidate({ node: endNode.data, nodes, edges });
+        outputNodeValidate({ node: endNode.data, nodes, edges });
       }).not.toThrow();
     });
 
     it("should throw error when end node has duplicate output keys", () => {
-      const endNode = createEndNodeData("end", "End Node", [
+      const endNode = createOutputNodeData("end", "End Node", [
         { key: "result", source: { nodeId: "start", path: ["input"] } },
         { key: "result", source: { nodeId: "start", path: ["input"] } },
       ]);
 
       expect(() => {
-        endNodeValidate({ node: endNode.data, nodes: [], edges: [] });
+        outputNodeValidate({ node: endNode.data, nodes: [], edges: [] });
       }).toThrow();
     });
   });
@@ -172,8 +172,8 @@ describe("node-validate", () => {
 
   describe("allNodeValidate", () => {
     it("should validate workflow with start and end nodes", () => {
-      const startNode = createStartNodeData("start", "Start Node");
-      const endNode = createEndNodeData("end", "End Node", [
+      const startNode = createInputNodeData("start", "Start Node");
+      const endNode = createOutputNodeData("end", "End Node", [
         {
           key: "result",
           source: { nodeId: "start", path: ["input"] },
@@ -187,8 +187,8 @@ describe("node-validate", () => {
     });
 
     it("should return error when nodes have duplicate names", () => {
-      const startNode1 = createStartNodeData("start1", "Duplicate Name");
-      const startNode2 = createEndNodeData("start1", "Duplicate Name");
+      const startNode1 = createInputNodeData("start1", "Duplicate Name");
+      const startNode2 = createOutputNodeData("start1", "Duplicate Name");
       const nodes = [startNode1, startNode2];
       const edges = [];
 

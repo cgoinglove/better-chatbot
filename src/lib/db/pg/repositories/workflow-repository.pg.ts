@@ -78,10 +78,10 @@ export const pgWorkflowRepository: WorkflowRepository = {
       .returning();
 
     if (isNew) {
-      const startNode = generateUINode(NodeKind.Start);
+      const startNode = generateUINode(NodeKind.Input);
       await pgDb.insert(WorkflowNodeDataSchema).values({
         ...convertUINodeToDBNode(row.id, startNode),
-        name: "START",
+        name: "INPUT",
       });
     }
 

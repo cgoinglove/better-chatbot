@@ -1,11 +1,12 @@
 import { customModelProvider } from "lib/ai/models";
 import {
   ConditionNodeData,
-  EndNodeData,
+  OutputNodeData,
   LLMNodeData,
   OutputSchemaSourceKey,
-  StartNodeData,
+  InputNodeData,
   WorkflowNodeData,
+  ToolNodeData,
 } from "../workflow.interface";
 import { WorkflowRuntimeState } from "./graph-store";
 import { generateText, Message } from "ai";
@@ -23,13 +24,16 @@ export type NodeExecutor<T extends WorkflowNodeData = any> = (input: {
       input?: any;
       output?: any;
     };
-export const startNodeExecutor: NodeExecutor<StartNodeData> = ({ state }) => {
+export const inputNodeExecutor: NodeExecutor<InputNodeData> = ({ state }) => {
   return {
     output: state.query,
   };
 };
 
-export const endNodeExecutor: NodeExecutor<EndNodeData> = ({ node, state }) => {
+export const outputNodeExecutor: NodeExecutor<OutputNodeData> = ({
+  node,
+  state,
+}) => {
   return {
     output: node.outputData.reduce((acc, cur) => {
       acc[cur.key] = state.getOutput(cur.source!);
@@ -125,3 +129,5 @@ export const conditionNodeExecutor: NodeExecutor<ConditionNodeData> = async ({
     },
   };
 };
+
+export const toolNodeExecutor: NodeExecutor<ToolNodeData> = async () => {};

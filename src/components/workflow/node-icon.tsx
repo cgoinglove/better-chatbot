@@ -22,11 +22,11 @@ export function NodeIcon({
 }: { type: NodeKind; className?: string; iconClassName?: string }) {
   const Icon = useMemo(() => {
     switch (type) {
-      case NodeKind.Start:
+      case NodeKind.Input:
         return HouseIcon;
-      case NodeKind.End:
+      case NodeKind.Output:
         return LandPlotIcon;
-      case NodeKind.Information:
+      case NodeKind.Note:
         return InfoIcon;
       case NodeKind.Tool:
         return WrenchIcon;
@@ -46,11 +46,11 @@ export function NodeIcon({
   return (
     <div
       className={cn(
-        type === NodeKind.Start
+        type === NodeKind.Input
           ? "bg-blue-500"
-          : type === NodeKind.End
+          : type === NodeKind.Output
             ? "bg-green-500"
-            : type === NodeKind.Information
+            : type === NodeKind.Note
               ? "text-foreground bg-input"
               : type === NodeKind.Tool || type === NodeKind.LLM
                 ? "bg-indigo-500"

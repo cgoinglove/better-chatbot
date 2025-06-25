@@ -16,13 +16,13 @@ vi.mock("./node-executor", async (importOriginal) => {
 
   return {
     ...actual,
-    startNodeExecutor: vi.fn().mockImplementation(() => {
+    inputNodeExecutor: vi.fn().mockImplementation(() => {
       // Return the test input data in output field
       return {
         output: testInputData,
       };
     }),
-    endNodeExecutor: vi.fn().mockImplementation(({ node, state }) => {
+    outputNodeExecutor: vi.fn().mockImplementation(({ node, state }) => {
       return {
         output: node.outputData.reduce((acc, cur) => {
           if (cur.source) {
@@ -106,7 +106,7 @@ describe("createWorkflowExecutor", () => {
         model: { provider: "openai", name: "gpt-4", id: "gpt-4" },
         messages: [],
       }),
-      ...(kind === NodeKind.End && { outputData: [] }),
+      ...(kind === NodeKind.Output && { outputData: [] }),
       ...additionalConfig,
     },
     uiConfig: {
@@ -138,9 +138,9 @@ describe("createWorkflowExecutor", () => {
 
   it("1. should execute a simple linear workflow: start -> noop -> end", async () => {
     const nodes: DBNode[] = [
-      createNode("start", NodeKind.Start, "Start Node"),
+      createNode("start", NodeKind.Input, "Start Node"),
       createNode("noop", "NOOP", "No Operation"),
-      createNode("end", NodeKind.End, "End Node"),
+      createNode("end", NodeKind.Output, "End Node"),
     ];
 
     const edges: DBEdge[] = [
@@ -182,7 +182,7 @@ describe("createWorkflowExecutor", () => {
 
   it("2. should handle REAL conditional branching with actual condition evaluation", async () => {
     const nodes: DBNode[] = [
-      createNode("start", NodeKind.Start, "Start Node"),
+      createNode("start", NodeKind.Input, "Start Node"),
       createNode("condition", NodeKind.Condition, "Condition Node", {
         branches: {
           if: {
@@ -207,7 +207,7 @@ describe("createWorkflowExecutor", () => {
       }),
       createNode("true-path", "NOOP", "True Path Node"),
       createNode("false-path", "NOOP", "False Path Node"),
-      createNode("end", NodeKind.End, "End Node"),
+      createNode("end", NodeKind.Output, "End Node"),
     ];
 
     const edges: DBEdge[] = [
@@ -273,7 +273,7 @@ describe("createWorkflowExecutor", () => {
 
   it("3. should handle string-based conditional branching", async () => {
     const nodes: DBNode[] = [
-      createNode("start", NodeKind.Start, "Start Node"),
+      createNode("start", NodeKind.Input, "Start Node"),
       createNode("condition", NodeKind.Condition, "Condition Node", {
         branches: {
           if: {
@@ -298,7 +298,7 @@ describe("createWorkflowExecutor", () => {
       }),
       createNode("admin-path", "NOOP", "Admin Path Node"),
       createNode("user-path", "NOOP", "User Path Node"),
-      createNode("end", NodeKind.End, "End Node"),
+      createNode("end", NodeKind.Output, "End Node"),
     ];
 
     const edges: DBEdge[] = [
@@ -364,12 +364,12 @@ describe("createWorkflowExecutor", () => {
 
   it("4. should handle REAL parallel execution with proper synchronization", async () => {
     const nodes: DBNode[] = [
-      createNode("start", NodeKind.Start, "Start Node"),
+      createNode("start", NodeKind.Input, "Start Node"),
       createNode("parallel1", "NOOP", "Parallel Node 1"),
       createNode("parallel2", "NOOP", "Parallel Node 2"),
       createNode("parallel3", "NOOP", "Parallel Node 3"),
       createNode("join", "NOOP", "Join Node"),
-      createNode("end", NodeKind.End, "End Node"),
+      createNode("end", NodeKind.Output, "End Node"),
     ];
 
     const edges: DBEdge[] = [
@@ -452,7 +452,7 @@ describe("createWorkflowExecutor", () => {
     //   true: parallel1 -> end
     //   false: single-path -> end
     const nodes: DBNode[] = [
-      createNode("start", NodeKind.Start, "Start"),
+      createNode("start", NodeKind.Input, "Start"),
       createNode("condition", NodeKind.Condition, "Condition", {
         branches: {
           if: {
@@ -478,7 +478,7 @@ describe("createWorkflowExecutor", () => {
       createNode("parallel1", "NOOP", "Parallel 1"),
       // Single branch node
       createNode("single-path", "NOOP", "Single Path"),
-      createNode("end", NodeKind.End, "End"),
+      createNode("end", NodeKind.Output, "End"),
     ];
 
     const edges: DBEdge[] = [
@@ -546,9 +546,9 @@ describe("createWorkflowExecutor", () => {
 
   it("6. should properly handle workflow execution events and state", async () => {
     const nodes: DBNode[] = [
-      createNode("start", NodeKind.Start, "Start"),
+      createNode("start", NodeKind.Input, "Start"),
       createNode("middle", "NOOP", "Middle"),
-      createNode("end", NodeKind.End, "End"),
+      createNode("end", NodeKind.Output, "End"),
     ];
 
     const edges: DBEdge[] = [

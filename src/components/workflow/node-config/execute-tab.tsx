@@ -62,8 +62,10 @@ type NodeRuntimeHistory = {
 
 export function ExecuteTab({
   close,
+  onSave,
 }: {
   close: () => void;
+  onSave: () => Promise<void>;
 }) {
   const { addProcess, processIds, workflow } = useWorkflowStore();
 
@@ -101,7 +103,7 @@ export function ExecuteTab({
   const [query, setQuery] = useObjectState({} as Record<string, any>);
 
   const startNodeData = useMemo(() => {
-    return nodes.find((node) => node.data.kind === NodeKind.Start)!.data;
+    return nodes.find((node) => node.data.kind === NodeKind.Input)!.data;
   }, [nodes]);
 
   const inputSchema = useMemo(() => {
@@ -171,7 +173,8 @@ user-prompt: ${result}
     );
   }, []);
 
-  const handleClick = () => {
+  const handleClick = async () => {
+    await onSave();
     const failSchema = inputSchemaIterator.find(([key]) => {
       if (inputSchema.required?.includes(key) && query[key] === undefined)
         return true;
