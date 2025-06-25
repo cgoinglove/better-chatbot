@@ -3,12 +3,10 @@
 import {
   ToolNodeData,
   UINode,
-  WorkflowNodeData,
   WorkflowToolKey,
 } from "lib/ai/workflow/workflow.interface";
 import { memo, useEffect, useMemo } from "react";
-import { getFieldKey } from "../../edit-json-schema-field-popup";
-import { ChevronDown, VariableIcon } from "lucide-react";
+import { ChevronDown, VariableIcon, WrenchIcon } from "lucide-react";
 
 import { useEdges, useNodes, useReactFlow } from "@xyflow/react";
 import { selectMcpClientsAction } from "@/app/api/mcp/actions";
@@ -23,6 +21,7 @@ import { SelectModel } from "@/components/select-model";
 import { Button } from "ui/button";
 import { OutputSchemaMentionInput } from "../output-schema-mention-input";
 import { useWorkflowStore } from "@/app/store/workflow.store";
+import { MCPIcon } from "ui/mcp-icon";
 
 export const ToolNodeDataConfig = memo(function ({
   data,
@@ -163,33 +162,44 @@ export const ToolNodeDataConfig = memo(function ({
 });
 ToolNodeDataConfig.displayName = "ToolNodeDataConfig";
 
-export const ToolNodeStack = memo(function ({
-  data,
-}: { data: WorkflowNodeData }) {
-  const keys = Object.keys(data.outputSchema?.properties ?? {});
-  if (!keys.length) return null;
+export const ToolNodeStack = memo(function ({ data }: { data: ToolNodeData }) {
+  const selectedToolLabel = useMemo(() => {
+    if (!data.tool)
+      return (
+        <>
+          <WrenchIcon className="size-3" />
+          <span className="text-muted-foreground">Select Tool...</span>
+        </>
+      );
+    if (data.tool.type == "mcp-tool") {
+      return (
+        <>
+          <MCPIcon className="size-3" />
+          <span className="font-bold">{data.tool.serverName}</span>
+          <div className="bg-primary text-primary-foreground px-2 rounded-md truncate">
+            {data.tool.id}
+          </div>
+        </>
+      );
+    }
+    return (
+      <>
+        <WrenchIcon className="size-3" />
+        <span className="font-semibold truncate">{data.tool.id}</span>
+      </>
+    );
+  }, [data.tool]);
   return (
     <div className="flex flex-col gap-1 px-4 mt-4">
-      {keys.map((v) => {
-        const schema = data.outputSchema.properties[v];
-        return (
-          <div
-            className="border bg-input text-[10px] rounded px-2 py-1 flex items-center gap-1"
-            key={v}
-          >
-            <VariableIcon className="size-3 text-blue-500" />
-            <span>{v}</span>
-            <div className="flex-1" />
-
-            <span className="text-[10px] block group-hover/item:hidden text-xs text-muted-foreground">
-              <span className=" text-destructive">
-                {data.outputSchema.required?.includes(v) ? "*" : " "}
-              </span>
-              {getFieldKey(schema)}
-            </span>
-          </div>
-        );
-      })}
+      {!data.tool ? (
+        <div className="text-xs text-muted-foreground text-center py-2 border rounded-md">
+          No tool selected
+        </div>
+      ) : (
+        <div className="border bg-input text-[10px] rounded px-2 py-1 flex items-center gap-1">
+          {selectedToolLabel}
+        </div>
+      )}
     </div>
   );
 });

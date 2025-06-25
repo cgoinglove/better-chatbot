@@ -1,9 +1,12 @@
 import { useWorkflowStore } from "@/app/store/workflow.store";
-import { NodeKind } from "lib/ai/workflow/workflow.interface";
+import {
+  NodeKind,
+  NodeRuntimeHistory,
+} from "lib/ai/workflow/workflow.interface";
 import { useReactFlow } from "@xyflow/react";
 import { useObjectState } from "@/hooks/use-object-state";
 import { UINode } from "lib/ai/workflow/workflow.interface";
-import { cn, createDebounce } from "lib/utils";
+import { cn, createDebounce, errorToString } from "lib/utils";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { GraphEndEvent } from "ts-edge";
 import { allNodeValidate } from "lib/ai/workflow/node-validate";
@@ -18,6 +21,7 @@ import {
   Check,
   WandSparklesIcon,
   XIcon,
+  Maximize2,
 } from "lucide-react";
 import JsonView from "ui/json-view";
 import { Button } from "ui/button";
@@ -40,25 +44,11 @@ import { generateObjectAction } from "@/app/api/chat/actions";
 import { appStore } from "@/app/store";
 import { notify } from "lib/notify";
 import { SelectModel } from "@/components/select-model";
-import { JsonViewPopup } from "@/components/json-view-popup";
+
 import { useCopy } from "@/hooks/use-copy";
+import { NodeResultPopup } from "../node-result-popup";
 
 const debounce = createDebounce();
-
-type NodeRuntimeHistory = {
-  id: string;
-  nodeId: string;
-  name: string;
-  startedAt: number;
-  endedAt?: number;
-  kind: NodeKind;
-  error?: string;
-  status: "fail" | "running" | "success";
-  result?: {
-    input?: any;
-    output?: any;
-  };
-};
 
 export function ExecuteTab({
   close,
@@ -530,12 +520,10 @@ user-prompt: ${result}
           >
             {histories.map((history, i) => {
               return (
-                <JsonViewPopup data={history.result} key={i}>
+                <NodeResultPopup history={history} key={i}>
                   <div
                     className={cn(
-                      "flex items-center gap-2 text-sm rounded-sm px-2 py-1.5 relative",
-                      history.status != "running" &&
-                        "cursor-pointer hover:bg-secondary",
+                      "cursor-pointer hover:bg-secondary flex items-center gap-2 text-sm rounded-sm px-2 py-1.5 relative",
                       history.status == "fail" && "text-destructive",
                     )}
                   >
@@ -578,21 +566,45 @@ user-prompt: ${result}
                       <Loader2 className="size-3 animate-spin" />
                     )}
                   </div>
-                </JsonViewPopup>
+                </NodeResultPopup>
               );
             })}
           </div>
           <Separator />
           <div className="px-4 py-4">
-            <div className="flex items-center gap-2 mb-4">
+            <div className="flex items-center mb-4">
               <p className="font-semibold text-sm">Result</p>
+              <div className="flex-1" />
+              {result && (
+                <NodeResultPopup
+                  history={{
+                    name: "Result",
+                    status: result.isOk ? "success" : "fail",
+                    startedAt: result.startedAt,
+                    endedAt: result.endedAt,
+                    error: errorToString(result.error),
+                    result: {
+                      input: histories[0].result?.output ?? {},
+                      output: histories.at(-1)?.result?.output ?? {},
+                    },
+                  }}
+                >
+                  <Button variant={"ghost"} size={"icon"}>
+                    <Maximize2 className="size-3" />
+                  </Button>
+                </NodeResultPopup>
+              )}
               <Button
                 variant={"ghost"}
-                size={"sm"}
+                size={"icon"}
                 className="ml-auto"
                 onClick={() => copy(JSON.stringify(latstNodeValue?.output))}
               >
-                {copied ? <Check /> : <Copy />}
+                {copied ? (
+                  <Check className="size-3" />
+                ) : (
+                  <Copy className="size-3" />
+                )}
               </Button>
             </div>
             {resultView}

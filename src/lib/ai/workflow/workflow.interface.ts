@@ -100,3 +100,18 @@ export type NodeRuntimeField = {
 export type UINode<Kind extends NodeKind = NodeKind> = Node<
   Extract<WorkflowNodeData, { kind: Kind }> & { runtime?: NodeRuntimeField }
 >;
+
+export type NodeRuntimeHistory = {
+  id: string;
+  nodeId: string;
+  name: string;
+  startedAt: number;
+  endedAt?: number;
+  kind: NodeKind;
+  error?: string;
+  status: "fail" | "running" | "success";
+  result?: {
+    input?: any;
+    output?: any;
+  };
+};

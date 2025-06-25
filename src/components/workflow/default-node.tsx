@@ -3,7 +3,7 @@
 import { Handle, Position, useReactFlow, type NodeProps } from "@xyflow/react";
 import { NodeKind, UINode } from "lib/ai/workflow/workflow.interface";
 import { cn } from "lib/utils";
-import { PlusIcon } from "lucide-react";
+import { Loader2Icon, PlusIcon, TriangleAlertIcon } from "lucide-react";
 
 import { memo, useCallback, useEffect, useState } from "react";
 import { NodeSelect } from "./node-select";
@@ -22,6 +22,7 @@ import { LLMNodeDataStack } from "./node-config/llm-node-config";
 import { NodeContextMenuContent } from "./node-context-menu-content";
 import { ConditionNodeDataOutputStack } from "./node-config/condition-node-config";
 import { createAppendNode } from "./create-append-node";
+import { ToolNodeStack } from "./node-config/tool-node-config";
 
 type Props = NodeProps<UINode>;
 
@@ -94,10 +95,10 @@ export const DefaultNode = memo(function DefaultNode({
             data.kind === NodeKind.Note &&
               "bg-primary-foreground text-primary rounded-none border-card",
             data.kind === NodeKind.Condition && "w-52",
+            selected && "border-blue-500 bg-secondary!",
             data.runtime?.status === "fail" && "border-destructive",
             ["success", "running"].includes(data.runtime?.status ?? "") &&
               "border-green-400",
-            selected && "border-blue-500 bg-secondary!",
           )}
         >
           <div className="flex items-center gap-2 relative px-4">
@@ -107,6 +108,9 @@ export const DefaultNode = memo(function DefaultNode({
                 type="target"
                 className={cn(
                   "h-4! border-none! bg-blue-500! w-[1px]! -left-[4px]! rounded-l-xs! rounded-r-none!",
+                  data.runtime?.status === "fail" && "bg-destructive!",
+                  ["success", "running"].includes(data.runtime?.status ?? "") &&
+                    "bg-green-400!",
                 )}
                 position={Position.Left}
                 isConnectable={isConnectable}
@@ -136,7 +140,15 @@ export const DefaultNode = memo(function DefaultNode({
                       selected && "hidden",
                     )}
                   >
-                    <div className="h-4 w-1.5 bg-blue-500 rounded-r-xs"></div>
+                    <div
+                      className={cn(
+                        "h-4 w-1.5 bg-blue-500 rounded-r-xs",
+                        data.runtime?.status === "fail" && "bg-destructive",
+                        ["success", "running"].includes(
+                          data.runtime?.status ?? "",
+                        ) && "bg-green-400",
+                      )}
+                    ></div>
                   </div>
                   <NodeSelect
                     onChange={appendNode}
@@ -158,6 +170,15 @@ export const DefaultNode = memo(function DefaultNode({
                 </div>
               </Handle>
             )}
+            {data.runtime?.status === "fail" ? (
+              <div className="ml-auto">
+                <TriangleAlertIcon className="size-3 text-destructive" />
+              </div>
+            ) : data.runtime?.status === "running" ? (
+              <div className="ml-auto">
+                <Loader2Icon className="size-3 animate-spin" />
+              </div>
+            ) : null}
           </div>
           <div>
             {data.kind === NodeKind.Input && <OutputSchemaStack data={data} />}
@@ -168,6 +189,7 @@ export const DefaultNode = memo(function DefaultNode({
             {data.kind === NodeKind.Condition && (
               <ConditionNodeDataOutputStack data={data} />
             )}
+            {data.kind === NodeKind.Tool && <ToolNodeStack data={data} />}
             {data.description && (
               <div className="px-4 mt-2">
                 <div className="text-xs text-muted-foreground">
