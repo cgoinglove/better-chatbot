@@ -5,10 +5,11 @@ import { create } from "zustand";
 export interface WorkflowState {
   workflow?: DBWorkflow;
   processIds: string[];
+  hasEditAccess?: boolean;
 }
 
 export interface WorkflowDispatch {
-  init: (workflow?: DBWorkflow) => void;
+  init: (workflow?: DBWorkflow, hasEditAccess?: boolean) => void;
   addProcess: () => () => void;
 }
 
@@ -19,7 +20,8 @@ const initialState: WorkflowState = {
 export const useWorkflowStore = create<WorkflowState & WorkflowDispatch>(
   (set) => ({
     ...initialState,
-    init: (workflow) => set({ ...initialState, workflow }),
+    init: (workflow, hasEditAccess) =>
+      set({ ...initialState, workflow, hasEditAccess }),
     addProcess: () => {
       const processId = generateUUID();
       set((state) => ({

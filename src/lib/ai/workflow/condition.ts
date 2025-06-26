@@ -1,7 +1,10 @@
 import { safe } from "ts-safe";
 import { OutputSchemaSourceKey } from "./workflow.interface";
 
-// Condition operators for different data types
+/**
+ * Condition operators for string-based comparisons.
+ * Used to evaluate string values from node outputs.
+ */
 export enum StringConditionOperator {
   Equals = "equals",
   NotEquals = "not_equals",
@@ -13,6 +16,10 @@ export enum StringConditionOperator {
   IsNotEmpty = "is_not_empty",
 }
 
+/**
+ * Condition operators for number-based comparisons.
+ * Inherits string equality operators and adds numeric comparisons.
+ */
 export enum NumberConditionOperator {
   Equals = StringConditionOperator.Equals,
   NotEquals = StringConditionOperator.NotEquals,
@@ -22,11 +29,18 @@ export enum NumberConditionOperator {
   LessThanOrEqual = "less_than_or_equal",
 }
 
+/**
+ * Condition operators for boolean value testing.
+ */
 export enum BooleanConditionOperator {
   IsTrue = "is_true",
   IsFalse = "is_false",
 }
 
+/**
+ * Gets the default condition operator for a given data type.
+ * Used when creating new conditions in the UI.
+ */
 export function getFirstConditionOperator(
   type: "string" | "number" | "boolean",
 ) {
@@ -42,18 +56,28 @@ export function getFirstConditionOperator(
   }
 }
 
+/**
+ * Union type of all possible condition operators.
+ */
 export type ConditionOperator =
   | StringConditionOperator
   | NumberConditionOperator
   | BooleanConditionOperator;
 
+/**
+ * A single condition rule that compares a value from a node output
+ * with a target value using a specified operator.
+ */
 export type ConditionRule = {
   source: OutputSchemaSourceKey; // Reference to another node's output field
   operator: ConditionOperator;
   value?: string | number | boolean; // Comparison value (not needed for is_empty, is_not_empty, is_true, is_false)
 };
 
-// Condition branch for if-elseIf-else structure
+/**
+ * A condition branch for if-elseIf-else structure.
+ * Each branch can have multiple conditions combined with AND/OR logic.
+ */
 export type ConditionBranch = {
   id: "if" | "else" | (string & {});
   type: "if" | "elseIf" | "else";
@@ -61,18 +85,30 @@ export type ConditionBranch = {
   logicalOperator: "AND" | "OR"; // How to combine multiple conditions, not needed for 'else'
 };
 
+/**
+ * Complete condition structure supporting if-elseIf-else branching.
+ * Used by Condition nodes to determine execution flow.
+ */
 export type ConditionBranches = {
   if: ConditionBranch;
   elseIf?: ConditionBranch[]; // Optional multiple elseIf branches
   else: ConditionBranch; // Optional else branch
 };
 
+/**
+ * Evaluates a condition branch to determine if it should be executed.
+ *
+ * @param branch - The condition branch to evaluate
+ * @param getSourceValue - Function to get values from node outputs
+ * @returns True if the branch conditions are met
+ */
 export function checkConditionBranch(
   branch: ConditionBranch,
   getSourceValue: (
     source: OutputSchemaSourceKey,
   ) => string | number | boolean | undefined,
 ): boolean {
+  // Evaluate all conditions in the branch
   const results = branch.conditions?.map((condition) => {
     return checkConditionRule({
       operator: condition.operator,
@@ -80,12 +116,20 @@ export function checkConditionBranch(
       source: getSourceValue(condition.source),
     });
   }) ?? [false];
+
+  // Combine results based on logical operator
   if (branch.logicalOperator === "AND") {
     return results.every((result) => result);
   }
   return results.some((result) => result);
 }
 
+/**
+ * Evaluates a single condition rule.
+ *
+ * @param params - The condition rule parameters
+ * @returns True if the condition is met
+ */
 function checkConditionRule({
   operator,
   target,
@@ -143,7 +187,7 @@ function checkConditionRule({
     return false;
   })
     .ifFail((e) => {
-      console.error(e);
+      console.error("Condition evaluation error:", e);
       return false;
     })
     .unwrap();

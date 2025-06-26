@@ -8,8 +8,15 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const { name, description, icon, id, isPublished, visibility } =
-    await request.json();
+  const {
+    name,
+    description,
+    icon,
+    id,
+    isPublished,
+    visibility,
+    noGenerateInputNode,
+  } = await request.json();
 
   const session = await getSession();
 
@@ -24,15 +31,18 @@ export async function POST(request: Request) {
     }
   }
 
-  const workflow = await workflowRepository.save({
-    name,
-    description,
-    id,
-    isPublished,
-    visibility,
-    icon,
-    userId: session.user.id,
-  });
+  const workflow = await workflowRepository.save(
+    {
+      name,
+      description,
+      id,
+      isPublished,
+      visibility,
+      icon,
+      userId: session.user.id,
+    },
+    noGenerateInputNode,
+  );
 
   return Response.json(workflow);
 }

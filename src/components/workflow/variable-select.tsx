@@ -22,6 +22,7 @@ import { Input } from "ui/input";
 import { JSONSchema7 } from "json-schema";
 import { findAccessibleNodeIds } from "lib/ai/workflow/shared.workflow";
 import { cn } from "lib/utils";
+import { useTranslations } from "next-intl";
 
 interface VariableSelectProps {
   currentNodeId: string;
@@ -68,6 +69,7 @@ export function VariableSelectContent({
   const { getNodes, getEdges } = useReactFlow<UINode>();
   const nodes = getNodes();
   const edges = getEdges();
+  const t = useTranslations();
 
   const accessibleSchemas = useMemo(() => {
     const accessibleNodes = findAccessibleNodeIds({
@@ -139,7 +141,7 @@ export function VariableSelectContent({
         <Input
           autoFocus
           className="border-none bg-transparent w-full"
-          placeholder="Search..."
+          placeholder={t("Common.search")}
           value={query}
           onChange={(e) => {
             e.stopPropagation();
@@ -152,7 +154,7 @@ export function VariableSelectContent({
         {nodes.length === 0 || filteredNodes.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <p className="text-muted-foreground py-4 text-xs">
-              No variables found
+              {t("Workflow.noVariablesFound")}
             </p>
           </div>
         ) : (

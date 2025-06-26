@@ -35,6 +35,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { cn } from "lib/utils";
 import { mutate } from "swr";
+import { useTranslations } from "next-intl";
 
 const BACKGROUND_COLORS = [
   "oklch(87% 0 0)",
@@ -90,6 +91,7 @@ export function EditWorkflowPopup({
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }) {
+  const t = useTranslations();
   const { theme } = useTheme();
 
   const getInitialConfig = () => {
@@ -136,8 +138,8 @@ export function EditWorkflowPopup({
         .watch(() => setLoading(false))
         .unwrap(),
       {
-        success: "Workflow created",
-        loading: "Saving...",
+        success: t("Common.success"),
+        loading: t("Common.saving"),
       },
     );
   };
@@ -153,9 +155,12 @@ export function EditWorkflowPopup({
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="p-2 md:p-10 pb-0">
         <DialogHeader className={cn("mb-4", config.id && "sr-only")}>
-          <DialogTitle>Create Workflow</DialogTitle>
-          <DialogDescription>
-            Create a workflow to automate your tasks.
+          <DialogTitle>{t("Workflow.createWorkflow")}</DialogTitle>
+          <DialogDescription asChild>
+            <div className="mt-2">
+              <p>{t("Workflow.createWorkflowDescription")}</p>
+              <p className="mt-1">{t("Workflow.workflowDescription")}</p>
+            </div>
           </DialogDescription>
         </DialogHeader>
 
@@ -164,14 +169,16 @@ export function EditWorkflowPopup({
           <div className="gap-6 flex flex-col justify-center w-full">
             <div className="flex gap-2">
               <div className="flex flex-col gap-2 flex-1">
-                <Label htmlFor="workflow-name">Workflow Name And Icon</Label>
+                <Label htmlFor="workflow-name">
+                  {t("Workflow.nameAndIcon")}
+                </Label>
                 <Input
                   value={config.name}
                   onChange={(e) => setConfig({ name: e.target.value })}
                   autoFocus
                   className="bg-input border-transparent"
                   id="workflow-name"
-                  placeholder="Enter workflow name"
+                  placeholder={t("Workflow.workflowNamePlaceholder")}
                 />
               </div>
 
@@ -232,12 +239,14 @@ export function EditWorkflowPopup({
                 className="flex items-center gap-1"
                 htmlFor="workflow-description"
               >
-                Description
-                <span className="text-xs text-muted-foreground">optional</span>
+                {t("Workflow.description")}
+                <span className="text-xs text-muted-foreground">
+                  {t("Common.optional")}
+                </span>
               </Label>
               <Textarea
                 id="workflow-description"
-                placeholder="Describe your workflow"
+                placeholder={t("Workflow.descriptionPlaceholder")}
                 className="resize-none min-h-[100px] bg-input border-transparent"
                 value={config.description}
                 onChange={(e) => setConfig({ description: e.target.value })}
@@ -247,10 +256,10 @@ export function EditWorkflowPopup({
         </div>
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="ghost">Cancel</Button>
+            <Button variant="ghost">{t("Common.cancel")}</Button>
           </DialogClose>
           <Button onClick={handleSubmit} disabled={loading}>
-            Save
+            {t("Common.save")}
             {loading && <Loader className="size-3.5 animate-spin" />}
           </Button>
         </DialogFooter>

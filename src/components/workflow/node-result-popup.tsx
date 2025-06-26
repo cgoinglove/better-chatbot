@@ -24,6 +24,7 @@ import { useCopy } from "@/hooks/use-copy";
 import { Button } from "ui/button";
 import { cn, errorToString } from "lib/utils";
 import { Alert, AlertDescription, AlertTitle } from "ui/alert";
+import { useTranslations } from "next-intl";
 
 export function NodeResultPopup({
   history,
@@ -36,6 +37,7 @@ export function NodeResultPopup({
   children: ReactNode;
 }) {
   const { copy, copied } = useCopy();
+  const t = useTranslations();
 
   const [tab, setTab] = useState<"input" | "output">("output");
 
@@ -54,12 +56,14 @@ export function NodeResultPopup({
           <DialogTitle className="flex items-center gap-2">
             {history.name}
           </DialogTitle>
-          <DialogDescription className="sr-only">node result</DialogDescription>
+          <DialogDescription className="sr-only">
+            {t("Common.result")}
+          </DialogDescription>
         </DialogHeader>
         <div className="w-full flex flex-col flex-1">
           <div className="flex items-center text-sm gap-12 my-8">
             <div>
-              <p className="mb-2 text-muted-foreground">status</p>
+              <p className="mb-2 text-muted-foreground">{t("Common.status")}</p>
               <Badge
                 className="font-semibold"
                 variant={
@@ -81,11 +85,15 @@ export function NodeResultPopup({
               </Badge>
             </div>
             <div>
-              <p className="text-muted-foreground mb-2">started at</p>
+              <p className="text-muted-foreground mb-2">
+                {t("Common.startedAt")}
+              </p>
               <p>{new Date(history.startedAt).toLocaleString()}</p>
             </div>
             <div>
-              <p className="text-muted-foreground mb-2">duration</p>
+              <p className="text-muted-foreground mb-2">
+                {t("Common.duration")}
+              </p>
               <p>{history.status === "running" ? "N/A" : duration}</p>
             </div>
           </div>

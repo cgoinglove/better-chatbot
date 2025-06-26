@@ -4,6 +4,7 @@ import { SelectModel } from "../../select-model";
 import { Button } from "ui/button";
 import {
   ChevronDown,
+  InfoIcon,
   MessageCirclePlusIcon,
   TrashIcon,
   VariableIcon,
@@ -11,11 +12,14 @@ import {
 import { Select, SelectTrigger, SelectContent, SelectItem } from "ui/select";
 import { OutputSchemaMentionInput } from "../output-schema-mention-input";
 import { Label } from "ui/label";
-import { Separator } from "ui/separator";
+
 import { memo, useCallback, useEffect, useMemo } from "react";
 import { appStore } from "@/app/store";
 import { Edge, useEdges, useNodes, useReactFlow } from "@xyflow/react";
 import { useWorkflowStore } from "@/app/store/workflow.store";
+import { useTranslations } from "next-intl";
+import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
+import { Separator } from "ui/separator";
 
 export const LLMNodeDataConfig = memo(function ({
   data,
@@ -23,7 +27,15 @@ export const LLMNodeDataConfig = memo(function ({
   data: LLMNodeData;
 }) {
   const { updateNodeData } = useReactFlow();
-  const isProcessing = useWorkflowStore((state) => state.processIds.length > 0);
+  const t = useTranslations();
+  const editable = useWorkflowStore((state) => {
+    return (
+      state.processIds.length === 0 &&
+      state.hasEditAccess &&
+      !state.workflow?.isPublished
+    );
+  });
+
   const nodes = useNodes() as UINode[];
   const edges = useEdges() as Edge[];
 
@@ -77,7 +89,7 @@ export const LLMNodeDataConfig = memo(function ({
 
   return (
     <div className="flex flex-col gap-2 text-sm h-full px-4 ">
-      <Label className="text-sm text-muted-foreground">Model</Label>
+      <Label className="text-sm">Model</Label>
       <SelectModel
         defaultModel={model}
         onSelect={(model) => {
@@ -98,27 +110,21 @@ export const LLMNodeDataConfig = memo(function ({
           <ChevronDown className="size-3" />
         </Button>
       </SelectModel>
-      <Label className="text-sm mt-1 text-muted-foreground">
-        LLM Response Schema
-      </Label>
-      <div className="flex items-center flex-wrap gap-1">
-        {Object.keys(data.outputSchema.properties).map((key) => {
-          return (
-            <div
-              key={key}
-              className="flex items-center text-xs px-1.5 py-0.5 bg-secondary rounded-md"
-            >
-              <VariableIcon className="size-3.5 text-blue-500" />
-              <span className="font-semibold">{key}</span>
-              <span className="text-muted-foreground ml-2">
-                {data.outputSchema.properties[key].type}
-              </span>
+
+      {/* <Separator className="my-4" /> */}
+      <div className="flex items-center justify-between">
+        <Label className="text-sm mt-1">Messages</Label>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="p-1 hover:bg-secondary rounded cursor-pointer">
+              <InfoIcon className="size-3" />
             </div>
-          );
-        })}
+          </TooltipTrigger>
+          <TooltipContent className="p-4 whitespace-pre-wrap">
+            {t("Workflow.messagesDescription")}
+          </TooltipContent>
+        </Tooltip>
       </div>
-      <Separator className="my-4" />
-      <Label className="text-sm mt-1 text-muted-foreground">Messages</Label>
       <div className="flex flex-col gap-2">
         {data.messages.map((message, index) => {
           return (
@@ -155,7 +161,7 @@ export const LLMNodeDataConfig = memo(function ({
                 nodes={nodes}
                 edges={edges}
                 content={message.content}
-                editable={!isProcessing}
+                editable={editable}
                 onChange={(content) => {
                   updateMessage(index, {
                     content,
@@ -172,8 +178,27 @@ export const LLMNodeDataConfig = memo(function ({
           className="w-full mt-1 border-dashed border text-muted-foreground"
           onClick={addMessage}
         >
-          <MessageCirclePlusIcon className="size-4" /> Add Message
+          <MessageCirclePlusIcon className="size-4" />{" "}
+          {t("Workflow.addMessage")}
         </Button>
+      </div>
+      <Separator className="my-4" />
+      <Label className="text-sm">{t("Workflow.outputSchema")}</Label>
+      <div className="flex items-center flex-wrap gap-1">
+        {Object.keys(data.outputSchema.properties).map((key) => {
+          return (
+            <div
+              key={key}
+              className="flex items-center text-xs px-1.5 py-0.5 bg-secondary rounded-md"
+            >
+              <VariableIcon className="size-3.5 text-blue-500" />
+              <span className="font-semibold">{key}</span>
+              <span className="text-muted-foreground ml-2">
+                {data.outputSchema.properties[key].type}
+              </span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

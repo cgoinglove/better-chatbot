@@ -1,6 +1,7 @@
 import type { UIMessage } from "ai";
 import type { ChatMessage } from "app-types/chat";
 import { type ClassValue, clsx } from "clsx";
+import { JSONSchema7 } from "json-schema";
 import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
@@ -311,4 +312,27 @@ export function exclude<T extends object, K extends keyof T>(
   return Object.fromEntries(
     Object.entries(obj).filter(([key]) => !keys.includes(key as K)),
   ) as Omit<T, K>;
+}
+
+export function validateSchema(key: string, schema: JSONSchema7) {
+  const variableName = cleanVariableName(key);
+  if (variableName.length === 0) {
+    throw new Error("Invalid Variable Name");
+  }
+  if (variableName.length > 255) {
+    throw new Error("Variable Name is too long");
+  }
+  if (!schema.type) {
+    throw new Error("Invalid Schema");
+  }
+  if (schema.type == "array" || schema.type == "object") {
+    const keys = Array.from(Object.keys(schema.properties ?? {}));
+    if (keys.length != new Set(keys).size) {
+      throw new Error("Output data must have unique keys");
+    }
+    return keys.every((key) => {
+      return validateSchema(key, schema.properties![key] as JSONSchema7);
+    });
+  }
+  return true;
 }

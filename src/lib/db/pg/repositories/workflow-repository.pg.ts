@@ -14,10 +14,8 @@ import {
   WorkflowSummary,
 } from "app-types/workflow";
 import { NodeKind } from "lib/ai/workflow/workflow.interface";
-import {
-  convertUINodeToDBNode,
-  generateUINode,
-} from "lib/ai/workflow/shared.workflow";
+import { createUINode } from "lib/ai/workflow/create-ui-node";
+import { convertUINodeToDBNode } from "lib/ai/workflow/shared.workflow";
 
 export const pgWorkflowRepository: WorkflowRepository = {
   async selectAll(userId) {
@@ -86,7 +84,7 @@ export const pgWorkflowRepository: WorkflowRepository = {
       .orderBy(desc(WorkflowSchema.createdAt));
     return rows as DBWorkflow[];
   },
-  async save(workflow) {
+  async save(workflow, noGenerateInputNode = false) {
     const prev = workflow.id
       ? await pgDb
           .select({ id: WorkflowSchema.id })
@@ -106,8 +104,8 @@ export const pgWorkflowRepository: WorkflowRepository = {
       })
       .returning();
 
-    if (isNew) {
-      const startNode = generateUINode(NodeKind.Input);
+    if (isNew && !noGenerateInputNode) {
+      const startNode = createUINode(NodeKind.Input);
       await pgDb.insert(WorkflowNodeDataSchema).values({
         ...convertUINodeToDBNode(row.id, startNode),
         name: "INPUT",

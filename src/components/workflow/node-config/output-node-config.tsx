@@ -5,6 +5,7 @@ import { memo, useCallback, useMemo } from "react";
 
 import {
   ChevronDownIcon,
+  InfoIcon,
   PlusIcon,
   TrashIcon,
   TriangleAlertIcon,
@@ -19,6 +20,8 @@ import { Button } from "ui/button";
 import { cleanVariableName, generateUniqueKey } from "lib/utils";
 import { Label } from "ui/label";
 import { findJsonSchemaByPath } from "lib/ai/workflow/shared.workflow";
+import { useTranslations } from "next-intl";
+import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 
 export const OutputNodeDataConfig = memo(function ({
   data,
@@ -26,7 +29,7 @@ export const OutputNodeDataConfig = memo(function ({
   data: OutputNodeData;
 }) {
   const { getNodes, updateNodeData } = useReactFlow();
-
+  const t = useTranslations();
   const outputVariables = useMemo(() => {
     const nodes = getNodes() as UINode[];
     return data.outputData.map(({ key, source }) => {
@@ -92,17 +95,17 @@ export const OutputNodeDataConfig = memo(function ({
   return (
     <div className="flex flex-col gap-2 text-sm px-4 ">
       <div className="flex items-center justify-between">
-        <Label className="text-sm text-muted-foreground">
-          Output Variables
-        </Label>
-        <div
-          onClick={() => {
-            addOutputVariable("text");
-          }}
-          className="p-1 hover:bg-secondary rounded cursor-pointer"
-        >
-          <PlusIcon className="size-3" />
-        </div>
+        <Label className="text-sm">{t("Workflow.outputVariables")}</Label>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="p-1 hover:bg-secondary rounded cursor-pointer">
+              <InfoIcon className="size-3" />
+            </div>
+          </TooltipTrigger>
+          <TooltipContent className="p-4 whitespace-pre-wrap">
+            {t("Workflow.messagesDescription")}
+          </TooltipContent>
+        </Tooltip>
       </div>
       <div className="flex flex-col gap-2">
         {outputVariables.map((item, index) => {
@@ -164,7 +167,7 @@ export const OutputNodeDataConfig = memo(function ({
           }}
           className="w-full border-dashed border text-muted-foreground"
         >
-          <PlusIcon /> Add Output
+          <PlusIcon /> {t("Workflow.addOutputVariable")}
         </Button>
       </div>
     </div>

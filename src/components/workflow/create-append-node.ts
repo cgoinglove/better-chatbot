@@ -1,7 +1,7 @@
 "use client";
 import { appStore } from "@/app/store";
 import { Edge } from "@xyflow/react";
-import { generateUINode } from "lib/ai/workflow/shared.workflow";
+import { createUINode } from "lib/ai/workflow/create-ui-node";
 import {
   LLMNodeData,
   NodeKind,
@@ -9,6 +9,17 @@ import {
 } from "lib/ai/workflow/workflow.interface";
 import { generateUniqueKey, generateUUID } from "lib/utils";
 
+/**
+ * Creates a new workflow node and connects it to an existing source node.
+ * This function handles:
+ * - Generating unique node names and IDs
+ * - Positioning the new node relative to the source
+ * - Creating the connecting edge between nodes
+ * - Setting appropriate default configurations
+ *
+ * @param params - Configuration for creating the new node
+ * @returns Object containing the new node and optional connecting edge
+ */
 export function createAppendNode({
   sourceNode,
   kind,
@@ -39,7 +50,7 @@ export function createAppendNode({
   const names = allNodes.map((node) => node.data.name as string);
   const name = generateUniqueKey(kind.toUpperCase(), names);
 
-  const node = generateUINode(kind, {
+  const node = createUINode(kind, {
     name,
     position: {
       x: sourceNode.position.x + 300 * 1.2,

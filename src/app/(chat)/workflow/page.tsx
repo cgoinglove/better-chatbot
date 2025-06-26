@@ -2,20 +2,62 @@
 import { EditWorkflowPopup } from "@/components/workflow/edit-workflow-popup";
 import { format } from "date-fns";
 
-import { ArrowUpRight, MoreHorizontal } from "lucide-react";
+import { ArrowUpRight, ChevronDown, MoreHorizontal } from "lucide-react";
 
 import { Card, CardDescription, CardHeader, CardTitle } from "ui/card";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Button } from "ui/button";
 import { WorkflowContextMenu } from "@/components/workflow/workflow-context-menu";
-import useSWR from "swr";
+import useSWR, { mutate } from "swr";
 import { fetcher } from "lib/utils";
 import { Skeleton } from "ui/skeleton";
 import { BackgroundPaths } from "ui/background-paths";
 import { WorkflowSummary } from "app-types/workflow";
+import { useTranslations } from "next-intl";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "ui/dropdown-menu";
+import { StoryGenerator } from "lib/ai/workflow/example";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+
+const createWithExample = async (example: string) => {
+  if (example === "storyGenerator") {
+    const exampleWorkflow = StoryGenerator();
+
+    const response = await fetch("/api/workflow", {
+      method: "POST",
+      body: JSON.stringify({
+        ...exampleWorkflow.workflow,
+        noGenerateInputNode: true,
+      }),
+    });
+
+    if (!response.ok) return toast.error("Error creating workflow");
+    const workflow = await response.json();
+    const structureResponse = await fetch(
+      `/api/workflow/${workflow.id}/structure`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          nodes: exampleWorkflow.nodes,
+          edges: exampleWorkflow.edges,
+        }),
+      },
+    );
+    if (!structureResponse.ok) return toast.error("Error creating workflow");
+    return workflow.id as string;
+  }
+};
 
 export default function WorkflowPage() {
+  const t = useTranslations();
+  const router = useRouter();
+
   const { data: workflows, isLoading } = useSWR<WorkflowSummary[]>(
     "/api/workflow",
     fetcher,
@@ -24,8 +66,32 @@ export default function WorkflowPage() {
     },
   );
 
+  const createExample = async (example: string) => {
+    const workflowId = await createWithExample(example);
+    mutate("/api/workflow");
+    router.push(`/workflow/${workflowId}`);
+  };
+
   return (
     <div className="w-full flex flex-col gap-4 p-8">
+      <div className="flex flex-row gap-2 items-center">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              className="min-w-54 justify-between data-[state=open]:bg-input"
+            >
+              {t("Common.createWithExample")}
+              <ChevronDown className="size-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-54">
+            <DropdownMenuItem onClick={() => createExample("storyGenerator")}>
+              📖 {t("Workflow.example.storyGenerator")}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
       <div className="flex w-full flex-col gap-2 mx-auto lg:flex-row lg:flex-wrap">
         <EditWorkflowPopup>
           <Card className="relative bg-secondary overflow-hidden w-full lg:w-sm xl:w-xs hover:bg-input transition-colors h-[196px] cursor-pointer">
@@ -34,15 +100,19 @@ export default function WorkflowPage() {
             </div>
             <CardHeader>
               <CardTitle>
-                <h1 className="text-lg font-bold">Create Workflow</h1>
+                <h1 className="text-lg font-bold">
+                  {t("Workflow.createWorkflow")}
+                </h1>
               </CardTitle>
               <CardDescription className="mt-2">
-                <p className="flex items-center gap-2">
-                  Create a workflow to automate{" "}
-                  <span className="text-foreground">your tasks.</span>
-                  <ArrowUpRight className="size-3.5" />
-                </p>
+                <p className="">{t("Workflow.createWorkflowDescription")}</p>
               </CardDescription>
+              <div className="mt-auto ml-auto flex-1">
+                <Button variant="ghost" size="lg">
+                  {t("Common.create")}
+                  <ArrowUpRight className="size-3.5" />
+                </Button>
+              </div>
             </CardHeader>
           </Card>
         </EditWorkflowPopup>
@@ -79,7 +149,7 @@ export default function WorkflowPage() {
                             {format(workflow.updatedAt, "MMM d, yyyy")}
                             {!workflow.isPublished && (
                               <span className="px-2 rounded-sm bg-secondary text-foreground">
-                                draft
+                                {t("Workflow.draft")}
                               </span>
                             )}
                           </p>

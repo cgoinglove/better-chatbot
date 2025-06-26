@@ -17,6 +17,10 @@ import globalLogger from "logger";
 import { ConsolaInstance } from "consola";
 import { colorize } from "consola/utils";
 
+/**
+ * Maps node kinds to their corresponding executor functions.
+ * When adding a new node type, add its executor here.
+ */
 function getExecutorByKind(kind: NodeKind): NodeExecutor {
   switch (kind) {
     case NodeKind.Input:
@@ -43,34 +47,56 @@ function getExecutorByKind(kind: NodeKind): NodeExecutor {
   };
 }
 
+/**
+ * Creates a workflow executor that can run a complete workflow.
+ * The executor manages:
+ * - Node execution order based on dependencies
+ * - Data flow between nodes
+ * - Error handling and logging
+ * - Branch synchronization for condition nodes
+ *
+ * @param workflow - Contains nodes and edges defining the workflow structure
+ * @returns Compiled workflow executor ready to run
+ */
 export const createWorkflowExecutor = (workflow: {
   nodes: DBNode[];
   edges: DBEdge[];
   logger?: ConsolaInstance;
 }) => {
+  // Create runtime state store for the workflow
   const store = createGraphStore({
     nodes: workflow.nodes,
     edges: workflow.edges,
   });
+
   const logger =
     workflow.logger ??
     globalLogger.withDefaults({
       message: colorize("cyan", `Workflow Executor:`),
     });
 
+  // Create mapping for node ID to name for logging
   const nodeNameByNodeId = new Map<string, string>(
     workflow.nodes.map((node) => [node.id, node.name]),
   );
 
+  // Create the execution graph using ts-edge library
   const graph = createStateGraph(store) as StateGraphRegistry<
     WorkflowRuntimeState,
     string
   >;
+
+  // Add branch labels for condition node edges
   addEdgeBranchLabel(workflow.nodes, workflow.edges);
 
+  /**
+   * Special SKIP node used to handle excess branches from condition nodes.
+   * When multiple branches try to execute the same target node,
+   * excess executions are routed here to prevent duplicate execution.
+   */
   const skipNode = graphNode({
     /*  Identification  */
-    name: "SKIP", // All “bypass / terminate” tokens land here
+    name: "SKIP", // All "bypass / terminate" tokens land here
     metadata: {
       description: "Noop sink node used to silently terminate excess branches",
     },
@@ -81,6 +107,7 @@ export const createWorkflowExecutor = (workflow: {
 
   graph.addNode(skipNode);
 
+  // Add all workflow nodes to the execution graph
   workflow.nodes.forEach((node) => {
     graph.addNode({
       name: node.id,
@@ -88,12 +115,16 @@ export const createWorkflowExecutor = (workflow: {
         kind: node.kind,
       },
       async execute(state) {
+        // Get the appropriate executor for this node type
         const executor = getExecutorByKind(node.kind as NodeKind);
+
+        // Execute the node with current state
         const result = await executor({
           node: convertDBNodeToUINode(node).data,
           state,
         });
 
+        // Store the execution results in the workflow state
         if (result?.output) {
           state.setOutput(
             {
@@ -108,7 +139,10 @@ export const createWorkflowExecutor = (workflow: {
         }
       },
     });
+
+    // Handle edges differently for condition nodes vs regular nodes
     if (node.kind === NodeKind.Condition) {
+      // Condition nodes use dynamic edges based on their evaluation result
       graph.dynamicEdge(node.id, (state) => {
         const next = state.getOutput({
           nodeId: node.id,
@@ -118,6 +152,7 @@ export const createWorkflowExecutor = (workflow: {
         return next.map((node) => node.id);
       });
     } else {
+      // Regular nodes have static edges defined in the workflow
       const targetEdges = workflow.edges
         .filter((edge) => edge.source == node.id)
         .map((v) => v.target);
@@ -126,17 +161,28 @@ export const createWorkflowExecutor = (workflow: {
     }
   });
 
+  // Build table to track how many branches need to reach each node
+  // Used to prevent duplicate execution when multiple condition branches
+  // converge on the same target node
   let needTable: Record<string, number> = buildNeedTable(workflow.edges);
 
+  // Compile the graph starting from the Input node
   const app = graph
     .compile(workflow.nodes.find((node) => node.kind == NodeKind.Input)!.id)
     .use(async ({ name: nodeId, input }, next) => {
+      // Check if this node is expecting multiple incoming branches
       if (!(nodeId in needTable)) return;
+
+      // Decrement the counter - only execute when all branches have arrived
       const left = --needTable[nodeId];
       if (left > 0) return next({ name: "SKIP", input });
+
+      // All branches have arrived, clean up and continue execution
       delete needTable[nodeId];
       return next();
     });
+
+  // Set up event logging for workflow execution monitoring
   app.subscribe((event) => {
     if (event.eventType == "WORKFLOW_START") {
       needTable = buildNeedTable(workflow.edges);
@@ -168,12 +214,24 @@ export const createWorkflowExecutor = (workflow: {
   return app;
 };
 
+/**
+ * Builds a table tracking how many different branches need to reach each target node.
+ * This is used to synchronize execution when multiple condition branches
+ * converge on the same target node.
+ *
+ * @param edges - All edges in the workflow
+ * @returns Object mapping node IDs to required branch count
+ */
 function buildNeedTable(edges: DBEdge[]): Record<string, number> {
   const map = new Map<string, Set<string>>();
+
+  // Group edges by target and track unique branch labels
   edges.forEach((e) => {
     const bid = e.uiConfig.label as string;
     (map.get(e.target) ?? map.set(e.target, new Set()).get(e.target))!.add(bid);
   });
+
+  // Only nodes with multiple incoming branches need synchronization
   const tbl: Record<string, number> = {};
   map.forEach((set, n) => set.size > 1 && (tbl[n] = set.size));
   return tbl;

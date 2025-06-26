@@ -10,18 +10,21 @@ import {
   EditJsonSchemaFieldPopup,
   getFieldKey,
 } from "../../edit-json-schema-field-popup";
-import { PlusIcon, TrashIcon, VariableIcon } from "lucide-react";
+import { InfoIcon, PlusIcon, TrashIcon, VariableIcon } from "lucide-react";
 import { PencilIcon } from "lucide-react";
 import { objectFlow } from "lib/utils";
 import { Button } from "ui/button";
 import { Label } from "ui/label";
 import { useReactFlow } from "@xyflow/react";
+import { useTranslations } from "next-intl";
+import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 
 export const InputNodeDataConfig = memo(function ({
   data,
 }: {
   data: InputNodeData;
 }) {
+  const t = useTranslations();
   const { updateNodeData } = useReactFlow();
 
   const checkRequired = useCallback(
@@ -36,7 +39,7 @@ export const InputNodeDataConfig = memo(function ({
       updateNodeData(data.id, (node) => {
         const prev = node.data as InputNodeData;
         const outputSchema = {
-          ...prev,
+          ...prev.outputSchema,
           properties: {
             ...prev.outputSchema.properties,
             [field.key]: {
@@ -44,14 +47,15 @@ export const InputNodeDataConfig = memo(function ({
               enum:
                 field.type == "string" && field.enum ? field.enum : undefined,
               description: field.description,
+              default: field.defaultValue,
             },
           },
-          default: field.defaultValue,
           required: !field.required
             ? prev.outputSchema.required?.filter((k) => k != field.key)
-            : [...(prev.outputSchema.required ?? []), field.key],
+            : Array.from(
+                new Set([...(prev.outputSchema.required ?? []), field.key]),
+              ),
         };
-
         return {
           outputSchema,
         };
@@ -65,7 +69,7 @@ export const InputNodeDataConfig = memo(function ({
       updateNodeData(data.id, (node) => {
         const prev = node.data as InputNodeData;
         const outputSchema = {
-          ...prev,
+          ...prev.outputSchema,
           properties: objectFlow(prev.outputSchema.properties).filter(
             (_, k) => k != key,
           ),
@@ -82,12 +86,22 @@ export const InputNodeDataConfig = memo(function ({
   return (
     <div className="flex flex-col gap-2 text-sm px-4 ">
       <div className="flex items-center justify-between">
-        <Label className="text-sm text-muted-foreground">Input Fields</Label>
-        <EditJsonSchemaFieldPopup onChange={addField}>
-          <div className="p-1 hover:bg-secondary rounded cursor-pointer">
-            <PlusIcon className="size-3" />
-          </div>
-        </EditJsonSchemaFieldPopup>
+        <Label className="text-sm">{t("Workflow.inputFields")}</Label>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="p-1 hover:bg-secondary rounded cursor-pointer">
+              <InfoIcon className="size-3.5" />
+            </div>
+          </TooltipTrigger>
+          <TooltipContent
+            side="left"
+            align="center"
+            className="p-4 text-sm whitespace-pre-wrap break-words"
+          >
+            {t("Workflow.inputFieldsDescription")}
+          </TooltipContent>
+        </Tooltip>
       </div>
       <div className="flex flex-col gap-1">
         {Object.entries(data.outputSchema.properties ?? {}).map(
@@ -116,6 +130,7 @@ export const InputNodeDataConfig = memo(function ({
                     description: value.description,
                     enum: value.enum as string[],
                     required: checkRequired(key),
+                    defaultValue: value.default as any,
                   }}
                   onChange={addField}
                 >
@@ -138,7 +153,7 @@ export const InputNodeDataConfig = memo(function ({
             variant="ghost"
             className="w-full mt-1 border-dashed border text-muted-foreground"
           >
-            <PlusIcon /> Add Input
+            <PlusIcon /> {t("Workflow.addInputField")}
           </Button>
         </EditJsonSchemaFieldPopup>
       </div>

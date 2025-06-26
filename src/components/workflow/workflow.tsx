@@ -68,7 +68,7 @@ export default function Workflow({
     fetcher,
     {
       onSuccess: (workflow) => {
-        init(workflow);
+        init(workflow, hasEditAccess);
       },
     },
   );
@@ -81,6 +81,7 @@ export default function Workflow({
   }, [isProcessing, hasEditAccess, workflow?.isPublished]);
 
   const save = async () => {
+    if (workflow?.isPublished) return;
     const stop = addProcess();
     await safe()
       .map(() => saveWorkflow(workflowId, snapshot.current, { nodes, edges }))
@@ -184,21 +185,25 @@ export default function Workflow({
     [editable, edges],
   );
 
-  const { errorIds, runningIds } = useMemo(() => {
+  const { errorIds, runningIds, successIds } = useMemo(() => {
     return nodes.reduce(
       (acc, prev) => {
         if (prev.data.runtime?.status === "fail") {
           acc.errorIds.push(prev.id);
         }
-        if (
-          prev.data.runtime?.status === "running" ||
-          prev.data.runtime?.status === "success"
-        ) {
+        if (prev.data.runtime?.status === "running") {
           acc.runningIds.push(prev.id);
+        }
+        if (prev.data.runtime?.status === "success") {
+          acc.successIds.push(prev.id);
         }
         return acc;
       },
-      { errorIds: [] as string[], runningIds: [] as string[] },
+      {
+        errorIds: [] as string[],
+        runningIds: [] as string[],
+        successIds: [] as string[],
+      },
     );
   }, [nodes]);
 
@@ -207,18 +212,17 @@ export default function Workflow({
       const isConnected =
         activeNodeIds.includes(edge.source) ||
         activeNodeIds.includes(edge.target);
-      const isConditionEdge = Boolean(
-        edge.sourceHandle && edge.sourceHandle != "right",
-      );
+
       const isErrorEdge = errorIds.includes(edge.target);
       const isRunningEdge = runningIds.includes(edge.target);
+      const isSuccessEdge = successIds.includes(edge.target);
       return {
         ...edge,
         style: {
           ...edge.style,
           stroke: isErrorEdge
             ? "var(--destructive)"
-            : isRunningEdge
+            : isRunningEdge || isSuccessEdge
               ? "#05df72"
               : isConnected
                 ? "oklch(62.3% 0.214 259.815)"
@@ -226,7 +230,8 @@ export default function Workflow({
           strokeWidth: 2,
           transition: "stroke 0.3s",
         },
-        animated: isConditionEdge,
+        animated:
+          runningIds.includes(edge.target) || runningIds.includes(edge.source),
       };
     });
   }, [edges, activeNodeIds, errorIds, runningIds]);
@@ -252,8 +257,8 @@ export default function Workflow({
   }, []);
 
   useEffect(() => {
-    init(workflow);
-  }, [workflow]);
+    init(workflow, hasEditAccess);
+  }, [workflow, hasEditAccess]);
 
   return (
     <div className="w-full h-full relative text-de text-gree-4">

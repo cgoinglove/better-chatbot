@@ -1,6 +1,7 @@
 import { WorkflowToolKey } from "lib/ai/workflow/workflow.interface";
 import { groupBy } from "lib/utils";
 import { ChevronDownIcon, WrenchIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { ReactNode, useMemo, useState } from "react";
 import { Button } from "ui/button";
 import {
@@ -29,6 +30,7 @@ export function WorkflowToolSelect({
   children?: ReactNode;
   tool?: WorkflowToolKey;
 }) {
+  const t = useTranslations();
   const [open, setOpen] = useState(false);
   const mcpToolsByServerId = useMemo(() => {
     return Object.entries(groupBy(tools, "serverId")).map(
@@ -47,7 +49,9 @@ export function WorkflowToolSelect({
       return (
         <>
           <WrenchIcon className="size-3.5" />
-          <span className="text-muted-foreground">Select Tool...</span>
+          <span className="text-muted-foreground">
+            {t("Common.selectTool")}
+          </span>
         </>
       );
     if (tool.type == "mcp-tool") {
@@ -85,9 +89,9 @@ export function WorkflowToolSelect({
       </PopoverTrigger>
       <PopoverContent className="p-0" side={side} align={align}>
         <Command>
-          <CommandInput placeholder="search..." />
+          <CommandInput placeholder={t("Common.search")} />
           <CommandList>
-            <CommandEmpty>No results.</CommandEmpty>
+            <CommandEmpty>{t("Common.noResults")}</CommandEmpty>
             {mcpToolsByServerId.map((mcpTools) => {
               return (
                 <CommandGroup

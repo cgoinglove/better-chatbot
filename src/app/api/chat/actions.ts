@@ -5,7 +5,6 @@ import {
   generateText,
   jsonSchema,
   LanguageModel,
-  UIMessage,
   type Message,
 } from "ai";
 
@@ -294,17 +293,20 @@ export async function rememberMcpServerCustomizationsAction(userId: string) {
 
 export async function generateObjectAction({
   model,
-  messages,
+  prompt,
   schema,
 }: {
   model?: ChatModel;
-  messages: Omit<UIMessage, "id">[];
+  prompt: {
+    system?: string;
+    user?: string;
+  };
   schema: JSONSchema7 | ObjectJsonSchema7;
 }) {
-  console.log(messages);
   const result = await generateObject({
     model: customModelProvider.getModel(model),
-    messages,
+    system: prompt.system,
+    prompt: prompt.user,
     schema: jsonSchemaToZod(schema),
   });
   return result.object;

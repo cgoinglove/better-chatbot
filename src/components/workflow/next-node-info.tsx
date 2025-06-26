@@ -12,6 +12,8 @@ import { PlusIcon, Unlink } from "lucide-react";
 import { NodeSelect } from "./node-select";
 import { useUpdate } from "@/hooks/use-update";
 import { createAppendNode } from "./create-append-node";
+import { useTranslations } from "next-intl";
+import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 
 interface NextNodeInfoProps {
   node: UINode;
@@ -19,6 +21,7 @@ interface NextNodeInfoProps {
 }
 
 export function NextNodeInfo({ node, onSelectNode }: NextNodeInfoProps) {
+  const t = useTranslations();
   const { addNodes, addEdges, updateNode, getEdges, getNodes, setEdges } =
     useReactFlow();
   const nodes = getNodes() as UINode[];
@@ -66,8 +69,8 @@ export function NextNodeInfo({ node, onSelectNode }: NextNodeInfoProps) {
   );
   return (
     <div className="flex flex-col w-full text-muted-foreground">
-      <Label>Next Step</Label>
-      <p className="my-2 text-xs">이 워크플로우에 다음 단계를 추가하세요.</p>
+      <Label className="text-foreground">{t("Workflow.nextNode")}</Label>
+      <p className="my-2 text-xs">{t("Workflow.nextNodeDescription")}</p>
       {node.data.kind === NodeKind.Condition ? (
         <ConditionNodeDataConnector
           node={node}
@@ -185,6 +188,7 @@ function NextNodeConnector({
   onSelectNode,
   label,
 }: NodeConnectorProps) {
+  const t = useTranslations();
   return (
     <div className="flex w-full">
       <div className="py-1">
@@ -213,15 +217,20 @@ function NextNodeConnector({
             >
               <NodeIcon type={n.node.data.kind} />
               {n.node.data.name}
-              <button
-                className="hover:border-destructive flex transition-colors ml-auto gap-1 border rounded  p-1 items-center"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDisconnected(n.edge);
-                }}
-              >
-                <Unlink className="size-3 group-hover:text-destructive" />
-              </button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    className="hover:border-destructive flex transition-colors ml-auto gap-1 border rounded  p-1 items-center"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDisconnected(n.edge);
+                    }}
+                  >
+                    <Unlink className="size-3 group-hover:text-destructive" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>{t("Workflow.unlink")}</TooltipContent>
+              </Tooltip>
             </div>
           );
         })}
@@ -229,10 +238,10 @@ function NextNodeConnector({
           <Button
             size={"lg"}
             variant="ghost"
-            className="text-xs w-full text-muted-foreground border border-dashed justify-start"
+            className="data-[state=open]:bg-secondary! text-xs w-full text-muted-foreground border border-dashed justify-start"
           >
             <PlusIcon className="size-3" />
-            <span>Add Next Step</span>
+            <span>{t("Workflow.addNextNode")}</span>
           </Button>
         </NodeSelect>
       </div>

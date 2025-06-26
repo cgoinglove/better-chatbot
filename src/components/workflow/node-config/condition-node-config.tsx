@@ -32,16 +32,19 @@ import {
 import { useCallback, useMemo, useState } from "react";
 import { findJsonSchemaByPath } from "lib/ai/workflow/shared.workflow";
 import { Badge } from "ui/badge";
-import { cn, generateUUID, isNull } from "lib/utils";
+import { cn, generateUUID } from "lib/utils";
 import { NodeSelect } from "../node-select";
 import { useUpdate } from "@/hooks/use-update";
 import { createAppendNode } from "../create-append-node";
+import { useTranslations } from "next-intl";
+import { Input } from "ui/input";
 
 export function ConditionNodeDataConfig({
   data,
 }: {
   data: ConditionNodeData;
 }) {
+  const t = useTranslations();
   const { updateNodeData, setEdges, getEdges } = useReactFlow();
 
   const updateIfBranch = useCallback(
@@ -132,8 +135,7 @@ export function ConditionNodeDataConfig({
           <>
             <p className="font-bold text-xs mb-2 text-blue-500">ELSE IF</p>
             <p className="text-xs ml-12 text-muted-foreground">
-              ELSE IF 조건이 충족되지 않을 때 실행할 논리를 정의하는 데
-              사용됩니다.
+              {t("Workflow.elseIfDescription")}
             </p>
           </>
         )}
@@ -170,7 +172,7 @@ export function ConditionNodeDataConfig({
           </span>
         </div>
         <p className="text-xs ml-12 text-muted-foreground ">
-          If 조건이 충족되지 않을 때 실행할 논리를 정의하는 데 사용됩니다.
+          {t("Workflow.elseDescription")}
         </p>
       </div>
     </div>
@@ -197,7 +199,7 @@ function ConditionBranchItem({
 }: ConditionBranchProps) {
   const { getNode } = useReactFlow<UINode>();
   const nodes = useNodes() as UINode[];
-
+  const t = useTranslations();
   const addCondition = useCallback(
     (source: OutputSchemaSourceKey) => {
       const node = getNode(source.nodeId)!;
@@ -318,7 +320,7 @@ function ConditionBranchItem({
             variant={"secondary"}
             className="ml-12 cursor-pointer hover:bg-input py-2 px-4"
           >
-            <PlusIcon className="size-4" /> 조건 추가
+            <PlusIcon className="size-4" /> {t("Workflow.addCondition")}
           </Badge>
         </VariableSelect>
 
@@ -329,7 +331,7 @@ function ConditionBranchItem({
             onClick={onDelete}
           >
             <TrashIcon className="size-3.5" />
-            삭제
+            {t("Common.delete")}
           </Button>
         )}
       </div>
@@ -433,12 +435,11 @@ function ConditionRuleItem({
       {itemType == "string" || itemType == "number" ? (
         <>
           <Separator className="my-1" />
-          <input
-            value={isNull(item.value) ? undefined : String(item.value || "")}
+          <Input
+            value={String(item.value || "")}
             autoFocus
-            className="text-xs py-1 px-2 focus:outline-none"
-            placeholder="...value"
-            type={itemType == "string" ? "text" : "number"}
+            className="text-xs py-1 px-2 focus:outline-none bg-transparent border-none"
+            type="text"
             onChange={(e) => onChange({ ...item, value: e.target.value })}
           />
         </>

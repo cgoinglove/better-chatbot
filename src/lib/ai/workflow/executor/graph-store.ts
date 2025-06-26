@@ -1,7 +1,9 @@
-import { objectFlow } from "lib/utils";
+import { objectFlow, toAny } from "lib/utils";
 import { OutputSchemaSourceKey } from "../workflow.interface";
 import { graphStore } from "ts-edge";
 import { DBEdge, DBNode } from "app-types/workflow";
+import { ObjectJsonSchema7 } from "app-types/util";
+import { defaultObjectJsonSchema } from "../shared.workflow";
 
 export interface WorkflowRuntimeState {
   query: Record<string, unknown>;
@@ -51,8 +53,25 @@ export const createGraphStore = (params: {
         });
       },
       getOutput(key) {
-        const { outputs } = get();
-        return objectFlow(outputs[key.nodeId]).getByPath(key.path);
+        const { outputs, nodes } = get();
+        const targetNode = nodes.find((n) => n.id == key.nodeId);
+        const schema =
+          (targetNode?.nodeConfig?.outputSchema as ObjectJsonSchema7) ??
+          defaultObjectJsonSchema;
+        const defaultValue = key.path.length
+          ? key.path.reduce(
+              (acc, cur, index) => {
+                const isLast = index === key.path.length - 1;
+                if (isLast) return acc?.[cur]?.default;
+                return acc?.[cur]?.properties?.[cur];
+              },
+              (schema.properties ?? {}) as any,
+            )
+          : toAny(schema)?.default;
+
+        return (
+          objectFlow(outputs[key.nodeId]).getByPath(key.path) ?? defaultValue
+        );
       },
     };
   });

@@ -2,7 +2,8 @@ import { describe, it, expect } from "vitest";
 import { addEdgeBranchLabel } from "./add-edge-branch-label";
 import { NodeKind } from "../workflow.interface";
 import { DBEdge, DBNode } from "app-types/workflow";
-import { convertUINodeToDBNode, generateUINode } from "../shared.workflow";
+import { convertUINodeToDBNode } from "../shared.workflow";
+import { createUINode } from "../create-ui-node";
 
 describe("addEdgeBranchLabel", () => {
   // Helper function to create a node
@@ -11,7 +12,7 @@ describe("addEdgeBranchLabel", () => {
     kind: NodeKind,
     name: string = `Node ${id}`,
   ): DBNode => {
-    const uiNode = generateUINode(kind, {
+    const uiNode = createUINode(kind, {
       name,
       id,
     });

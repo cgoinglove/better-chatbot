@@ -37,6 +37,7 @@ import {
 } from "ui/dropdown-menu";
 import { allNodeValidate } from "lib/ai/workflow/node-validate";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 export const WorkflowPanel = memo(
   function WorkflowPanel({
@@ -56,7 +57,7 @@ export const WorkflowPanel = memo(
   }) {
     const { setNodes, getNodes, getEdges } = useReactFlow();
     const [showExecutePanel, setShowExecutePanel] = useState(false);
-
+    const t = useTranslations();
     const updateVisibility = useCallback(
       (visibility: DBWorkflow["visibility"]) => {
         const close = addProcess();
@@ -167,66 +168,97 @@ export const WorkflowPanel = memo(
             }}
           >
             <PlayIcon />
-            Execute
+            {t("Common.run")}
           </Button>
 
           {!workflow.isPublished && (
-            <Button
-              disabled={isProcessing || !hasEditAccess}
-              onClick={onSave}
-              variant="default"
-              className="w-16"
-            >
-              {isProcessing ? (
-                <Loader className="size-3.5 animate-spin" />
-              ) : (
-                "Save"
-              )}
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  disabled={isProcessing || !hasEditAccess}
+                  onClick={onSave}
+                  variant="default"
+                  className="w-16"
+                >
+                  {isProcessing ? (
+                    <Loader className="size-3.5 animate-spin" />
+                  ) : (
+                    t("Common.save")
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                {t("Workflow.autoSaveDescription")}
+              </TooltipContent>
+            </Tooltip>
           )}
           <div className="h-6">
             <Separator orientation="vertical" />
           </div>
-          <Button
-            variant={"secondary"}
-            disabled={isProcessing || !hasEditAccess}
-            onClick={() => updatePublished(!workflow.isPublished)}
-            className="w-20"
-          >
-            {workflow.isPublished ? "Draft" : "Publish"}
-          </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
+          <Tooltip>
+            <TooltipTrigger asChild>
               <Button
-                variant="secondary"
-                size="icon"
-                className="data-[state=open]:bg-input!"
+                variant={"secondary"}
+                disabled={isProcessing || !hasEditAccess}
+                onClick={() => updatePublished(!workflow.isPublished)}
+                className="w-20"
               >
-                {workflow.visibility == "public" ? (
-                  <BlocksIcon />
-                ) : workflow.visibility == "readonly" ? (
-                  <EyeIcon />
-                ) : (
-                  <LockIcon />
-                )}
+                {workflow.isPublished
+                  ? t("Workflow.draft")
+                  : t("Workflow.publish")}
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-40">
+            </TooltipTrigger>
+            <TooltipContent side="bottom" align="end" className="w-60 text-sm">
+              <p className="whitespace-pre-wrap break-words p-4">
+                {workflow.isPublished
+                  ? t("Workflow.publishedDescription")
+                  : t("Workflow.draftDescription")}
+              </p>
+            </TooltipContent>
+          </Tooltip>
+          <DropdownMenu>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    className="data-[state=open]:bg-input!"
+                  >
+                    {workflow.visibility == "public" ? (
+                      <BlocksIcon />
+                    ) : workflow.visibility == "readonly" ? (
+                      <EyeIcon />
+                    ) : (
+                      <LockIcon />
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                {t("Workflow.visibilityDescription")}
+              </TooltipContent>
+            </Tooltip>
+
+            <DropdownMenuContent side="bottom" align="end">
               {[
                 {
                   icon: <LockIcon />,
                   value: "private",
-                  label: "Private",
+                  label: "Workflow.private",
+                  description: "Workflow.privateDescription",
                 },
                 {
                   icon: <EyeIcon />,
                   value: "readonly",
-                  label: "Read Only",
+                  label: "Workflow.readonly",
+                  description: "Workflow.readonlyDescription",
                 },
                 {
                   icon: <BlocksIcon />,
                   value: "public",
-                  label: "Public",
+                  label: "Workflow.public",
+                  description: "Workflow.publicDescription",
                 },
               ].map((item) => {
                 return (
@@ -241,7 +273,12 @@ export const WorkflowPanel = memo(
                     }
                   >
                     {item.icon}
-                    {item.label}
+                    <div className="flex flex-col px-4 gap-1">
+                      <p>{t(item.label)}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {t(item.description)}
+                      </p>
+                    </div>
                     {workflow.visibility == item.value && (
                       <Check className="ml-auto" />
                     )}

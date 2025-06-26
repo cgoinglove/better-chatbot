@@ -11,22 +11,20 @@ export type ObjectJsonSchema7 = {
 
 export type TipTapMentionJsonContent = {
   type: "doc";
-  content: [
-    {
-      type: "paragraph";
-      content: (
-        | {
-            type: "text";
-            text: string;
-          }
-        | {
-            type: "mention";
-            attrs: {
-              id: string;
-              label: string;
-            };
-          }
-      )[];
-    },
-  ];
+  content: {
+    type: "paragraph";
+    content: (
+      | {
+          type: "text";
+          text: string;
+        }
+      | {
+          type: "mention";
+          attrs: {
+            id: string;
+            label: string;
+          };
+        }
+    )[];
+  }[];
 };

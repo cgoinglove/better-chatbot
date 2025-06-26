@@ -31,11 +31,17 @@ export async function POST(
   if (!hasAccess) {
     return new Response("Unauthorized", { status: 401 });
   }
-
+  console.log(nodes, edges);
   await workflowRepository.saveStructure({
     workflowId: id,
-    nodes,
-    edges,
+    nodes: nodes.map((v) => ({
+      ...v,
+      workflowId: id,
+    })),
+    edges: edges.map((v) => ({
+      ...v,
+      workflowId: id,
+    })),
     deleteNodes,
     deleteEdges,
   });

@@ -12,6 +12,8 @@ import { safe } from "ts-safe";
 
 import { toast } from "sonner";
 import { mutate } from "swr";
+import { useTranslations } from "next-intl";
+import { PencilIcon, Trash2Icon } from "lucide-react";
 
 interface WorkflowContextMenuProps {
   children: React.ReactNode;
@@ -24,7 +26,7 @@ interface WorkflowContextMenuProps {
 export function WorkflowContextMenu(props: WorkflowContextMenuProps) {
   const [editOpen, setEditOpen] = useState(false);
   const [open, setOpen] = useState(false);
-
+  const t = useTranslations();
   const handleDeleteWorkflow = async () => {
     toast.promise(
       safe(() =>
@@ -38,8 +40,8 @@ export function WorkflowContextMenu(props: WorkflowContextMenuProps) {
         })
         .unwrap(),
       {
-        success: "Workflow deleted",
-        loading: "Delete...",
+        success: t("Common.success"),
+        loading: t("Common.deleting"),
       },
     );
   };
@@ -53,7 +55,8 @@ export function WorkflowContextMenu(props: WorkflowContextMenuProps) {
             className="cursor-pointer text-sm"
             onClick={() => setEditOpen(true)}
           >
-            Info Update
+            <PencilIcon className="size-3.5" />
+            {t("Common.edit")}
           </DropdownMenuItem>
           <DropdownMenuItem
             className="cursor-pointer text-sm"
@@ -63,7 +66,8 @@ export function WorkflowContextMenu(props: WorkflowContextMenuProps) {
               handleDeleteWorkflow();
             }}
           >
-            Delete
+            <Trash2Icon className="size-3.5" />
+            {t("Common.delete")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

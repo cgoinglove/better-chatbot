@@ -69,7 +69,7 @@ export function AppSidebarMenus() {
               <Link href="/workflow">
                 <SidebarMenuButton className="font-semibold">
                   <Waypoints className="size-4" />
-                  workflow
+                  {t("workflow")}
                   <Badge>Beta</Badge>
                 </SidebarMenuButton>
               </Link>

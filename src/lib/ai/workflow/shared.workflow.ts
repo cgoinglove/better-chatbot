@@ -1,12 +1,11 @@
 import { ObjectJsonSchema7, TipTapMentionJsonContent } from "app-types/util";
 import { JSONSchema7 } from "json-schema";
 import {
-  NodeKind,
   UINode,
   OutputSchemaSourceKey,
   WorkflowNodeData,
 } from "./workflow.interface";
-import { exclude, generateUUID } from "lib/utils";
+import { exclude } from "lib/utils";
 import { DBEdge, DBNode } from "app-types/workflow";
 import { Edge } from "@xyflow/react";
 import { GraphEvent } from "ts-edge";
@@ -16,74 +15,6 @@ export const defaultObjectJsonSchema: ObjectJsonSchema7 = {
   type: "object",
   properties: {},
 };
-
-export function generateUINode(
-  kind: NodeKind,
-  option?: Partial<{
-    position: { x: number; y: number };
-    name?: string;
-    id?: string;
-  }>,
-): UINode {
-  const id = option?.id ?? generateUUID();
-
-  const node: UINode = {
-    ...option,
-    id,
-    position: option?.position ?? { x: 0, y: 0 },
-    data: {
-      kind: kind as any,
-      name: option?.name ?? kind.toUpperCase(),
-      id,
-      outputSchema: { ...defaultObjectJsonSchema },
-      runtime: {
-        isNew: true,
-      },
-    },
-    type: "default",
-  };
-
-  if (node.data.kind === NodeKind.Output) {
-    node.data.outputData = [];
-  } else if (node.data.kind === NodeKind.LLM) {
-    node.data.outputSchema.properties = {
-      answer: {
-        type: "string",
-      },
-      totalTokens: {
-        type: "number",
-      },
-    };
-    node.data.messages = [
-      {
-        role: "user",
-      },
-    ];
-  } else if (node.data.kind === NodeKind.Condition) {
-    node.data.branches = {
-      if: {
-        id: "if",
-        logicalOperator: "AND",
-        type: "if",
-        conditions: [],
-      },
-      else: {
-        id: "else",
-        logicalOperator: "AND",
-        type: "else",
-        conditions: [],
-      },
-    };
-  } else if (node.data.kind === NodeKind.Tool) {
-    node.data.outputSchema.properties = {
-      tool_result: {
-        type: "object",
-      },
-    };
-  }
-
-  return node;
-}
 
 export function findAccessibleNodeIds({
   nodeId,
@@ -259,36 +190,28 @@ export function convertTiptapJsonToAiMessage({
     };
 
   const text =
-    json.content?.[0].content
+    json.content
+      ?.flatMap((p) => p.content)
       .reduce((prev, part) => {
         let data = "";
-
-        switch (part.type) {
-          case "text":
-            {
-              data += ` ${part.text}`;
-            }
-            break;
-          case "mention":
-            {
-              const key = JSON.parse(part.attrs.label) as OutputSchemaSourceKey;
-              const mentionItem = getOutput(key) || "";
-              if (typeof mentionItem == "object") {
-                data +=
-                  "\n```json\n" +
-                  JSON.stringify(mentionItem, null, 2) +
-                  "\n```\n";
-              } else data += ` \`${String(mentionItem)}\``;
-            }
-            break;
+        if (part.type === "text") {
+          data += ` ${part.text}`;
+        } else if (part.type === "mention") {
+          const key = JSON.parse(part.attrs.label) as OutputSchemaSourceKey;
+          const mentionItem = getOutput(key) || "";
+          if (typeof mentionItem == "object") {
+            data +=
+              "\n```json\n" + JSON.stringify(mentionItem, null, 2) + "\n```\n";
+          } else data += ` \`${String(mentionItem)}\``;
         }
+
         return prev + data;
       }, "")
       .trim() || "";
 
   return {
     role,
-    content: "",
+    content: text,
     parts: [
       {
         type: "text",

@@ -23,6 +23,7 @@ import { NodeContextMenuContent } from "./node-context-menu-content";
 import { ConditionNodeDataOutputStack } from "./node-config/condition-node-config";
 import { createAppendNode } from "./create-append-node";
 import { ToolNodeStack } from "./node-config/tool-node-config";
+import { Markdown } from "../markdown";
 
 type Props = NodeProps<UINode>;
 
@@ -93,9 +94,11 @@ export const DefaultNode = memo(function DefaultNode({
           className={cn(
             "fade-300 group py-4 w-72 relative bg-secondary border-2 hover:bg-input rounded-lg flex flex-col cursor-grab transition-colors",
             data.kind === NodeKind.Note &&
-              "bg-primary-foreground text-primary rounded-none border-card",
+              "bg-card/40 text-primary rounded-none w-md min-h-40 border-input",
             data.kind === NodeKind.Condition && "w-52",
-            selected && "border-blue-500 bg-secondary!",
+            data.kind !== NodeKind.Note &&
+              selected &&
+              "border-blue-500 bg-secondary!",
             data.runtime?.status === "fail" && "border-destructive",
             ["success", "running"].includes(data.runtime?.status ?? "") &&
               "border-green-400",
@@ -193,9 +196,17 @@ export const DefaultNode = memo(function DefaultNode({
             {data.description && (
               <div className="px-4 mt-2">
                 <div className="text-xs text-muted-foreground">
-                  <p className="break-all whitespace-pre-wrap">
-                    {data.description}
-                  </p>
+                  {data.kind === NodeKind.Note ? (
+                    <Markdown>{data.description}</Markdown>
+                  ) : (
+                    <p
+                      className={cn(
+                        "break-all whitespace-pre-wrap text-sm text-foreground mt-4",
+                      )}
+                    >
+                      {data.description}
+                    </p>
+                  )}
                 </div>
               </div>
             )}

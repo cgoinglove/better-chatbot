@@ -52,13 +52,15 @@ export function NodeIcon({
             ? "bg-green-500"
             : type === NodeKind.Note
               ? "text-foreground bg-input"
-              : type === NodeKind.Tool || type === NodeKind.LLM
+              : type === NodeKind.LLM
                 ? "bg-indigo-500"
-                : type === NodeKind.Code || type === NodeKind.Http
-                  ? "bg-rose-500"
-                  : type === NodeKind.Condition
-                    ? "bg-amber-500"
-                    : "bg-card",
+                : type === NodeKind.Tool
+                  ? "bg-blue-500"
+                  : type === NodeKind.Code || type === NodeKind.Http
+                    ? "bg-rose-500"
+                    : type === NodeKind.Condition
+                      ? "bg-amber-500"
+                      : "bg-card",
         "p-1 rounded",
         className,
       )}

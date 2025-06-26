@@ -6,7 +6,7 @@ import {
   WorkflowToolKey,
 } from "lib/ai/workflow/workflow.interface";
 import { memo, useEffect, useMemo } from "react";
-import { ChevronDown, VariableIcon, WrenchIcon } from "lucide-react";
+import { ChevronDown, InfoIcon, VariableIcon, WrenchIcon } from "lucide-react";
 
 import { useEdges, useNodes, useReactFlow } from "@xyflow/react";
 import { selectMcpClientsAction } from "@/app/api/mcp/actions";
@@ -22,16 +22,25 @@ import { Button } from "ui/button";
 import { OutputSchemaMentionInput } from "../output-schema-mention-input";
 import { useWorkflowStore } from "@/app/store/workflow.store";
 import { MCPIcon } from "ui/mcp-icon";
+import { useTranslations } from "next-intl";
+import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 
 export const ToolNodeDataConfig = memo(function ({
   data,
 }: {
   data: ToolNodeData;
 }) {
+  const t = useTranslations();
   const { updateNodeData } = useReactFlow();
   const nodes = useNodes() as UINode[];
   const edges = useEdges();
-  const isProcessing = useWorkflowStore((state) => state.processIds.length > 0);
+  const editable = useWorkflowStore((state) => {
+    return (
+      state.processIds.length === 0 &&
+      state.hasEditAccess &&
+      !state.workflow?.isPublished
+    );
+  });
 
   const { data: mcpList } = useSWR("mcp-list", selectMcpClientsAction, {
     refreshInterval: 1000 * 60 * 1,
@@ -68,7 +77,7 @@ export const ToolNodeDataConfig = memo(function ({
 
   return (
     <div className="flex flex-col gap-2 text-sm px-4">
-      <p className="text-sm font-semibold">Tool</p>
+      <p className="text-sm font-semibold">{t("Common.tool")}</p>
       <WorkflowToolSelect
         tools={toolList}
         onChange={(tool) => {
@@ -76,7 +85,9 @@ export const ToolNodeDataConfig = memo(function ({
         }}
         tool={data.tool}
       />
-      <p className="text-sm font-semibold my-2">Description & Schema</p>
+      <p className="text-sm font-semibold my-2">
+        {t("Workflow.descriptionAndSchema")}
+      </p>
       {data.tool?.description ||
       Object.keys(data.tool?.parameterSchema?.properties || {}).length > 0 ? (
         <div className="text-xs p-2 bg-background border rounded-md">
@@ -114,7 +125,7 @@ export const ToolNodeDataConfig = memo(function ({
         </div>
       ) : (
         <div className="text-xs text-muted-foreground text-center py-2 border rounded-md">
-          No description And schema
+          {t("Workflow.noDescriptionAndSchema")}
         </div>
       )}
 
@@ -142,6 +153,16 @@ export const ToolNodeDataConfig = memo(function ({
             <ChevronDown className="size-3" />
           </Button>
         </SelectModel>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="p-1 hover:bg-secondary rounded cursor-pointer">
+              <InfoIcon className="size-3" />
+            </div>
+          </TooltipTrigger>
+          <TooltipContent className="p-4 whitespace-pre-wrap">
+            {t("Workflow.toolDescription")}
+          </TooltipContent>
+        </Tooltip>
       </div>
       <div className="w-full bg-secondary rounded-md p-2 min-h-20">
         <OutputSchemaMentionInput
@@ -149,7 +170,7 @@ export const ToolNodeDataConfig = memo(function ({
           nodes={nodes}
           edges={edges}
           content={data.message}
-          editable={!isProcessing}
+          editable={editable}
           onChange={(content) => {
             updateNodeData(data.id, {
               message: content,
@@ -163,12 +184,15 @@ export const ToolNodeDataConfig = memo(function ({
 ToolNodeDataConfig.displayName = "ToolNodeDataConfig";
 
 export const ToolNodeStack = memo(function ({ data }: { data: ToolNodeData }) {
+  const t = useTranslations();
   const selectedToolLabel = useMemo(() => {
     if (!data.tool)
       return (
         <>
           <WrenchIcon className="size-3" />
-          <span className="text-muted-foreground">Select Tool...</span>
+          <span className="text-muted-foreground">
+            {t("Common.selectTool")}
+          </span>
         </>
       );
     if (data.tool.type == "mcp-tool") {
@@ -193,7 +217,7 @@ export const ToolNodeStack = memo(function ({ data }: { data: ToolNodeData }) {
     <div className="flex flex-col gap-1 px-4 mt-4">
       {!data.tool ? (
         <div className="text-xs text-muted-foreground text-center py-2 border rounded-md">
-          No tool selected
+          {t("Common.noResults")}
         </div>
       ) : (
         <div className="border bg-input text-[10px] rounded px-2 py-1 flex items-center gap-1">

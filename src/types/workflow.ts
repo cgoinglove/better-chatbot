@@ -78,6 +78,7 @@ export interface WorkflowRepository {
       | "isPublished"
       | "version"
     >,
+    noGenerateInputNode?: boolean,
   ): Promise<DBWorkflow>;
   saveStructure(data: {
     workflowId: string;

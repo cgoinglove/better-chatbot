@@ -47,6 +47,7 @@ import { SelectModel } from "@/components/select-model";
 
 import { useCopy } from "@/hooks/use-copy";
 import { NodeResultPopup } from "../node-result-popup";
+import { useTranslations } from "next-intl";
 
 const debounce = createDebounce();
 
@@ -74,7 +75,7 @@ export function ExecuteTab({
   );
 
   const [tab, setTab] = useState<(typeof tabs)[number]["value"]>(tabs[0].value);
-
+  const t = useTranslations();
   const [isRunning, setIsRunning] = useState(false);
   const [histories, setHistories] = useState<NodeRuntimeHistory[]>([]);
   const [result, setResult] = useState<GraphEndEvent | undefined>();
@@ -107,11 +108,11 @@ export function ExecuteTab({
   const handleGenerateInputWithAI = useCallback(async () => {
     let model = appStore.getState().chatModel;
     const result = await notify.prompt({
-      title: "Generate Input With AI",
+      title: t("Common.generateInputWithAI"),
       description: (
         <div className="flex items-center gap-2">
           <p className="mr-auto">
-            Write a prompt to generate input for the workflow
+            {t("Workflow.generateInputWithAIDescription")}
           </p>
           <SelectModel
             onSelect={(m) => {
@@ -125,43 +126,27 @@ export function ExecuteTab({
     toast.promise(
       generateObjectAction({
         model,
-        messages: [
-          {
-            role: "system",
-            content: "",
-            parts: [
-              {
-                type: "text",
-                text: `You are a parameter generator for tool execution.
+        prompt: {
+          system: `You are a parameter generator for tool execution.
 Analyze the user's request and generate creative JSON data that matches the provided schema.
 If information cannot be inferred from the user's question, use your creativity to generate engaging data.
 Fill all required fields and return only valid JSON without explanations.
 
 tool-name: ${workflow!.name}
-${workflow!.description ? `tool-description: ${workflow!.description}` : ""}
-
-user-prompt: ${result}
-`,
-              },
-            ],
-          },
-          {
-            role: "user",
-            content: "",
-            parts: [{ type: "text", text: result }],
-          },
-        ],
+${workflow!.description ? `tool-description: ${workflow!.description}` : ""}`,
+          user: result,
+        },
         schema: inputSchema,
       }).then((res) => {
         setQuery(res);
       }),
       {
-        loading: "Generating input with AI...",
-        success: "Input generated successfully",
-        error: "Failed to generate input",
+        loading: t("Common.generatingInputWithAI"),
+        success: t("Common.inputGeneratedSuccessfully"),
+        error: t("Common.failedToGenerateInput"),
       },
     );
-  }, []);
+  }, [inputSchema]);
 
   const handleClick = async () => {
     await onSave();
@@ -424,7 +409,7 @@ user-prompt: ${result}
                 onClick={handleGenerateInputWithAI}
                 className="hover:bg-secondary rounded-sm px-2 py-1 flex items-center gap-2 ml-auto text-xs font-semibold cursor-pointer hover:text-primary transition-colors"
               >
-                Generate Input With AI
+                {t("Common.generateInputWithAI")}
                 <WandSparklesIcon className="size-3" />
               </div>
               {inputSchemaIterator.map(([key, schema], i) => {
@@ -462,7 +447,7 @@ user-prompt: ${result}
                     ) : schema.type == "string" && schema.enum ? (
                       <Select
                         disabled={isProcessing}
-                        defaultValue={query[key]}
+                        value={query[key]}
                         onValueChange={(value) =>
                           setQuery({ ...query, [key]: value })
                         }
@@ -508,7 +493,7 @@ user-prompt: ${result}
             {isProcessing ? (
               <Loader className="size-3.5 animate-spin" />
             ) : (
-              "Run Workflow"
+              t("Common.run")
             )}
           </Button>
         </div>

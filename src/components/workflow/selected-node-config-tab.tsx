@@ -19,8 +19,10 @@ import { Label } from "ui/label";
 import { NextNodeInfo } from "./next-node-info";
 import { nextTick } from "lib/utils";
 import { ToolNodeDataConfig } from "./node-config/tool-node-config";
+import { useTranslations } from "next-intl";
 
 export function SelectedNodeConfigTab({ node }: { node: UINode }) {
+  const t = useTranslations();
   const { updateNodeData, updateNode, setNodes } = useReactFlow();
 
   return (
@@ -74,7 +76,7 @@ export function SelectedNodeConfigTab({ node }: { node: UINode }) {
                 description: e.target.value,
               })
             }
-            placeholder="node description..."
+            placeholder={t("Workflow.nodeDescriptionPlaceholder")}
           />
         )}
       </div>
@@ -97,7 +99,7 @@ export function SelectedNodeConfigTab({ node }: { node: UINode }) {
               htmlFor="description"
               className="text-muted-foreground text-xs"
             >
-              Description
+              {t("Common.description")}
             </Label>
             <Textarea
               id="description"
