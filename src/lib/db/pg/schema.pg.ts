@@ -166,7 +166,7 @@ export const WorkflowSchema = pgTable("workflow", {
   description: text("description"),
   isPublished: boolean("is_published").notNull().default(false),
   visibility: varchar("visibility", {
-    enum: ["public", "private", "collaborative"],
+    enum: ["public", "private", "readonly"],
   })
     .notNull()
     .default("private"),

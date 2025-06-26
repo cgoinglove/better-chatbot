@@ -48,9 +48,11 @@ export default function Workflow({
   initialNodes,
   initialEdges,
   workflowId,
+  hasEditAccess,
 }: {
   workflowId: string;
   initialNodes: UINode[];
+  hasEditAccess?: boolean;
   initialEdges: Edge[];
 }) {
   const { init, addProcess, processIds } = useWorkflowStore();
@@ -73,6 +75,10 @@ export default function Workflow({
   const [activeNodeIds, setActiveNodeIds] = useState<string[]>([]);
 
   const snapshot = useRef({ nodes: initialNodes, edges: initialEdges });
+
+  const editable = useMemo(() => {
+    return !isProcessing && hasEditAccess && !workflow?.isPublished;
+  }, [isProcessing, hasEditAccess, workflow?.isPublished]);
 
   const save = async () => {
     const stop = addProcess();
@@ -97,7 +103,7 @@ export default function Workflow({
 
   const onNodesChange: OnNodesChange = useCallback(
     (changes) => {
-      if (isProcessing) {
+      if (!editable) {
         setNodes((nds) => {
           let updatedNodes = nds;
           changes.forEach((change) => {
@@ -128,18 +134,18 @@ export default function Workflow({
       }
       setNodes((nds) => applyNodeChanges(changes, nds) as UINode[]);
     },
-    [isProcessing],
+    [editable],
   );
   const onEdgesChange: OnEdgesChange = useCallback(
     (changes) => {
-      if (isProcessing) return;
+      if (!editable) return;
       setEdges((eds) => applyEdgeChanges(changes, eds));
     },
-    [isProcessing],
+    [editable],
   );
   const onConnect: OnConnect = useCallback(
     (connection) => {
-      if (isProcessing) return;
+      if (!editable) return;
       setEdges((eds) =>
         addEdge(
           {
@@ -150,41 +156,32 @@ export default function Workflow({
         ),
       );
     },
-    [isProcessing],
+    [editable],
   );
 
   const onSelectionChange: OnSelectionChangeFunc = useCallback(
     ({ nodes: selectedNodes }) => {
-      if (isProcessing) return;
       setActiveNodeIds(selectedNodes.map((node) => node.id));
     },
-    [isProcessing],
+    [],
   );
-  const onNodeMouseEnter: NodeMouseHandler = useCallback(
-    (_, node) => {
-      if (isProcessing) return;
-      setActiveNodeIds((prev) => {
-        return prev.includes(node.id) ? prev : [...prev, node.id];
-      });
-    },
-    [isProcessing],
-  );
+  const onNodeMouseEnter: NodeMouseHandler = useCallback((_, node) => {
+    setActiveNodeIds((prev) => {
+      return prev.includes(node.id) ? prev : [...prev, node.id];
+    });
+  }, []);
 
-  const onNodeMouseLeave: NodeMouseHandler = useCallback(
-    (_, node) => {
-      if (isProcessing) return;
-      setActiveNodeIds((prev) => prev.filter((id) => id !== node.id));
-    },
-    [isProcessing],
-  );
+  const onNodeMouseLeave: NodeMouseHandler = useCallback((_, node) => {
+    setActiveNodeIds((prev) => prev.filter((id) => id !== node.id));
+  }, []);
 
   const isValidConnection: IsValidConnection = useCallback(
     (connection) => {
-      if (isProcessing) return false;
+      if (!editable) return false;
       if (connection.source === connection.target) return false;
       return !wouldCreateCycle(connection as Connection, edges as Connection[]);
     },
-    [isProcessing, edges],
+    [editable, edges],
   );
 
   const { errorIds, runningIds } = useMemo(() => {
@@ -283,6 +280,8 @@ export default function Workflow({
         <Panel position="top-right" className="z-20!">
           {workflow && (
             <WorkflowPanel
+              hasEditAccess={hasEditAccess}
+              addProcess={addProcess}
               onSave={save}
               selectedNode={selectedNode}
               workflow={workflow}

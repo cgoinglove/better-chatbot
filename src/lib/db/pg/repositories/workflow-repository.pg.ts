@@ -37,7 +37,7 @@ export const pgWorkflowRepository: WorkflowRepository = {
       .innerJoin(UserSchema, eq(WorkflowSchema.userId, UserSchema.id))
       .where(
         or(
-          inArray(WorkflowSchema.visibility, ["public", "collaborative"]),
+          inArray(WorkflowSchema.visibility, ["public", "readonly"]),
           eq(WorkflowSchema.userId, userId),
         ),
       )
@@ -63,10 +63,11 @@ export const pgWorkflowRepository: WorkflowRepository = {
     if (!workflow) {
       return false;
     }
-    if (workflow.visibility === "private" && workflow.userId !== userId) {
+    if (userId == workflow.userId) return true;
+    if (workflow.visibility === "private") {
       return false;
     }
-    if (workflow.visibility == "public" && !readOnly) return false;
+    if (workflow.visibility == "readonly" && !readOnly) return false;
     return true;
   },
   async delete(id) {

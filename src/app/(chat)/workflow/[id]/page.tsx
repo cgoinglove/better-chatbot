@@ -22,6 +22,11 @@ export default async function WorkflowPage({
   if (!workflow) {
     return notFound();
   }
+  const hasEditAccess = await workflowRepository.checkAccess(
+    id,
+    session.user.id,
+    false,
+  );
   const initialNodes = workflow.nodes.map(convertDBNodeToUINode);
   const initialEdges = workflow.edges.map(convertDBEdgeToUIEdge);
   return (
@@ -30,6 +35,7 @@ export default async function WorkflowPage({
       workflowId={id}
       initialNodes={initialNodes}
       initialEdges={initialEdges}
+      hasEditAccess={hasEditAccess}
     />
   );
 }

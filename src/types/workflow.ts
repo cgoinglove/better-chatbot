@@ -11,7 +11,7 @@ export type DBWorkflow = {
   name: string;
   description?: string;
   isPublished: boolean;
-  visibility: "public" | "private" | "collaborative";
+  visibility: "public" | "private" | "readonly";
   userId: string;
   createdAt: Date;
   updatedAt: Date;
@@ -52,7 +52,7 @@ export type WorkflowSummary = {
   name: string;
   description?: string;
   icon?: WorkflowIcon;
-  visibility: "public" | "private" | "collaborative";
+  visibility: "public" | "private" | "readonly";
   isPublished: boolean;
   userName: string;
   userAvatar?: string;
