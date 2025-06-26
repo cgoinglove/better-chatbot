@@ -97,7 +97,6 @@ export const getSession = async () => {
     });
   if (!session) {
     logger.error("No session found");
-    throw new UnauthorizedError();
   }
   return session;
 };
