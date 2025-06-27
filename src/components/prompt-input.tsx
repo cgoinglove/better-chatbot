@@ -125,7 +125,7 @@ export default function PromptInput({
               </div>
               <div className="flex w-full items-center z-30 gap-1.5">
                 <div
-                  className="cursor-pointer text-muted-foreground border rounded-full p-2 bg-transparent hover:bg-muted transition-all duration-200"
+                  className="cursor-pointer text-muted-foreground hover:ring ring-input rounded-full p-2 bg-transparent hover:bg-muted transition-all duration-200"
                   onClick={notImplementedToast}
                 >
                   <Paperclip className="size-4" />

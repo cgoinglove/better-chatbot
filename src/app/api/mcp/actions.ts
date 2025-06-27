@@ -2,7 +2,7 @@
 import { mcpClientsManager } from "lib/ai/mcp/mcp-manager";
 import { z } from "zod";
 import { Safe, safe } from "ts-safe";
-import { errorToString } from "lib/utils";
+import { errorToString, safeJSONParse } from "lib/utils";
 import { McpServerSchema } from "lib/db/pg/schema.pg";
 
 export async function selectMcpClientsAction() {
@@ -67,15 +67,34 @@ export async function refreshMcpClientAction(id: string) {
 
 function safeCallToolResult(chain: Safe<any>) {
   return chain
+    .map((res) => {
+      if (res?.content && Array.isArray(res.content)) {
+        const parsedResult = {
+          ...res,
+          content: res.content.map((c) => {
+            if (c?.type === "text" && c?.text) {
+              const parsed = safeJSONParse(c.text);
+              return {
+                type: "text",
+                text: parsed.success ? parsed.value : c.text,
+              };
+            }
+            return c;
+          }),
+        };
+        return parsedResult;
+      }
+
+      return res;
+    })
     .ifFail((err) => {
-      console.error(err);
       return {
         isError: true,
-        content: [
-          JSON.stringify({
-            error: { message: errorToString(err), name: err?.name },
-          }),
-        ],
+        error: {
+          message: errorToString(err),
+          name: err?.name || "ERROR",
+        },
+        content: [],
       };
     })
     .unwrap();
@@ -91,16 +110,7 @@ export async function callMcpToolAction(
     if (!client) {
       throw new Error("Client not found");
     }
-    return client.client.callTool(toolName, input).then((res) => {
-      if (res?.isError) {
-        throw new Error(
-          res.content?.[0]?.text ??
-            JSON.stringify(res.content, null, 2) ??
-            "Unknown error",
-        );
-      }
-      return res;
-    });
+    return client.client.callTool(toolName, input);
   });
   return safeCallToolResult(chain);
 }

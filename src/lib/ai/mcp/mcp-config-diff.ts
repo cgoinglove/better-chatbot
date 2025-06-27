@@ -1,4 +1,4 @@
-import equal from "fast-deep-equal";
+import equal from "lib/equal";
 import { isMaybeMCPServerConfig } from "./is-mcp-config";
 import type { MCPServerConfig } from "app-types/mcp";
 

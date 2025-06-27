@@ -93,6 +93,8 @@
     },
     "placeholder": "您想了解什么？",
     "Tool": {
+      "toolModeDescription": "选择工具使用方式:\n• 自动: AI 自动决定何时使用工具\n• 手动: 使用工具前询问许可\n• 无: 禁用所有工具",
+      "toolsSetupDescription": "为聊天选择工具。\n在对话中使用 '@' 提及\n并调用工具。",
       "selectToolMode": "选择工具模式",
       "autoToolModeDescription": "自动决定何时使用工具，无需询问您",
       "manualToolModeDescription": "在使用任何工具前询问您的许可",

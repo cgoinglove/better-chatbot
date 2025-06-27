@@ -195,12 +195,20 @@ export const toolNodeExecutor: NodeExecutor<ToolNodeData> = async ({
 
   // Execute the tool based on its type
   if (node.tool.type == "mcp-tool") {
+    const toolResult = await callMcpToolAction(
+      node.tool.serverId,
+      node.tool.id,
+      result.input.parameter,
+    );
+    if (toolResult.isError) {
+      throw new Error(
+        toolResult.error?.message ||
+          toolResult.error?.name ||
+          JSON.stringify(toolResult),
+      );
+    }
     result.output = {
-      tool_result: await callMcpToolAction(
-        node.tool.serverId,
-        node.tool.id,
-        result.input.parameter,
-      ),
+      tool_result: toolResult,
     };
   } else {
     // Placeholder for future tool types

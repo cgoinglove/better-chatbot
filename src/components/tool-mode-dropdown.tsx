@@ -59,7 +59,7 @@ export const ToolModeDropdown = ({ disabled }: { disabled?: boolean }) => {
           variant={"outline"}
           className={cn(
             toolChoice == "none" ? "text-muted-foreground" : "",
-            "font-semibold mr-1 rounded-full flex items-center gap-2 bg-transparent",
+            "font-semibold mr-1 rounded-full flex items-center gap-2 bg-transparent data-[state=open]:bg-input/80!",
           )}
         >
           <span>{capitalizeFirstLetter(toolChoice)}</span>

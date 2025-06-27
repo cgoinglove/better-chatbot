@@ -38,21 +38,24 @@ export type ChatMessage = {
   createdAt: Date;
 };
 
-export type ChatMention =
-  | {
-      type: "tool";
-      name: string;
-      description?: string;
-      serverName?: string;
-      serverId: string;
-    }
-  | {
-      description?: string;
-      type: "mcpServer";
-      name: string;
-      toolCount?: number;
-      serverId: string;
-    };
+export const ChatMentionSchema = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal("tool"),
+    name: z.string(),
+    description: z.string().optional(),
+    serverName: z.string().optional(),
+    serverId: z.string(),
+  }),
+  z.object({
+    type: z.literal("mcpServer"),
+    name: z.string(),
+    description: z.string().optional(),
+    toolCount: z.number().optional(),
+    serverId: z.string(),
+  }),
+]);
+
+export type ChatMention = z.infer<typeof ChatMentionSchema>;
 
 export type ChatMessageAnnotation = {
   mentions?: ChatMention[];

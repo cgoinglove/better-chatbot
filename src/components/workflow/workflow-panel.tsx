@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { Button } from "ui/button";
 
-import equal from "fast-deep-equal";
+import equal from "lib/equal";
 
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
@@ -308,6 +308,9 @@ export const WorkflowPanel = memo(
       return false;
     }
     if (Boolean(prev.selectedNode) !== Boolean(next.selectedNode)) {
+      return false;
+    }
+    if (prev.hasEditAccess !== next.hasEditAccess) {
       return false;
     }
     if (!equal(prev.selectedNode?.data, next.selectedNode?.data)) {

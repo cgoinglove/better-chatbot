@@ -13,7 +13,7 @@ export type TipTapMentionJsonContent = {
   type: "doc";
   content: {
     type: "paragraph";
-    content: (
+    content?: (
       | {
           type: "text";
           text: string;

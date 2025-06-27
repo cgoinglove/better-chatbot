@@ -5,7 +5,7 @@ import type {
 import { mcpRepository } from "lib/db/repository";
 import defaultLogger from "logger";
 import { createDebounce } from "lib/utils";
-import equal from "fast-deep-equal";
+import equal from "lib/equal";
 import { colorize } from "consola/utils";
 
 const logger = defaultLogger.withDefaults({

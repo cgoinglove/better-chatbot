@@ -236,20 +236,14 @@ export class MCPClient {
           this.log.error("Tool call failed", toolName, status.value.content);
         }
       })
-      .ifFail((error) => {
+      .ifFail((err) => {
         return {
-          content: [
-            {
-              type: "text",
-              text: JSON.stringify({
-                error: {
-                  message: errorToString(error),
-                  name: error?.name,
-                },
-              }),
-            },
-          ],
           isError: true,
+          error: {
+            message: errorToString(err),
+            name: err?.name || "ERROR",
+          },
+          content: [],
         };
       })
       .unwrap();

@@ -8,7 +8,7 @@ import type {
 import chokidar from "chokidar";
 import type { FSWatcher } from "chokidar";
 import { createDebounce } from "lib/utils";
-import equal from "fast-deep-equal";
+import equal from "lib/equal";
 import defaultLogger from "logger";
 import { MCP_CONFIG_PATH } from "lib/ai/mcp/config-path";
 import { colorize } from "consola/utils";

@@ -149,6 +149,7 @@
     },
     "placeholder": "What do you want to know?",
     "Tool": {
+      "toolsSetupDescription": "Select tools for your chat.\nUse '@' to mention and call tools\nduring conversation.",
       "selectToolMode": "Select a tool mode",
       "autoToolModeDescription": "Decides when to use tools without asking you",
       "manualToolModeDescription": "Asks your permission before using any tools",

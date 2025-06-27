@@ -93,6 +93,8 @@
     },
     "placeholder": "무엇이든 물어보세요",
     "Tool": {
+      "toolModeDescription": "도구 사용 방식을 선택하세요:\n• 자동: AI가 도구 사용 여부를 자동으로 결정\n• 수동: 도구 사용 전 권한 요청\n• 사용 안함: 모든 도구 비활성화",
+      "toolsSetupDescription": "채팅에서 사용할 도구를 선택하세요.\n대화 중 '@'로 도구를 멘션하여\n호출할 수 있습니다.",
       "selectToolMode": "도구 사용 모드",
       "autoToolModeDescription": "도구 사용 여부를 자동으로 결정합니다",
       "manualToolModeDescription": "도구 사용 여부를 물어봅니다",

@@ -4,6 +4,7 @@ import { workflowRepository } from "lib/db/repository";
 import { encodeWorkflowEvent } from "lib/ai/workflow/shared.workflow";
 import logger from "logger";
 import { colorize } from "consola/utils";
+import { safeJSONParse, toAny } from "lib/utils";
 
 export async function POST(
   request: Request,
@@ -45,6 +46,13 @@ export async function POST(
           return;
         }
         try {
+          const err = toAny(evt)?.error;
+          if (err) {
+            toAny(evt).error = {
+              name: err.name || "ERROR",
+              message: err?.message || safeJSONParse(err).value,
+            };
+          }
           // Use custom encoding instead of SSE format
           const data = encodeWorkflowEvent(evt);
           controller.enqueue(encoder.encode(data));

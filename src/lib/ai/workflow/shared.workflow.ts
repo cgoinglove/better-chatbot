@@ -192,8 +192,10 @@ export function convertTiptapJsonToAiMessage({
   const text =
     json.content
       ?.flatMap((p) => p.content)
+      .filter(Boolean)
       .reduce((prev, part) => {
         let data = "";
+        if (!part) return prev;
         if (part.type === "text") {
           data += ` ${part.text}`;
         } else if (part.type === "mention") {

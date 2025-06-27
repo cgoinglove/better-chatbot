@@ -2,7 +2,7 @@
 
 import type { UIMessage } from "ai";
 import { memo, useMemo, useState } from "react";
-import equal from "fast-deep-equal";
+import equal from "lib/equal";
 
 import { cn, truncateString } from "lib/utils";
 import type { UseChatHelpers } from "@ai-sdk/react";

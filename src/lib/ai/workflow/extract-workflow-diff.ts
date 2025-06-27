@@ -1,6 +1,6 @@
 import { Edge } from "@xyflow/react";
 import { UINode } from "./workflow.interface";
-import equal from "fast-deep-equal";
+import equal from "lib/equal";
 import { exclude } from "lib/utils";
 
 function normalizeNode(node: UINode) {

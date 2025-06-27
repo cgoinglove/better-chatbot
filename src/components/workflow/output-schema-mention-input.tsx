@@ -9,7 +9,7 @@ import { VariableSelectContent } from "./variable-select";
 import { TipTapMentionJsonContent } from "app-types/util";
 import MentionInput from "../mention-input";
 
-import { generateUUID, isString } from "lib/utils";
+import { generateUUID } from "lib/utils";
 import { findAvailableSchemaBySource } from "lib/ai/workflow/shared.workflow";
 import { VariableMentionItem } from "./variable-mention-item";
 import { useToRef } from "@/hooks/use-latest";

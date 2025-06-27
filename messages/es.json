@@ -93,6 +93,8 @@
     },
     "placeholder": "¿Qué quieres saber?",
     "Tool": {
+      "toolModeDescription": "Elije cómo se usan las herramientas:\n• Auto: La IA decide cuándo usar herramientas\n• Manual: Pide permiso antes de usar herramientas\n• Ninguno: Desactiva todas las herramientas",
+      "toolsSetupDescription": "Selecciona herramientas para tu chat.\nUsa '@' para mencionar y llamar\nherramientas durante la conversación.",
       "selectToolMode": "Seleccionar modo de herramientas",
       "autoToolModeDescription": "Decide cuándo usar herramientas sin preguntarte",
       "manualToolModeDescription": "Pide tu permiso antes de usar cualquier herramienta",

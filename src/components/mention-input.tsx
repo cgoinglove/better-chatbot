@@ -116,7 +116,7 @@ export default function MentionInput({
               ?.filter((v) => v.type == "mention")
               .map((v) => v.attrs);
           })
-          .filter(Boolean);
+          .filter(Boolean) as { label: string; id: string }[];
         latestContent.current = {
           json,
           text,
@@ -137,6 +137,10 @@ export default function MentionInput({
   }, [disabled, MentionItem, suggestionChar, onChange]);
 
   const editor = useEditor(editorConfig);
+
+  useEffect(() => {
+    editor?.setEditable(!disabled);
+  }, [disabled]);
 
   // Memoize handlers
   const handleKeyDown = useCallback(

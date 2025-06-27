@@ -20,6 +20,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 import { createPortal } from "react-dom";
 import { appStore } from "@/app/store";
+import { cn } from "lib/utils";
 
 interface ChatMentionInputProps {
   onChange: (text: string) => void;
@@ -62,11 +63,22 @@ export default function ChatMentionInput({
   );
 }
 
-function ChatMentionInputMentionItem({ id }: { label: string; id: string }) {
+export function ChatMentionInputMentionItem({
+  id,
+  className,
+}: {
+  id: string;
+  className?: string;
+}) {
   const item = JSON.parse(id) as ChatMention;
 
   const label = (
-    <div className="flex items-center text-sm gap-2 mx-1 px-2 py-0.5 font-semibold rounded-lg ring ring-blue-500/20 bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 hover:ring-blue-500 transition-colors">
+    <div
+      className={cn(
+        "flex items-center text-sm gap-2 mx-1 px-2 py-0.5 font-semibold rounded-lg ring ring-blue-500/20 bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 hover:ring-blue-500 transition-colors",
+        className,
+      )}
+    >
       {item.type == "mcpServer" ? (
         <MCPIcon className="size-3" />
       ) : (
@@ -76,17 +88,14 @@ function ChatMentionInputMentionItem({ id }: { label: string; id: string }) {
     </div>
   );
 
-  if (item.description)
-    return (
-      <Tooltip>
-        <TooltipTrigger asChild>{label}</TooltipTrigger>
-        <TooltipContent className="p-4 whitespace-pre-wrap max-w-xs">
-          {item.description}
-        </TooltipContent>
-      </Tooltip>
-    );
-
-  return label;
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{label}</TooltipTrigger>
+      <TooltipContent className="p-4 whitespace-pre-wrap max-w-xs">
+        {item.description || "mention"}
+      </TooltipContent>
+    </Tooltip>
+  );
 }
 
 function ChatMentionInputSuggestion({
@@ -126,6 +135,7 @@ function ChatMentionInputSuggestion({
         ]) as ChatMention[]) ?? []
     );
   }, [mcpList]);
+
   return createPortal(
     <Popover open onOpenChange={(f) => !f && onClose()}>
       <PopoverTrigger asChild>
@@ -149,6 +159,7 @@ function ChatMentionInputSuggestion({
           />
           <CommandList className="p-2">
             <CommandEmpty>{t("noResults")}</CommandEmpty>
+
             {mentionItems.map((item) => {
               const key =
                 item.type == "mcpServer"
@@ -166,15 +177,25 @@ function ChatMentionInputSuggestion({
                   }
                 >
                   {item.type == "mcpServer" ? (
-                    <MCPIcon className="size-3.5" />
+                    <div className="p-1 bg-secondary rounded-sm ring ring-input">
+                      <MCPIcon className="size-3.5 text-foreground" />
+                    </div>
                   ) : (
-                    <WrenchIcon className="size-3.5" />
+                    <div className="p-1">
+                      <WrenchIcon className="size-3.5" />
+                    </div>
                   )}
                   <span className="truncate min-w-0">{item.name}</span>
-                  {item.type == "mcpServer" && (
+                  {item.type == "mcpServer" ? (
                     <span className="ml-auto text-xs text-muted-foreground">
                       {item.toolCount} tools
                     </span>
+                  ) : (
+                    item.type === "tool" && (
+                      <span className="ml-auto text-xs text-muted-foreground">
+                        {item.serverName}
+                      </span>
+                    )
                   )}
                 </CommandItem>
               );
