@@ -63,7 +63,7 @@ export const OpenAICompatibleProviderSchema = z.object({
   provider: z
     .string()
     .describe(
-      "The name of the AI provider (e.g., 'groq', 'OpenAI', 'Google').",
+      "Your api key",
     ),
   models: z
     .array(OpenAICompatibleModelSchema)
