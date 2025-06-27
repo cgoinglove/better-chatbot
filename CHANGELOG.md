@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.10.0](https://github.com/cgoinglove/mcp-client-chatbot/compare/v1.9.0...v1.10.0) (2025-06-27)
+
+
+### Features
+
+* **releases:** add debug logging to the add authors and update release step ([#105](https://github.com/cgoinglove/mcp-client-chatbot/issues/105)) ([c855a6a](https://github.com/cgoinglove/mcp-client-chatbot/commit/c855a6a94c49dfd93c9a8d1d0932aeda36bd6c7e))
+* workflow beta ([#100](https://github.com/cgoinglove/mcp-client-chatbot/issues/100)) ([2f5ada2](https://github.com/cgoinglove/mcp-client-chatbot/commit/2f5ada2a66e8e3cd249094be9d28983e4331d3a1))
+
+
+### Bug Fixes
+
+* update tool selection logic in McpServerSelector to maintain current selections ([4103c1b](https://github.com/cgoinglove/mcp-client-chatbot/commit/4103c1b828c3e5b513679a3fb9d72bd37301f99d))
+* **workflow:** MPC Tool Response Structure  And Workflow  ([#113](https://github.com/cgoinglove/mcp-client-chatbot/issues/113)) ([836ffd7](https://github.com/cgoinglove/mcp-client-chatbot/commit/836ffd7ef5858210bdce44d18ca82a1c8f0fc87f))
+
 ## [1.9.0](https://github.com/cgoinglove/mcp-client-chatbot/compare/v1.8.0...v1.9.0) (2025-06-16)
 
 
