@@ -20,7 +20,7 @@ export function VariableMentionItem({
     <div
       className={cn(
         notFound ? "hover:border-destructive" : "hover:border-blue-500",
-        "border max-w-40 gap-1 flex items-center text-xs px-2 rounded-sm bg-background",
+        "border max-w-40 gap-1 flex items-center text-xs px-2 py-1 rounded-sm bg-background",
         className,
       )}
     >

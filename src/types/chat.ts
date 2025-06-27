@@ -42,17 +42,16 @@ export type ChatMention =
   | {
       type: "tool";
       name: string;
+      description?: string;
       serverName?: string;
       serverId: string;
     }
   | {
+      description?: string;
       type: "mcpServer";
       name: string;
+      toolCount?: number;
       serverId: string;
-    }
-  | {
-      type: "unknown";
-      name: string;
     };
 
 export type ChatMessageAnnotation = {

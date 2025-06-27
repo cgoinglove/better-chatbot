@@ -17,7 +17,6 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { Button } from "ui/button";
 import { Markdown } from "./markdown";
-import { MessagePastesContentCard } from "./message-pasts-content";
 import { cn, safeJSONParse } from "lib/utils";
 import JsonView from "ui/json-view";
 import {
@@ -42,7 +41,7 @@ import {
 
 import { toast } from "sonner";
 import { safe } from "ts-safe";
-import { ChatMessageAnnotation, ChatModel } from "app-types/chat";
+import { ChatModel } from "app-types/chat";
 import { DefaultToolName } from "lib/ai/tools/app-default-tool-name";
 import { Skeleton } from "ui/skeleton";
 import { PieChart } from "./tool-invocation/pie-chart";
@@ -89,29 +88,6 @@ interface ToolMessagePartProps {
   setMessages?: UseChatHelpers["setMessages"];
 }
 
-interface HighlightedTextProps {
-  text: string;
-  mentions: string[];
-}
-
-const HighlightedText = memo(({ text, mentions }: HighlightedTextProps) => {
-  if (!mentions.length) return text;
-
-  const parts = text.split(/(\s+)/);
-  return parts.map((part, index) => {
-    if (mentions.includes(part.trim())) {
-      return (
-        <span key={index} className="mention">
-          {part}
-        </span>
-      );
-    }
-    return part;
-  });
-});
-
-HighlightedText.displayName = "HighlightedText";
-
 export const UserMessagePart = ({
   part,
   isLast,
@@ -125,19 +101,6 @@ export const UserMessagePart = ({
   const [mode, setMode] = useState<"view" | "edit">("view");
   const [isDeleting, setIsDeleting] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const toolMentions = useMemo(() => {
-    if (!message.annotations?.length) return [];
-    return Array.from(
-      new Set(
-        message.annotations
-          .flatMap((annotation) => {
-            return (annotation as ChatMessageAnnotation).mentions ?? [];
-          })
-          .filter(Boolean)
-          .map((v) => `@${v.name}`),
-      ),
-    );
-  }, [message.annotations]);
 
   const deleteMessage = useCallback(() => {
     safe(() => setIsDeleting(true))
@@ -189,13 +152,9 @@ export const UserMessagePart = ({
           isError && "border-destructive border",
         )}
       >
-        {isLast || part.text.length <= PROMPT_PASTE_MAX_LENGTH ? (
-          <p className={cn("whitespace-pre-wrap text-sm break-words")}>
-            <HighlightedText text={part.text} mentions={toolMentions} />
-          </p>
-        ) : (
-          <MessagePastesContentCard initialContent={part.text} readonly />
-        )}
+        <p className={cn("whitespace-pre-wrap text-sm break-words")}>
+          {part.text}
+        </p>
       </div>
 
       <div className="flex w-full justify-end">

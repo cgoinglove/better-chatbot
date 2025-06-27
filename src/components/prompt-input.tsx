@@ -10,7 +10,6 @@ import {
 import { useCallback, useMemo, useState } from "react";
 import { Button } from "ui/button";
 import { notImplementedToast } from "ui/shared-toast";
-import { MessagePastesContentCard } from "./message-pasts-content";
 import { UseChatHelpers } from "@ai-sdk/react";
 import { SelectModel } from "./select-model";
 import { appStore } from "@/app/store";
@@ -18,7 +17,7 @@ import { useShallow } from "zustand/shallow";
 import { ChatMention, ChatMessageAnnotation, ChatModel } from "app-types/chat";
 import dynamic from "next/dynamic";
 import { ToolModeDropdown } from "./tool-mode-dropdown";
-import { PROMPT_PASTE_MAX_LENGTH } from "lib/const";
+
 import { ToolSelectDropdown } from "./tool-select-dropdown";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { useTranslations } from "next-intl";
@@ -57,21 +56,15 @@ export default function PromptInput({
 }: PromptInputProps) {
   const t = useTranslations("Chat");
 
-  const [
-    currentThreadId,
-    currentProjectId,
-    mcpList,
-    globalModel,
-    appStoreMutate,
-  ] = appStore(
-    useShallow((state) => [
-      state.currentThreadId,
-      state.currentProjectId,
-      state.mcpList,
-      state.chatModel,
-      state.mutate,
-    ]),
-  );
+  const [currentThreadId, currentProjectId, globalModel, appStoreMutate] =
+    appStore(
+      useShallow((state) => [
+        state.currentThreadId,
+        state.currentProjectId,
+        state.chatModel,
+        state.mutate,
+      ]),
+    );
 
   const chatModel = useMemo(() => {
     return model ?? globalModel;
@@ -90,56 +83,16 @@ export default function PromptInput({
 
   const [toolMentionItems, setToolMentionItems] = useState<ChatMention[]>([]);
 
-  const [pastedContents, setPastedContents] = useState<string[]>([]);
-
-  const mentionItems = useMemo(() => {
-    return (
-      (mcpList?.flatMap((mcp) => [
-        {
-          type: "mcpServer",
-          name: mcp.name,
-          serverId: mcp.id,
-        },
-        ...mcp.toolInfo.map((tool) => {
-          return {
-            type: "tool",
-            name: tool.name,
-            serverId: mcp.id,
-            serverName: mcp.name,
-          };
-        }),
-      ]) as ChatMention[]) ?? []
-    );
-  }, [mcpList]);
-
-  const handlePaste = (e: React.ClipboardEvent) => {
-    const text = e.clipboardData.getData("text/plain");
-    if (text.length > PROMPT_PASTE_MAX_LENGTH) {
-      setPastedContents([...pastedContents, text]);
-      e.preventDefault();
-    }
-  };
-
   const submit = () => {
     if (isLoading) return;
     const userMessage = input?.trim() || "";
-
-    const pastedContentsParsed = pastedContents.map((content) => ({
-      type: "text" as const,
-      text: content,
-    }));
-
-    if (userMessage.length === 0 && pastedContentsParsed.length === 0) {
-      return;
-    }
-
+    if (userMessage.length === 0) return;
     const annotations: ChatMessageAnnotation[] = [];
     if (toolMentionItems.length > 0) {
       annotations.push({
         mentions: toolMentionItems,
       });
     }
-    setPastedContents([]);
     setToolMentionItems([]);
     setInput("");
     append!({
@@ -147,7 +100,6 @@ export default function PromptInput({
       content: "",
       annotations,
       parts: [
-        ...pastedContentsParsed,
         {
           type: "text",
           text: userMessage,
@@ -169,31 +121,7 @@ export default function PromptInput({
                   onChangeMention={setToolMentionItems}
                   onEnter={submit}
                   placeholder={placeholder ?? t("placeholder")}
-                  onPaste={handlePaste}
-                  items={mentionItems}
                 />
-              </div>
-              <div className="flex w-full items-center gap-2">
-                {pastedContents.map((content, index) => (
-                  <MessagePastesContentCard
-                    key={index}
-                    initialContent={content}
-                    deleteContent={() => {
-                      setPastedContents((prev) => {
-                        const newContents = [...prev];
-                        newContents.splice(index, 1);
-                        return newContents;
-                      });
-                    }}
-                    updateContent={(content) => {
-                      setPastedContents((prev) => {
-                        const newContents = [...prev];
-                        newContents[index] = content;
-                        return newContents;
-                      });
-                    }}
-                  />
-                ))}
               </div>
               <div className="flex w-full items-center z-30 gap-1.5">
                 <div

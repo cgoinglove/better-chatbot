@@ -1,30 +1,24 @@
-import Mention from "@tiptap/extension-mention";
-import {
-  EditorContent,
-  Range,
-  useEditor,
-  UseEditorOptions,
-} from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import { Edge } from "@xyflow/react";
+import { Edge, useReactFlow } from "@xyflow/react";
 import {
   OutputSchemaSourceKey,
   UINode,
 } from "lib/ai/workflow/workflow.interface";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import { useCallback, useMemo, useRef } from "react";
+
 import { VariableSelectContent } from "./variable-select";
+import { TipTapMentionJsonContent } from "app-types/util";
+import MentionInput from "../mention-input";
+
+import { generateUUID, isString } from "lib/utils";
+import { findAvailableSchemaBySource } from "lib/ai/workflow/shared.workflow";
+import { VariableMentionItem } from "./variable-mention-item";
+import { useToRef } from "@/hooks/use-latest";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "ui/dropdown-menu";
-import { TipTapMentionJsonContent } from "app-types/util";
-import { findAvailableSchemaBySource } from "lib/ai/workflow/shared.workflow";
-import { useToRef } from "@/hooks/use-latest";
-import { createRoot } from "react-dom/client";
-import { VariableMentionItem } from "./variable-mention-item";
-import { generateUUID } from "lib/utils";
+import { createPortal } from "react-dom";
 
 interface OutputSchemaMentionInputProps {
   currentNodeId: string;
@@ -38,172 +32,125 @@ interface OutputSchemaMentionInputProps {
 
 export function OutputSchemaMentionInput({
   currentNodeId,
-  nodes,
-  edges,
   content,
   onChange,
   editable,
 }: OutputSchemaMentionInputProps) {
-  const [suggestion, setSuggestion] = useState<{
-    top: number;
-    left: number;
-    range: Range;
-  } | null>(null);
-
-  const mentionRef = useRef<HTMLDivElement>(null);
-
-  const removeMention = (id: string) => {
-    const newContent = editor?.getJSON() as unknown as TipTapMentionJsonContent;
-    newContent.content[0].content = newContent.content[0].content.filter(
-      (item) => !(item.type == "mention" && item.attrs.id === id),
-    );
-    editor?.commands.setContent(newContent);
-  };
-
-  const latestRef = useToRef({ nodes, edges, removeMention });
-
-  const editorConfig = useMemo<UseEditorOptions>(
-    () => ({
-      editable,
-      immediatelyRender: false,
-      extensions: [
-        StarterKit.configure({
-          codeBlock: false,
-          blockquote: false,
-          code: false,
-        }),
-        Mention.configure({
-          HTMLAttributes: {
-            class: "mention",
-          },
-          renderHTML: (props) => {
-            const el = document.createElement("div");
-            const item = JSON.parse(
-              props.node.attrs.label,
-            ) as OutputSchemaSourceKey;
-            const labelData = {
-              nodeName: "",
-              path: [] as string[],
-              notFound: false,
-            };
-
-            const sourceNode = latestRef.current.nodes.find(
-              (node) => node.id === item.nodeId,
-            );
-
-            labelData.nodeName = sourceNode?.data.name ?? "ERROR";
-            labelData.path = item.path;
-
-            const schema = findAvailableSchemaBySource({
-              nodeId: currentNodeId,
-              source: item,
-              nodes: latestRef.current.nodes.map((node) => node.data),
-              edges: latestRef.current.edges,
-            });
-
-            if (!schema) {
-              labelData.notFound = true;
-            }
-
-            el.setAttribute("data-mention-item", props.node.attrs.id);
-            el.className = "mr-1 inline-flex";
-            const root = createRoot(el);
-            root.render(
-              <VariableMentionItem
-                {...labelData}
-                onRemove={() =>
-                  latestRef.current.removeMention(props.node.attrs.id)
-                }
-              />,
-            );
-            return el;
-          },
-          suggestion: {
-            char: "/",
-            render: () => {
-              return {
-                onStart: (props) => {
-                  const rect = props.clientRect?.();
-                  if (rect) {
-                    setSuggestion({
-                      top: rect.top - +window.scrollY,
-                      left: rect.left - +window.scrollX,
-                      range: props.range,
-                    });
-                  }
-                },
-                onExit: () => setSuggestion(null),
-              };
-            },
-          },
-        }),
-      ],
-      content,
-      autofocus: true,
-      onUpdate: ({ editor }) => {
-        onChange?.(editor.getJSON() as TipTapMentionJsonContent);
-      },
-      editorProps: {
-        attributes: {
-          class:
-            "w-full max-h-80 min-h-[2rem] break-words overflow-y-auto resize-none focus:outline-none px-2 py-1 prose prose-sm dark:prose-invert",
-        },
-      },
-    }),
+  const { getNodes, getEdges } = useReactFlow<UINode>();
+  const latestContent = useToRef<TipTapMentionJsonContent>(content!);
+  const handleChange = useCallback(
+    ({ json }: { json: TipTapMentionJsonContent }) => {
+      onChange(json);
+    },
     [],
   );
 
-  const editor = useEditor(editorConfig);
-
-  useEffect(() => {
-    if (!suggestion) return;
-
-    const handleClick = (e: MouseEvent) => {
-      if (
-        !mentionRef.current?.contains(e.target as Node) &&
-        !editor?.isActive("mention")
-      ) {
-        setSuggestion(null);
+  const onRemove = useCallback((id: string) => {
+    const newContent = structuredClone(latestContent.current);
+    newContent.content.some((item) => {
+      if (item?.content?.length) {
+        const targetIndex = item.content.findIndex(
+          (item) => item.type == "mention" && item.attrs.id === id,
+        );
+        if (targetIndex !== -1) {
+          item.content.splice(targetIndex, 1);
+          return true;
+        }
+        return false;
       }
-    };
-    window.addEventListener("click", handleClick);
-    return () => {
-      window.removeEventListener("click", handleClick);
-    };
-  }, [suggestion, editor]);
+    });
+    onChange(newContent);
+  }, []);
 
-  const suggestionPortal = useMemo(() => {
-    if (!suggestion) return null;
+  const MentionItem = useCallback(
+    ({ id, label }: { id: string; label: string }) => {
+      const item = JSON.parse(label) as OutputSchemaSourceKey;
+      const labelData = {
+        nodeName: "",
+        path: item.path,
+        notFound: false,
+      };
+
+      const nodes = getNodes();
+      const edges = getEdges();
+
+      const sourceNode = nodes.find((node) => node.id === item.nodeId);
+      labelData.nodeName = sourceNode?.data.name ?? "ERROR";
+
+      const schema = findAvailableSchemaBySource({
+        nodeId: currentNodeId,
+        source: item,
+        nodes: nodes.map((node) => node.data),
+        edges,
+      });
+
+      if (!schema) {
+        labelData.notFound = true;
+      }
+      const handleRemove = () => onRemove(id);
+
+      return (
+        <VariableMentionItem
+          className="max-w-60"
+          {...labelData}
+          onRemove={handleRemove}
+        />
+      );
+    },
+    [],
+  );
+
+  const Suggestion = useMemo(
+    () => outputSchemaMentionInputSuggestionBuilder(currentNodeId),
+    [currentNodeId],
+  );
+
+  return (
+    <MentionInput
+      suggestionChar="/"
+      disabled={!editable}
+      content={content}
+      onChange={handleChange}
+      MentionItem={MentionItem}
+      Suggestion={Suggestion}
+    />
+  );
+}
+
+const outputSchemaMentionInputSuggestionBuilder =
+  (
+    nodeId: string,
+  ): React.FC<{
+    onClose: () => void;
+    onSelectMention: (item: { label: string; id: string }) => void;
+    top: number;
+    left: number;
+  }> =>
+  ({ onSelectMention, top, left, onClose }) => {
+    const mentionRef = useRef<HTMLDivElement>(null);
+
     return createPortal(
       <div
         className="fixed z-50"
         style={{
-          top: suggestion.top,
-          left: suggestion.left,
+          top,
+          left,
         }}
       >
-        <DropdownMenu open={true}>
-          <DropdownMenuTrigger />
-          <DropdownMenuContent ref={mentionRef}>
+        <DropdownMenu open={true} onOpenChange={onClose}>
+          <DropdownMenuTrigger className="sr-only" />
+          <DropdownMenuContent ref={mentionRef} align="start" side="top">
             <VariableSelectContent
-              currentNodeId={currentNodeId}
+              onClose={onClose}
+              currentNodeId={nodeId}
               onChange={(item) => {
-                editor
-                  ?.chain()
-                  .focus()
-                  .insertContentAt(suggestion.range, [
-                    {
-                      type: "mention",
-                      attrs: {
-                        id: generateUUID(),
-                        label: JSON.stringify({
-                          nodeId: item.nodeId,
-                          path: item.path,
-                        }),
-                      },
-                    },
-                  ])
-                  .run();
+                onSelectMention({
+                  id: generateUUID(),
+                  label: JSON.stringify({
+                    nodeId: item.nodeId,
+                    path: item.path,
+                  }),
+                });
               }}
             />
           </DropdownMenuContent>
@@ -211,12 +158,4 @@ export function OutputSchemaMentionInput({
       </div>,
       document.body,
     );
-  }, [suggestion]);
-
-  return (
-    <div className="relative w-full">
-      <EditorContent editor={editor} className="relative" />
-      {suggestionPortal}
-    </div>
-  );
-}
+  };
