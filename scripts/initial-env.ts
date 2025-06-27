@@ -8,7 +8,7 @@ const DOCKER_ENV_PATH = path.join(ROOT, "docker", ".env.docker");
 
 const DOCKER_ENV_CONTENT =
   [
-    "POSTGRES_URL=postgres://your_username:your_password@postgres:5432/your_database_name",
+    "POSTGRES_URL=postgres://your_username:your_password@postgres:5433/your_database_name",
     "POSTGRES_DB=your_database_name",
     "POSTGRES_USER=your_username",
     "POSTGRES_PASSWORD=your_password",
