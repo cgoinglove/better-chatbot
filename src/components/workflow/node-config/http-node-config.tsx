@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, VariableIcon } from "lucide-react";
+import { Link, Plus, TriangleAlertIcon, VariableIcon } from "lucide-react";
 import {
   HttpNodeData,
   HttpMethod,
@@ -360,6 +360,61 @@ export function HttpNodeConfig({ node }: { node: UINode<any> }) {
           </CardContent>
         )}
       </Card>
+    </div>
+  );
+}
+
+export function HttpNodeDataStack({ data }: { data: HttpNodeData }) {
+  const { getNodes } = useReactFlow();
+
+  const urlDisplay = (() => {
+    if (!data.url) return "No URL";
+
+    if (typeof data.url === "string") {
+      const isUrl = data.url.startsWith("http");
+      return (
+        <div className="w-48 gap-1 flex items-center px-2 py-1 rounded-sm bg-background">
+          {isUrl ? (
+            <Link className="size-3 text-blue-500" />
+          ) : (
+            <TriangleAlertIcon className="size-3 text-destructive" />
+          )}
+
+          <span className="text-foreground truncate flex-1">{data.url}</span>
+        </div>
+      );
+    }
+
+    if (typeof data.url === "object" && "nodeId" in data.url) {
+      const nodes = getNodes() as UINode[];
+      const urlAsSource = data.url as OutputSchemaSourceKey;
+      const sourceNode = nodes.find(
+        (node) => node.data.id === urlAsSource.nodeId,
+      );
+
+      return (
+        <VariableMentionItem
+          nodeName={sourceNode?.data.name || "ERROR"}
+          path={urlAsSource.path}
+          notFound={!sourceNode}
+          className="text-[10px] ring-0 w-full"
+        />
+      );
+    }
+
+    return "Unknown source";
+  })();
+
+  return (
+    <div className="flex flex-col gap-1 px-4 mt-4">
+      <div className="text-[10px] px-2 py-1 flex items-center gap-2s">
+        <span className="px-1.5 py-0.5 rounded-lg font-semibold text-muted-foreground">
+          {data.method}
+        </span>
+        <div className="truncate flex-1 font-bold text-muted-foreground flex items-center">
+          {urlDisplay}
+        </div>
+      </div>
     </div>
   );
 }

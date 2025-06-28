@@ -33,6 +33,7 @@
     "tool": "Tool",
     "selectTool": "Select Tool...",
     "noResults": "No results.",
+    "generateWithAI": "Generate With AI",
     "generateInputWithAI": "Generate Input With AI",
     "generatingInputWithAI": "Generating input with AI...",
     "inputGeneratedSuccessfully": "Input generated successfully",
@@ -92,6 +93,17 @@
     "toolDescription": "Provide information needed for LLM to generate tool parameters.\n\nUse '/' to mention data from previous nodes.",
     "generateInputWithAIDescription": "Write a prompt to generate input for the workflow",
     "selectVariable": "Select Variable",
+    "structuredOutput": "Structured Output",
+    "structuredOutputDescription": "Generate response as JSON object with defined schema",
+    "outputSchemaEditor": "Output Schema Editor",
+    "addField": "Add Field",
+    "saveSchema": "Save Schema",
+    "generateSchemaWithAI": "Generate Schema with AI",
+    "describeOutputDataRequest": "Provide example JSON data that represents what this node should output\n\nExample: {eg}",
+    "generatingJsonSchemaWithAI": "Generating JSON Schema with AI...",
+    "jsonSchemaGeneratedSuccessfully": "JSON Schema generated successfully!",
+    "failedToGenerateSchema": "Failed to generate schema",
+    "jsonSchemaEditorDescription": "Direct JSON Schema editing with AI assistance. Supports complex nested structures and arrays.",
     "example": {
       "storyGenerator": "Story Generator"
     }
@@ -199,7 +211,6 @@
       "renameProject": "Rename Project",
       "deleteProject": "Delete Project",
       "placeholder": "e.g. You are a Korean travel guide ChatBot. Respond only in Korean, include precise times for every itinerary item, and present transportation, budget, and dining recommendations succinctly in a table format.",
-      "generateWithAI": "Generate With AI",
       "instructions": "Instructions",
       "projectName": "Name",
       "enterNameForNewProject": "Enter a name for your new project",

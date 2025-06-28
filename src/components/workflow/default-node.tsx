@@ -24,6 +24,7 @@ import { ConditionNodeDataOutputStack } from "./node-config/condition-node-confi
 import { createAppendNode } from "./create-append-node";
 import { ToolNodeStack } from "./node-config/tool-node-config";
 import { Markdown } from "../markdown";
+import { HttpNodeDataStack } from "./node-config/http-node-config";
 
 type Props = NodeProps<UINode>;
 
@@ -193,6 +194,7 @@ export const DefaultNode = memo(function DefaultNode({
               <ConditionNodeDataOutputStack data={data} />
             )}
             {data.kind === NodeKind.Tool && <ToolNodeStack data={data} />}
+            {data.kind === NodeKind.Http && <HttpNodeDataStack data={data} />}
             {data.description && (
               <div className="px-4 mt-2">
                 <div className="text-xs text-muted-foreground">

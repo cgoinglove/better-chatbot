@@ -138,7 +138,7 @@ function InstructionsStep({
           ) : (
             <WandSparkles className="size-3.5" />
           )}
-          {t("Chat.Project.generateWithAI")}
+          {t("Common.generateWithAI")}
         </Button>
         <SelectModel onSelect={setModel} align="end">
           <Button variant="ghost" className="gap-1 justify-between min-w-24">

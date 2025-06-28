@@ -1,6 +1,7 @@
 import { generateUUID } from "lib/utils";
 import { NodeKind, UINode } from "./workflow.interface";
 import { defaultObjectJsonSchema } from "./shared.workflow";
+import { ObjectJsonSchema7 } from "app-types/util";
 
 export function createUINode(
   kind: NodeKind,
@@ -31,14 +32,7 @@ export function createUINode(
   if (node.data.kind === NodeKind.Output) {
     node.data.outputData = [];
   } else if (node.data.kind === NodeKind.LLM) {
-    node.data.outputSchema.properties = {
-      answer: {
-        type: "string",
-      },
-      totalTokens: {
-        type: "number",
-      },
-    };
+    node.data.outputSchema = structuredClone(defaultLLMNodeOutputSchema);
     node.data.messages = [
       {
         role: "user",
@@ -103,3 +97,15 @@ export function createUINode(
 
   return node;
 }
+
+export const defaultLLMNodeOutputSchema: ObjectJsonSchema7 = {
+  type: "object",
+  properties: {
+    answer: {
+      type: "string",
+    },
+    totalTokens: {
+      type: "number",
+    },
+  },
+};
