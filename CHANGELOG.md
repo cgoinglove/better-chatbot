@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.11.0](https://github.com/cgoinglove/mcp-client-chatbot/compare/v1.10.0...v1.11.0) (2025-06-28)
+
+
+### Features
+
+* **workflow:** Add HTTP and Template nodes with LLM structured output supportWorkflow node ([#117](https://github.com/cgoinglove/mcp-client-chatbot/issues/117)) ([10ec438](https://github.com/cgoinglove/mcp-client-chatbot/commit/10ec438f13849f0745e7fab652cdd7cef8e97ab6))
+* **workflow:** add HTTP node configuration and execution support ([7d2f65f](https://github.com/cgoinglove/mcp-client-chatbot/commit/7d2f65fe4f0fdaae58ca2a69abb04abee3111c60))
+
+
+### Bug Fixes
+
+* add POST endpoint for MCP client saving with session validation ([fa005aa](https://github.com/cgoinglove/mcp-client-chatbot/commit/fa005aaecbf1f8d9279f5b4ce5ba85343e18202b))
+* split theme system into base themes and style variants ([61ebd07](https://github.com/cgoinglove/mcp-client-chatbot/commit/61ebd0745bcfd7a84ba3ad65c3f52b7050b5131a))
+* update ToolMessagePart to use isExecuting state instead of isExpanded ([752f8f0](https://github.com/cgoinglove/mcp-client-chatbot/commit/752f8f06e319119569e9ee7c04d621ab1c43ca54))
+
 ## [1.10.0](https://github.com/cgoinglove/mcp-client-chatbot/compare/v1.9.0...v1.10.0) (2025-06-27)
 
 
