@@ -1,4 +1,8 @@
-import { ObjectJsonSchema7, TipTapMentionJsonContent } from "app-types/util";
+import {
+  ObjectJsonSchema7,
+  TipTapMentionJsonContent,
+  TipTapMentionJsonContentPart,
+} from "app-types/util";
 import { JSONSchema7 } from "json-schema";
 import {
   UINode,
@@ -193,6 +197,47 @@ export function decodeWorkflowEvents(buffer: string): {
   return { events, remainingBuffer };
 }
 
+export function convertTiptapJsonToText({
+  json,
+  mentionParser,
+  getOutput,
+}: {
+  json: TipTapMentionJsonContent;
+  mentionParser?: (
+    part: Extract<TipTapMentionJsonContentPart, { type: "mention" }>,
+  ) => string;
+  getOutput: (key: OutputSchemaSourceKey) => any;
+}): string {
+  const parser =
+    mentionParser ||
+    ((part) => {
+      const key = JSON.parse(part.attrs.label) as OutputSchemaSourceKey;
+      const mentionItem = getOutput(key) || "";
+      const value =
+        typeof mentionItem == "object"
+          ? JSON.stringify(mentionItem)
+          : String(mentionItem);
+      return value;
+    });
+  return (
+    json.content
+      ?.flatMap((p) => p.content)
+      .filter(Boolean)
+      .reduce((prev, part) => {
+        let data = "";
+        if (!part) return prev;
+        if (part.type === "text") {
+          data += ` ${part.text}`;
+        } else if (part.type === "mention") {
+          data += parser(part);
+        }
+
+        return prev + data;
+      }, "")
+      .trim() || ""
+  );
+}
+
 export function convertTiptapJsonToAiMessage({
   role,
   getOutput,
@@ -209,27 +254,19 @@ export function convertTiptapJsonToAiMessage({
       parts: [],
     };
 
-  const text =
-    json.content
-      ?.flatMap((p) => p.content)
-      .filter(Boolean)
-      .reduce((prev, part) => {
-        let data = "";
-        if (!part) return prev;
-        if (part.type === "text") {
-          data += ` ${part.text}`;
-        } else if (part.type === "mention") {
-          const key = JSON.parse(part.attrs.label) as OutputSchemaSourceKey;
-          const mentionItem = getOutput(key) || "";
-          if (typeof mentionItem == "object") {
-            data +=
-              "\n```json\n" + JSON.stringify(mentionItem, null, 2) + "\n```\n";
-          } else data += ` \`${String(mentionItem)}\``;
-        }
-
-        return prev + data;
-      }, "")
-      .trim() || "";
+  const text = convertTiptapJsonToText({
+    json,
+    getOutput,
+    mentionParser: (part) => {
+      const key = JSON.parse(part.attrs.label) as OutputSchemaSourceKey;
+      const mentionItem = getOutput(key) || "empty";
+      const value =
+        typeof mentionItem == "object"
+          ? "\n```json\n" + JSON.stringify(mentionItem, null, 2) + "\n```\n"
+          : `**${String(mentionItem)}**`;
+      return value;
+    },
+  });
 
   return {
     role,

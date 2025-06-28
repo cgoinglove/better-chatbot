@@ -321,7 +321,47 @@
     "toolDescription": "Fournissez les informations nécessaires pour que LLM génère les paramètres d'outil.\n\nUtilisez '/' pour mentionner des données de nœuds précédents.",
     "generateInputWithAIDescription": "Écrivez un prompt pour générer une entrée pour le flux de travail",
     "example": {
-      "storyGenerator": "Générateur d'Histoire"
+      "storyGenerator": "Générateur d'Histoire",
+      "getWeather": "Obtenir Météo"
+    },
+    "selectVariable": "Sélectionner Variable",
+    "structuredOutput": "Sortie Structurée",
+    "structuredOutputDescription": "Générer une réponse comme objet JSON avec schéma défini",
+    "outputSchemaEditor": "Éditeur de Schéma de Sortie",
+    "addField": "Ajouter Champ",
+    "saveSchema": "Enregistrer Schéma",
+    "generateSchemaWithAI": "Générer Schéma avec IA",
+    "describeOutputDataRequest": "Fournissez des données JSON d'exemple qui représentent ce que ce nœud devrait produire\n\nExemple: {eg}",
+    "generatingJsonSchemaWithAI": "Génération du schéma JSON avec IA...",
+    "jsonSchemaGeneratedSuccessfully": "Schéma JSON généré avec succès !",
+    "failedToGenerateSchema": "Échec de génération du schéma",
+    "jsonSchemaEditorDescription": "Édition directe de schéma JSON avec assistance IA. Supporte les structures imbriquées complexes et les tableaux.",
+    "template": "Modèle",
+    "templateDescription": "Générer des documents de modèle.\n\nUtilisez '/' pour référencer et utiliser les valeurs de sortie d'autres nœuds.",
+    "kindsDescription": {
+      "input": "Définit les paramètres d'entrée que le chatbot fournira en utilisant ce flux de travail comme outil.\n\nSpécifie la structure des données et les règles de validation pour l'exécution de l'outil.",
+      "output": "Collecte et retourne les résultats finaux de l'exécution de votre flux de travail.\n\nCombine les données de plusieurs nœuds dans la réponse finale de l'outil.",
+      "llm": "Génère du texte ou des données structurées en utilisant des modèles IA.\n\nRéférence les sorties de nœuds précédents avec des mentions '/' pour créer des réponses conscientes du contexte.",
+      "tool": "Exécute des outils MCP ou des services externes.\n\nÉcrivez des instructions dans les messages, et LLM générera les paramètres d'outil requis à partir de votre contexte.",
+      "note": "Ajoute de la documentation et des commentaires pour organiser la logique de votre flux de travail.\n\nAide les membres de l'équipe à comprendre les processus complexes de flux de travail.",
+      "code": "Exécute des scripts de code personnalisé avec accès aux données de nœuds précédents.\n\nExécute JavaScript, Python ou d'autres langages dans votre flux de travail (bientôt disponible).",
+      "http": "Récupère des données d'APIs externes et de services web via des requêtes HTTP.\n\nIntègre avec des APIs REST, webhooks et services tiers.",
+      "template": "Crée des documents dynamiques en combinant du texte avec des données de nœuds précédents.\n\nGénère des emails, rapports ou contenu formaté en utilisant la substitution de variables.",
+      "condition": "Ajoute une logique conditionnelle pour brancher votre flux de travail basé sur l'évaluation des données.\n\nCrée une logique if-else pour gérer différents scénarios et conditions de données."
+    },
+    "greeting": {
+      "buildAutomationTitle": "Construire l'Automatisation en Connectant les Nœuds",
+      "buildAutomationDescription": "Connectez divers nœuds pour automatiser des tâches complexes. Chaque nœud gère des fonctions spécifiques, et les données circulent séquentiellement pour le traitement.",
+      "chatbotToolTitle": "Utiliser comme Outils de Chatbot",
+      "chatbotToolDescription": "Le but principal des flux de travail est de les utiliser comme outils dans les conversations de chatbot. Transformez les tâches répétitives en flux de travail pour une exécution facile pendant les chats.",
+      "parameterBasedTitle": "️ Démarrage Basé sur les Paramètres",
+      "parameterBasedDescription": "Les nœuds d'entrée définissent des structures de paramètres, pas des déclencheurs. Ils spécifient le format de données nécessaire quand le chatbot appelle ce flux de travail comme outil.",
+      "exampleTitle": "Exemple d'Utilisation",
+      "exampleDescription": "Créez un flux de travail \"Écrire Email → Traduire → Envoyer\", puis exécutez-le facilement dans les conversations de chatbot avec \"@email_workflow\".",
+      "availableNodesTitle": "Nœuds Disponibles",
+      "upcomingNodesTitle": "Nœuds à Venir",
+      "ctaMessage": "Commencez à créer des flux de travail maintenant pour étendre les capacités de votre chatbot !",
+      "soonMessage": "Bientôt disponible."
     }
   }
 }

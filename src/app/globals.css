@@ -1485,6 +1485,23 @@
     }
   }
 
+  @keyframes wiggle {
+    0%,
+    100% {
+      transform: rotate(0deg);
+    }
+    25% {
+      transform: rotate(-8deg);
+    }
+    75% {
+      transform: rotate(8deg);
+    }
+  }
+
+  .wiggle {
+    animation: wiggle 2.5s ease-in-out infinite;
+  }
+
   .react-flow__node-default {
     @apply bg-transparent! text-foreground! p-0! border-none! text-sm! text-left! shadow-none!;
   }

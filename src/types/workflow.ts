@@ -62,6 +62,7 @@ export interface WorkflowRepository {
   delete(id: string): Promise<void>;
   selectByUserId(userId: string): Promise<DBWorkflow[]>;
   selectAll(userId: string): Promise<WorkflowSummary[]>;
+  selectExecuteAbility(userId: string): Promise<WorkflowSummary[]>;
   checkAccess(
     workflowId: string,
     userId: string,

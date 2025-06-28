@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, or, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, not, or, sql } from "drizzle-orm";
 import { pgDb } from "../db.pg";
 import {
   UserSchema,
@@ -18,6 +18,32 @@ import { createUINode } from "lib/ai/workflow/create-ui-node";
 import { convertUINodeToDBNode } from "lib/ai/workflow/shared.workflow";
 
 export const pgWorkflowRepository: WorkflowRepository = {
+  async selectExecuteAbility(userId) {
+    const rows = await pgDb
+      .select({
+        id: WorkflowSchema.id,
+        name: WorkflowSchema.name,
+        description: WorkflowSchema.description,
+        icon: WorkflowSchema.icon,
+        visibility: WorkflowSchema.visibility,
+        isPublished: WorkflowSchema.isPublished,
+        userName: UserSchema.name,
+        userAvatar: UserSchema.image,
+        updatedAt: WorkflowSchema.updatedAt,
+      })
+      .from(WorkflowSchema)
+      .innerJoin(UserSchema, eq(WorkflowSchema.userId, UserSchema.id))
+      .where(
+        and(
+          eq(WorkflowSchema.isPublished, true),
+          or(
+            eq(WorkflowSchema.userId, userId),
+            not(eq(WorkflowSchema.visibility, "private")),
+          ),
+        ),
+      );
+    return rows as WorkflowSummary[];
+  },
   async selectAll(userId) {
     const rows = await pgDb
       .select({

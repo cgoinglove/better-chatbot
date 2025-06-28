@@ -76,7 +76,6 @@
     "fieldDescriptionPlaceholder": "Enter field description...",
     "defaultValuePlaceholder": "Enter default {type} value...",
     "selectOptionPlaceholder": "Select option...",
-
     "unlink": "Unlink Node",
     "elseIfDescription": "If the condition is not met, the logic to be executed is defined.",
     "elseDescription": "If the condition is not met, the logic to be executed is defined.",
@@ -104,8 +103,36 @@
     "jsonSchemaGeneratedSuccessfully": "JSON Schema generated successfully!",
     "failedToGenerateSchema": "Failed to generate schema",
     "jsonSchemaEditorDescription": "Direct JSON Schema editing with AI assistance. Supports complex nested structures and arrays.",
+    "template": "Template",
+    "templateDescription": "Generate template documents.\n\nUse '/' to reference and use output values from other nodes.",
+    "greeting": {
+      "buildAutomationTitle": "Build Automation by Connecting Nodes",
+      "buildAutomationDescription": "Connect various nodes to automate complex tasks. Each node handles specific functions, and data flows sequentially for processing.",
+      "chatbotToolTitle": "Use as Chatbot Tools",
+      "chatbotToolDescription": "The main purpose of workflows is to use them as tools in chatbot conversations. Turn repetitive tasks into workflows for easy execution during chats.",
+      "parameterBasedTitle": "Parameter-Based Start",
+      "parameterBasedDescription": "Input nodes define parameter structures, not triggers. They specify the data format needed when chatbot calls this workflow as a tool.",
+      "exampleTitle": "Usage Example",
+      "exampleDescription": "Create an \"Email Writing → Translation → Send\" workflow, then easily execute it in chatbot conversations with \"@email_workflow\".",
+      "availableNodesTitle": "Available Nodes",
+      "upcomingNodesTitle": "Upcoming Nodes",
+      "ctaMessage": "Start creating workflows now to expand your chatbot's capabilities!",
+      "soonMessage": "Coming soon."
+    },
     "example": {
-      "storyGenerator": "Story Generator"
+      "storyGenerator": "Story Generator",
+      "getWeather": "Get Weather"
+    },
+    "kindsDescription": {
+      "input": "Define input parameters that the chatbot will provide when using this workflow as a tool.\n\nSpecify the data structure and validation rules for tool execution.",
+      "output": "Collect and return the final results from your workflow execution.\n\nCombine data from multiple nodes into the final tool response.",
+      "llm": "Generate text or structured data using AI models.\n\nReference previous node outputs with '/' mentions to create context-aware responses.",
+      "tool": "Execute MCP tools or external services.\n\nWrite instructions in messages, and LLM will generate the required tool parameters from your context.",
+      "note": "Add documentation and comments to organize your workflow logic.\n\nHelp team members understand complex workflow processes.",
+      "code": "Execute custom code scripts with access to previous node data.\n\nRun JavaScript, Python, or other languages within your workflow (coming soon).",
+      "http": "Fetch data from external APIs and web services via HTTP requests.\n\nIntegrate with REST APIs, webhooks, and third-party services.",
+      "template": "Create dynamic documents by combining text with data from previous nodes.\n\nGenerate emails, reports, or formatted content using variable substitution.",
+      "condition": "Add conditional logic to branch your workflow based on data evaluation.\n\nCreate if-else logic to handle different scenarios and data conditions."
     }
   },
   "Auth": {

@@ -37,7 +37,8 @@
     "generatingInputWithAI": "AI로 입력 생성 중...",
     "inputGeneratedSuccessfully": "입력이 성공적으로 생성되었습니다",
     "failedToGenerateInput": "입력 생성에 실패했습니다",
-    "createWithExample": "예제로 생성"
+    "createWithExample": "예제로 생성",
+    "generateWithAI": "AI로 생성"
   },
   "Auth": {
     "SignIn": {
@@ -321,7 +322,47 @@
     "toolDescription": "LLM이 도구 매개변수를 생성하는 데 필요한 정보를 제공합니다.\n\n'/'를 사용하여 이전 노드의 데이터를 언급하세요.",
     "generateInputWithAIDescription": "워크플로우에 대한 입력을 생성하는 프롬프트를 작성하세요",
     "example": {
-      "storyGenerator": "스토리 생성기"
+      "storyGenerator": "스토리 생성기",
+      "getWeather": "날씨 조회"
+    },
+    "selectVariable": "변수 선택",
+    "structuredOutput": "구조화된 출력",
+    "structuredOutputDescription": "정의된 스키마를 가진 JSON 객체로 응답 생성",
+    "outputSchemaEditor": "출력 스키마 에디터",
+    "addField": "필드 추가",
+    "saveSchema": "스키마 저장",
+    "generateSchemaWithAI": "AI로 스키마 생성",
+    "describeOutputDataRequest": "이 노드가 출력해야 하는 것을 나타내는 예제 JSON 데이터를 제공하세요\n\n예제: {eg}",
+    "generatingJsonSchemaWithAI": "AI로 JSON 스키마 생성 중...",
+    "jsonSchemaGeneratedSuccessfully": "JSON 스키마가 성공적으로 생성되었습니다!",
+    "failedToGenerateSchema": "스키마 생성에 실패했습니다",
+    "jsonSchemaEditorDescription": "AI 지원으로 직접 JSON 스키마 편집. 복잡한 중첩 구조와 배열을 지원합니다.",
+    "template": "템플릿",
+    "templateDescription": "템플릿 문서를 생성합니다.\n\n'/'를 사용하여 다른 노드의 출력 값을 참조하고 사용하세요.",
+    "kindsDescription": {
+      "input": "챗봇이 이 워크플로우를 도구로 사용할 때 제공할 입력 매개변수를 정의합니다.\n\n도구 실행을 위한 데이터 구조와 검증 규칙을 지정합니다.",
+      "output": "워크플로우 실행의 최종 결과를 수집하고 반환합니다.\n\n여러 노드의 데이터를 최종 도구 응답으로 결합합니다.",
+      "llm": "AI 모델을 사용하여 텍스트나 구조화된 데이터를 생성합니다.\n\n'/' 멘션으로 이전 노드 출력을 참조하여 컨텍스트 인식 응답을 생성합니다.",
+      "tool": "MCP 도구나 외부 서비스를 실행합니다.\n\n메시지에 지시사항을 작성하면 LLM이 컨텍스트에서 필요한 도구 매개변수를 생성합니다.",
+      "note": "워크플로우 로직을 정리하기 위한 문서와 주석을 추가합니다.\n\n팀원들이 복잡한 워크플로우 프로세스를 이해하는 데 도움을 줍니다.",
+      "code": "이전 노드 데이터에 접근할 수 있는 커스텀 코드 스크립트를 실행합니다.\n\n워크플로우 내에서 JavaScript, Python 또는 기타 언어를 실행합니다 (곧 출시).",
+      "http": "HTTP 요청을 통해 외부 API 및 웹 서비스에서 데이터를 가져옵니다.\n\nREST API, 웹훅 및 타사 서비스와 통합합니다.",
+      "template": "이전 노드의 데이터와 텍스트를 결합하여 동적 문서를 생성합니다.\n\n변수 치환을 사용하여 이메일, 보고서 또는 형식화된 콘텐츠를 생성합니다.",
+      "condition": "데이터 평가를 기반으로 워크플로우를 분기하는 조건부 로직을 추가합니다.\n\n다양한 시나리오와 데이터 조건을 처리하기 위한 if-else 로직을 생성합니다."
+    },
+    "greeting": {
+      "buildAutomationTitle": "노드 연결로 자동화 구축",
+      "buildAutomationDescription": "다양한 노드들을 연결하여 복잡한 작업을 자동화하세요. 각 노드는 특정 기능을 담당하며, 데이터가 순차적으로 흘러가며 처리됩니다.",
+      "chatbotToolTitle": "챗봇 도구로 활용",
+      "chatbotToolDescription": "워크플로우의 주요 목적은 챗봇에서 도구로 사용하는 것입니다. 반복적인 작업을 워크플로우로 만들어 대화 중 간단히 실행할 수 있습니다.",
+      "parameterBasedTitle": "️ 매개변수 기반 시작",
+      "parameterBasedDescription": "Input 노드는 트리거가 아닌 매개변수 구조를 정의합니다. 챗봇이 이 워크플로우를 도구로 호출할 때 필요한 데이터 형식을 지정합니다.",
+      "exampleTitle": "사용 예시",
+      "exampleDescription": "\"이메일 작성 → 번역 → 전송\" 워크플로우를 만들어두면, 챗봇 대화에서 \"@이메일_워크플로우\"로 간편하게 실행할 수 있습니다.",
+      "availableNodesTitle": "사용 가능한 노드들",
+      "upcomingNodesTitle": "곧 출시될 노드",
+      "ctaMessage": "지금 바로 워크플로우를 만들어 챗봇의 능력을 확장해보세요!",
+      "soonMessage": "곧 제공될 예정입니다."
     }
   }
 }

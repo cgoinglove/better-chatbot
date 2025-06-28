@@ -5,7 +5,6 @@ import { memo, useCallback, useMemo } from "react";
 
 import {
   ChevronDownIcon,
-  InfoIcon,
   PlusIcon,
   TrashIcon,
   TriangleAlertIcon,
@@ -21,7 +20,6 @@ import { cleanVariableName, generateUniqueKey } from "lib/utils";
 import { Label } from "ui/label";
 import { findJsonSchemaByPath } from "lib/ai/workflow/shared.workflow";
 import { useTranslations } from "next-intl";
-import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 
 export const OutputNodeDataConfig = memo(function ({
   data,
@@ -96,16 +94,6 @@ export const OutputNodeDataConfig = memo(function ({
     <div className="flex flex-col gap-2 text-sm px-4 ">
       <div className="flex items-center justify-between">
         <Label className="text-sm">{t("Workflow.outputVariables")}</Label>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <div className="p-1 hover:bg-secondary rounded cursor-pointer">
-              <InfoIcon className="size-3" />
-            </div>
-          </TooltipTrigger>
-          <TooltipContent className="p-4 whitespace-pre-wrap">
-            {t("Workflow.messagesDescription")}
-          </TooltipContent>
-        </Tooltip>
       </div>
       <div className="flex flex-col gap-2">
         {outputVariables.map((item, index) => {

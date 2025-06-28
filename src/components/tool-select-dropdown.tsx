@@ -1,4 +1,3 @@
-import { selectMcpClientsAction } from "@/app/api/mcp/actions";
 import { appStore } from "@/app/store";
 import { AppDefaultToolkit } from "app-types/chat";
 import { AllowedMCPServer, MCPServerInfo } from "app-types/mcp";
@@ -17,7 +16,6 @@ import {
 import Link from "next/link";
 import { PropsWithChildren, useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
-import useSWR from "swr";
 import { Badge } from "ui/badge";
 import { Button } from "ui/button";
 import { Checkbox } from "ui/checkbox";
@@ -45,12 +43,12 @@ import {
 import { Input } from "ui/input";
 import { MCPIcon } from "ui/mcp-icon";
 
-import { handleErrorWithToast } from "ui/shared-toast";
 import { useTranslations } from "next-intl";
 
 import { Switch } from "ui/switch";
 import { useShallow } from "zustand/shallow";
 import { Separator } from "ui/separator";
+import { useMcpList } from "@/hooks/queries/use-mcp-list";
 
 interface ToolSelectDropdownProps {
   align?: "start" | "end" | "center";
@@ -75,17 +73,10 @@ export function ToolSelectDropdown({
   side,
   disabled,
 }: PropsWithChildren<ToolSelectDropdownProps>) {
-  const [appStoreMutate, toolChoice] = appStore(
-    useShallow((state) => [state.mutate, state.toolChoice]),
-  );
+  const [toolChoice] = appStore(useShallow((state) => [state.toolChoice]));
   const t = useTranslations("Chat.Tool");
-  const { isLoading } = useSWR("mcp-list", selectMcpClientsAction, {
-    refreshInterval: 1000 * 60 * 1,
-    fallbackData: [],
-    onError: handleErrorWithToast,
-    onSuccess: (data) => {
-      appStoreMutate({ mcpList: data });
-    },
+  const { isLoading } = useMcpList({
+    refreshInterval: 1000 * 60 * 5,
   });
   return (
     <DropdownMenu>

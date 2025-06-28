@@ -2,7 +2,12 @@
 import { EditWorkflowPopup } from "@/components/workflow/edit-workflow-popup";
 import { format } from "date-fns";
 
-import { ArrowUpRight, ChevronDown, MoreHorizontal } from "lucide-react";
+import {
+  ArrowUpRight,
+  ChevronDown,
+  MoreHorizontal,
+  MousePointer2,
+} from "lucide-react";
 
 import { Card, CardDescription, CardHeader, CardTitle } from "ui/card";
 import Link from "next/link";
@@ -13,7 +18,12 @@ import useSWR, { mutate } from "swr";
 import { fetcher } from "lib/utils";
 import { Skeleton } from "ui/skeleton";
 import { BackgroundPaths } from "ui/background-paths";
-import { WorkflowSummary } from "app-types/workflow";
+import {
+  DBEdge,
+  DBNode,
+  DBWorkflow,
+  WorkflowSummary,
+} from "app-types/workflow";
 import { useTranslations } from "next-intl";
 import {
   DropdownMenu,
@@ -21,37 +31,47 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "ui/dropdown-menu";
-import { StoryGenerator } from "lib/ai/workflow/example";
+import { GetWeather, StoryGenerator } from "lib/ai/workflow/example";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "ui/dialog";
+import { WorkflowGreeting } from "@/components/workflow/workflow-greeting";
 
 const createWithExample = async (example: string) => {
+  let exampleWorkflow: {
+    workflow: Partial<DBWorkflow>;
+    nodes: Partial<DBNode>[];
+    edges: Partial<DBEdge>[];
+  } | null = null;
   if (example === "storyGenerator") {
-    const exampleWorkflow = StoryGenerator();
+    exampleWorkflow = StoryGenerator();
+  } else if (example === "getWeather") {
+    exampleWorkflow = GetWeather();
+  }
 
-    const response = await fetch("/api/workflow", {
+  if (!exampleWorkflow) return;
+  const response = await fetch("/api/workflow", {
+    method: "POST",
+    body: JSON.stringify({
+      ...exampleWorkflow.workflow,
+      noGenerateInputNode: true,
+    }),
+  });
+
+  if (!response.ok) return toast.error("Error creating workflow");
+  const workflow = await response.json();
+  const structureResponse = await fetch(
+    `/api/workflow/${workflow.id}/structure`,
+    {
       method: "POST",
       body: JSON.stringify({
-        ...exampleWorkflow.workflow,
-        noGenerateInputNode: true,
+        nodes: exampleWorkflow.nodes,
+        edges: exampleWorkflow.edges,
       }),
-    });
-
-    if (!response.ok) return toast.error("Error creating workflow");
-    const workflow = await response.json();
-    const structureResponse = await fetch(
-      `/api/workflow/${workflow.id}/structure`,
-      {
-        method: "POST",
-        body: JSON.stringify({
-          nodes: exampleWorkflow.nodes,
-          edges: exampleWorkflow.edges,
-        }),
-      },
-    );
-    if (!structureResponse.ok) return toast.error("Error creating workflow");
-    return workflow.id as string;
-  }
+    },
+  );
+  if (!structureResponse.ok) return toast.error("Error creating workflow");
+  return workflow.id as string;
 };
 
 export default function WorkflowPage() {
@@ -75,10 +95,26 @@ export default function WorkflowPage() {
   return (
     <div className="w-full flex flex-col gap-4 p-8">
       <div className="flex flex-row gap-2 items-center">
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant={"ghost"} className="relative group">
+              What is Workflow?
+              {}
+              <div className="absolute left-0 -top-1.5 opacity-100 group-hover:opacity-0 transition-opacity duration-300">
+                <MousePointer2 className="rotate-180 text-blue-500 fill-blue-500 size-3 wiggle" />
+              </div>
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="md:max-w-3xl!">
+            <DialogTitle className="sr-only">workflow greeting</DialogTitle>
+            <WorkflowGreeting />
+          </DialogContent>
+        </Dialog>
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
-              variant="outline"
+              variant="secondary"
               className="min-w-54 justify-between data-[state=open]:bg-input"
             >
               {t("Common.createWithExample")}
@@ -88,6 +124,9 @@ export default function WorkflowPage() {
           <DropdownMenuContent className="w-54">
             <DropdownMenuItem onClick={() => createExample("storyGenerator")}>
               📖 {t("Workflow.example.storyGenerator")}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => createExample("getWeather")}>
+              🌤️ {t("Workflow.example.getWeather")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

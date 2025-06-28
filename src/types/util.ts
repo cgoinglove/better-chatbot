@@ -9,6 +9,19 @@ export type ObjectJsonSchema7 = {
   };
 };
 
+export type TipTapMentionJsonContentPart =
+  | {
+      type: "text";
+      text: string;
+    }
+  | {
+      type: "mention";
+      attrs: {
+        id: string;
+        label: string;
+      };
+    };
+
 export type TipTapMentionJsonContent = {
   type: "doc";
   content: {

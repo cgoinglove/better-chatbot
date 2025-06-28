@@ -28,6 +28,7 @@ interface OutputSchemaMentionInputProps {
   onChange: (content: TipTapMentionJsonContent) => void;
   placeholder?: string;
   editable?: boolean;
+  className?: string;
 }
 
 export function OutputSchemaMentionInput({
@@ -35,6 +36,7 @@ export function OutputSchemaMentionInput({
   content,
   onChange,
   editable,
+  className,
 }: OutputSchemaMentionInputProps) {
   const { getNodes, getEdges } = useReactFlow<UINode>();
   const latestContent = useToRef<TipTapMentionJsonContent>(content!);
@@ -96,6 +98,7 @@ export function OutputSchemaMentionInput({
 
   return (
     <MentionInput
+      className={className}
       suggestionChar="/"
       disabled={!editable}
       content={content}

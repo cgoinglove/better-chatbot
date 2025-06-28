@@ -321,7 +321,47 @@
     "toolDescription": "LLMがツールパラメータを生成するために必要な情報を提供します。\n\n'/'を使用して前のノードのデータを言及してください。",
     "generateInputWithAIDescription": "ワークフローの入力を生成するプロンプトを書いてください",
     "example": {
-      "storyGenerator": "ストーリージェネレーター"
+      "storyGenerator": "ストーリージェネレーター",
+      "getWeather": "天気取得"
+    },
+    "selectVariable": "変数を選択",
+    "structuredOutput": "構造化出力",
+    "structuredOutputDescription": "定義されたスキーマでJSONオブジェクトとしてレスポンスを生成",
+    "outputSchemaEditor": "出力スキーマエディター",
+    "addField": "フィールドを追加",
+    "saveSchema": "スキーマを保存",
+    "generateSchemaWithAI": "AIでスキーマを生成",
+    "describeOutputDataRequest": "このノードが出力すべき内容を表すサンプルJSONデータを提供してください\n\n例: {eg}",
+    "generatingJsonSchemaWithAI": "AIでJSONスキーマを生成中...",
+    "jsonSchemaGeneratedSuccessfully": "JSONスキーマが正常に生成されました！",
+    "failedToGenerateSchema": "スキーマの生成に失敗しました",
+    "jsonSchemaEditorDescription": "AI支援による直接的なJSONスキーマ編集。複雑なネストした構造と配列をサポートします。",
+    "template": "テンプレート",
+    "templateDescription": "テンプレート文書を生成します。\n\n'/'を使用して他のノードの出力値を参照・使用してください。",
+    "kindsDescription": {
+      "input": "チャットボットがこのワークフローをツールとして使用する際に提供する入力パラメータを定義します。\n\nツール実行のためのデータ構造と検証ルールを指定します。",
+      "output": "ワークフロー実行の最終結果を収集して返します。\n\n複数のノードからのデータを最終ツールレスポンスに結合します。",
+      "llm": "AIモデルを使用してテキストや構造化データを生成します。\n\n'/'メンションで前のノード出力を参照してコンテキスト認識レスポンスを作成します。",
+      "tool": "MCPツールや外部サービスを実行します。\n\nメッセージに指示を書けば、LLMがコンテキストから必要なツールパラメータを生成します。",
+      "note": "ワークフローロジックを整理するためのドキュメントとコメントを追加します。\n\nチームメンバーが複雑なワークフロープロセスを理解するのに役立ちます。",
+      "code": "前のノードデータにアクセスできるカスタムコードスクリプトを実行します。\n\nワークフロー内でJavaScript、Python、その他の言語を実行します（近日公開）。",
+      "http": "HTTPリクエストを通じて外部APIやWebサービスからデータを取得します。\n\nREST API、Webhook、サードパーティサービスと統合します。",
+      "template": "前のノードのデータとテキストを組み合わせて動的文書を作成します。\n\n変数置換を使用してメール、レポート、フォーマットされたコンテンツを生成します。",
+      "condition": "データ評価に基づいてワークフローを分岐する条件ロジックを追加します。\n\n異なるシナリオやデータ条件を処理するif-elseロジックを作成します。"
+    },
+    "greeting": {
+      "buildAutomationTitle": "ノード接続による自動化構築",
+      "buildAutomationDescription": "様々なノードを接続して複雑なタスクを自動化します。各ノードは特定の機能を担当し、データが順次流れて処理されます。",
+      "chatbotToolTitle": "チャットボットツールとして活用",
+      "chatbotToolDescription": "ワークフローの主な目的は、チャットボットの会話でツールとして使用することです。反復的なタスクをワークフローに変換して、チャット中に簡単に実行できます。",
+      "parameterBasedTitle": "️ パラメータベースの開始",
+      "parameterBasedDescription": "入力ノードはトリガーではなく、パラメータ構造を定義します。チャットボットがこのワークフローをツールとして呼び出すときに必要なデータ形式を指定します。",
+      "exampleTitle": "使用例",
+      "exampleDescription": "「メール作成 → 翻訳 → 送信」ワークフローを作成しておけば、チャットボットの会話で「@メール_ワークフロー」で簡単に実行できます。",
+      "availableNodesTitle": "利用可能なノード",
+      "upcomingNodesTitle": "近日公開予定のノード",
+      "ctaMessage": "今すぐワークフローを作成してチャットボットの機能を拡張しましょう！",
+      "soonMessage": "近日公開予定です。"
     }
   }
 }

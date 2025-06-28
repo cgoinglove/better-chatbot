@@ -8,6 +8,7 @@ import {
 } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { TipTapMentionJsonContent } from "app-types/util";
+import { cn } from "lib/utils";
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 
@@ -23,6 +24,7 @@ interface MentionInputProps {
   onEnter?: () => void;
   placeholder?: string;
   suggestionChar?: string;
+  className?: string;
   MentionItem: FC<{
     label: string;
     id: string;
@@ -45,6 +47,7 @@ export default function MentionInput({
   suggestionChar = "@",
   MentionItem,
   Suggestion,
+  className,
 }: MentionInputProps) {
   const [open, setOpen] = useState(false);
   const position = useRef<{
@@ -130,7 +133,7 @@ export default function MentionInput({
       editorProps: {
         attributes: {
           class:
-            "w-full max-h-80 min-h-[2rem] break-words overflow-y-auto resize-none focus:outline-none px-2 py-1 prose prose-sm dark:prose-invert",
+            "w-full max-h-80 min-h-[2rem] break-words overflow-y-auto resize-none focus:outline-none px-2 py-1 prose prose-sm dark:prose-invert ",
         },
       },
     };
@@ -219,13 +222,13 @@ export default function MentionInput({
     }
   }, [content]);
 
+  const focus = useCallback(() => {
+    editor?.commands.focus();
+  }, [editor]);
+
   return (
-    <div className="relative w-full">
-      <EditorContent
-        editor={editor}
-        onKeyDown={handleKeyDown}
-        className="relative"
-      />
+    <div onClick={focus} className={cn("relative w-full", className)}>
+      <EditorContent editor={editor} onKeyDown={handleKeyDown} />
       {suggestion}
       {placeholderElement}
     </div>

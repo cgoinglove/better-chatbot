@@ -321,7 +321,47 @@
     "toolDescription": "Proporciona información necesaria para que LLM genere parámetros de herramienta.\n\nUsa '/' para mencionar datos de nodos anteriores.",
     "generateInputWithAIDescription": "Escribe un prompt para generar entrada para el flujo de trabajo",
     "example": {
-      "storyGenerator": "Generador de Historias"
+      "storyGenerator": "Generador de Historias",
+      "getWeather": "Consultar Clima"
+    },
+    "selectVariable": "Seleccionar Variable",
+    "structuredOutput": "Salida Estructurada",
+    "structuredOutputDescription": "Generar respuesta como objeto JSON con esquema definido",
+    "outputSchemaEditor": "Editor de Esquema de Salida",
+    "addField": "Agregar Campo",
+    "saveSchema": "Guardar Esquema",
+    "generateSchemaWithAI": "Generar Esquema con IA",
+    "describeOutputDataRequest": "Proporciona datos JSON de ejemplo que representen lo que este nodo debería generar\n\nEjemplo: {eg}",
+    "generatingJsonSchemaWithAI": "Generando esquema JSON con IA...",
+    "jsonSchemaGeneratedSuccessfully": "¡Esquema JSON generado exitosamente!",
+    "failedToGenerateSchema": "Error al generar esquema",
+    "jsonSchemaEditorDescription": "Edición directa de esquema JSON con asistencia de IA. Soporta estructuras anidadas complejas y arrays.",
+    "template": "Plantilla",
+    "templateDescription": "Generar documentos de plantilla.\n\nUsa '/' para referenciar y usar valores de salida de otros nodos.",
+    "kindsDescription": {
+      "input": "Define parámetros de entrada que el chatbot proporcionará al usar este flujo de trabajo como herramienta.\n\nEspecifica la estructura de datos y reglas de validación para la ejecución de la herramienta.",
+      "output": "Recopila y retorna los resultados finales de la ejecución de tu flujo de trabajo.\n\nCombina datos de múltiples nodos en la respuesta final de la herramienta.",
+      "llm": "Genera texto o datos estructurados usando modelos de IA.\n\nReferencia salidas de nodos anteriores con menciones '/' para crear respuestas conscientes del contexto.",
+      "tool": "Ejecuta herramientas MCP o servicios externos.\n\nEscribe instrucciones en mensajes, y LLM generará los parámetros de herramienta requeridos desde tu contexto.",
+      "note": "Agrega documentación y comentarios para organizar la lógica de tu flujo de trabajo.\n\nAyuda a los miembros del equipo a entender procesos complejos de flujo de trabajo.",
+      "code": "Ejecuta scripts de código personalizado con acceso a datos de nodos anteriores.\n\nEjecuta JavaScript, Python u otros lenguajes dentro de tu flujo de trabajo (próximamente).",
+      "http": "Obtén datos de APIs externas y servicios web vía peticiones HTTP.\n\nIntégrate con APIs REST, webhooks y servicios de terceros.",
+      "template": "Crea documentos dinámicos combinando texto con datos de nodos anteriores.\n\nGenera correos, reportes o contenido formateado usando sustitución de variables.",
+      "condition": "Agrega lógica condicional para ramificar tu flujo de trabajo basado en evaluación de datos.\n\nCrea lógica if-else para manejar diferentes escenarios y condiciones de datos."
+    },
+    "greeting": {
+      "buildAutomationTitle": "Construir Automatización Conectando Nodos",
+      "buildAutomationDescription": "Conecta varios nodos para automatizar tareas complejas. Cada nodo maneja funciones específicas, y los datos fluyen secuencialmente para su procesamiento.",
+      "chatbotToolTitle": "Usar como Herramientas de Chatbot",
+      "chatbotToolDescription": "El propósito principal de los flujos de trabajo es usarlos como herramientas en conversaciones de chatbot. Convierte tareas repetitivas en flujos de trabajo para una fácil ejecución durante los chats.",
+      "parameterBasedTitle": "️ Inicio Basado en Parámetros",
+      "parameterBasedDescription": "Los nodos de entrada definen estructuras de parámetros, no disparadores. Especifican el formato de datos necesario cuando el chatbot llama a este flujo de trabajo como herramienta.",
+      "exampleTitle": "Ejemplo de Uso",
+      "exampleDescription": "Crea un flujo de trabajo \"Escribir Email → Traducir → Enviar\", luego ejecútalo fácilmente en conversaciones de chatbot con \"@email_workflow\".",
+      "availableNodesTitle": "Nodos Disponibles",
+      "upcomingNodesTitle": "Nodos Próximos",
+      "ctaMessage": "¡Comienza a crear flujos de trabajo ahora para expandir las capacidades de tu chatbot!",
+      "soonMessage": "Próximamente."
     }
   }
 }

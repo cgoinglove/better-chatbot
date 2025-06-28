@@ -15,13 +15,14 @@ import { JSONSchema7 } from "json-schema";
  */
 export enum NodeKind {
   Input = "input", // Entry point of workflow - receives initial data
-  Output = "output", // Exit point of workflow - produces final result
   LLM = "llm", // Large Language Model interaction node
-  Tool = "tool", // MCP tool execution node
-  Note = "note", // Documentation/annotation node
-  Code = "code", // Code execution node (future implementation)
-  Http = "http", // HTTP request node
   Condition = "condition", // Conditional branching node
+  Note = "note", // Documentation/annotation node
+  Tool = "tool", // MCP tool execution node
+  Http = "http", // HTTP request node
+  Template = "template", // Template processing node
+  Code = "code", // Code execution node (future implementation)
+  Output = "output", // Exit point of workflow - produces final result
 }
 
 /**
@@ -171,6 +172,19 @@ export type HttpNodeData = BaseWorkflowNodeDataData<{
 };
 
 /**
+ * Template node: Processes text templates with variable substitution
+ * Supports different template engines for flexible content generation
+ */
+export type TemplateNodeData = BaseWorkflowNodeDataData<{
+  kind: NodeKind.Template;
+}> & {
+  template: {
+    type: "tiptap";
+    tiptap: TipTapMentionJsonContent;
+  };
+};
+
+/**
  * Union type of all possible node data types.
  * When adding a new node type, include it in this union.
  */
@@ -181,7 +195,8 @@ export type WorkflowNodeData =
   | NoteNodeData
   | ToolNodeData
   | ConditionNodeData
-  | HttpNodeData;
+  | HttpNodeData
+  | TemplateNodeData;
 
 /**
  * Runtime fields added during workflow execution

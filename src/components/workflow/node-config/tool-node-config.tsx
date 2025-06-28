@@ -9,9 +9,6 @@ import { memo, useEffect, useMemo } from "react";
 import { ChevronDown, InfoIcon, VariableIcon, WrenchIcon } from "lucide-react";
 
 import { useEdges, useNodes, useReactFlow } from "@xyflow/react";
-import { selectMcpClientsAction } from "@/app/api/mcp/actions";
-import useSWR from "swr";
-import { handleErrorWithToast } from "ui/shared-toast";
 import { appStore } from "@/app/store";
 
 import { WorkflowToolSelect } from "../workflow-tool-select";
@@ -24,6 +21,7 @@ import { useWorkflowStore } from "@/app/store/workflow.store";
 import { MCPIcon } from "ui/mcp-icon";
 import { useTranslations } from "next-intl";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
+import { useMcpList } from "@/hooks/queries/use-mcp-list";
 
 export const ToolNodeDataConfig = memo(function ({
   data,
@@ -42,14 +40,7 @@ export const ToolNodeDataConfig = memo(function ({
     );
   });
 
-  const { data: mcpList } = useSWR("mcp-list", selectMcpClientsAction, {
-    refreshInterval: 1000 * 60 * 1,
-    fallbackData: [],
-    onError: handleErrorWithToast,
-    onSuccess: (data) => {
-      appStore.setState({ mcpList: data });
-    },
-  });
+  const { data: mcpList } = useMcpList();
 
   const toolList = useMemo<WorkflowToolKey[]>(() => {
     const mcpTools: WorkflowToolKey[] = mcpList.flatMap((mcp) => {

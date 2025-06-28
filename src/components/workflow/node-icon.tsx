@@ -11,6 +11,7 @@ import {
   LandPlotIcon,
   SplitIcon,
   TerminalIcon,
+  TextIcon,
   WrenchIcon,
 } from "lucide-react";
 import { useMemo } from "react";
@@ -36,6 +37,8 @@ export function NodeIcon({
         return SplitIcon;
       case NodeKind.Http:
         return HardDriveUpload;
+      case NodeKind.Template:
+        return TextIcon;
       case NodeKind.Code:
         return TerminalIcon;
       default:
@@ -58,9 +61,11 @@ export function NodeIcon({
                   ? "bg-blue-500"
                   : type === NodeKind.Code || type === NodeKind.Http
                     ? "bg-rose-500"
-                    : type === NodeKind.Condition
-                      ? "bg-amber-500"
-                      : "bg-card",
+                    : type === NodeKind.Template
+                      ? "bg-purple-500"
+                      : type === NodeKind.Condition
+                        ? "bg-amber-500"
+                        : "bg-card",
         "p-1 rounded",
         className,
       )}

@@ -10,6 +10,7 @@ import {
   WorkflowNodeData,
   ToolNodeData,
   HttpNodeData,
+  TemplateNodeData,
 } from "lib/ai/workflow/workflow.interface";
 import { cleanVariableName } from "lib/utils";
 import { safe } from "ts-safe";
@@ -106,6 +107,8 @@ export const nodeValidate: NodeValidate<WorkflowNodeData> = ({
       return toolNodeValidate({ node, nodes, edges });
     case NodeKind.Http:
       return httpNodeValidate({ node, nodes, edges });
+    case NodeKind.Template:
+      return templateNodeValidate({ node, nodes, edges });
   }
 };
 
@@ -253,4 +256,17 @@ export const httpNodeValidate: NodeValidate<HttpNodeData> = ({ node }) => {
   ) {
     throw new Error(`Body is not allowed for ${node.method} requests`);
   }
+};
+
+export const templateNodeValidate: NodeValidate<TemplateNodeData> = ({
+  node,
+}) => {
+  // Validate template type
+  const validTypes = ["tiptap"]; // Future: add "handlebars"
+  if (!validTypes.includes(node.template.type)) {
+    throw new Error(`Template type must be one of: ${validTypes.join(", ")}`);
+  }
+
+  // Template content can be undefined/empty - that's valid
+  // The actual content validation is handled by the TipTap editor
 };

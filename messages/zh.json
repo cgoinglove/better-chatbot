@@ -37,7 +37,8 @@
     "generatingInputWithAI": "正在用 AI 生成输入...",
     "inputGeneratedSuccessfully": "输入生成成功",
     "failedToGenerateInput": "输入生成失败",
-    "createWithExample": "用示例创建"
+    "createWithExample": "用示例创建",
+    "generateWithAI": "用 AI 生成"
   },
   "Auth": {
     "SignIn": {
@@ -321,7 +322,47 @@
     "toolDescription": "提供 LLM 生成工具参数所需的信息。\n\n使用 '/' 提及前一个节点的数据。",
     "generateInputWithAIDescription": "编写提示为工作流生成输入",
     "example": {
-      "storyGenerator": "故事生成器"
+      "storyGenerator": "故事生成器",
+      "getWeather": "获取天气"
+    },
+    "selectVariable": "选择变量",
+    "structuredOutput": "结构化输出",
+    "structuredOutputDescription": "使用定义的模式生成 JSON 对象响应",
+    "outputSchemaEditor": "输出模式编辑器",
+    "addField": "添加字段",
+    "saveSchema": "保存模式",
+    "generateSchemaWithAI": "用 AI 生成模式",
+    "describeOutputDataRequest": "提供代表此节点应输出内容的示例 JSON 数据\n\n示例: {eg}",
+    "generatingJsonSchemaWithAI": "正在用 AI 生成 JSON 模式...",
+    "jsonSchemaGeneratedSuccessfully": "JSON 模式生成成功！",
+    "failedToGenerateSchema": "模式生成失败",
+    "jsonSchemaEditorDescription": "在 AI 辅助下直接编辑 JSON 模式。支持复杂的嵌套结构和数组。",
+    "template": "模板",
+    "templateDescription": "生成模板文档。\n\n使用 '/' 引用和使用其他节点的输出值。",
+    "kindsDescription": {
+      "input": "定义聊天机器人将此工作流用作工具时提供的输入参数。\n\n指定工具执行的数据结构和验证规则。",
+      "output": "收集并返回工作流执行的最终结果。\n\n将多个节点的数据合并为最终工具响应。",
+      "llm": "使用 AI 模型生成文本或结构化数据。\n\n使用 '/' 提及引用前一个节点的输出，创建上下文感知的响应。",
+      "tool": "执行 MCP 工具或外部服务。\n\n在消息中写入指令，LLM 将从您的上下文生成所需的工具参数。",
+      "note": "添加文档和注释来组织您的工作流逻辑。\n\n帮助团队成员理解复杂的工作流过程。",
+      "code": "执行可访问前一个节点数据的自定义代码脚本。\n\n在工作流中运行 JavaScript、Python 或其他语言（即将推出）。",
+      "http": "通过 HTTP 请求从外部 API 和 Web 服务获取数据。\n\n与 REST API、webhook 和第三方服务集成。",
+      "template": "通过将文本与前一个节点的数据结合来创建动态文档。\n\n使用变量替换生成电子邮件、报告或格式化内容。",
+      "condition": "基于数据评估添加条件逻辑来分支您的工作流。\n\n创建 if-else 逻辑来处理不同的场景和数据条件。"
+    },
+    "greeting": {
+      "buildAutomationTitle": "通过连接节点构建自动化",
+      "buildAutomationDescription": "连接各种节点来自动化复杂任务。每个节点处理特定功能，数据按顺序流动处理。",
+      "chatbotToolTitle": "用作聊天机器人工具",
+      "chatbotToolDescription": "工作流的主要目的是在聊天机器人对话中用作工具。将重复性任务转换为工作流，在聊天中轻松执行。",
+      "parameterBasedTitle": "️ 基于参数的开始",
+      "parameterBasedDescription": "输入节点定义参数结构，而不是触发器。它们指定聊天机器人将此工作流用作工具时所需的数据格式。",
+      "exampleTitle": "使用示例",
+      "exampleDescription": "创建一个\"邮件编写 → 翻译 → 发送\"工作流，然后在聊天机器人对话中用\"@邮件_工作流\"轻松执行。",
+      "availableNodesTitle": "可用节点",
+      "upcomingNodesTitle": "即将推出的节点",
+      "ctaMessage": "现在就开始创建工作流来扩展您的聊天机器人能力！",
+      "soonMessage": "即将推出。"
     }
   }
 }

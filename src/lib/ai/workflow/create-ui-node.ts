@@ -93,6 +93,16 @@ export function createUINode(
     node.data.headers = [];
     node.data.query = [];
     node.data.timeout = 30000; // 30 seconds default
+  } else if (node.data.kind === NodeKind.Template) {
+    node.data.outputSchema = structuredClone(defaultTemplateNodeOutputSchema);
+    // Set default values for Template node
+    node.data.template = {
+      type: "tiptap",
+      tiptap: {
+        type: "doc",
+        content: [],
+      },
+    };
   }
 
   return node;
@@ -106,6 +116,15 @@ export const defaultLLMNodeOutputSchema: ObjectJsonSchema7 = {
     },
     totalTokens: {
       type: "number",
+    },
+  },
+};
+
+export const defaultTemplateNodeOutputSchema: ObjectJsonSchema7 = {
+  type: "object",
+  properties: {
+    template: {
+      type: "string",
     },
   },
 };

@@ -8,9 +8,11 @@ import {
 } from "app-types/chat";
 import { AllowedMCPServer, MCPServerInfo } from "app-types/mcp";
 import { OPENAI_VOICE } from "lib/ai/speech/open-ai/use-voice-chat.openai";
+import { WorkflowSummary } from "app-types/workflow";
 export interface AppState {
   threadList: ChatThread[];
   mcpList: (MCPServerInfo & { id: string })[];
+  workflowToolList: WorkflowSummary[];
   projectList: Omit<Project, "instructions">[];
   currentThreadId: ChatThread["id"] | null;
   currentProjectId: Project["id"] | null;
@@ -50,6 +52,7 @@ const initialState: AppState = {
   threadList: [],
   projectList: [],
   mcpList: [],
+  workflowToolList: [],
   currentThreadId: null,
   currentProjectId: null,
   toolChoice: "auto",
