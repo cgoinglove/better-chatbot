@@ -13,6 +13,7 @@ import { TipTapMentionJsonContent } from "app-types/util";
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { useTranslations } from "next-intl";
+import { useWorkflowStore } from "@/app/store/workflow.store";
 
 interface TemplateNodeConfigProps {
   data: TemplateNodeData;
@@ -25,6 +26,13 @@ export const TemplateNodeConfig = memo(function TemplateNodeConfig({
   const { updateNodeData } = useReactFlow<UINode>();
   const nodes = useNodes() as UINode[];
   const edges = useEdges();
+  const editable = useWorkflowStore((state) => {
+    return (
+      state.processIds.length === 0 &&
+      state.hasEditAccess &&
+      !state.workflow?.isPublished
+    );
+  });
 
   const handleTemplateChange = useCallback(
     (template: TipTapMentionJsonContent) => {
@@ -63,7 +71,7 @@ export const TemplateNodeConfig = memo(function TemplateNodeConfig({
             edges={edges}
             content={data.template.tiptap}
             onChange={handleTemplateChange}
-            editable={true}
+            editable={editable}
           />
         </div>
       </div>

@@ -53,6 +53,19 @@ export const ChatMentionSchema = z.discriminatedUnion("type", [
     toolCount: z.number().optional(),
     serverId: z.string(),
   }),
+  z.object({
+    type: z.literal("workflow"),
+    name: z.string(),
+    description: z.string().optional(),
+    workflowId: z.string(),
+    icon: z
+      .object({
+        type: z.literal("emoji"),
+        value: z.string(),
+        style: z.record(z.string(), z.string()).optional(),
+      })
+      .optional(),
+  }),
 ]);
 
 export type ChatMention = z.infer<typeof ChatMentionSchema>;

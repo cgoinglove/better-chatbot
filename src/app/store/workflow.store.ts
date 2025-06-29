@@ -1,3 +1,4 @@
+"use client";
 import { DBWorkflow } from "app-types/workflow";
 import { generateUUID } from "lib/utils";
 import { create } from "zustand";

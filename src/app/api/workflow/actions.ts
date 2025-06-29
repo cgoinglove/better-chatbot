@@ -1,3 +1,4 @@
+"use server";
 import { getSession } from "auth/server";
 import { workflowRepository } from "lib/db/repository";
 
