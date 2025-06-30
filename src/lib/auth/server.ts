@@ -33,7 +33,7 @@ export const auth = betterAuth({
   session: {
     cookieCache: {
       enabled: true,
-      maxAge: 10 * 60,
+      maxAge: 60 * 60,
     },
     expiresIn: 60 * 60 * 24 * 7, // 7 days
     updateAge: 60 * 60 * 24, // 1 day (every 1 day the session expiration is updated)
@@ -85,7 +85,7 @@ export const getSession = async () => {
     });
   if (!session) {
     logger.error("No session found");
-    redirect("/");
+    redirect("/sign-in");
   }
   return session!;
 };

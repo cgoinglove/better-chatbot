@@ -38,13 +38,15 @@ import { useCallback } from "react";
 import { GithubIcon } from "ui/github-icon";
 import { DiscordIcon } from "ui/discord-icon";
 import { useThemeStyle } from "@/hooks/use-theme-style";
+import { Session, User } from "better-auth";
 
-export function AppSidebarUser() {
+export function AppSidebarUser({
+  session,
+}: { session?: { session: Session; user: User } }) {
   const appStoreMutate = appStore((state) => state.mutate);
-  const { data } = authClient.useSession();
   const t = useTranslations("Layout");
 
-  const user = data?.user;
+  const user = session?.user;
 
   const logout = () => {
     authClient.signOut().finally(() => {
