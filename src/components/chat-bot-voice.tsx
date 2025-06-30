@@ -566,7 +566,7 @@ function ConversationView({
                       key={index}
                       part={part}
                       showActions={false}
-                      message={message}
+                      messageId={message.id}
                       isLast={part.toolInvocation.state != "result"}
                     />
                   );

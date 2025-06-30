@@ -144,7 +144,14 @@ export async function POST(request: Request) {
               .map((v) => v.workflowId),
           ),
         )
-          .map((v) => v.map(workflowToVercelAITools))
+          .map((v) =>
+            v.map((workflow) =>
+              workflowToVercelAITools({
+                ...workflow,
+                dataStream,
+              }),
+            ),
+          )
           .map((workflowTools) =>
             workflowTools.reduce(
               (prev, cur) => {
@@ -220,6 +227,7 @@ export async function POST(request: Request) {
           messages,
           maxSteps: 10,
           experimental_continueSteps: true,
+          toolCallStreaming: true,
           experimental_transform: smoothStream({ chunking: "word" }),
           maxRetries: 1,
           tools: vercelAITooles,

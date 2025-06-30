@@ -231,7 +231,7 @@ export function useOpenAIVoiceChat(
       if (DEFAULT_VOICE_TOOLS.some((t) => t.name === toolName)) {
         switch (toolName) {
           case "changeBrowserTheme":
-            setTheme(toolArgs?.theme == "dark" ? "light" : "dark");
+            setTheme(toolArgs?.theme);
             break;
         }
       } else {

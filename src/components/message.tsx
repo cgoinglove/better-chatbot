@@ -122,7 +122,7 @@ const PurePreviewMessage = ({
               return (
                 <ToolMessagePart
                   isLast={isLast}
-                  message={message}
+                  messageId={message.id}
                   showActions={
                     isLastMessage ? isLastPart && !isLoading : isLastPart
                   }

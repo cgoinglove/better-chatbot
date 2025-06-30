@@ -56,6 +56,7 @@ import { extractMCPToolId } from "lib/ai/mcp/mcp-tool-id";
 import { Separator } from "ui/separator";
 import { ChatMentionInputMentionItem } from "./chat-mention-input";
 import { TextShimmer } from "ui/text-shimmer";
+import equal from "lib/equal";
 
 type MessagePart = UIMessage["parts"][number];
 
@@ -85,7 +86,7 @@ interface AssistMessagePartProps {
 
 interface ToolMessagePartProps {
   part: ToolMessagePart;
-  message: UIMessage;
+  messageId: string;
   showActions: boolean;
   isLast?: boolean;
   onPoxyToolCall?: (answer: boolean) => void;
@@ -93,7 +94,7 @@ interface ToolMessagePartProps {
   setMessages?: UseChatHelpers["setMessages"];
 }
 
-export const UserMessagePart = ({
+export const UserMessagePart = memo(function UserMessagePart({
   part,
   isLast,
   status,
@@ -101,7 +102,7 @@ export const UserMessagePart = ({
   setMessages,
   reload,
   isError,
-}: UserMessagePartProps) => {
+}: UserMessagePartProps) {
   const { copied, copy } = useCopy();
   const [mode, setMode] = useState<"view" | "edit">("view");
   const [isDeleting, setIsDeleting] = useState(false);
@@ -234,9 +235,10 @@ export const UserMessagePart = ({
       <div ref={ref} className="min-w-0" />
     </div>
   );
-};
+});
+UserMessagePart.displayName = "UserMessagePart";
 
-export const AssistMessagePart = ({
+export const AssistMessagePart = memo(function AssistMessagePart({
   part,
   showActions,
   reload,
@@ -244,7 +246,7 @@ export const AssistMessagePart = ({
   setMessages,
   isError,
   threadId,
-}: AssistMessagePartProps) => {
+}: AssistMessagePartProps) {
   const { copied, copy } = useCopy();
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -365,7 +367,8 @@ export const AssistMessagePart = ({
       )}
     </div>
   );
-};
+});
+AssistMessagePart.displayName = "AssistMessagePart";
 
 export const ToolMessagePart = memo(
   ({
@@ -374,7 +377,7 @@ export const ToolMessagePart = memo(
     showActions,
     onPoxyToolCall,
     isError,
-    message,
+    messageId,
     setMessages,
   }: ToolMessagePartProps) => {
     const t = useTranslations("Common");
@@ -387,10 +390,10 @@ export const ToolMessagePart = memo(
     const isExecuting = state !== "result" && (isLast || onPoxyToolCall);
     const deleteMessage = useCallback(() => {
       safe(() => setIsDeleting(true))
-        .ifOk(() => deleteMessageAction(message.id))
+        .ifOk(() => deleteMessageAction(messageId))
         .ifOk(() =>
           setMessages?.((messages) => {
-            const index = messages.findIndex((m) => m.id === message.id);
+            const index = messages.findIndex((m) => m.id === messageId);
             if (index !== -1) {
               return messages.filter((_, i) => i !== index);
             }
@@ -400,7 +403,7 @@ export const ToolMessagePart = memo(
         .ifFail((error) => toast.error(error.message))
         .watch(() => setIsDeleting(false))
         .unwrap();
-    }, [message.id, setMessages]);
+    }, [messageId, setMessages]);
     const ToolResultComponent = useMemo(() => {
       if (state === "result") {
         switch (toolName) {
@@ -470,6 +473,10 @@ export const ToolMessagePart = memo(
     const isExpanded = useMemo(() => {
       return expanded || result === null;
     }, [expanded, result]);
+
+    useEffect(() => {
+      console.log(JSON.parse(JSON.stringify(toolInvocation)));
+    }, [toolInvocation]);
 
     return (
       <div key={toolCallId} className="group w-full">
@@ -648,10 +655,20 @@ export const ToolMessagePart = memo(
       </div>
     );
   },
+  (prev, next) => {
+    if (prev.isError !== next.isError) return false;
+    if (prev.isLast !== next.isLast) return false;
+    if (prev.showActions !== next.showActions) return false;
+    if (!!prev.onPoxyToolCall !== !!next.onPoxyToolCall) return false;
+    if (prev.messageId !== next.messageId) return false;
+    if (!equal(prev.part.toolInvocation, next.part.toolInvocation))
+      return false;
+    return true;
+  },
 );
 
 ToolMessagePart.displayName = "ToolMessagePart";
-export function ReasoningPart({
+export const ReasoningPart = memo(function ReasoningPart({
   reasoning,
 }: {
   reasoning: string;
@@ -713,4 +730,5 @@ export function ReasoningPart({
       </div>
     </div>
   );
-}
+});
+ReasoningPart.displayName = "ReasoningPart";

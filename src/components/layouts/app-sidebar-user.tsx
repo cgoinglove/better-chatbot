@@ -54,6 +54,19 @@ export function AppSidebarUser({
     });
   };
 
+  useSWR(
+    "/session-update",
+    () =>
+      authClient.getSession().then(() => {
+        console.log(`session-update: ${new Date().toISOString()}`);
+      }),
+    {
+      refreshIntervalOnFocus: false,
+      refreshWhenHidden: true,
+      refreshInterval: 1000 * 60 * 5,
+    },
+  );
+
   return (
     <SidebarMenu>
       <SidebarMenuItem>

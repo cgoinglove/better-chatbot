@@ -14,6 +14,7 @@ import {
   index,
 } from "drizzle-orm/pg-core";
 import { DBWorkflow, DBEdge, DBNode } from "app-types/workflow";
+import { NodeKind } from "lib/ai/workflow/workflow.interface";
 
 export const ChatThreadSchema = pgTable("chat_thread", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
