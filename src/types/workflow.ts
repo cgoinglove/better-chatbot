@@ -1,3 +1,7 @@
+import { Tool } from "ai";
+import { ObjectJsonSchema7 } from "./util";
+import { WorkflowNodeData } from "lib/ai/workflow/workflow.interface";
+
 export type WorkflowIcon = {
   type: "emoji";
   value: string;
@@ -23,7 +27,7 @@ export type DBNode = {
   kind: string;
   name: string;
   description?: string;
-  nodeConfig: Record<string, any>;
+  nodeConfig: Omit<WorkflowNodeData, "id" | "name" | "description">;
   uiConfig: {
     position?: {
       x: number;
@@ -63,6 +67,14 @@ export interface WorkflowRepository {
   selectByUserId(userId: string): Promise<DBWorkflow[]>;
   selectAll(userId: string): Promise<WorkflowSummary[]>;
   selectExecuteAbility(userId: string): Promise<WorkflowSummary[]>;
+  selectToolByIds(ids: string[]): Promise<
+    {
+      id: string;
+      name: string;
+      description?: string;
+      schema: ObjectJsonSchema7;
+    }[]
+  >;
   checkAccess(
     workflowId: string,
     userId: string,
@@ -89,7 +101,12 @@ export interface WorkflowRepository {
     deleteEdges?: string[]; // edge id
   }): Promise<void>;
 
-  selectStructureById(id: string): Promise<
+  selectStructureById(
+    id: string,
+    option?: {
+      ignoreNote?: boolean;
+    },
+  ): Promise<
     | null
     | (DBWorkflow & {
         nodes: DBNode[];
@@ -97,3 +114,9 @@ export interface WorkflowRepository {
       })
   >;
 }
+
+export type VercelAIWorkflowTool = Tool & {
+  _workflowId: string;
+  _toolName: string;
+  _originToolName: string;
+};

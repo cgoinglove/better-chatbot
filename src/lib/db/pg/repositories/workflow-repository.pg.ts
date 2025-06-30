@@ -15,9 +15,52 @@ import {
 } from "app-types/workflow";
 import { NodeKind } from "lib/ai/workflow/workflow.interface";
 import { createUINode } from "lib/ai/workflow/create-ui-node";
-import { convertUINodeToDBNode } from "lib/ai/workflow/shared.workflow";
+import {
+  convertUINodeToDBNode,
+  defaultObjectJsonSchema,
+} from "lib/ai/workflow/shared.workflow";
+import { ObjectJsonSchema7 } from "app-types/util";
 
 export const pgWorkflowRepository: WorkflowRepository = {
+  async selectToolByIds(ids) {
+    if (!ids.length) return [];
+    const rows = await pgDb
+      .select({
+        id: WorkflowSchema.id,
+        name: WorkflowSchema.name,
+        description: WorkflowSchema.description,
+        schema: WorkflowNodeDataSchema.nodeConfig,
+      })
+      .from(WorkflowSchema)
+      .innerJoin(
+        WorkflowNodeDataSchema,
+        and(
+          eq(WorkflowNodeDataSchema.workflowId, WorkflowSchema.id),
+          eq(WorkflowNodeDataSchema.kind, NodeKind.Input),
+        ),
+      )
+      .where(
+        and(
+          inArray(WorkflowSchema.id, ids),
+          eq(WorkflowSchema.isPublished, true),
+        ),
+      );
+    return rows.map(
+      (data) =>
+        ({
+          ...data,
+          schema:
+            data.schema?.outputSchema ||
+            structuredClone(defaultObjectJsonSchema),
+        }) as {
+          id: string;
+          name: string;
+          description?: string;
+          schema: ObjectJsonSchema7;
+        },
+    );
+  },
+
   async selectExecuteAbility(userId) {
     const rows = await pgDb
       .select({
@@ -193,17 +236,25 @@ export const pgWorkflowRepository: WorkflowRepository = {
       }
     });
   },
-  async selectStructureById(id) {
+  async selectStructureById(id, opt) {
     const [workflow] = await pgDb
       .select()
       .from(WorkflowSchema)
       .where(eq(WorkflowSchema.id, id));
 
     if (!workflow) return null;
+
+    const nodeWhere = opt?.ignoreNote
+      ? and(
+          eq(WorkflowNodeDataSchema.workflowId, id),
+          not(eq(WorkflowNodeDataSchema.kind, NodeKind.Note)),
+        )
+      : eq(WorkflowNodeDataSchema.workflowId, id);
+
     const nodePromises = pgDb
       .select()
       .from(WorkflowNodeDataSchema)
-      .where(eq(WorkflowNodeDataSchema.workflowId, id));
+      .where(nodeWhere);
     const edgePromises = pgDb
       .select()
       .from(WorkflowEdgeSchema)

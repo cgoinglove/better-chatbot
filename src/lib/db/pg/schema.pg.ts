@@ -189,7 +189,9 @@ export const WorkflowNodeDataSchema = pgTable(
     name: text("name").notNull(),
     description: text("description"),
     uiConfig: json("ui_config").$type<DBNode["uiConfig"]>().default({}),
-    nodeConfig: json("node_config").$type<DBNode["nodeConfig"]>().default({}),
+    nodeConfig: json("node_config")
+      .$type<Partial<DBNode["nodeConfig"]>>()
+      .default({}),
     createdAt: timestamp("created_at")
       .notNull()
       .default(sql`CURRENT_TIMESTAMP`),

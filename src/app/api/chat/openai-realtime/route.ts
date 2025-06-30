@@ -4,7 +4,7 @@ import { AllowedMCPServer, VercelAIMcpTool } from "app-types/mcp";
 import { chatRepository } from "lib/db/repository";
 import {
   filterMcpServerCustomizations,
-  filterToolsByAllowedMCPServers,
+  filterMCPToolsByAllowedMCPServers,
   mergeSystemPrompt,
 } from "../shared.chat";
 import {
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
     const tools = safe(mcpTools)
       .map(errorIf(() => toolChoice === "none" && "Not allowed"))
       .map((tools) => {
-        return filterToolsByAllowedMCPServers(tools, allowedMcpServers);
+        return filterMCPToolsByAllowedMCPServers(tools, allowedMcpServers);
       })
       .orElse(undefined);
 

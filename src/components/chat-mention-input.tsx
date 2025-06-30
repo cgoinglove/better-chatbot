@@ -80,6 +80,8 @@ export function ChatMentionInputMentionItem({
         "flex items-center text-sm gap-2 mx-1 px-2 py-0.5 font-semibold rounded-lg ring ring-blue-500/20 bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 hover:ring-blue-500 transition-colors",
         item.type == "workflow" &&
           "ring-pink-500/20 bg-pink-500/10 text-pink-500 hover:bg-pink-500/20 hover:ring-pink-500",
+        item.type == "mcpServer" &&
+          "ring-indigo-500/20 bg-indigo-500/10 text-indigo-500 hover:bg-indigo-500/20 hover:ring-indigo-500",
         className,
       )}
     >
@@ -93,7 +95,7 @@ export function ChatMentionInputMentionItem({
       ) : (
         <WrenchIcon className="size-3" />
       )}
-      <span className="ml-auto text-xs opacity-50">
+      <span className="ml-auto text-xs opacity-60">
         {capitalizeFirstLetter(item.type)}
       </span>
       {item.name}

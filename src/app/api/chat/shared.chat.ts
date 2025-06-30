@@ -3,6 +3,7 @@ import {
   Message,
   Tool,
   ToolInvocation,
+  jsonSchema,
   tool as createTool,
 } from "ai";
 import {
@@ -13,7 +14,6 @@ import {
 } from "app-types/chat";
 import { errorToString, objectFlow, toAny } from "lib/utils";
 import { callMcpToolAction } from "../mcp/actions";
-import { safe } from "ts-safe";
 import logger from "logger";
 import { defaultTools } from "lib/ai/tools";
 import {
@@ -23,7 +23,14 @@ import {
 } from "app-types/mcp";
 import { MANUAL_REJECT_RESPONSE_PROMPT } from "lib/ai/prompts";
 
-export function filterToolsByMentions(
+import { ObjectJsonSchema7 } from "app-types/util";
+import { safe } from "ts-safe";
+import { workflowRepository } from "lib/db/repository";
+
+import { VercelAIWorkflowTool } from "app-types/workflow";
+import { createWorkflowExecutor } from "lib/ai/workflow/executor/workflow-executor";
+
+export function filterMCPToolsByMentions(
   tools: Record<string, VercelAIMcpTool>,
   mentions: ChatMention[],
 ) {
@@ -61,7 +68,7 @@ export function filterToolsByMentions(
   });
 }
 
-export function filterToolsByAllowedMCPServers(
+export function filterMCPToolsByAllowedMCPServers(
   tools: Record<string, VercelAIMcpTool>,
   allowedMcpServers?: Record<string, AllowedMCPServer>,
 ): Record<string, VercelAIMcpTool> {
@@ -195,10 +202,6 @@ export function assignToolResult(toolPart: ToolInvocationUIPart, result: any) {
   });
 }
 
-export function isUserMessage(message: Message): boolean {
-  return message.role == "user";
-}
-
 export function filterMcpServerCustomizations(
   tools: Record<string, VercelAIMcpTool>,
   mcpServerCustomization: Record<string, McpServerCustomizationsPrompt>,
@@ -240,3 +243,79 @@ export function filterMcpServerCustomizations(
     {} as Record<string, McpServerCustomizationsPrompt>,
   );
 }
+
+export const workflowToVercelAITools = ({
+  id,
+  description,
+  schema,
+  name,
+}: {
+  id: string;
+  name: string;
+  description?: string;
+  schema: ObjectJsonSchema7;
+}): VercelAIWorkflowTool => {
+  const tool = createTool({
+    description: `${name} ${description?.trim().slice(0, 50)}`,
+    parameters: jsonSchema(schema),
+    execute(query, { toolCallId, abortSignal }) {
+      console.log({ toolCallId });
+      let lastNodeId;
+      return safe(id)
+        .map((id) =>
+          workflowRepository.selectStructureById(id, {
+            ignoreNote: true,
+          }),
+        )
+        .map((workflow) => {
+          if (!workflow) throw new Error("Not Found Workflow");
+          const executor = createWorkflowExecutor({
+            nodes: workflow.nodes,
+            edges: workflow.edges,
+          });
+          abortSignal?.addEventListener("abort", () => executor.exit());
+          executor.subscribe((e) => {
+            if (e.eventType == "NODE_END") {
+              lastNodeId = e.node.name;
+            }
+          });
+          return executor.run(
+            {
+              query: query ?? ({} as any),
+            },
+            {
+              disableHistory: true,
+            },
+          );
+        })
+        .map((result) => {
+          if (result.isOk) {
+            return result.output.getOutput({
+              nodeId: lastNodeId,
+              path: [],
+            });
+          }
+          throw result.error;
+        })
+        .ifFail((err) => {
+          return {
+            error: {
+              name: err?.name || "ERROR",
+              message: errorToString(err),
+            },
+          };
+        })
+        .unwrap();
+    },
+  }) as VercelAIWorkflowTool;
+
+  tool._workflowId = id;
+  tool._originToolName = name;
+  tool._toolName = name
+    .replace(/[^a-zA-Z0-9\s]/g, "")
+    .trim()
+    .replace(/\s+/g, "-")
+    .toUpperCase();
+
+  return tool;
+};
