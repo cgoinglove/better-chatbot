@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.12.0](https://github.com/cgoinglove/mcp-client-chatbot/compare/v1.11.0...v1.12.0) (2025-07-01)
+
+
+### Features
+
+* **chat:** enable [@mention](https://github.com/mention) and tool click to trigger workflow execution in chat ([#122](https://github.com/cgoinglove/mcp-client-chatbot/issues/122)) ([b4e7f02](https://github.com/cgoinglove/mcp-client-chatbot/commit/b4e7f022fa155ef70be2aee9228a4d1d2643bf10))
+
+
+### Bug Fixes
+
+* clean changlelog and stop duplicate attributions in the changelog file ([#119](https://github.com/cgoinglove/mcp-client-chatbot/issues/119)) ([aa970b6](https://github.com/cgoinglove/mcp-client-chatbot/commit/aa970b6a2d39ac1f0ca22db761dd452e3c7a5542))
+
 ## [1.11.0](https://github.com/cgoinglove/mcp-client-chatbot/compare/v1.10.0...v1.11.0) (2025-06-28)
 
 ### Features
