@@ -585,7 +585,7 @@ export const ToolMessagePart = memo(
                     </div>
                   )}
                 </div>
-                {result && isWorkflowTool ? (
+                {!result ? null : isWorkflowTool ? (
                   <WorkflowToolDetail result={result} />
                 ) : (
                   <div

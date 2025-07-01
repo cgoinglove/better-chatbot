@@ -372,7 +372,7 @@ export const workflowToVercelAITools = ({
                 message: errorToString(result.error) || "Unknown Error",
               }
             : undefined;
-          toolResult.result = history.sort(
+          toolResult.result = [...history].sort(
             (a, b) => (b.endedAt ?? b.startedAt) - (a.endedAt ?? a.startedAt),
           )[0].result?.output;
           return toolResult;

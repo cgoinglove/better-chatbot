@@ -205,7 +205,8 @@ export async function POST(request: Request) {
 
         // Precompute toolChoice to avoid repeated tool calls
         const computedToolChoice =
-          isToolCallAllowed && mentions.length > 0 && inProgressToolStep
+          (isToolCallAllowed && mentions.length > 0 && inProgressToolStep) ||
+          Object.keys(workflowToVercelAITools).length
             ? "required"
             : "auto";
 

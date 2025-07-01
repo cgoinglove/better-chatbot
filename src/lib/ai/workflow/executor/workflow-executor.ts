@@ -11,7 +11,7 @@ import {
   httpNodeExecutor,
   templateNodeExecutor,
 } from "./node-executor";
-import { toAny, wait } from "lib/utils";
+import { toAny } from "lib/utils";
 import { addEdgeBranchLabel } from "./add-edge-branch-label";
 import { DBEdge, DBNode } from "app-types/workflow";
 import { convertDBNodeToUINode } from "../shared.workflow";
@@ -121,7 +121,6 @@ export const createWorkflowExecutor = (workflow: {
         kind: node.kind,
       },
       async execute(state) {
-        await wait(1000);
         // Get the appropriate executor for this node type
         const executor = getExecutorByKind(node.kind as NodeKind);
 

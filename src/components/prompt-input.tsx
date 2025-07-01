@@ -7,7 +7,7 @@ import {
   Paperclip,
   Pause,
 } from "lucide-react";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { Button } from "ui/button";
 import { notImplementedToast } from "ui/shared-toast";
 import { UseChatHelpers } from "@ai-sdk/react";
@@ -21,6 +21,8 @@ import { ToolModeDropdown } from "./tool-mode-dropdown";
 import { ToolSelectDropdown } from "./tool-select-dropdown";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { useTranslations } from "next-intl";
+import { Editor } from "@tiptap/react";
+import { WorkflowSummary } from "app-types/workflow";
 
 interface PromptInputProps {
   placeholder?: string;
@@ -70,6 +72,8 @@ export default function PromptInput({
     return model ?? globalModel;
   }, [model, globalModel]);
 
+  const editorRef = useRef<Editor | null>(null);
+
   const setChatModel = useCallback(
     (model: ChatModel) => {
       if (setModel) {
@@ -82,6 +86,28 @@ export default function PromptInput({
   );
 
   const [toolMentionItems, setToolMentionItems] = useState<ChatMention[]>([]);
+
+  const onSelectWorkflow = useCallback((workflow: WorkflowSummary) => {
+    const workflowMention: ChatMention = {
+      type: "workflow",
+      workflowId: workflow.id,
+      icon: workflow.icon,
+      name: workflow.name,
+      description: workflow.description,
+    };
+    editorRef.current
+      ?.chain()
+
+      .insertContent({
+        type: "mention",
+        attrs: {
+          label: `${workflow.name} `,
+          id: JSON.stringify(workflowMention),
+        },
+      })
+      .focus()
+      .run();
+  }, []);
 
   const submit = () => {
     if (isLoading) return;
@@ -121,6 +147,7 @@ export default function PromptInput({
                   onChangeMention={setToolMentionItems}
                   onEnter={submit}
                   placeholder={placeholder ?? t("placeholder")}
+                  ref={editorRef}
                 />
               </div>
               <div className="flex w-full items-center z-30 gap-1.5">
@@ -134,7 +161,11 @@ export default function PromptInput({
                 {!toolDisabled && (
                   <>
                     <ToolModeDropdown />
-                    <ToolSelectDropdown align="start" side="top" />
+                    <ToolSelectDropdown
+                      align="start"
+                      side="top"
+                      onSelectWorkflow={onSelectWorkflow}
+                    />
                   </>
                 )}
                 <div className="flex-1" />

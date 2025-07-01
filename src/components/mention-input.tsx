@@ -5,11 +5,20 @@ import {
   Range,
   useEditor,
   UseEditorOptions,
+  Editor,
 } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { TipTapMentionJsonContent } from "app-types/util";
 import { cn } from "lib/utils";
-import { FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  FC,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  RefObject,
+} from "react";
 import { createRoot } from "react-dom/client";
 
 interface MentionInputProps {
@@ -25,6 +34,7 @@ interface MentionInputProps {
   placeholder?: string;
   suggestionChar?: string;
   className?: string;
+  editorRef?: RefObject<Editor | null>;
   MentionItem: FC<{
     label: string;
     id: string;
@@ -48,6 +58,7 @@ export default function MentionInput({
   MentionItem,
   Suggestion,
   className,
+  editorRef,
 }: MentionInputProps) {
   const [open, setOpen] = useState(false);
   const position = useRef<{
@@ -140,6 +151,13 @@ export default function MentionInput({
   }, [disabled, MentionItem, suggestionChar, onChange]);
 
   const editor = useEditor(editorConfig);
+
+  // Expose editor through ref
+  useEffect(() => {
+    if (editorRef && editor) {
+      editorRef.current = editor;
+    }
+  }, [editor]);
 
   useEffect(() => {
     editor?.setEditable(!disabled);

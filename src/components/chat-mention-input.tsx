@@ -1,5 +1,5 @@
 "use client";
-import React, { useCallback, useMemo } from "react";
+import React, { RefObject, useCallback, useMemo, useRef } from "react";
 
 import { WaypointsIcon, WrenchIcon } from "lucide-react";
 import { MCPIcon } from "ui/mcp-icon";
@@ -23,6 +23,7 @@ import { appStore } from "@/app/store";
 import { capitalizeFirstLetter, cn } from "lib/utils";
 import { useShallow } from "zustand/shallow";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
+import { Editor } from "@tiptap/react";
 
 interface ChatMentionInputProps {
   onChange: (text: string) => void;
@@ -30,6 +31,7 @@ interface ChatMentionInputProps {
   onEnter?: () => void;
   placeholder?: string;
   input: string;
+  ref?: RefObject<Editor | null>;
 }
 
 export default function ChatMentionInput({
@@ -37,6 +39,7 @@ export default function ChatMentionInput({
   onChangeMention,
   onEnter,
   placeholder,
+  ref,
   input,
 }: ChatMentionInputProps) {
   const handleChange = useCallback(
@@ -61,6 +64,7 @@ export default function ChatMentionInput({
       onChange={handleChange}
       MentionItem={ChatMentionInputMentionItem}
       Suggestion={ChatMentionInputSuggestion}
+      editorRef={ref}
     />
   );
 }
