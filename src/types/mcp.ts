@@ -57,6 +57,7 @@ export type VercelAIMcpTool = Tool & {
   _mcpServerName: string;
   _mcpServerId: string;
   _originToolName: string;
+  __$ref__: "mcp";
 };
 
 export interface MCPRepository {

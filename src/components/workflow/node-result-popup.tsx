@@ -29,12 +29,14 @@ import { useTranslations } from "next-intl";
 export function NodeResultPopup({
   history,
   children,
+  disabled,
 }: {
   history: Pick<
     NodeRuntimeHistory,
     "name" | "status" | "startedAt" | "endedAt" | "error" | "result"
   >;
   children: ReactNode;
+  disabled?: boolean;
 }) {
   const { copy, copied } = useCopy();
   const t = useTranslations();
@@ -49,7 +51,7 @@ export function NodeResultPopup({
   }, [history.endedAt, history.startedAt]);
 
   return (
-    <Dialog>
+    <Dialog open={disabled ? false : undefined}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="min-w-[40vw] h-[70vh] max-w-[40vw] overflow-y-auto flex flex-col">
         <DialogHeader>

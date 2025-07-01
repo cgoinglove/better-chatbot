@@ -1,6 +1,6 @@
 import { Tool } from "ai";
 import { ObjectJsonSchema7 } from "./util";
-import { NodeKind, WorkflowNodeData } from "lib/ai/workflow/workflow.interface";
+import { NodeKind } from "lib/ai/workflow/workflow.interface";
 
 export type WorkflowIcon = {
   type: "emoji";
@@ -116,41 +116,41 @@ export interface WorkflowRepository {
 }
 
 export type VercelAIWorkflowTool = Tool & {
+  __$ref__: "workflow";
   _workflowId: string;
   _toolName: string;
   _originToolName: string;
 };
 
 export type VercelAIWorkflowToolStreaming = {
-  eventType: "NODE_START" | "NODE_END";
   name: string;
   startedAt: number;
   kind: NodeKind;
   endedAt?: number;
   id: string;
-  status: "running" | "success" | "error";
+  status: "running" | "success" | "fail";
   error?: { name: string; message: string };
-  result?: any;
+  result?: { input?: any; output?: any };
 };
 
 export type VercelAIWorkflowToolStreamingResult = {
   toolCallId: string;
   workflowName: string;
   workflowIcon?: WorkflowIcon;
-  __type__: "workflow";
+  __$ref__: "workflow";
   startedAt: number;
   endedAt: number;
   history: VercelAIWorkflowToolStreaming[];
   error?: { name: string; message: string };
   result?: any;
-  status: "running" | "success" | "error";
+  status: "running" | "success" | "fail";
 };
 
 export function isVercelAIWorkflowTool(
   value?: any,
 ): value is VercelAIWorkflowToolStreamingResult {
-  if (typeof value !== "object") return false;
+  if (!value || typeof value !== "object") return false;
   return (
-    value.__type__ === "workflow" && value.toolCallId && value.workflowName
+    value.__$ref__ === "workflow" && value.toolCallId && value.workflowName
   );
 }

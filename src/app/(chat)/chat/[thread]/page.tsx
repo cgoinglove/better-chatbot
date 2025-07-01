@@ -3,14 +3,12 @@ import ChatBot from "@/components/chat-bot";
 
 import { ChatMessage, ChatThread } from "app-types/chat";
 import { convertToUIMessage } from "lib/utils";
-import { redirect } from "next/navigation";
+import { redirect, RedirectType } from "next/navigation";
 
 const fetchThread = async (
   threadId: string,
 ): Promise<(ChatThread & { messages: ChatMessage[] }) | null> => {
-  const response = await selectThreadWithMessagesAction(threadId);
-  if (!response) return null;
-  return response;
+  return await selectThreadWithMessagesAction(threadId);
 };
 
 export default async function Page({
@@ -20,7 +18,7 @@ export default async function Page({
 
   const thread = await fetchThread(threadId);
 
-  if (!thread) redirect("/");
+  if (!thread) redirect("/", RedirectType.replace);
 
   const initialMessages = thread.messages.map(convertToUIMessage);
 

@@ -77,6 +77,7 @@ export class MCPClientsManager {
             {
               ...tool,
               _originToolName: name,
+              __$ref__: "mcp",
               _mcpServerName: client.getInfo().name,
               _mcpServerId: id,
             },

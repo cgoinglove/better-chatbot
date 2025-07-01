@@ -4,6 +4,7 @@ import { customModelProvider } from "lib/ai/models";
 import { SUMMARIZE_PROMPT } from "lib/ai/prompts";
 import logger from "logger";
 import { ChatModel } from "app-types/chat";
+import { redirect, RedirectType } from "next/navigation";
 
 export async function POST(request: Request) {
   try {
@@ -15,9 +16,7 @@ export async function POST(request: Request) {
 
     const thread = await selectThreadWithMessagesAction(threadId);
 
-    if (!thread) {
-      return new Response("Thread not found", { status: 404 });
-    }
+    if (!thread) redirect("/", RedirectType.replace);
 
     const messages = convertToCoreMessages(
       thread.messages

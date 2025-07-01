@@ -65,8 +65,11 @@ const defaultConfig = {
 
 const zodSchema = z.object({
   id: z.string().optional(),
-  name: z.string().min(1),
-  description: z.string().optional(),
+  name: z
+    .string()
+    .min(1)
+    .regex(/^[a-zA-Z -]+$/),
+  description: z.string().max(120).optional(),
   icon: z.object({
     type: z.enum(["emoji"]),
     value: z.string().min(1),

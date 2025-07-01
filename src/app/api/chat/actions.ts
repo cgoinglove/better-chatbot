@@ -27,7 +27,7 @@ import { serverCache } from "lib/cache";
 import { CacheKeys } from "lib/cache/cache-keys";
 import { getSession } from "auth/server";
 import logger from "logger";
-import { redirect } from "next/navigation";
+
 import { JSONSchema7 } from "json-schema";
 import { ObjectJsonSchema7 } from "app-types/util";
 import { jsonSchemaToZod } from "lib/json-schema-to-zod";
@@ -52,7 +52,7 @@ export async function generateTitleFromUserMessageAction({
     model,
     system: CREATE_THREAD_TITLE_PROMPT,
     prompt,
-    maxTokens: 300,
+    maxTokens: 500,
   });
 
   return title.trim();
@@ -64,10 +64,10 @@ export async function selectThreadWithMessagesAction(threadId: string) {
 
   if (!thread) {
     logger.error("Thread not found", threadId);
-    return redirect("/");
+    return null;
   }
   if (thread.userId !== session?.user.id) {
-    return redirect("/");
+    return null;
   }
   const messages = await chatRepository.selectMessagesByThreadId(threadId);
   return { ...thread, messages: messages ?? [] };

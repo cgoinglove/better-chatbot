@@ -36,6 +36,7 @@ import {
   VercelAIWorkflowToolStreamingResult,
 } from "app-types/workflow";
 import { createWorkflowExecutor } from "lib/ai/workflow/executor/workflow-executor";
+import { NodeKind } from "lib/ai/workflow/workflow.interface";
 
 export function filterMCPToolsByMentions(
   tools: Record<string, VercelAIMcpTool>,
@@ -133,16 +134,14 @@ export function mergeSystemPrompt(...prompts: (string | undefined)[]): string {
 export function manualToolExecuteByLastMessage(
   part: ToolInvocationUIPart,
   message: Message,
-  tools: Record<string, VercelAIMcpTool>,
+  tools: Record<string, VercelAIMcpTool | VercelAIWorkflowTool>,
+  abortSignal?: AbortSignal,
 ) {
   const { args, toolName } = part.toolInvocation;
 
   const manulConfirmation = (message.parts as ToolInvocationUIPart[]).find(
     (_part) => {
-      return (
-        _part.toolInvocation?.state == "result" &&
-        _part.toolInvocation?.toolCallId == part.toolInvocation.toolCallId
-      );
+      return _part.toolInvocation?.toolCallId == part.toolInvocation.toolCallId;
     },
   )?.toolInvocation as Extract<ToolInvocation, { state: "result" }>;
 
@@ -153,7 +152,16 @@ export function manualToolExecuteByLastMessage(
   return safe(() => {
     if (!tool) throw new Error(`tool not found: ${toolName}`);
   })
-    .map(() => callMcpToolAction(tool._mcpServerId, tool._originToolName, args))
+    .map(() => {
+      if (tool.__$ref__ === "workflow") {
+        return tool.execute!(args, {
+          toolCallId: part.toolInvocation.toolCallId,
+          abortSignal: abortSignal ?? new AbortController().signal,
+          messages: [],
+        });
+      }
+      return callMcpToolAction(tool._mcpServerId, tool._originToolName, args);
+    })
     .ifFail((error) => ({
       isError: true,
       statusMessage: `tool call fail: ${toolName}`,
@@ -278,7 +286,7 @@ export const workflowToVercelAITools = ({
       const toolResult: VercelAIWorkflowToolStreamingResult = {
         toolCallId,
         workflowName: name,
-        __type__: "workflow",
+        __$ref__: "workflow",
         startedAt: Date.now(),
         endedAt: Date.now(),
         history,
@@ -314,21 +322,23 @@ export const workflowToVercelAITools = ({
                 id: e.nodeExecutionId,
                 name: node.name,
                 status: "running",
-                eventType: e.eventType,
                 startedAt: e.startedAt,
-                kind: node.kind,
+                kind: node.kind as NodeKind,
               });
             } else if (e.eventType == "NODE_END") {
               const result = history.find((r) => r.id == e.nodeExecutionId);
               if (result) {
                 if (e.isOk) {
                   result.status = "success";
-                  result.result = e.node.output.getOutput({
-                    nodeId: e.node.name,
-                    path: [],
-                  });
+                  result.result = {
+                    input: e.node.output.getInput(e.node.name),
+                    output: e.node.output.getOutput({
+                      nodeId: e.node.name,
+                      path: [],
+                    }),
+                  };
                 } else {
-                  result.status = "error";
+                  result.status = "fail";
                   result.error = {
                     name: e.error?.name || "ERROR",
                     message: errorToString(e.error),
@@ -353,27 +363,18 @@ export const workflowToVercelAITools = ({
             },
           );
         })
-        .ifOk((result) => {
+        .map((result) => {
           toolResult.endedAt = Date.now();
-          toolResult.status = result.isOk ? "success" : "error";
+          toolResult.status = result.isOk ? "success" : "fail";
           toolResult.error = result.error
             ? {
                 name: result.error.name || "ERROR",
                 message: errorToString(result.error) || "Unknown Error",
               }
             : undefined;
-          toolResult.result = result.output?.getOutput({
-            nodeId: history.sort(
-              (a, b) => (a.endedAt ?? a.startedAt) - (b.endedAt ?? b.startedAt),
-            )[history.length - 1].id,
-            path: [],
-          });
-          dataStream.write(
-            formatDataStreamPart("tool_result", {
-              toolCallId,
-              result: toolResult,
-            }),
-          );
+          toolResult.result = history.sort(
+            (a, b) => (b.endedAt ?? b.startedAt) - (a.endedAt ?? a.startedAt),
+          )[0].result?.output;
           return toolResult;
         })
         .ifFail((err) => {
@@ -392,6 +393,7 @@ export const workflowToVercelAITools = ({
   tool._workflowId = id;
   tool._originToolName = name;
   tool._toolName = toolName;
+  tool.__$ref__ = "workflow";
 
   return tool;
 };

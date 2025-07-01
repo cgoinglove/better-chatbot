@@ -7,7 +7,6 @@ import {
   formatDataStreamPart,
   appendClientMessage,
   Message,
-  Tool,
 } from "ai";
 
 import { customModelProvider, isToolCallUnsupportedModel } from "lib/ai/models";
@@ -50,6 +49,10 @@ import {
 } from "./actions";
 import { getSession } from "auth/server";
 import { colorize } from "consola/utils";
+import {
+  isVercelAIWorkflowTool,
+  VercelAIWorkflowTool,
+} from "app-types/workflow";
 
 const logger = globalLogger.withDefaults({
   message: colorize("blackBright", `Chat API: `),
@@ -158,7 +161,7 @@ export async function POST(request: Request) {
                 prev[cur._toolName] = cur;
                 return prev;
               },
-              {} as Record<string, Tool>,
+              {} as Record<string, VercelAIWorkflowTool>,
             ),
           )
           .orElse({});
@@ -171,7 +174,8 @@ export async function POST(request: Request) {
           const toolResult = await manualToolExecuteByLastMessage(
             inProgressToolStep,
             message,
-            MCP_TOOLS,
+            { ...MCP_TOOLS, ...WORKFLOW_TOOLS },
+            request.signal,
           );
           assignToolResult(inProgressToolStep, toolResult);
           dataStream.write(
@@ -205,7 +209,7 @@ export async function POST(request: Request) {
             ? "required"
             : "auto";
 
-        const vercelAITooles = safe({ ...MCP_TOOLS, ...WORKFLOW_TOOLS })
+        const vercelAITooles = safe(MCP_TOOLS)
           .map((t) => {
             if (!Object.keys(t).length) return undefined;
             const bindingTools =
@@ -213,6 +217,7 @@ export async function POST(request: Request) {
             return {
               ...getAllowedDefaultToolkit(allowedAppDefaultToolkit),
               ...bindingTools,
+              ...WORKFLOW_TOOLS, // Workflow Tool Not Supported Manual
             };
           })
           .unwrap();
@@ -265,7 +270,34 @@ export async function POST(request: Request) {
                 threadId: thread!.id,
                 role: assistantMessage.role,
                 id: assistantMessage.id,
-                parts: assistantMessage.parts as UIMessage["parts"],
+                parts: (assistantMessage.parts as UIMessage["parts"]).map(
+                  (v) => {
+                    if (
+                      v.type == "tool-invocation" &&
+                      v.toolInvocation.state == "result" &&
+                      isVercelAIWorkflowTool(v.toolInvocation.result)
+                    ) {
+                      return {
+                        ...v,
+                        toolInvocation: {
+                          ...v.toolInvocation,
+                          result: {
+                            ...v.toolInvocation.result,
+                            history: v.toolInvocation.result.history.map(
+                              (h) => {
+                                return {
+                                  ...h,
+                                  result: undefined,
+                                };
+                              },
+                            ),
+                          },
+                        },
+                      };
+                    }
+                    return v;
+                  },
+                ),
                 attachments: assistantMessage.experimental_attachments,
                 annotations,
               });
