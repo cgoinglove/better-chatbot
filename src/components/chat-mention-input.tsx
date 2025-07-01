@@ -1,5 +1,5 @@
 "use client";
-import React, { RefObject, useCallback, useMemo, useRef } from "react";
+import React, { RefObject, useCallback, useMemo } from "react";
 
 import { WaypointsIcon, WrenchIcon } from "lucide-react";
 import { MCPIcon } from "ui/mcp-icon";
