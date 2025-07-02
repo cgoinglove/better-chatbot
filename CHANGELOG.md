@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.1](https://github.com/cgoinglove/mcp-client-chatbot/compare/v1.12.0...v1.12.1) (2025-07-02)
+
+
+### Bug Fixes
+
+* **workflow:** enhance structured output handling and improve user notifications ([dd43de9](https://github.com/cgoinglove/mcp-client-chatbot/commit/dd43de99881d64ca0c557e29033e953bcd4adc0e))
+
 ## [1.12.0](https://github.com/cgoinglove/mcp-client-chatbot/compare/v1.11.0...v1.12.0) (2025-07-01)
 
 
