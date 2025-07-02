@@ -1,6 +1,6 @@
-# Contributing to MCP Client Chatbot
+# Contributing to Better Chatbot
 
-Thank you for your interest in contributing to MCP Client Chatbot! We welcome contributions from the community and truly appreciate your effort to improve the project.
+Thank you for your interest in contributing to Better Chatbot! We welcome contributions from the community and truly appreciate your effort to improve the project.
 
 ---
 
@@ -11,8 +11,8 @@ Thank you for your interest in contributing to MCP Client Chatbot! We welcome co
 2. **Clone your fork** locally:
 
    ```bash
-   git clone https://github.com/YOUR_USERNAME/mcp-client-chatbot.git
-   cd mcp-client-chatbot
+   git clone https://github.com/YOUR_USERNAME/better-chatbot.git
+   cd better-chatbot
    ```
 
 3. **Create a new branch** for your changes:
@@ -41,13 +41,13 @@ We use [Release Please](https://github.com/googleapis/release-please) to automat
 
 ### ✅ PR Title Examples
 
-* `fix: voice chat audio not initializing`
-* `feat: support multi-language UI toggle`
-* `chore: update dependencies`
+- `fix: voice chat audio not initializing`
+- `feat: support multi-language UI toggle`
+- `chore: update dependencies`
 
 ### ⚠️ Important Notes
 
-* PR **titles must start** with one of the following prefixes:
+- PR **titles must start** with one of the following prefixes:
 
   ```
   feat: ...
@@ -61,11 +61,11 @@ We use [Release Please](https://github.com/googleapis/release-please) to automat
   build: ...
   ```
 
-* Only the PR title is used for changelog and versioning
+- Only the PR title is used for changelog and versioning
 
-* We use **squash merge** to keep the history clean
+- We use **squash merge** to keep the history clean
 
-* Changelog entries and GitHub Releases are **automatically generated** after merging
+- Changelog entries and GitHub Releases are **automatically generated** after merging
 
 ---
 
@@ -87,14 +87,14 @@ We use [Release Please](https://github.com/googleapis/release-please) to automat
 
 3. **Open a Pull Request**:
 
-   * **Title**: Must follow the Conventional Commit format
-   * **Description**: Explain what you changed and why
-   * Link to related issues, if any
-   * Include **screenshots or demos** for any UI changes
+   - **Title**: Must follow the Conventional Commit format
+   - **Description**: Explain what you changed and why
+   - Link to related issues, if any
+   - Include **screenshots or demos** for any UI changes
 
 ---
 
 ## Thank You
 
-We sincerely appreciate your contribution to MCP Client Chatbot.
+We sincerely appreciate your contribution to Better Chatbot.
 Let’s build a powerful and lightweight AI experience together! 🚀

@@ -14,8 +14,8 @@ Docker provides a streamlined and efficient method for managing containerized ap
     Navigate to the desired directory in your terminal and clone the project repository. If you're not already in the project directory after cloning, change into it:
 
     ```sh
-    git clone https://github.com/cgoinglove/mcp-client-chatbot
-    cd mcp-client-chatbot
+    git clone https://github.com/cgoinglove/better-chatbot
+    cd better-chatbot
     ```
 
 2.  **Set up Environment Variables:**
@@ -28,9 +28,7 @@ Docker provides a streamlined and efficient method for managing containerized ap
     For the database, Docker will handle all necessary configuration automatically,  
     so the default `docker/.env` file is sufficient.
 
-
-
-1.  **Build and Start the Container:**
+3.  **Build and Start the Container:**
     From the project's root directory, build the Docker image and start the container in detached mode (running in the background):
 
     ```sh

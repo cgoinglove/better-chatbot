@@ -4,7 +4,7 @@ import { IS_DEV } from "./const";
 const logger = createConsola({
   level: IS_DEV ? LogLevels.debug : LogLevels.info,
   defaults: {
-    tag: "mcp-chatbot",
+    tag: "better-chatbot",
   },
 });
 

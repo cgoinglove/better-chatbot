@@ -1,9 +1,9 @@
-# MCP Client Chatbot
+# Better Chatbot
 
 [![MCP Supported](https://img.shields.io/badge/MCP-Supported-00c853)](https://modelcontextprotocol.io/introduction)
 [![Discord](https://img.shields.io/discord/1374047276074537103?label=Discord&logo=discord&color=5865F2)](https://discord.gg/gCRu69Upnp)
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/cgoinglove/mcp-client-chatbot&env=BETTER_AUTH_SECRET&env=OPENAI_API_KEY&env=GOOGLE_GENERATIVE_AI_API_KEY&env=ANTHROPIC_API_KEY&envDescription=Learn+more+about+how+to+get+the+API+Keys+for+the+application&envLink=https://github.com/cgoinglove/mcp-client-chatbot/blob/main/.env.example&demo-title=MCP+Client+Chatbot&demo-description=An+Open-Source+MCP+Chatbot+Template+Built+With+Next.js+and+the+AI+SDK+by+Vercel.&products=[{"type":"integration","protocol":"storage","productSlug":"neon","integrationSlug":"neon"}])
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/cgoinglove/better-chatbot&env=BETTER_AUTH_SECRET&env=OPENAI_API_KEY&env=GOOGLE_GENERATIVE_AI_API_KEY&env=ANTHROPIC_API_KEY&envDescription=Learn+more+about+how+to+get+the+API+Keys+for+the+application&envLink=https://github.com/cgoinglove/better-chatbot/blob/main/.env.example&demo-title=MCP+Client+Chatbot&demo-description=An+Open-Source+MCP+Chatbot+Template+Built+With+Next.js+and+the+AI+SDK+by+Vercel.&products=[{"type":"integration","protocol":"storage","productSlug":"neon","integrationSlug":"neon"}])
 
 Our goal is to create the best possible chatbot UX — focusing on the joy and intuitiveness users feel when calling and interacting with AI tools.
 
@@ -13,7 +13,7 @@ See the experience in action in the [preview](#preview) below!
 
 ## Table of Contents
 
-- [MCP Client Chatbot](#mcp-client-chatbot)
+- [Better Chatbot](#better-chatbot)
   - [Table of Contents](#table-of-contents)
   - [Preview](#preview)
     - [🧩 Browser Automation with Playwright MCP](#-browser-automation-with-playwright-mcp)
@@ -25,14 +25,14 @@ See the experience in action in the [preview](#preview) below!
     - [Quick Start (Local Version) 🚀](#quick-start-local-version-)
     - [Environment Variables](#environment-variables)
   - [📘 Guides](#-guides)
-      - [🔌 MCP Server Setup \& Tool Testing](#-mcp-server-setup--tool-testing)
-      - [🐳 Docker Hosting Guide](#-docker-hosting-guide)
-      - [▲ Vercel Hosting Guide](#-vercel-hosting-guide)
-      - [🎯 System Prompts \& Chat Customization](#-system-prompts--chat-customization)
-      - [🔐 OAuth Sign-In Setup](#-oauth-sign-in-setup)
+    - [🔌 MCP Server Setup \& Tool Testing](#-mcp-server-setup--tool-testing)
+    - [🐳 Docker Hosting Guide](#-docker-hosting-guide)
+    - [▲ Vercel Hosting Guide](#-vercel-hosting-guide)
+    - [🎯 System Prompts \& Chat Customization](#-system-prompts--chat-customization)
+    - [🔐 OAuth Sign-In Setup](#-oauth-sign-in-setup)
   - [💡 Tips](#-tips)
-      - [🧠 Agentic Chatbot with Project Instructions](#-agentic-chatbot-with-project-instructions)
-      - [💬 Temporary Chat Windows](#-temporary-chat-windows)
+    - [🧠 Agentic Chatbot with Project Instructions](#-agentic-chatbot-with-project-instructions)
+    - [💬 Temporary Chat Windows](#-temporary-chat-windows)
   - [🗺️ Roadmap](#️-roadmap)
   - [🙌 Contributing](#-contributing)
   - [💬 Join Our Discord](#-join-our-discord)
@@ -54,7 +54,7 @@ Get a feel for the UX — here's a quick look at what's possible.
 Sample prompt:
 
 ```prompt
-Please go to GitHub and visit the cgoinglove/mcp-client-chatbot project.
+Please go to GitHub and visit the cgoinglove/better-chatbot project.
 Then, click on the README.md file.
 After that, close the browser.
 Finally, tell me how to install the package.
@@ -64,13 +64,9 @@ Finally, tell me how to install the package.
 
 ### 🎙️ Realtime Voice Assistant + MCP Tools
 
-
 <p align="center">
   <video src="https://github.com/user-attachments/assets/e2657b8c-ce0b-40dd-80b6-755324024973" width="100%" />
 </p>
-
-
-
 
 This demo showcases a **realtime voice-based chatbot assistant** built with OpenAI's new Realtime API — now extended with full **MCP tool integration**.
 Talk to the assistant naturally, and watch it execute tools in real time.
@@ -88,7 +84,6 @@ Switch between presets instantly with a click — perfect for organizing tools b
 ### 🧭 Tool Choice Mode
 
 <img width="1161" alt="tool-mode" src="https://github.com/user-attachments/assets/0988f8dd-8a37-4adf-84da-79c083917af9" />
-
 
 Control how tools are used in each chat with **Tool Choice Mode** — switch anytime with `⌘P`.
 
@@ -198,8 +193,7 @@ GITHUB_CLIENT_SECRET=
 
 ## 📘 Guides
 
-Step-by-step setup guides for running and configuring MCP Client Chatbot.
-
+Step-by-step setup guides for running and configuring Better Chatbot.
 
 #### [🔌 MCP Server Setup & Tool Testing](./docs/tips-guides/mcp-server-setup-and-tool-testing.md)
 
@@ -212,7 +206,7 @@ Step-by-step setup guides for running and configuring MCP Client Chatbot.
 #### [▲ Vercel Hosting Guide](./docs/tips-guides/vercel.md)
 
 - Deploy the chatbot to Vercel with simple setup steps for production use.
-  
+
 #### [🎯 System Prompts & Chat Customization](./docs/tips-guides/system-prompts-and-customization.md)
 
 - Personalize your chatbot experience with custom system prompts, user preferences, and MCP tool instructions
@@ -222,8 +216,9 @@ Step-by-step setup guides for running and configuring MCP Client Chatbot.
 - Configure Google and GitHub OAuth for secure user login support.
 
 #### [Adding openAI like providers](docs/tips-guides/adding-openAI-like-providers.md)
+
 - Adding openAI like ai providers
-<br/>
+  <br/>
 
 ## 💡 Tips
 
@@ -239,7 +234,7 @@ Advanced use cases and extra capabilities that enhance your chatbot experience.
 
 ## 🗺️ Roadmap
 
-Planned features coming soon to MCP Client Chatbot:
+Planned features coming soon to Better Chatbot:
 
 - [ ] **MCP-integrated LLM Workflow**
 - [ ] **File Attach & Image Generation**
@@ -247,7 +242,7 @@ Planned features coming soon to MCP Client Chatbot:
 - [ ] **RAG (Retrieval-Augmented Generation)**
 - [ ] **Web-based Compute** (with [WebContainers](https://webcontainers.io) integration)
 
-💡 If you have suggestions or need specific features, please create an [issue](https://github.com/cgoinglove/mcp-client-chatbot/issues)!
+💡 If you have suggestions or need specific features, please create an [issue](https://github.com/cgoinglove/better-chatbot/issues)!
 
 ## 🙌 Contributing
 

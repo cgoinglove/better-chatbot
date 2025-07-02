@@ -1,6 +1,7 @@
 ## Social Login Setup (Google & GitHub, English)
 
 ### Get your Google credentials
+
 To use Google as a social provider, you need to get your Google credentials. You can get them by creating a new project in the [Google Cloud Console](https://console.cloud.google.com/apis/dashboard).
 
 - In the Google Cloud Console, go to **APIs & Services > Credentials**.
@@ -17,6 +18,7 @@ To use Google as a social provider, you need to get your Google credentials. You
   ```
 
 ### Get your GitHub credentials
+
 To use GitHub sign in, you need a client ID and client secret. You can get them from the [GitHub Developer Portal](https://github.com/settings/developers).
 
 - For local development, set the redirect URL to:
@@ -44,4 +46,4 @@ GITHUB_CLIENT_SECRET=your_github_client_secret
 
 ## Done
 
-You can now sign in to MCP Client Chatbot using your Google or GitHub account. Restart the application to apply the changes. 
+You can now sign in to Better Chatbot using your Google or GitHub account. Restart the application to apply the changes.

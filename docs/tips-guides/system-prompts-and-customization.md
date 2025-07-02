@@ -1,6 +1,6 @@
 # 🎯 System Prompts & Chat Customization Guide
 
-> Transform your chatbot experience with powerful system prompt customization. The MCP Client Chatbot uses a sophisticated multi-layered prompt system that adapts to your preferences, project context, and MCP tool usage — making every conversation more personalized and effective.
+> Transform your chatbot experience with powerful system prompt customization. The Better Chatbot uses a sophisticated multi-layered prompt system that adapts to your preferences, project context, and MCP tool usage — making every conversation more personalized and effective.
 
 The system intelligently combines multiple prompt layers to create the perfect context for each chat, ensuring the assistant understands exactly how to help you.
 
@@ -23,12 +23,15 @@ Click the **settings button** in the bottom-left corner to open the dropdown men
 Configure three key aspects of your interaction:
 
 **Assistant Name:** How you'd like the assistant to address you
+
 - Example: "Alex", "Dr. Smith", "Team Lead"
 
 **Your Role/Profession:** Your job or expertise area (helps the assistant tailor explanations)
+
 - Example: "Software Engineer", "Marketing Manager", "Student"
 
 **Response Style:** How you prefer the assistant to communicate
+
 - Example: "Keep explanations brief and to the point"
 - Example: "When learning new concepts, I find analogies particularly helpful"
 - Example: "Ask clarifying questions before giving detailed answers"
@@ -44,6 +47,7 @@ Access **"Custom Instructions"** to set up context that automatically applies wh
 Set default context for entire MCP servers. Perfect for avoiding repetitive information:
 
 **GitHub MCP Server Example:**
+
 ```
 Default repository: owner/repo-name
 Always use the main branch unless specified
@@ -51,6 +55,7 @@ Include issue labels when creating issues
 ```
 
 **File System MCP Server Example:**
+
 ```
 Working directory: /Users/username/projects/my-app
 Prefer relative paths in responses
@@ -62,12 +67,14 @@ Always backup before making destructive changes
 Configure specific tools within MCP servers for even more precision:
 
 **Google Login Tool Example:**
+
 ```
 Default email: user@company.com
 Prefer 2FA authentication when available
 ```
 
 **Database Query Tool Example:**
+
 ```
 Default database: production
 Always explain query results in business terms
@@ -80,12 +87,13 @@ Include performance impact warnings for large queries
 
 The chatbot combines four distinct prompt layers to create the perfect context:
 
-1. **Base System Prompt** - Core MCP Client Chatbot behavior
-2. **User Preferences** - Your personal settings and communication style  
+1. **Base System Prompt** - Core Better Chatbot behavior
+2. **User Preferences** - Your personal settings and communication style
 3. **Project Instructions** - Context from the current project (if applicable)
 4. **MCP Customizations** - Tool-specific instructions (only when tools are used)
 
 This layered approach ensures:
+
 - ✅ **Efficiency**: Only relevant context is included
 - ✅ **Consistency**: Your preferences apply across all chats
 - ✅ **Flexibility**: Different projects can have different contexts
@@ -103,4 +111,4 @@ This layered approach ensures:
 
 **Project Synergy:** Combine personal preferences with project-specific instructions for domain expertise (e.g., "React developer" + "E-commerce project context").
 
-> 💡 **Result:** Every conversation becomes more productive because the assistant already understands your context, preferences, and workflow — no need to repeat yourself! 
+> 💡 **Result:** Every conversation becomes more productive because the assistant already understands your context, preferences, and workflow — no need to repeat yourself!
