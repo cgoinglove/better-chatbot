@@ -56,6 +56,7 @@ import { useWorkflowToolList } from "@/hooks/queries/use-workflow-tool-list";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { WorkflowSummary } from "app-types/workflow";
 import { WorkflowGreeting } from "./workflow/workflow-greeting";
+import { GlobalIcon } from "ui/global-icon";
 
 interface ToolSelectDropdownProps {
   align?: "start" | "end" | "center";
@@ -647,6 +648,22 @@ function AppDefaultToolKitSelector() {
           className="ml-auto"
           checked={allowedAppDefaultToolkit?.includes(
             AppDefaultToolkit.Visualization,
+          )}
+        />
+      </DropdownMenuItem>
+      <DropdownMenuItem
+        className="cursor-pointer font-semibold text-xs"
+        onClick={(e) => {
+          e.preventDefault();
+          toggleAppDefaultToolkit(AppDefaultToolkit.WebSearch);
+        }}
+      >
+        <GlobalIcon className="text-blue-400 size-3.5" />
+        {t("webSearchTools")}
+        <Switch
+          className="ml-auto"
+          checked={allowedAppDefaultToolkit?.includes(
+            AppDefaultToolkit.WebSearch,
           )}
         />
       </DropdownMenuItem>

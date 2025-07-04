@@ -3,11 +3,16 @@ import { createBarChartTool } from "./create-bar-chart";
 import { createLineChartTool } from "./create-line-chart";
 import { DefaultToolName } from "./app-default-tool-name";
 import { AppDefaultToolkit } from "app-types/chat";
+import { safeTavilySearchTool, safeTavilyWebContentTool } from "./web-search";
 
 export const defaultTools = {
   [AppDefaultToolkit.Visualization]: {
     [DefaultToolName.CreatePieChart]: createPieChartTool,
     [DefaultToolName.CreateBarChart]: createBarChartTool,
     [DefaultToolName.CreateLineChart]: createLineChartTool,
+  },
+  [AppDefaultToolkit.WebSearch]: {
+    [DefaultToolName.WebSearch]: safeTavilySearchTool,
+    [DefaultToolName.WebContent]: safeTavilyWebContentTool,
   },
 };

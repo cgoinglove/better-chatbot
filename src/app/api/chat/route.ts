@@ -166,6 +166,10 @@ export async function POST(request: Request) {
           )
           .orElse({});
 
+        const APP_DEFAULT_TOOLS = isToolCallAllowed
+          ? getAllowedDefaultToolkit(allowedAppDefaultToolkit)
+          : {};
+
         const inProgressToolStep = extractInProgressToolPart(
           messages.slice(-2),
         );
@@ -214,8 +218,8 @@ export async function POST(request: Request) {
             const bindingTools =
               toolChoice === "manual" ? excludeToolExecution(t) : t;
             return {
-              ...getAllowedDefaultToolkit(allowedAppDefaultToolkit),
               ...bindingTools,
+              ...APP_DEFAULT_TOOLS,
               ...WORKFLOW_TOOLS, // Workflow Tool Not Supported Manual
             };
           })
@@ -225,7 +229,7 @@ export async function POST(request: Request) {
           `tool mode: ${toolChoice}, tool choice: ${computedToolChoice}`,
         );
         logger.debug(
-          `binding tool count MCP: ${Object.keys(MCP_TOOLS ?? {}).length}, Workflow: ${Object.keys(WORKFLOW_TOOLS ?? {}).length}`,
+          `binding tool count APP_DEFAULT: ${Object.keys(APP_DEFAULT_TOOLS ?? {}).length}, MCP: ${Object.keys(MCP_TOOLS ?? {}).length}, Workflow: ${Object.keys(WORKFLOW_TOOLS ?? {}).length}`,
         );
         logger.debug(`model: ${chatModel?.provider}/${chatModel?.model}`);
 

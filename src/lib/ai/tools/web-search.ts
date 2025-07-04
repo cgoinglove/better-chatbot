@@ -2,6 +2,7 @@ import { tool as createTool } from "ai";
 import { JSONSchema7 } from "json-schema";
 import { jsonSchemaToZod } from "lib/json-schema-to-zod";
 import { isString } from "lib/utils";
+import { safe } from "ts-safe";
 
 export interface TavilyResponse {
   // Response structure from Tavily API
@@ -379,7 +380,7 @@ export const tavilySearchTool = createTool({
   },
 });
 
-export const tavilyExtractTool = createTool({
+export const tavilyWebContentTool = createTool({
   description:
     "A powerful web content extraction tool that retrieves and processes raw content from specified URLs, ideal for data collection, content analysis, and research tasks.",
   parameters: jsonSchemaToZod(tavilyExtractSchema),
@@ -388,5 +389,58 @@ export const tavilyExtractTool = createTool({
       ...params,
       include_favicon: true,
     });
+  },
+});
+
+export const safeTavilySearchTool = createTool({
+  description:
+    "A powerful web search tool that provides comprehensive, real-time results using Tavily's AI search engine. Returns relevant web content with customizable parameters for result count, content type, and domain filtering. Ideal for gathering current information, news, and detailed web content analysis.",
+  parameters: jsonSchemaToZod(tavilySearchSchema),
+  execute: (params) => {
+    return safe(() =>
+      fetchTavily(baseURLs.search, {
+        ...params,
+        topic: params.country ? "general" : params.topic,
+        include_favicon: true,
+        include_domains: Array.isArray(params.include_domains)
+          ? params.include_domains
+          : [],
+        exclude_domains: Array.isArray(params.exclude_domains)
+          ? params.exclude_domains
+          : [],
+      }),
+    )
+      .ifFail((e) => {
+        return {
+          isError: true,
+          error: e.message,
+          solution:
+            "A web search error occurred. First, explain to the user what caused this specific error and how they can resolve it. Then provide helpful information based on your existing knowledge to answer their question.",
+        };
+      })
+      .unwrap();
+  },
+});
+
+export const safeTavilyWebContentTool = createTool({
+  description:
+    "A powerful web content extraction tool that retrieves and processes raw content from specified URLs, ideal for data collection, content analysis, and research tasks.",
+  parameters: jsonSchemaToZod(tavilyExtractSchema),
+  execute: async (params) => {
+    return safe(() =>
+      fetchTavily(baseURLs.extract, {
+        ...params,
+        include_favicon: true,
+      }),
+    )
+      .ifFail((e) => {
+        return {
+          isError: true,
+          error: e.message,
+          solution:
+            "A web content extraction error occurred. First, explain to the user what caused this specific error and how they can resolve it. Then provide helpful information based on your existing knowledge to answer their question.",
+        };
+      })
+      .unwrap();
   },
 });

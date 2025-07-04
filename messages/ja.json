@@ -109,6 +109,7 @@
       "presetNameAlreadyExists": "プリセット名が既に存在します",
       "presetSaved": "プリセットが保存されました",
       "chartTools": "チャートツール",
+      "webSearchTools": "ウェブを検索",
       "clickSaveAsPresetToGetStarted": "開始するには「プリセットとして保存」をクリックしてください。"
     },
     "VoiceChat": {

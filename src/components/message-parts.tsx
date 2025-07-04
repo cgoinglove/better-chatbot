@@ -16,6 +16,7 @@ import {
   XIcon,
   Loader2,
   AlertTriangleIcon,
+  Search,
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { Button } from "ui/button";
@@ -69,6 +70,8 @@ import { NodeResultPopup } from "./workflow/node-result-popup";
 
 import { Alert, AlertDescription, AlertTitle } from "ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
+import { GlobalIcon } from "ui/global-icon";
+import { TavilyResponse } from "lib/ai/tools/web-search";
 
 type MessagePart = UIMessage["parts"][number];
 
@@ -416,7 +419,67 @@ export const ToolMessagePart = memo(
         .watch(() => setIsDeleting(false))
         .unwrap();
     }, [messageId, setMessages]);
+    const result = useMemo(() => {
+      if (state === "result") {
+        return toolInvocation.result?.content
+          ? {
+              ...toolInvocation.result,
+              content: toolInvocation.result.content.map((node) => {
+                if (node.type === "text") {
+                  const parsed = safeJSONParse(node.text);
+                  return {
+                    ...node,
+                    text: parsed.success ? parsed.value : node.text,
+                  };
+                }
+                return node;
+              }),
+            }
+          : toolInvocation.result;
+      }
+      return null;
+    }, [state, toolInvocation]);
     const ChartResultComponent = useMemo(() => {
+      if (
+        toolName === DefaultToolName.WebSearch ||
+        toolName === DefaultToolName.WebContent
+      ) {
+        if (state != "result")
+          return (
+            <div className="flex items-center gap-2">
+              <Search className="size-4 text-muted-foreground" />
+              <TextShimmer>Web Searching...</TextShimmer>
+            </div>
+          );
+
+        if (!result?.isError)
+          return (
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2">
+                <GlobalIcon className="size-4 text-muted-foreground" />
+                Searched the Web
+              </div>
+              <div className="flex gap-2">
+                <div className="px-2">
+                  <Separator orientation="vertical" />
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {(result as TavilyResponse).results.map((result, i) => {
+                    return (
+                      <div
+                        className="rounded-full bg-secondary px-4 py-1 text-xs"
+                        key={i}
+                      >
+                        {result.title}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          );
+      }
+
       if (state === "result") {
         switch (toolName) {
           case DefaultToolName.CreatePieChart:
@@ -456,27 +519,6 @@ export const ToolMessagePart = memo(
       }
       return null;
     }, [toolName, state]);
-
-    const result = useMemo(() => {
-      if (state === "result") {
-        return toolInvocation.result?.content
-          ? {
-              ...toolInvocation.result,
-              content: toolInvocation.result.content.map((node) => {
-                if (node.type === "text") {
-                  const parsed = safeJSONParse(node.text);
-                  return {
-                    ...node,
-                    text: parsed.success ? parsed.value : node.text,
-                  };
-                }
-                return node;
-              }),
-            }
-          : toolInvocation.result;
-      }
-      return null;
-    }, [state, toolInvocation]);
 
     const isWorkflowTool = isVercelAIWorkflowTool(result);
 
