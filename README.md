@@ -118,7 +118,8 @@ This lets you flexibly choose between autonomous, guided, or tool-free interacti
 
 ### 🌐 Web Search (Default Tool)
 
-<img width="1225" alt="image" src="https://github.com/user-attachments/assets/c0ade861-3622-466a-be13-74643e8cc9bc" loading="lazy"/>
+<img width="1394" alt="web-search" src="https://github.com/user-attachments/assets/14e2dc33-b702-4b93-a05f-bc36edde18f1" />
+
 
 Built-in web search powered by [Tavily API](https://app.tavily.com/home). Search the web and extract content from URLs directly in your chats.
 
