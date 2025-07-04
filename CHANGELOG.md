@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.13.0](https://github.com/cgoinglove/mcp-client-chatbot/compare/v1.12.1...v1.13.0) (2025-07-04)
+
+
+### Features
+
+* Add web search and content extraction tools using Tavily API ([#126](https://github.com/cgoinglove/mcp-client-chatbot/issues/126)) ([f7b4ea5](https://github.com/cgoinglove/mcp-client-chatbot/commit/f7b4ea5828b33756a83dd881b9afa825796bf69f))
+
+
+### Bug Fixes
+
+* workflow condition node issue ([78b7add](https://github.com/cgoinglove/mcp-client-chatbot/commit/78b7addbba51b4553ec5d0ce8961bf90be5d649c))
+* **workflow:** improve mention handling by ensuring empty values are represented correctly ([92ff9c3](https://github.com/cgoinglove/mcp-client-chatbot/commit/92ff9c3e14b97d9f58a22f9df2559e479f14537c))
+* **workflow:** simplify mention formatting by removing bold styling for non-empty values ([ef65fd7](https://github.com/cgoinglove/mcp-client-chatbot/commit/ef65fd713ab59c7d8464cae480df7626daeff5cd))
+
 ## [1.12.1](https://github.com/cgoinglove/mcp-client-chatbot/compare/v1.12.0...v1.12.1) (2025-07-02)
 
 
