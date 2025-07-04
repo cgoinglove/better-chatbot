@@ -259,11 +259,13 @@ export function convertTiptapJsonToAiMessage({
     getOutput,
     mentionParser: (part) => {
       const key = JSON.parse(part.attrs.label) as OutputSchemaSourceKey;
-      const mentionItem = getOutput(key) || "empty";
+      const mentionItem = getOutput(key) || "";
       const value =
         typeof mentionItem == "object"
           ? "\n```json\n" + JSON.stringify(mentionItem, null, 2) + "\n```\n"
-          : `**${String(mentionItem)}**`;
+          : mentionItem
+            ? String(mentionItem)
+            : "";
       return value;
     },
   });

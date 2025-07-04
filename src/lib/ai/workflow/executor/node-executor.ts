@@ -147,7 +147,10 @@ export const conditionNodeExecutor: NodeExecutor<ConditionNodeData> = async ({
 
   // Find the target nodes for the selected branch
   const nextNodes = state.edges
-    .filter((edge) => edge.uiConfig.sourceHandle === okBranch.id)
+    .filter(
+      (edge) =>
+        edge.uiConfig.sourceHandle === okBranch.id && edge.source == node.id,
+    )
     .map((edge) => state.nodes.find((node) => node.id === edge.target)!)
     .filter(Boolean);
 

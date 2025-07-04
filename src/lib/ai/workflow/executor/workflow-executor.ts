@@ -154,7 +154,7 @@ export const createWorkflowExecutor = (workflow: {
           nodeId: node.id,
           path: ["nextNodes"],
         }) as DBNode[];
-        if (!next) return;
+        if (!next?.length) return;
         return next.map((node) => node.id);
       });
     } else {

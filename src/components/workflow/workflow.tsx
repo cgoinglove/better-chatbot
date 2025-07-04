@@ -82,20 +82,30 @@ export default function Workflow({
 
   const save = async () => {
     if (workflow?.isPublished) return;
-    const stop = addProcess();
-    await safe()
-      .map(() => saveWorkflow(workflowId, snapshot.current, { nodes, edges }))
-      .ifOk(() => {
-        snapshot.current = {
-          edges,
-          nodes,
-        };
-      })
-      .ifFail(() => {
-        window.location.reload();
-      })
-      .watch(stop)
-      .unwrap();
+
+    const diff = extractWorkflowDiff(snapshot.current, { nodes, edges });
+
+    if (
+      diff.deleteEdges.length ||
+      diff.deleteNodes.length ||
+      diff.updateEdges.length ||
+      diff.updateNodes.length
+    ) {
+      const stop = addProcess();
+      await safe()
+        .map(() => saveWorkflow(workflowId, diff))
+        .ifOk(() => {
+          snapshot.current = {
+            edges,
+            nodes,
+          };
+        })
+        .ifFail(() => {
+          window.location.reload();
+        })
+        .watch(stop)
+        .unwrap();
+    }
   };
 
   const selectedNode = useMemo(() => {
@@ -230,8 +240,7 @@ export default function Workflow({
           strokeWidth: 2,
           transition: "stroke 0.3s",
         },
-        animated:
-          runningIds.includes(edge.target) || runningIds.includes(edge.source),
+        animated: runningIds.includes(edge.source),
       };
     });
   }, [edges, activeNodeIds, errorIds, runningIds]);
@@ -241,7 +250,7 @@ export default function Workflow({
       snapshot.current.nodes.length !== nodes.length ||
       snapshot.current.edges.length !== edges.length
         ? 200
-        : 5000;
+        : 10000;
     debounce(save, debounceDelay);
   }, [nodes, edges]);
 
@@ -310,35 +319,23 @@ export default function Workflow({
 
 function saveWorkflow(
   workflowId: string,
-  before: { nodes: UINode[]; edges: Edge[] },
-  after: { nodes: UINode[]; edges: Edge[] },
+  diff: ReturnType<typeof extractWorkflowDiff>,
 ) {
-  const diff = extractWorkflowDiff(before, after);
-
-  if (
-    diff.deleteEdges.length ||
-    diff.deleteNodes.length ||
-    diff.updateEdges.length ||
-    diff.updateNodes.length
-  ) {
-    return fetch(`/api/workflow/${workflowId}/structure`, {
-      method: "POST",
-      body: JSON.stringify({
-        nodes: diff.updateNodes.map((node) =>
-          convertUINodeToDBNode(workflowId, node),
-        ),
-        edges: diff.updateEdges.map((edge) =>
-          convertUIEdgeToDBEdge(workflowId, edge),
-        ),
-        deleteNodes: diff.deleteNodes.map((node) => node.id),
-        deleteEdges: diff.deleteEdges.map((edge) => edge.id),
-      }),
-    }).then((res) => {
-      if (res.status >= 400) {
-        throw new Error(String(res.statusText || res.status || "Error"));
-      }
-    });
-  }
-
-  return Promise.resolve();
+  return fetch(`/api/workflow/${workflowId}/structure`, {
+    method: "POST",
+    body: JSON.stringify({
+      nodes: diff.updateNodes.map((node) =>
+        convertUINodeToDBNode(workflowId, node),
+      ),
+      edges: diff.updateEdges.map((edge) =>
+        convertUIEdgeToDBEdge(workflowId, edge),
+      ),
+      deleteNodes: diff.deleteNodes.map((node) => node.id),
+      deleteEdges: diff.deleteEdges.map((edge) => edge.id),
+    }),
+  }).then((res) => {
+    if (res.status >= 400) {
+      throw new Error(String(res.statusText || res.status || "Error"));
+    }
+  });
 }
