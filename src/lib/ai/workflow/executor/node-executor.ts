@@ -21,6 +21,11 @@ import { jsonSchemaToZod } from "lib/json-schema-to-zod";
 import { callMcpToolAction } from "@/app/api/mcp/actions";
 import { toAny } from "lib/utils";
 import { AppError } from "lib/errors";
+import { DefaultToolName } from "lib/ai/tools/app-default-tool-name";
+import {
+  tavilySearchToolForWorkflow,
+  tavilyWebContentToolForWorkflow,
+} from "lib/ai/tools/web-search";
 
 /**
  * Interface for node executor functions.
@@ -240,11 +245,26 @@ export const toolNodeExecutor: NodeExecutor<ToolNodeData> = async ({
     result.output = {
       tool_result: toolResult,
     };
+  } else if (node.tool.type == "app-tool") {
+    const executor =
+      node.tool.id == DefaultToolName.WebContent
+        ? tavilyWebContentToolForWorkflow.execute
+        : node.tool.id == DefaultToolName.WebSearch
+          ? tavilySearchToolForWorkflow.execute
+          : () => "Unknown tool";
+
+    const toolResult = await executor(result.input.parameter, {
+      messages: [],
+      toolCallId: "",
+    });
+    result.output = {
+      tool_result: toolResult,
+    };
   } else {
     // Placeholder for future tool types
     result.output = {
       tool_result: {
-        error: `Not implemented "${node.tool.type}"`,
+        error: `Not implemented "${toAny(node.tool)?.type}"`,
       },
     };
   }

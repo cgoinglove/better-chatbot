@@ -64,6 +64,10 @@ type MCPTool = {
   serverName: string;
 };
 
+type DefaultTool = {
+  type: "app-tool";
+};
+
 /**
  * Workflow tool key that defines available tools for Tool nodes.
  */
@@ -72,7 +76,7 @@ export type WorkflowToolKey = {
   description: string;
   parameterSchema?: JSONSchema7; // Input schema for the tool
   returnSchema?: JSONSchema7; // Output schema for the tool
-} & MCPTool;
+} & (MCPTool | DefaultTool);
 
 // Node Data Types - Each node kind has its specific data structure
 

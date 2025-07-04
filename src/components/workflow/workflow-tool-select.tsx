@@ -33,7 +33,8 @@ export function WorkflowToolSelect({
   const t = useTranslations();
   const [open, setOpen] = useState(false);
   const mcpToolsByServerId = useMemo(() => {
-    return Object.entries(groupBy(tools, "serverId")).map(
+    const mcpTools = tools.filter((tool) => tool.type == "mcp-tool");
+    return Object.entries(groupBy(mcpTools, "serverId")).map(
       ([serverId, tools]) => {
         return {
           serverId,
@@ -42,6 +43,9 @@ export function WorkflowToolSelect({
         };
       },
     );
+  }, [tools]);
+  const defaultTools = useMemo(() => {
+    return tools.filter((tool) => tool.type == "app-tool");
   }, [tools]);
 
   const selectedToolLabel = useMemo(() => {
@@ -118,6 +122,23 @@ export function WorkflowToolSelect({
                 </CommandGroup>
               );
             })}
+            <CommandGroup heading={"App Default Tools"}>
+              {defaultTools.map((tool) => {
+                return (
+                  <CommandItem
+                    key={tool.id}
+                    onSelect={() => {
+                      onChange(tool);
+                      setOpen(false);
+                    }}
+                    className="cursor-pointer"
+                  >
+                    <WrenchIcon className="size-3.5" />
+                    <span className="font-semibold truncate">{tool.id}</span>
+                  </CommandItem>
+                );
+              })}
+            </CommandGroup>
           </CommandList>
         </Command>
       </PopoverContent>

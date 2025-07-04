@@ -361,7 +361,7 @@ const fetchTavily = async (url: string, body: any): Promise<TavilyResponse> => {
   };
 };
 
-export const tavilySearchTool = createTool({
+export const tavilySearchToolForWorkflow = createTool({
   description:
     "A web search tool for quick research and information gathering. Provides basic search results with titles, summaries, and URLs from across the web. Perfect for finding relevant sources and getting an overview of topics.",
   parameters: jsonSchemaToZod(tavilySearchSchema),
@@ -380,7 +380,7 @@ export const tavilySearchTool = createTool({
   },
 });
 
-export const tavilyWebContentTool = createTool({
+export const tavilyWebContentToolForWorkflow = createTool({
   description:
     "A detailed web content extraction tool that analyzes and summarizes specific web pages from provided URLs. Extracts full content, processes it intelligently, and provides comprehensive summaries. Perfect for in-depth analysis of specific articles, documents, or web pages.",
   parameters: jsonSchemaToZod(tavilyWebContentSchema),
@@ -392,7 +392,7 @@ export const tavilyWebContentTool = createTool({
   },
 });
 
-export const safeTavilySearchTool = createTool({
+export const tavilySearchTool = createTool({
   description:
     "A web search tool for quick research and information gathering. Provides basic search results with titles, summaries, and URLs from across the web. Perfect for finding relevant sources and getting an overview of topics.",
   parameters: jsonSchemaToZod(tavilySearchSchema),
@@ -422,7 +422,7 @@ export const safeTavilySearchTool = createTool({
   },
 });
 
-export const safeTavilyWebContentTool = createTool({
+export const tavilyWebContentTool = createTool({
   description:
     "A detailed web content extraction tool that analyzes and summarizes specific web pages from provided URLs. Extracts full content, processes it intelligently, and provides comprehensive summaries. Perfect for in-depth analysis of specific articles, documents, or web pages.",
   parameters: jsonSchemaToZod(tavilyWebContentSchema),

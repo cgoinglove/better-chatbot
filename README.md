@@ -22,6 +22,7 @@ See the experience in action in the [preview](#preview) below!
   - [🎙️ Realtime Voice Assistant + MCP Tools](#️-realtime-voice-assistant--mcp-tools)
   - [⚡️ Quick Tool Mentions (`@`) \& Presets](#️-quick-tool-mentions---presets)
   - [🧭 Tool Choice Mode](#-tool-choice-mode)
+  - [🌐 Web Search (Default Tool)](#-web-search-default-tool)
 - [Getting Started](#getting-started)
   - [Quick Start (Docker Compose Version) 🐳](#quick-start-docker-compose-version-)
   - [Quick Start (Local Version) 🚀](#quick-start-local-version-)
@@ -32,7 +33,7 @@ See the experience in action in the [preview](#preview) below!
     - [▲ Vercel Hosting Guide](#-vercel-hosting-guide)
     - [🎯 System Prompts \& Chat Customization](#-system-prompts--chat-customization)
     - [🔐 OAuth Sign-In Setup](#-oauth-sign-in-setup)
-    - [Adding openAI like providers](#adding-openai-like-providers)
+    - [🕵🏿 Adding openAI like providers](#-adding-openai-like-providers)
 - [💡 Tips](#-tips)
     - [🧠 Agentic Chatbot with Project Instructions](#-agentic-chatbot-with-project-instructions)
     - [💬 Temporary Chat Windows](#-temporary-chat-windows)
@@ -114,6 +115,18 @@ Control how tools are used in each chat with **Tool Choice Mode** — switch any
 - **None:** Tool usage is disabled completely.
 
 This lets you flexibly choose between autonomous, guided, or tool-free interaction depending on the situation.
+
+### 🌐 Web Search (Default Tool)
+
+<img width="1225" alt="image" src="https://github.com/user-attachments/assets/c0ade861-3622-466a-be13-74643e8cc9bc" loading="lazy"/>
+
+Built-in web search powered by [Tavily API](https://app.tavily.com/home). Search the web and extract content from URLs directly in your chats.
+
+- **Optional:** Add `TAVILY_API_KEY` to `.env` to enable web search
+- **Free Tier:** 1,000 requests/month at no cost
+- **Easy Setup:** Get your API key with one click at [app.tavily.com](https://app.tavily.com/home)
+
+Works perfectly fine without the API key — web search just won't be available.
 
 <br/>
 
@@ -199,16 +212,28 @@ BETTER_AUTH_URL=
 # If you don't have PostgreSQL running locally, start it with: pnpm docker:pg
 POSTGRES_URL=postgres://your_username:your_password@localhost:5432/your_database_name
 
+# (Optional)
+# === Tools === 
+# Tavily for web search and content extraction (optional, but recommended for @web and research features)
+TAVILY_API_KEY=your_tavily_api_key_here
+
+
 # Whether to use file-based MCP config (default: false)
 FILE_BASED_MCP_CONFIG=false
 
-# (Optional)
+# (Optional) 
 # === OAuth Settings ===
 # Fill in these values only if you want to enable Google/GitHub login
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
 GITHUB_CLIENT_ID=
 GITHUB_CLIENT_SECRET=
+
+# Set this to 1 to disable user sign-ups.
+DISABLE_SIGN_UP=
+
+# Set this to 1 to disallow adding MCP servers.
+NOT_ALLOW_ADD_MCP_SERVERS=
 ```
 
 <br/>
@@ -237,7 +262,7 @@ Step-by-step setup guides for running and configuring MCP Client Chatbot.
 
 - Configure Google and GitHub OAuth for secure user login support.
 
-#### [Adding openAI like providers](docs/tips-guides/adding-openAI-like-providers.md)
+#### [🕵🏿 Adding openAI like providers](docs/tips-guides/adding-openAI-like-providers.md)
 
 - Adding openAI like ai providers
   <br/>
