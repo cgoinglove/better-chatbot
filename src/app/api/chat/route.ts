@@ -7,6 +7,7 @@ import {
   formatDataStreamPart,
   appendClientMessage,
   Message,
+  Tool,
 } from "ai";
 
 import { customModelProvider, isToolCallUnsupportedModel } from "lib/ai/models";
@@ -39,7 +40,6 @@ import {
   extractInProgressToolPart,
   assignToolResult,
   workflowToVercelAITools,
-  getAllowedDefaultToolkit,
   filterMCPToolsByAllowedMCPServers,
   filterMcpServerCustomizations,
 } from "./shared.chat";
@@ -53,6 +53,8 @@ import {
   isVercelAIWorkflowTool,
   VercelAIWorkflowTool,
 } from "app-types/workflow";
+import { objectFlow } from "lib/utils";
+import { defaultTools } from "lib/ai/tools";
 
 const logger = globalLogger.withDefaults({
   message: colorize("blackBright", `Chat API: `),
@@ -166,9 +168,30 @@ export async function POST(request: Request) {
           )
           .orElse({});
 
-        const APP_DEFAULT_TOOLS = isToolCallAllowed
-          ? getAllowedDefaultToolkit(allowedAppDefaultToolkit)
-          : {};
+        const APP_DEFAULT_TOOLS = safe(defaultTools)
+          .map(errorIf(() => !isToolCallAllowed && "Not allowed"))
+          .map((tools) => {
+            if (mentions.length) {
+              const defaultToolMentions = mentions.filter(
+                (m) => m.type == "defaultTool",
+              );
+              return Array.from(Object.values(tools)).reduce((acc, t) => {
+                const allowed = objectFlow(t).filter((_, k) => {
+                  return defaultToolMentions.some((m) => m.name == k);
+                });
+                return { ...acc, ...allowed };
+              }, {});
+            }
+            return (
+              allowedAppDefaultToolkit?.reduce(
+                (acc, key) => {
+                  return { ...acc, ...tools[key] };
+                },
+                {} as Record<string, Tool>,
+              ) || {}
+            );
+          })
+          .unwrap();
 
         const inProgressToolStep = extractInProgressToolPart(
           messages.slice(-2),

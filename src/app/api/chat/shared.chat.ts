@@ -18,7 +18,6 @@ import {
 import { errorToString, objectFlow, toAny } from "lib/utils";
 import { callMcpToolAction } from "../mcp/actions";
 import logger from "logger";
-import { defaultTools } from "lib/ai/tools";
 import {
   AllowedMCPServer,
   McpServerCustomizationsPrompt,
@@ -89,18 +88,6 @@ export function filterMCPToolsByAllowedMCPServers(
       _tool._originToolName,
     );
   });
-}
-export function getAllowedDefaultToolkit(
-  allowedAppDefaultToolkit?: string[],
-): Record<string, Tool> {
-  if (!allowedAppDefaultToolkit) {
-    return Object.values(defaultTools).reduce((acc, toolkit) => {
-      return { ...acc, ...toolkit };
-    }, {});
-  }
-  return allowedAppDefaultToolkit.reduce((acc, toolkit) => {
-    return { ...acc, ...(defaultTools[toolkit] ?? {}) };
-  }, {});
 }
 
 export function excludeToolExecution(

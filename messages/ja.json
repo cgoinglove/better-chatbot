@@ -37,7 +37,8 @@
     "generatingInputWithAI": "AIで入力を生成中...",
     "inputGeneratedSuccessfully": "入力が正常に生成されました",
     "failedToGenerateInput": "入力の生成に失敗しました",
-    "createWithExample": "例で作成"
+    "createWithExample": "例で作成",
+    "resultsFound": "{count}件の結果が見つかりました"
   },
   "Auth": {
     "SignIn": {
@@ -93,6 +94,8 @@
     },
     "placeholder": "何について知りたいですか？",
     "Tool": {
+      "webSearching": "ウェブを検索中...",
+      "searchedTheWeb": "ウェブを検索しました",
       "toolModeDescription": "ツールの使用方法を選択:\n• 自動: AIがツールの使用を自動で決定\n• 手動: ツール使用前に許可を求める\n• なし: すべてのツールを無効化",
       "toolsSetupDescription": "チャットで使用するツールを選択。\n会話中に '@' でツールを\nメンションして呼び出せます。",
       "selectToolMode": "ツールモードを選択",

@@ -37,7 +37,8 @@
     "generatingInputWithAI": "Generando entrada con IA...",
     "inputGeneratedSuccessfully": "Entrada generada exitosamente",
     "failedToGenerateInput": "Error al generar entrada",
-    "createWithExample": "Crear con Ejemplo"
+    "createWithExample": "Crear con Ejemplo",
+    "resultsFound": "{count} resultados encontrados"
   },
   "Auth": {
     "SignIn": {
@@ -93,6 +94,8 @@
     },
     "placeholder": "¿Qué quieres saber?",
     "Tool": {
+      "webSearching": "Buscando en la web...",
+      "searchedTheWeb": "Buscado en la web",
       "toolModeDescription": "Elije cómo se usan las herramientas:\n• Auto: La IA decide cuándo usar herramientas\n• Manual: Pide permiso antes de usar herramientas\n• Ninguno: Desactiva todas las herramientas",
       "toolsSetupDescription": "Selecciona herramientas para tu chat.\nUsa '@' para mencionar y llamar\nherramientas durante la conversación.",
       "selectToolMode": "Seleccionar modo de herramientas",

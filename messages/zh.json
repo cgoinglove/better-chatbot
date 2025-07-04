@@ -38,7 +38,8 @@
     "inputGeneratedSuccessfully": "输入生成成功",
     "failedToGenerateInput": "输入生成失败",
     "createWithExample": "用示例创建",
-    "generateWithAI": "用 AI 生成"
+    "generateWithAI": "用 AI 生成",
+    "resultsFound": "找到 {count} 个结果"
   },
   "Auth": {
     "SignIn": {
@@ -94,6 +95,8 @@
     },
     "placeholder": "您想了解什么？",
     "Tool": {
+      "webSearching": "正在搜索网络...",
+      "searchedTheWeb": "搜索网络",
       "toolModeDescription": "选择工具使用方式:\n• 自动: AI 自动决定何时使用工具\n• 手动: 使用工具前询问许可\n• 无: 禁用所有工具",
       "toolsSetupDescription": "为聊天选择工具。\n在对话中使用 '@' 提及\n并调用工具。",
       "selectToolMode": "选择工具模式",

@@ -34,6 +34,39 @@ interface ChatMentionInputProps {
   ref?: RefObject<Editor | null>;
 }
 
+const appDefaultToolMentions: ChatMention[] = [
+  {
+    type: "defaultTool",
+    name: "webSearch",
+    description: "Search the web for information",
+    label: "web-search",
+  },
+  {
+    type: "defaultTool",
+    name: "webDetail",
+    description: "Extract details from a web page",
+    label: "web-detail",
+  },
+  {
+    type: "defaultTool",
+    name: "createPieChart",
+    description: "Create a pie chart",
+    label: "pie-chart",
+  },
+  {
+    type: "defaultTool",
+    name: "createBarChart",
+    description: "Create a bar chart",
+    label: "bar-chart",
+  },
+  {
+    type: "defaultTool",
+    name: "createLineChart",
+    description: "Create a line chart",
+    label: "line-chart",
+  },
+];
+
 export default function ChatMentionInput({
   onChange,
   onChangeMention,
@@ -99,7 +132,12 @@ export function ChatMentionInputMentionItem({
       ) : (
         <WrenchIcon className="size-3" />
       )}
-      <span className="ml-auto text-xs opacity-60">
+      <span
+        className={cn(
+          "ml-auto text-xs opacity-60",
+          item.type == "defaultTool" && "sr-only",
+        )}
+      >
         {capitalizeFirstLetter(item.type)}
       </span>
       {item.name}
@@ -153,15 +191,17 @@ function ChatMentionInputSuggestion({
             };
           }),
         ]) as ChatMention[]) ?? []
-    ).concat(
-      workflowList.map((workflow) => ({
-        type: "workflow",
-        name: workflow.name,
-        workflowId: workflow.id,
-        icon: workflow.icon,
-        description: workflow.description,
-      })),
-    );
+    )
+      .concat(
+        workflowList.map((workflow) => ({
+          type: "workflow",
+          name: workflow.name,
+          workflowId: workflow.id,
+          icon: workflow.icon,
+          description: workflow.description,
+        })),
+      )
+      .concat(appDefaultToolMentions);
   }, [mcpList, workflowList]);
 
   return createPortal(
@@ -194,7 +234,9 @@ function ChatMentionInputSuggestion({
                   ? item.serverId
                   : item.type == "workflow"
                     ? item.workflowId
-                    : `${item.serverId}-${item.name}`;
+                    : item.type == "defaultTool"
+                      ? `default-${item.name}`
+                      : `${item.serverId}-${item.name}`;
               return (
                 <CommandItem
                   key={key}
@@ -204,7 +246,9 @@ function ChatMentionInputSuggestion({
                       label:
                         item.type === "mcpServer"
                           ? `${item.name} `
-                          : `tool("${item.name}") `,
+                          : item.type === "defaultTool"
+                            ? `tool("${item.label || item.name}") `
+                            : `tool("${item.name}") `,
                       id: JSON.stringify(item),
                     })
                   }
@@ -222,7 +266,11 @@ function ChatMentionInputSuggestion({
                       <WrenchIcon className="size-3.5" />
                     </div>
                   )}
-                  <span className="truncate min-w-0">{item.name}</span>
+                  <span className="truncate min-w-0">
+                    {item.type == "defaultTool"
+                      ? item.label || item.name
+                      : item.name}
+                  </span>
                   {item.type == "mcpServer" ? (
                     <span className="ml-auto text-xs text-muted-foreground">
                       {item.toolCount} tools

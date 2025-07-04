@@ -277,7 +277,7 @@ export const tavilySearchSchema: JSONSchema7 = {
   required: ["query"],
 };
 
-export const tavilyExtractSchema: JSONSchema7 = {
+export const tavilyWebContentSchema: JSONSchema7 = {
   type: "object",
   properties: {
     urls: {
@@ -363,7 +363,7 @@ const fetchTavily = async (url: string, body: any): Promise<TavilyResponse> => {
 
 export const tavilySearchTool = createTool({
   description:
-    "A powerful web search tool that provides comprehensive, real-time results using Tavily's AI search engine. Returns relevant web content with customizable parameters for result count, content type, and domain filtering. Ideal for gathering current information, news, and detailed web content analysis.",
+    "A web search tool for quick research and information gathering. Provides basic search results with titles, summaries, and URLs from across the web. Perfect for finding relevant sources and getting an overview of topics.",
   parameters: jsonSchemaToZod(tavilySearchSchema),
   execute: async (params) => {
     return fetchTavily(baseURLs.search, {
@@ -382,8 +382,8 @@ export const tavilySearchTool = createTool({
 
 export const tavilyWebContentTool = createTool({
   description:
-    "A powerful web content extraction tool that retrieves and processes raw content from specified URLs, ideal for data collection, content analysis, and research tasks.",
-  parameters: jsonSchemaToZod(tavilyExtractSchema),
+    "A detailed web content extraction tool that analyzes and summarizes specific web pages from provided URLs. Extracts full content, processes it intelligently, and provides comprehensive summaries. Perfect for in-depth analysis of specific articles, documents, or web pages.",
+  parameters: jsonSchemaToZod(tavilyWebContentSchema),
   execute: async (params) => {
     return fetchTavily(baseURLs.extract, {
       ...params,
@@ -394,7 +394,7 @@ export const tavilyWebContentTool = createTool({
 
 export const safeTavilySearchTool = createTool({
   description:
-    "A powerful web search tool that provides comprehensive, real-time results using Tavily's AI search engine. Returns relevant web content with customizable parameters for result count, content type, and domain filtering. Ideal for gathering current information, news, and detailed web content analysis.",
+    "A web search tool for quick research and information gathering. Provides basic search results with titles, summaries, and URLs from across the web. Perfect for finding relevant sources and getting an overview of topics.",
   parameters: jsonSchemaToZod(tavilySearchSchema),
   execute: (params) => {
     return safe(() =>
@@ -424,8 +424,8 @@ export const safeTavilySearchTool = createTool({
 
 export const safeTavilyWebContentTool = createTool({
   description:
-    "A powerful web content extraction tool that retrieves and processes raw content from specified URLs, ideal for data collection, content analysis, and research tasks.",
-  parameters: jsonSchemaToZod(tavilyExtractSchema),
+    "A detailed web content extraction tool that analyzes and summarizes specific web pages from provided URLs. Extracts full content, processes it intelligently, and provides comprehensive summaries. Perfect for in-depth analysis of specific articles, documents, or web pages.",
+  parameters: jsonSchemaToZod(tavilyWebContentSchema),
   execute: async (params) => {
     return safe(() =>
       fetchTavily(baseURLs.extract, {
