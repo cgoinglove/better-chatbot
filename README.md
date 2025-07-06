@@ -49,7 +49,9 @@ Get a feel for the UX — here's a quick look at what's possible.
 
 ### 🧩 Browser Automation with Playwright MCP
 
-![playwright](https://github.com/user-attachments/assets/67f23b93-b48d-4eaa-9ced-6a14c591b3e1)
+<img alt="playwright" src="https://github.com/user-attachments/assets/67f23b93-b48d-4eaa-9ced-6a14c591b3e1" loading="lazy"/>
+
+
 
 **Example:** Control a web browser using Microsoft's [playwright-mcp](https://github.com/microsoft/playwright-mcp) tool.
 
@@ -91,7 +93,7 @@ Talk to the assistant naturally, and watch it execute tools in real time.
 
 ### ⚡️ Quick Tool Mentions (`@`) & Presets
 
-![tool](https://github.com/user-attachments/assets/eb690c07-cb9f-4a61-8397-9f39518e1b6c)
+<img src="https://github.com/user-attachments/assets/eb690c07-cb9f-4a61-8397-9f39518e1b6c" alt="mention" loading="lazy"/>
 
 
 Quickly call any registered MCP tool during chat by typing `@toolname`.
