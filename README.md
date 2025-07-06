@@ -1,4 +1,5 @@
-<img width="1274" alt="thumbnail" src="https://github.com/user-attachments/assets/bd018edb-69c9-43bb-a8c8-ffbc3f816ce5" />
+<img width="1647" alt="thumbnail" loading="lazy" src="https://github.com/user-attachments/assets/7b0f279a-8771-42a0-b8b6-128b3b1a076c" />
+
 
 [![MCP Supported](https://img.shields.io/badge/MCP-Supported-00c853)](https://modelcontextprotocol.io/introduction)
 [![Local First](https://img.shields.io/badge/Local-First-blue)](https://localfirstweb.dev/)
