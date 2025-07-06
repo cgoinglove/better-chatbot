@@ -1,5 +1,5 @@
 {
-  "name": "mcp-client-chatbot",
+  "name": "better-chatbot",
   "version": "1.13.0",
   "private": true,
   "author": "cgoinglove",
@@ -34,7 +34,7 @@
     "docker-compose:ps": "docker-compose -f docker/compose.yml ps",
     "docker-compose:update": "git pull && docker-compose -f docker/compose.yml up -d --build",
     "docker:pg": "docker run --name mcp-pg -e POSTGRES_PASSWORD=your_password -e POSTGRES_USER=your_username -e POSTGRES_DB=your_database_name -p 5432:5432 -d postgres",
-    "docker:app": "docker build -f docker/Dockerfile -t mcp-client-chatbot . && docker run -p 3000:3000 -e NO_HTTPS=1 mcp-client-chatbot",
+    "docker:app": "docker build -f docker/Dockerfile -t better-chatbot . && docker run -p 3000:3000 -e NO_HTTPS=1 better-chatbot",
     "prepare": "husky",
     "check": "pnpm lint:fix && pnpm check-types && pnpm test"
   },
@@ -134,10 +134,7 @@
     "vitest": "^3.2.4"
   },
   "lint-staged": {
-    "*.{js,json,mjs,ts,yaml,tsx,css}": [
-      "pnpm format",
-      "pnpm lint:fix"
-    ]
+    "*.{js,json,mjs,ts,yaml,tsx,css}": ["pnpm format", "pnpm lint:fix"]
   },
   "packageManager": "pnpm@10.2.1",
   "engines": {

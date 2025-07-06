@@ -65,7 +65,7 @@
       "createAccount": "アカウントを作成"
     },
     "Intro": {
-      "description": "MCP Chat Botへようこそ。AIを活用した会話ツールを体験するためにサインインしてください。"
+      "description": "better-chatbot へようこそ。AIを活用した会話ツールを体験するためにサインインしてください。"
     }
   },
   "Chat": {

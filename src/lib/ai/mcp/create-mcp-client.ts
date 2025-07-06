@@ -94,7 +94,7 @@ export class MCPClient {
       this.locker.lock();
 
       const client = new Client({
-        name: "mcp-chatbot-client",
+        name: "better-chatbot",
         version: "1.0.0",
       });
 

@@ -5,7 +5,7 @@
 [![Discord](https://img.shields.io/discord/1374047276074537103?label=Discord&logo=discord&color=5865F2)](https://discord.gg/gCRu69Upnp)
 
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/cgoinglove/mcp-client-chatbot&env=BETTER_AUTH_SECRET&env=OPENAI_API_KEY&env=GOOGLE_GENERATIVE_AI_API_KEY&env=ANTHROPIC_API_KEY&envDescription=Learn+more+about+how+to+get+the+API+Keys+for+the+application&envLink=https://github.com/cgoinglove/mcp-client-chatbot/blob/main/.env.example&demo-title=MCP+Client+Chatbot&demo-description=An+Open-Source+MCP+Chatbot+Template+Built+With+Next.js+and+the+AI+SDK+by+Vercel.&products=[{"type":"integration","protocol":"storage","productSlug":"neon","integrationSlug":"neon"}])
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/cgoinglove/better-chatbot&env=BETTER_AUTH_SECRET&env=OPENAI_API_KEY&env=GOOGLE_GENERATIVE_AI_API_KEY&env=ANTHROPIC_API_KEY&envDescription=Learn+more+about+how+to+get+the+API+Keys+for+the+application&envLink=https://github.com/cgoinglove/better-chatbot/blob/main/.env.example&demo-title=better-chatbot&demo-description=An+Open-Source+Chatbot+Template+Built+With+Next.js+and+the+AI+SDK+by+Vercel.&products=[{"type":"integration","protocol":"storage","productSlug":"neon","integrationSlug":"neon"}])
 
 Our goal is to create the best possible chatbot UX — focusing on the joy and intuitiveness users feel when calling and interacting with AI tools.
 
@@ -58,7 +58,7 @@ Get a feel for the UX — here's a quick look at what's possible.
 Sample prompt:
 
 ```prompt
-Please go to GitHub and visit the cgoinglove/mcp-client-chatbot project.
+Please go to GitHub and visit the cgoinglove/better-chatbot project.
 Then, click on the README.md file.
 After that, close the browser.
 Finally, tell me how to install the package.
@@ -242,7 +242,7 @@ NOT_ALLOW_ADD_MCP_SERVERS=
 
 ## 📘 Guides
 
-Step-by-step setup guides for running and configuring MCP Client Chatbot.
+Step-by-step setup guides for running and configuring better-chatbot.
 
 #### [🔌 MCP Server Setup & Tool Testing](./docs/tips-guides/mcp-server-setup-and-tool-testing.md)
 
@@ -283,14 +283,14 @@ Advanced use cases and extra capabilities that enhance your chatbot experience.
 
 ## 🗺️ Roadmap
 
-Planned features coming soon to MCP Client Chatbot:
+Planned features coming soon to better-chatbot:
 
 - [ ] **File Attach & Image Generation**
 - [ ] **Collaborative Document Editing** (like OpenAI Canvas: user & assistant co-editing)
 - [ ] **RAG (Retrieval-Augmented Generation)**
 - [ ] **Web-based Compute** (with [WebContainers](https://webcontainers.io) integration)
 
-💡 If you have suggestions or need specific features, please create an [issue](https://github.com/cgoinglove/mcp-client-chatbot/issues)!
+💡 If you have suggestions or need specific features, please create an [issue](https://github.com/cgoinglove/better-chatbot/issues)!
 
 ## 🙌 Contributing
 

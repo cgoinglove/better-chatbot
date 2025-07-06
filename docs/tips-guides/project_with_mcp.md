@@ -1,6 +1,6 @@
-# 🧠 Building a Project Agent with MCP Client Chatbot
+# 🧠 Building a Project Agent with better-chatbot
 
-You can turn the MCP Client Chatbot into a powerful agent by combining a **Project**, a custom **System Prompt**, and the **Tool Preset** feature. This is similar to how OpenAI and Claude structure their Project features — a way to start conversations with context tailored to a specific task or domain.
+You can turn the better-chatbot into a powerful agent by combining a **Project**, a custom **System Prompt**, and the **Tool Preset** feature. This is similar to how OpenAI and Claude structure their Project features — a way to start conversations with context tailored to a specific task or domain.
 
 ---
 
@@ -13,11 +13,11 @@ By using both together, you can create an effective workflow-specific assistant.
 
 ---
 
-## 📦 Example: Managing the `mcp-client-chatbot` Repository
+## 📦 Example: Managing the `better-chatbot` Repository
 
-Let’s say you want to build an assistant for managing the `mcp-client-chatbot` GitHub repository:
+Let’s say you want to build an assistant for managing the `better-chatbot` GitHub repository:
 
-1. **Create a Project** named `mcp-client-chatbot`
+1. **Create a Project** named `better-chatbot`
 2. In the system prompt, include:
 
    * A description of the project
@@ -26,7 +26,7 @@ Let’s say you want to build an assistant for managing the `mcp-client-chatbot`
    * A brief instruction on how to use the GitHub MCP server
 3. Separately, create a **Tool Preset** including 10–15 GitHub tools like `list_issues`, `comment_on_issue`, `merge_pr`, etc.
 
-Now, any chat created under the `mcp-client-chatbot` project will always start with that system prompt. If the user enables the corresponding Tool Preset, the assistant becomes a specialized project agent.
+Now, any chat created under the `better-chatbot` project will always start with that system prompt. If the user enables the corresponding Tool Preset, the assistant becomes a specialized project agent.
 
 ---
 

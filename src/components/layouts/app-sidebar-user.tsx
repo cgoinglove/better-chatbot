@@ -134,7 +134,7 @@ export function AppSidebarUser({
             <DropdownMenuItem
               onClick={() => {
                 window.open(
-                  "https://github.com/cgoinglove/mcp-client-chatbot/issues/new",
+                  "https://github.com/cgoinglove/better-chatbot/issues/new",
                   "_blank",
                 );
               }}

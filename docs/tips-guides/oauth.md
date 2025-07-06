@@ -44,4 +44,4 @@ GITHUB_CLIENT_SECRET=your_github_client_secret
 
 ## Done
 
-You can now sign in to MCP Client Chatbot using your Google or GitHub account. Restart the application to apply the changes. 
+You can now sign in to better-chatbot using your Google or GitHub account. Restart the application to apply the changes. 
