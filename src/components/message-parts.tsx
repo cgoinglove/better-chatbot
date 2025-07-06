@@ -712,6 +712,7 @@ function SearchToolPart({ part }: { part: ToolMessagePart["toolInvocation"] }) {
     if (part.state != "result") return null;
     return part.result as TavilyResponse & { isError: boolean; error?: string };
   }, [part.state]);
+  const [errorSrc, setErrorSrc] = useState<string[]>([]);
 
   const options = useMemo(() => {
     return (
@@ -732,6 +733,18 @@ function SearchToolPart({ part }: { part: ToolMessagePart["toolInvocation"] }) {
       </HoverCard>
     );
   }, [part.args]);
+
+  const onError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    const target = e.currentTarget;
+    if (errorSrc.includes(target.src)) return;
+    setErrorSrc([...errorSrc, target.src]);
+  };
+
+  const images = useMemo(() => {
+    return (
+      result?.images?.filter((image) => !errorSrc.includes(image.url)) ?? []
+    );
+  }, [result?.images, errorSrc]);
 
   if (part.state != "result")
     return (
@@ -757,9 +770,9 @@ function SearchToolPart({ part }: { part: ToolMessagePart["toolInvocation"] }) {
           />
         </div>
         <div className="flex flex-col gap-2 pb-2">
-          {result?.images?.length && (
+          {images?.length && (
             <div className="grid grid-cols-3 gap-3 max-w-2xl">
-              {result?.images?.map((image, i) => {
+              {images.map((image, i) => {
                 if (!image.url) return null;
                 return (
                   <Tooltip key={i}>
@@ -777,6 +790,7 @@ function SearchToolPart({ part }: { part: ToolMessagePart["toolInvocation"] }) {
                                     src={image.url}
                                     className="max-w-[80vw] max-h-[80vh] object-contain rounded-lg"
                                     alt={image.description}
+                                    onError={onError}
                                   />
                                 </div>
                               </div>
@@ -791,6 +805,7 @@ function SearchToolPart({ part }: { part: ToolMessagePart["toolInvocation"] }) {
                           src={image.url}
                           alt={image.description}
                           className="w-full h-36 object-cover hover:scale-120 transition-transform duration-300"
+                          onError={onError}
                         />
                       </div>
                     </TooltipTrigger>
