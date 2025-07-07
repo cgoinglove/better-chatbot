@@ -20,6 +20,7 @@ import {
   buildMcpServerCustomizationsSystemPrompt,
   buildProjectInstructionsSystemPrompt,
   buildUserSystemPrompt,
+  mentionPrompt,
 } from "lib/ai/prompts";
 import {
   chatApiSchemaRequestBodySchema,
@@ -228,6 +229,7 @@ export async function POST(request: Request) {
           buildUserSystemPrompt(session.user, userPreferences),
           buildProjectInstructionsSystemPrompt(thread?.instructions),
           buildMcpServerCustomizationsSystemPrompt(mcpServerCustomizations),
+          mentions.length ? mentionPrompt : undefined,
         );
 
         // Precompute toolChoice to avoid repeated tool calls
@@ -267,6 +269,7 @@ export async function POST(request: Request) {
           maxRetries: 1,
           tools: vercelAITooles,
           toolChoice: computedToolChoice,
+          abortSignal: request.signal,
           onFinish: async ({ response, usage }) => {
             const appendMessages = appendResponseMessages({
               messages: messages.slice(-1),
@@ -337,6 +340,11 @@ export async function POST(request: Request) {
         result.consumeStream();
         result.mergeIntoDataStream(dataStream, {
           sendReasoning: true,
+        });
+        result.usage.then((useage) => {
+          logger.debug(
+            `usage input: ${useage.promptTokens}, usage output: ${useage.completionTokens}, usage total: ${useage.totalTokens}`,
+          );
         });
       },
       onError: handleError,

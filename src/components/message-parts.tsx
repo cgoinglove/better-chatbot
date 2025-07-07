@@ -962,6 +962,8 @@ ReasoningPart.displayName = "ReasoningPart";
 export function WorkflowToolDetail({
   result,
 }: { result: VercelAIWorkflowToolStreamingResult }) {
+  const { copied, copy } = useCopy();
+  const savedResult = useRef<VercelAIWorkflowToolStreamingResult>(result);
   const output = useMemo(() => {
     if (result.status == "running") return null;
     if (result.status == "fail")
@@ -976,25 +978,44 @@ export function WorkflowToolDetail({
 
     return (
       <div className="w-full max-h-96 overflow-y-auto bg-card p-4 border text-xs transition-colors fade-300 rounded-lg ">
+        <div className="flex justify-end">
+          <Button
+            variant={"ghost"}
+            size={"icon"}
+            onClick={() => copy(JSON.stringify(result.result))}
+          >
+            {copied ? (
+              <Check className="size-3" />
+            ) : (
+              <Copy className="size-3" />
+            )}
+          </Button>
+        </div>
         <JsonView data={result.result} />
       </div>
     );
-  }, [result.status, result.error, result.result]);
+  }, [result.status, result.error, result.result, copied]);
+  useEffect(() => {
+    if (result.status == "running") {
+      savedResult.current = result;
+    }
+  }, [result]);
 
   return (
     <div className="w-full flex flex-col gap-1">
-      {result.history.map((item) => {
+      {result.history.map((item, i) => {
+        const result = item.result || savedResult.current.history[i]?.result;
         return (
           <NodeResultPopup
             key={item.id}
-            disabled={!item.result}
+            disabled={!result}
             history={{
               name: item.name,
               status: item.status,
               startedAt: item.startedAt,
               endedAt: item.endedAt,
               error: item.error?.message,
-              result: item.result,
+              result,
             }}
           >
             <div
@@ -1002,7 +1023,7 @@ export function WorkflowToolDetail({
               className={cn(
                 "flex items-center gap-2 text-sm rounded-sm px-2 py-1.5 relative",
                 item.status == "fail" && "text-destructive",
-                item.result && "cursor-pointer hover:bg-secondary",
+                !!result && "cursor-pointer hover:bg-secondary",
               )}
             >
               <div className="border rounded overflow-hidden">

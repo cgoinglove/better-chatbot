@@ -301,10 +301,12 @@ export const workflowToVercelAITools = ({
               e.eventType == "WORKFLOW_END"
             )
               return;
+            if (e.node.name == "SKIP") return;
             if (e.eventType == "NODE_START") {
               const node = workflow.nodes.find(
                 (node) => node.id == e.node.name,
               )!;
+              if (!node) return;
               history.push({
                 id: e.nodeExecutionId,
                 name: node.name,
@@ -363,7 +365,10 @@ export const workflowToVercelAITools = ({
             .filter((h) => h.kind == NodeKind.Output)
             .map((v) => v.result?.output)
             .filter(Boolean);
-
+          toolResult.history = history.map((h) => ({
+            ...h,
+            result: undefined, // save tokens.
+          }));
           toolResult.result =
             outputNodeResults.length == 1
               ? outputNodeResults[0]

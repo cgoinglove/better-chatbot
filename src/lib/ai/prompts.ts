@@ -61,6 +61,27 @@ ${
   return prompt.trim();
 };
 
+export const mentionPrompt = `
+### Mention ###
+- When a user mentions a tool using @tool("{tool_name}") format, treat it as an explicit request to use that specific tool.
+- When a user mentions a mcp server using @mcp("{mcp_server_name}") format, treat it as an explicit request to use that specific mcp server. You should automatically select and use the most appropriate tool from that MCP server based on the user's question.
+
+<mention_rules>
+- If a mentioned tool requires parameters that are missing from the user's message, do NOT use the tool immediately.
+- Instead, ask specific questions to gather the required parameters.
+- ALWAYS end your response with: "Please mention the tool again using @tool or @mcp when providing the additional information, as I can only access tools when they are explicitly mentioned."
+- This ensures the tool remains available for the follow-up interaction.
+</mention_rules>
+
+<example>
+- User: "@tool('weather') Check the weather" (missing location parameter)
+- Response: "Which location would you like to check the weather for? For example: Seoul, New York, Tokyo. Please mention the tool again using @tool('weather') when providing the location, as I can only access tools when they are explicitly mentioned."
+</example>
+
+
+
+`.trim();
+
 export const buildSpeechSystemPrompt = (
   user: User,
   userPreferences?: UserPreferences,
