@@ -16,7 +16,7 @@ export const notImplementedToast = () => {
 };
 
 export const handleErrorWithToast = (error: Error, id?: string) => {
-  toast.error(`${error.name}`, {
+  toast.error(`${error?.name || "Error"}`, {
     description: (
       <div className="my-4 max-h-[340px] overflow-y-auto">
         <JsonView data={errorToString(error)} />

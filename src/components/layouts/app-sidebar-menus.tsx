@@ -12,7 +12,6 @@ import { useTranslations } from "next-intl";
 import { MCPIcon } from "ui/mcp-icon";
 import { WriteIcon } from "ui/write-icon";
 import { Waypoints } from "lucide-react";
-import { Badge } from "ui/badge";
 
 export function AppSidebarMenus() {
   const router = useRouter();
@@ -70,7 +69,6 @@ export function AppSidebarMenus() {
                 <SidebarMenuButton className="font-semibold">
                   <Waypoints className="size-4" />
                   {t("workflow")}
-                  <Badge>Beta</Badge>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
