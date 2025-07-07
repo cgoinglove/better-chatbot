@@ -327,7 +327,7 @@
     "toolDescription": "Fournissez les informations nécessaires pour que LLM génère les paramètres d'outil.\n\nUtilisez '/' pour mentionner des données de nœuds précédents.",
     "generateInputWithAIDescription": "Écrivez un prompt pour générer une entrée pour le flux de travail",
     "example": {
-      "storyGenerator": "Générateur d'Histoire",
+      "babyResearch": "Recherche de Bébé",
       "getWeather": "Obtenir Météo"
     },
     "selectVariable": "Sélectionner Variable",

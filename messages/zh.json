@@ -328,7 +328,7 @@
     "toolDescription": "提供 LLM 生成工具参数所需的信息。\n\n使用 '/' 提及前一个节点的数据。",
     "generateInputWithAIDescription": "编写提示为工作流生成输入",
     "example": {
-      "storyGenerator": "故事生成器",
+      "babyResearch": "婴儿研究",
       "getWeather": "获取天气"
     },
     "selectVariable": "选择变量",

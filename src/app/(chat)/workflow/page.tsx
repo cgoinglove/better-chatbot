@@ -31,30 +31,23 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "ui/dropdown-menu";
-import { GetWeather, StoryGenerator } from "lib/ai/workflow/example";
+import { BabyResearch, GetWeather } from "lib/ai/workflow/examples";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "ui/dialog";
 import { WorkflowGreeting } from "@/components/workflow/workflow-greeting";
 
-const createWithExample = async (example: string) => {
-  let exampleWorkflow: {
-    workflow: Partial<DBWorkflow>;
-    nodes: Partial<DBNode>[];
-    edges: Partial<DBEdge>[];
-  } | null = null;
-  if (example === "storyGenerator") {
-    exampleWorkflow = StoryGenerator();
-  } else if (example === "getWeather") {
-    exampleWorkflow = GetWeather();
-  }
-
-  if (!exampleWorkflow) return;
+const createWithExample = async (exampleWorkflow: {
+  workflow: Partial<DBWorkflow>;
+  nodes: Partial<DBNode>[];
+  edges: Partial<DBEdge>[];
+}) => {
   const response = await fetch("/api/workflow", {
     method: "POST",
     body: JSON.stringify({
       ...exampleWorkflow.workflow,
       noGenerateInputNode: true,
+      isPublished: true,
     }),
   });
 
@@ -86,8 +79,12 @@ export default function WorkflowPage() {
     },
   );
 
-  const createExample = async (example: string) => {
-    const workflowId = await createWithExample(example);
+  const createExample = async (exampleWorkflow: {
+    workflow: Partial<DBWorkflow>;
+    nodes: Partial<DBNode>[];
+    edges: Partial<DBEdge>[];
+  }) => {
+    const workflowId = await createWithExample(exampleWorkflow);
     mutate("/api/workflow");
     router.push(`/workflow/${workflowId}`);
   };
@@ -121,10 +118,10 @@ export default function WorkflowPage() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-54">
-            <DropdownMenuItem onClick={() => createExample("storyGenerator")}>
-              📖 {t("Workflow.example.storyGenerator")}
+            <DropdownMenuItem onClick={() => createExample(BabyResearch())}>
+              👨🏻‍🔬 {t("Workflow.example.babyResearch")}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => createExample("getWeather")}>
+            <DropdownMenuItem onClick={() => createExample(GetWeather())}>
               🌤️ {t("Workflow.example.getWeather")}
             </DropdownMenuItem>
           </DropdownMenuContent>

@@ -327,7 +327,7 @@
     "toolDescription": "LLMがツールパラメータを生成するために必要な情報を提供します。\n\n'/'を使用して前のノードのデータを言及してください。",
     "generateInputWithAIDescription": "ワークフローの入力を生成するプロンプトを書いてください",
     "example": {
-      "storyGenerator": "ストーリージェネレーター",
+      "babyResearch": "ベビーリサーチ",
       "getWeather": "天気取得"
     },
     "selectVariable": "変数を選択",

@@ -328,7 +328,7 @@
     "toolDescription": "LLM이 도구 매개변수를 생성하는 데 필요한 정보를 제공합니다.\n\n'/'를 사용하여 이전 노드의 데이터를 언급하세요.",
     "generateInputWithAIDescription": "워크플로우에 대한 입력을 생성하는 프롬프트를 작성하세요",
     "example": {
-      "storyGenerator": "스토리 생성기",
+      "babyResearch": "베이비 리서치",
       "getWeather": "날씨 조회"
     },
     "selectVariable": "변수 선택",

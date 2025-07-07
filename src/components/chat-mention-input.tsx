@@ -156,7 +156,7 @@ function ChatMentionInputSuggestion({
               className="cursor-pointer text-foreground"
               onSelect={() =>
                 onSelectMention({
-                  label: `@mcp("${mcp.name}")`,
+                  label: `mcp("${mcp.name}")`,
                   id: JSON.stringify({
                     type: "mcpServer",
                     name: mcp.name,
@@ -211,7 +211,7 @@ function ChatMentionInputSuggestion({
               className="cursor-pointer text-foreground"
               onSelect={() =>
                 onSelectMention({
-                  label: `@tool("${workflow.name}")`,
+                  label: `tool("${workflow.name}")`,
                   id: JSON.stringify({
                     type: "workflow",
                     name: workflow.name,
@@ -244,7 +244,7 @@ function ChatMentionInputSuggestion({
           <CommandItem
             onSelect={() =>
               onSelectMention({
-                label: "@tool('pie-chart')",
+                label: "tool('pie-chart')",
                 id: JSON.stringify({
                   type: "defaultTool",
                   name: DefaultToolName.CreatePieChart,
@@ -259,7 +259,7 @@ function ChatMentionInputSuggestion({
           <CommandItem
             onSelect={() =>
               onSelectMention({
-                label: "@tool('bar-chart')",
+                label: "tool('bar-chart')",
                 id: JSON.stringify({
                   type: "defaultTool",
                   name: DefaultToolName.CreateBarChart,
@@ -274,7 +274,7 @@ function ChatMentionInputSuggestion({
           <CommandItem
             onSelect={() =>
               onSelectMention({
-                label: "@tool('line-chart')",
+                label: "tool('line-chart')",
                 id: JSON.stringify({
                   type: "defaultTool",
                   name: DefaultToolName.CreateLineChart,
@@ -291,7 +291,7 @@ function ChatMentionInputSuggestion({
           <CommandItem
             onSelect={() =>
               onSelectMention({
-                label: "@tool('web-search')",
+                label: "tool('web-search')",
                 id: JSON.stringify({
                   type: "defaultTool",
                   name: DefaultToolName.WebSearch,
@@ -306,7 +306,7 @@ function ChatMentionInputSuggestion({
           <CommandItem
             onSelect={() =>
               onSelectMention({
-                label: "@tool('web-content')",
+                label: "tool('web-content')",
                 id: JSON.stringify({
                   type: "defaultTool",
                   name: DefaultToolName.WebContent,

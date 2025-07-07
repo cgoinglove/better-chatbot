@@ -327,7 +327,7 @@
     "toolDescription": "Proporciona información necesaria para que LLM genere parámetros de herramienta.\n\nUsa '/' para mencionar datos de nodos anteriores.",
     "generateInputWithAIDescription": "Escribe un prompt para generar entrada para el flujo de trabajo",
     "example": {
-      "storyGenerator": "Generador de Historias",
+      "babyResearch": "Investigación de Bebés",
       "getWeather": "Consultar Clima"
     },
     "selectVariable": "Seleccionar Variable",
