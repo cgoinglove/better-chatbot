@@ -165,6 +165,7 @@ export default function PromptInput({
                       align="start"
                       side="top"
                       onSelectWorkflow={onSelectWorkflow}
+                      mentions={toolMentionItems}
                     />
                   </>
                 )}

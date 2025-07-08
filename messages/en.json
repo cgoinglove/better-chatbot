@@ -202,7 +202,7 @@
       "selectToolMode": "Select a tool mode",
       "autoToolModeDescription": "Decides when to use tools without asking you",
       "manualToolModeDescription": "Asks your permission before using any tools",
-      "noneToolModeDescription": "Do not use tools",
+      "noneToolModeDescription": "Do not use tools. @mention is still available.",
       "toolsSetup": "Tools Setup",
       "preset": "Preset",
       "toolPresets": "Tool Presets",

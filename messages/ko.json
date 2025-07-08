@@ -102,7 +102,7 @@
       "selectToolMode": "도구 사용 모드",
       "autoToolModeDescription": "도구 사용 여부를 자동으로 결정합니다",
       "manualToolModeDescription": "도구 사용 여부를 물어봅니다",
-      "noneToolModeDescription": "도구를 사용하지 않습니다",
+      "noneToolModeDescription": "도구를 사용하지 않습니다. @mention은 여전히 가능합니다.",
       "toolsSetup": "도구 설정",
       "preset": "프리셋",
       "toolPresets": "도구 프리셋",

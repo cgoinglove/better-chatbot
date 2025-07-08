@@ -101,7 +101,7 @@
       "selectToolMode": "Seleccionar modo de herramientas",
       "autoToolModeDescription": "Decide cuándo usar herramientas sin preguntarte",
       "manualToolModeDescription": "Pide tu permiso antes de usar cualquier herramienta",
-      "noneToolModeDescription": "No usar herramientas",
+      "noneToolModeDescription": "No usar herramientas. @mention sigue estando disponible.",
       "toolsSetup": "Configuración de Herramientas",
       "preset": "Preajuste",
       "toolPresets": "Preajustes de Herramientas",

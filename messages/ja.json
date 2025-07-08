@@ -101,7 +101,7 @@
       "selectToolMode": "ツールモードを選択",
       "autoToolModeDescription": "あなたに尋ねることなく、ツールをいつ使用するかを決定します",
       "manualToolModeDescription": "ツールを使用する前にあなたの許可を求めます",
-      "noneToolModeDescription": "ツールを使用しません",
+      "noneToolModeDescription": "ツールを使用しません。@mentionは引き続き利用可能です。",
       "toolsSetup": "ツール設定",
       "preset": "プリセット",
       "toolPresets": "ツールプリセット",

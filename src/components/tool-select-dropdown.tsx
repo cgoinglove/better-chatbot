@@ -1,6 +1,6 @@
 import { appStore } from "@/app/store";
 import { AllowedMCPServer, MCPServerInfo } from "app-types/mcp";
-import { cn } from "lib/utils";
+import { cn, objectFlow } from "lib/utils";
 import {
   AtSign,
   ChartColumn,
@@ -17,7 +17,7 @@ import {
   X,
 } from "lucide-react";
 import Link from "next/link";
-import { PropsWithChildren, useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "ui/badge";
 import { Button } from "ui/button";
@@ -58,11 +58,13 @@ import { WorkflowSummary } from "app-types/workflow";
 import { WorkflowGreeting } from "./workflow/workflow-greeting";
 import { GlobalIcon } from "ui/global-icon";
 import { AppDefaultToolkit } from "lib/ai/tools";
+import { ChatMention } from "app-types/chat";
 
 interface ToolSelectDropdownProps {
   align?: "start" | "end" | "center";
   side?: "left" | "right" | "top" | "bottom";
   disabled?: boolean;
+  mentions?: ChatMention[];
   onSelectWorkflow?: (workflow: WorkflowSummary) => void;
 }
 
@@ -78,40 +80,85 @@ const calculateToolCount = (
 };
 
 export function ToolSelectDropdown({
-  children,
   align,
   side,
-  disabled,
   onSelectWorkflow,
-}: PropsWithChildren<ToolSelectDropdownProps>) {
-  const [toolChoice] = appStore(useShallow((state) => [state.toolChoice]));
+  mentions,
+}: ToolSelectDropdownProps) {
+  const [toolChoice, allowedAppDefaultToolkit, allowedMcpServers, mcpList] =
+    appStore(
+      useShallow((state) => [
+        state.toolChoice,
+        state.allowedAppDefaultToolkit,
+        state.allowedMcpServers,
+        state.mcpList,
+      ]),
+    );
   const t = useTranslations("Chat.Tool");
   const { isLoading } = useMcpList({
     refreshInterval: 1000 * 60 * 5,
   });
+
   useWorkflowToolList({
     refreshInterval: 1000 * 60 * 5,
   });
+
+  const bindingTools = useMemo<string[]>(() => {
+    if (mentions?.length) {
+      return mentions.map((m) => m.name);
+    }
+    if (toolChoice == "none") return [];
+    const translate = t.raw("defaultToolKit");
+    const defaultTools = Object.values(AppDefaultToolkit)
+      .map((t) => translate[t])
+      .filter((t) => allowedAppDefaultToolkit?.includes(t));
+    const mcpIds = mcpList.map((v) => v.id);
+    const mcpTools = Object.values(
+      objectFlow(allowedMcpServers ?? {}).filter((_, id) =>
+        mcpIds.includes(id),
+      ),
+    )
+      .map((v) => v.tools)
+      .flat();
+
+    return [...defaultTools, ...mcpTools];
+  }, [
+    mentions,
+    allowedAppDefaultToolkit,
+    allowedMcpServers,
+    toolChoice,
+    mcpList,
+  ]);
+
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild disabled={disabled}>
-        {children ?? (
-          <Button
-            variant={"outline"}
-            className={cn(
-              "rounded-full font-semibold bg-secondary data-[state=open]:bg-input/80!",
-              toolChoice == "none" && "text-muted-foreground bg-transparent",
-            )}
-          >
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant={"outline"}
+          className={cn(
+            "gap-1 rounded-full font-semibold bg-secondary data-[state=open]:bg-input/80!",
+            toolChoice == "none" && "text-muted-foreground bg-transparent",
+          )}
+        >
+          {bindingTools.length > 0 && <span>{bindingTools.length}</span>}
+          <span className={mentions?.length ? "text-muted-foreground" : ""}>
             Tools
-            <Separator orientation="vertical" className="h-4 hidden sm:block" />
-            {isLoading ? (
-              <Loader className="size-3 animate-spin" />
-            ) : (
-              <AtSign className="size-3 hidden sm:block" />
-            )}
-          </Button>
-        )}
+          </span>
+          <Separator
+            orientation="vertical"
+            className="h-4 mx-1 hidden sm:block"
+          />
+          {isLoading ? (
+            <Loader className="size-3 animate-spin" />
+          ) : (
+            <AtSign
+              className={
+                "size-3 hidden sm:block text-muted-foreground transition-colors duration-300" +
+                (mentions?.length ? " text-foreground! wiggle" : "")
+              }
+            />
+          )}
+        </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="md:w-72" align={align} side={side}>
         <DropdownMenuLabel className="flex items-center gap-2">
