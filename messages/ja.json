@@ -111,11 +111,13 @@
       "presetNameCannotBeEmpty": "プリセット名を空にすることはできません",
       "presetNameAlreadyExists": "プリセット名が既に存在します",
       "presetSaved": "プリセットが保存されました",
-      "chartTools": "チャートツール",
-      "webSearchTools": "ウェブを検索",
       "clickSaveAsPresetToGetStarted": "開始するには「プリセットとして保存」をクリックしてください。",
       "searchOptions": "検索オプション",
-      "searchOptionsDescription": "検索結果の最大数、検索日時など、チャットボットに検索オプションを渡すことができます。"
+      "searchOptionsDescription": "検索結果の最大数、検索日時など、チャットボットに検索オプションを渡すことができます。",
+      "defaultToolKit": {
+        "visualization": "チャートツール",
+        "webSearch": "ウェブを検索"
+      }
     },
     "VoiceChat": {
       "title": "音声チャットモード",

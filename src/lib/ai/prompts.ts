@@ -55,7 +55,6 @@ ${
 }
 - If a diagram or chart is requested or would be helpful to express your thoughts, use mermaid code blocks.
 - When you're about to use a tool, casually mention which tool you'll use and why - just a quick comment about your approach, then proceed to use the tool.
-- When a user mentions a tool using @tool("{tool_name}") format, treat it as an explicit request to use that specific tool.
 </response_style>`.trim();
 
   return prompt.trim();

@@ -49,7 +49,7 @@ import {
   ChatMessageAnnotation,
   ChatModel,
 } from "app-types/chat";
-import { DefaultToolName } from "lib/ai/tools/app-default-tool-name";
+
 import { Skeleton } from "ui/skeleton";
 import { PieChart } from "./tool-invocation/pie-chart";
 import { BarChart } from "./tool-invocation/bar-chart";
@@ -70,9 +70,11 @@ import { NodeResultPopup } from "./workflow/node-result-popup";
 import { Alert, AlertDescription, AlertTitle } from "ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { GlobalIcon } from "ui/global-icon";
-import { TavilyResponse } from "lib/ai/tools/web-search";
+
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "ui/hover-card";
 import { notify } from "lib/notify";
+import { DefaultToolName } from "lib/ai/tools";
+import { TavilyResponse } from "lib/ai/tools/web/web-search";
 
 type MessagePart = UIMessage["parts"][number];
 

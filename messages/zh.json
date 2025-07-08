@@ -112,11 +112,13 @@
       "presetNameCannotBeEmpty": "预设名称不能为空",
       "presetNameAlreadyExists": "预设名称已存在",
       "presetSaved": "预设已保存",
-      "chartTools": "图表工具",
-      "webSearchTools": "网络搜索",
       "clickSaveAsPresetToGetStarted": "点击保存为预设开始。",
       "searchOptions": "搜索选项",
-      "searchOptionsDescription": "您可以向聊天机器人传递搜索选项，例如搜索结果的最大数量、搜索日期等。"
+      "searchOptionsDescription": "您可以向聊天机器人传递搜索选项，例如搜索结果的最大数量、搜索日期等。",
+      "defaultToolKit": {
+        "visualization": "图表工具",
+        "webSearch": "网页搜寻"
+      }
     },
     "VoiceChat": {
       "title": "语音聊天模式",

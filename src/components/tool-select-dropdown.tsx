@@ -1,11 +1,11 @@
 import { appStore } from "@/app/store";
-import { AppDefaultToolkit } from "app-types/chat";
 import { AllowedMCPServer, MCPServerInfo } from "app-types/mcp";
 import { cn } from "lib/utils";
 import {
   AtSign,
   ChartColumn,
   ChevronRight,
+  HardDriveUploadIcon,
   InfoIcon,
   Loader,
   MousePointer2,
@@ -57,6 +57,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { WorkflowSummary } from "app-types/workflow";
 import { WorkflowGreeting } from "./workflow/workflow-greeting";
 import { GlobalIcon } from "ui/global-icon";
+import { AppDefaultToolkit } from "lib/ai/tools";
 
 interface ToolSelectDropdownProps {
   align?: "start" | "end" | "center";
@@ -615,7 +616,7 @@ function AppDefaultToolKitSelector() {
   const [appStoreMutate, allowedAppDefaultToolkit] = appStore(
     useShallow((state) => [state.mutate, state.allowedAppDefaultToolkit]),
   );
-  const t = useTranslations("Chat.Tool");
+  const t = useTranslations();
   const toggleAppDefaultToolkit = useCallback((toolkit: AppDefaultToolkit) => {
     appStoreMutate((prev) => {
       const newAllowedAppDefaultToolkit = [
@@ -633,40 +634,52 @@ function AppDefaultToolKitSelector() {
     });
   }, []);
 
+  const defaultToolInfo = useMemo(() => {
+    const raw = t.raw("Chat.Tool.defaultToolKit");
+    return Object.values(AppDefaultToolkit).map((toolkit) => {
+      const label = raw[toolkit] || toolkit;
+      const id = toolkit;
+      let icon = <Wrench className="size-3.5 text-primary" />;
+      switch (toolkit) {
+        case AppDefaultToolkit.Visualization:
+          icon = <ChartColumn className="size-3.5 text-blue-500 stroke-3" />;
+          break;
+        case AppDefaultToolkit.WebSearch:
+          icon = <GlobalIcon className="text-blue-400 size-3.5" />;
+          break;
+        case AppDefaultToolkit.Http:
+          icon = <HardDriveUploadIcon className="size-3.5 text-blue-400" />;
+          break;
+      }
+      return {
+        label,
+        id,
+        icon,
+      };
+    });
+  }, []);
+
   return (
     <DropdownMenuGroup>
-      <DropdownMenuItem
-        className="cursor-pointer font-semibold text-xs"
-        onClick={(e) => {
-          e.preventDefault();
-          toggleAppDefaultToolkit(AppDefaultToolkit.Visualization);
-        }}
-      >
-        <ChartColumn className="size-3.5 text-blue-500 stroke-3" />
-        {t("chartTools")}
-        <Switch
-          className="ml-auto"
-          checked={allowedAppDefaultToolkit?.includes(
-            AppDefaultToolkit.Visualization,
-          )}
-        />
-      </DropdownMenuItem>
-      <DropdownMenuItem
-        className="cursor-pointer font-semibold text-xs"
-        onClick={(e) => {
-          e.preventDefault();
-          toggleAppDefaultToolkit(AppDefaultToolkit.WebSearch);
-        }}
-      >
-        <GlobalIcon className="text-blue-400 size-3.5" />
-        {t("webSearchTools")}
-        <Switch
-          className="ml-auto"
-          checked={allowedAppDefaultToolkit?.includes(
-            AppDefaultToolkit.WebSearch,
-          )}
-        />
-      </DropdownMenuItem>
+      {defaultToolInfo.map((tool) => {
+        return (
+          <DropdownMenuItem
+            key={tool.id}
+            className="cursor-pointer font-semibold text-xs"
+            onClick={(e) => {
+              e.preventDefault();
+              toggleAppDefaultToolkit(tool.id);
+            }}
+          >
+            {tool.icon}
+            {tool.label}
+            <Switch
+              className="ml-auto"
+              checked={allowedAppDefaultToolkit?.includes(tool.id)}
+            />
+          </DropdownMenuItem>
+        );
+      })}
     </DropdownMenuGroup>
   );
 }

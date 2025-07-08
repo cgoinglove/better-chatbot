@@ -4,6 +4,7 @@ import React, { RefObject, useCallback, useMemo } from "react";
 import {
   ChartColumnIcon,
   ChartPie,
+  HardDriveUploadIcon,
   TrendingUpIcon,
   WrenchIcon,
 } from "lucide-react";
@@ -30,7 +31,7 @@ import { capitalizeFirstLetter, cn } from "lib/utils";
 import { useShallow } from "zustand/shallow";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Editor } from "@tiptap/react";
-import { DefaultToolName } from "lib/ai/tools/app-default-tool-name";
+import { DefaultToolName } from "lib/ai/tools";
 import { GlobalIcon } from "ui/global-icon";
 
 interface ChatMentionInputProps {
@@ -238,86 +239,73 @@ function ChatMentionInputSuggestion({
   }, [workflowList]);
 
   const defaultToolMentions = useMemo(() => {
+    const items = Object.values(DefaultToolName).map((toolName) => {
+      let label = toolName as string;
+      let icon = <WrenchIcon className="size-3.5" />;
+      let description = "";
+      switch (toolName) {
+        case DefaultToolName.CreatePieChart:
+          label = "pie-chart";
+          icon = <ChartPie className="size-3.5 text-blue-500" />;
+          description = "Create a pie chart";
+          break;
+        case DefaultToolName.CreateBarChart:
+          label = "bar-chart";
+          icon = <ChartColumnIcon className="size-3.5 text-blue-500" />;
+          description = "Create a bar chart";
+          break;
+        case DefaultToolName.CreateLineChart:
+          label = "line-chart";
+          icon = <TrendingUpIcon className="size-3.5 text-blue-500" />;
+          description = "Create a line chart";
+          break;
+        case DefaultToolName.WebSearch:
+          label = "web-search";
+          icon = <GlobalIcon className="size-3.5 text-blue-400" />;
+          description = "Search the web";
+          break;
+        case DefaultToolName.WebContent:
+          label = "web-content";
+          icon = <GlobalIcon className="size-3.5 text-blue-400" />;
+          description = "Get the content of a web page";
+          break;
+        case DefaultToolName.Http:
+          label = "http";
+          icon = <HardDriveUploadIcon className="size-3.5 text-blue-300" />;
+          description = "Send an http request";
+          break;
+      }
+      return {
+        id: toolName,
+        label,
+        icon,
+        description,
+      };
+    });
+
     return (
       <>
-        <CommandGroup heading="Chart" key="visual-toolkits">
-          <CommandItem
-            onSelect={() =>
-              onSelectMention({
-                label: "tool('pie-chart')",
-                id: JSON.stringify({
-                  type: "defaultTool",
-                  name: DefaultToolName.CreatePieChart,
-                  description: "Create a pie chart",
-                }),
-              })
-            }
-          >
-            <ChartPie className="size-3.5 text-blue-500" />
-            <span className="truncate min-w-0">pie-chart</span>
-          </CommandItem>
-          <CommandItem
-            onSelect={() =>
-              onSelectMention({
-                label: "tool('bar-chart')",
-                id: JSON.stringify({
-                  type: "defaultTool",
-                  name: DefaultToolName.CreateBarChart,
-                  description: "Create a bar chart",
-                }),
-              })
-            }
-          >
-            <ChartColumnIcon className="size-3.5 text-blue-500" />
-            <span className="truncate min-w-0">bar-chart</span>
-          </CommandItem>
-          <CommandItem
-            onSelect={() =>
-              onSelectMention({
-                label: "tool('line-chart')",
-                id: JSON.stringify({
-                  type: "defaultTool",
-                  name: DefaultToolName.CreateLineChart,
-                  description: "Create a line chart",
-                }),
-              })
-            }
-          >
-            <TrendingUpIcon className="size-3.5 text-blue-500" />
-            <span className="truncate min-w-0">line-chart</span>
-          </CommandItem>
-        </CommandGroup>
-        <CommandGroup heading="Web" key="web-toolkits">
-          <CommandItem
-            onSelect={() =>
-              onSelectMention({
-                label: "tool('web-search')",
-                id: JSON.stringify({
-                  type: "defaultTool",
-                  name: DefaultToolName.WebSearch,
-                  description: "Search the web",
-                }),
-              })
-            }
-          >
-            <GlobalIcon className="size-3.5 text-blue-400" />
-            <span className="truncate min-w-0">web-search</span>
-          </CommandItem>
-          <CommandItem
-            onSelect={() =>
-              onSelectMention({
-                label: "tool('web-content')",
-                id: JSON.stringify({
-                  type: "defaultTool",
-                  name: DefaultToolName.WebContent,
-                  description: "Get the content of a web page",
-                }),
-              })
-            }
-          >
-            <GlobalIcon className="size-3.5 text-blue-400" />
-            <span className="truncate min-w-0">web-content</span>
-          </CommandItem>
+        <CommandGroup heading="App Tools" key="default-tool">
+          {items.map((item) => {
+            return (
+              <CommandItem
+                key={item.id}
+                onSelect={() =>
+                  onSelectMention({
+                    label: `tool('${item.label}')`,
+                    id: JSON.stringify({
+                      type: "defaultTool",
+                      name: item.id,
+                      description: item.description,
+                    }),
+                  })
+                }
+              >
+                {item.icon}
+                <span className="truncate min-w-0">{item.label}</span>
+              </CommandItem>
+            );
+          })}
         </CommandGroup>
       </>
     );

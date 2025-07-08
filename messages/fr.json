@@ -111,11 +111,13 @@
       "presetNameCannotBeEmpty": "Le nom du préréglage ne peut pas être vide",
       "presetNameAlreadyExists": "Le nom du préréglage existe déjà",
       "presetSaved": "Préréglage enregistré",
-      "chartTools": "Outils de Graphiques",
-      "webSearchTools": "Rechercher sur le web",
       "clickSaveAsPresetToGetStarted": "Cliquez sur Enregistrer comme Préréglage pour commencer.",
       "searchOptions": "Options de Recherche",
-      "searchOptionsDescription": "Vous pouvez passer des options de recherche au chatbot, comme le nombre maximum de résultats de recherche, la date de recherche, etc."
+      "searchOptionsDescription": "Vous pouvez passer des options de recherche au chatbot, comme le nombre maximum de résultats de recherche, la date de recherche, etc.",
+      "defaultToolKit": {
+        "visualization": "Outils graphiques",
+        "webSearch": "Rechercher sur le le Web"
+      }
     },
     "VoiceChat": {
       "title": "Mode Chat Vocal",

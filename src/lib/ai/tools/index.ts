@@ -1,18 +1,14 @@
-import { createPieChartTool } from "./create-pie-chart";
-import { createBarChartTool } from "./create-bar-chart";
-import { createLineChartTool } from "./create-line-chart";
-import { DefaultToolName } from "./app-default-tool-name";
-import { AppDefaultToolkit } from "app-types/chat";
-import { tavilySearchTool, tavilyWebContentTool } from "./web-search";
+export enum AppDefaultToolkit {
+  Visualization = "visualization",
+  WebSearch = "webSearch",
+  Http = "http",
+}
 
-export const defaultTools = {
-  [AppDefaultToolkit.Visualization]: {
-    [DefaultToolName.CreatePieChart]: createPieChartTool,
-    [DefaultToolName.CreateBarChart]: createBarChartTool,
-    [DefaultToolName.CreateLineChart]: createLineChartTool,
-  },
-  [AppDefaultToolkit.WebSearch]: {
-    [DefaultToolName.WebSearch]: tavilySearchTool,
-    [DefaultToolName.WebContent]: tavilyWebContentTool,
-  },
-};
+export enum DefaultToolName {
+  CreatePieChart = "createPieChart",
+  CreateBarChart = "createBarChart",
+  CreateLineChart = "createLineChart",
+  WebSearch = "webSearch",
+  WebContent = "webContent",
+  Http = "http",
+}

@@ -111,11 +111,13 @@
       "presetNameCannotBeEmpty": "El nombre del preajuste no puede estar vacío",
       "presetNameAlreadyExists": "El nombre del preajuste ya existe",
       "presetSaved": "Preajuste guardado",
-      "chartTools": "Herramientas de Gráficos",
-      "webSearchTools": "Buscar en la web",
       "clickSaveAsPresetToGetStarted": "Haz clic en Guardar como Preajuste para comenzar.",
       "searchOptions": "Opciones de Búsqueda",
-      "searchOptionsDescription": "Puedes pasar opciones de búsqueda al chatbot, como el número máximo de resultados de búsqueda, la fecha de búsqueda, etc."
+      "searchOptionsDescription": "Puedes pasar opciones de búsqueda al chatbot, como el número máximo de resultados de búsqueda, la fecha de búsqueda, etc.",
+      "defaultToolKit": {
+        "visualization": "Herramientas de gráficos",
+        "webSearch": "Buscar en la web"
+      }
     },
     "VoiceChat": {
       "title": "Modo de Chat por Voz",

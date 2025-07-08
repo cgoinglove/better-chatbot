@@ -1,14 +1,10 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import {
-  AppDefaultToolkit,
-  ChatModel,
-  ChatThread,
-  Project,
-} from "app-types/chat";
+import { ChatModel, ChatThread, Project } from "app-types/chat";
 import { AllowedMCPServer, MCPServerInfo } from "app-types/mcp";
 import { OPENAI_VOICE } from "lib/ai/speech/open-ai/use-voice-chat.openai";
 import { WorkflowSummary } from "app-types/workflow";
+import { AppDefaultToolkit } from "lib/ai/tools";
 export interface AppState {
   threadList: ChatThread[];
   mcpList: (MCPServerInfo & { id: string })[];
