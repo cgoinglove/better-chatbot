@@ -43,6 +43,7 @@ async function main() {
     console.log(
       "Running in a normal environment, performing initial environment setup.",
     );
+    await runCommand("pnpm db:migrate", "Database migration");
     await runCommand("pnpm initial:env", "Initial environment setup");
     await runCommand(
       "pnpm openai-compatiable:init",

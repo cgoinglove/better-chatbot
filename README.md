@@ -1,10 +1,8 @@
 <img width="1647" alt="thumbnail" loading="lazy" src="https://github.com/user-attachments/assets/7b0f279a-8771-42a0-b8b6-128b3b1a076c" />
 
-
 [![MCP Supported](https://img.shields.io/badge/MCP-Supported-00c853)](https://modelcontextprotocol.io/introduction)
 [![Local First](https://img.shields.io/badge/Local-First-blue)](https://localfirstweb.dev/)
 [![Discord](https://img.shields.io/discord/1374047276074537103?label=Discord&logo=discord&color=5865F2)](https://discord.gg/gCRu69Upnp)
-
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/cgoinglove/better-chatbot&env=BETTER_AUTH_SECRET&env=OPENAI_API_KEY&env=GOOGLE_GENERATIVE_AI_API_KEY&env=ANTHROPIC_API_KEY&envDescription=Learn+more+about+how+to+get+the+API+Keys+for+the+application&envLink=https://github.com/cgoinglove/better-chatbot/blob/main/.env.example&demo-title=better-chatbot&demo-description=An+Open-Source+Chatbot+Template+Built+With+Next.js+and+the+AI+SDK+by+Vercel.&products=[{"type":"integration","protocol":"storage","productSlug":"neon","integrationSlug":"neon"}])
 
@@ -13,6 +11,40 @@ Our goal is to create the best possible chatbot UX — focusing on the joy and i
 See the experience in action in the [preview](#preview) below!
 
 > Built with [Vercel AI SDK](https://sdk.vercel.ai) and [Next.js](https://nextjs.org/), this app adopts modern patterns for building AI chat interfaces. It leverages the power of the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) to seamlessly integrate external tools into your chat experience. You can also create custom workflows that become callable tools in chat, allowing you to chain multiple MCP tools, LLM interactions, and logic into powerful automated sequences.
+
+### Quick Start 🚀
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/cgoinglove/better-chatbot.git
+cd better-chatbot
+
+# 2. (Optional) Install pnpm if you don't have it
+npm install -g pnpm
+
+# 3. Install dependencies
+pnpm i
+
+# 4. Create the environment variable file and fill in your .env values
+pnpm initial:env # This runs automatically in postinstall, so you can usually skip it.
+
+# 5. (Optional) If you already have PostgreSQL running and .env is configured, skip this step
+pnpm docker:pg
+
+# 6. Run database migrations
+pnpm db:migrate
+
+# 7. Start the development server
+pnpm dev
+
+# 8. (Optional) Build & start for local production-like testing
+pnpm build:local && pnpm start
+# Use build:local for local start to ensure correct cookie settings
+```
+
+> **⚠️ Important:** When updating to a new version of the project (after `git pull`), always run `pnpm db:migrate` to ensure your database schema is up to date.
+
+Open [http://localhost:3000](http://localhost:3000) in your browser to get started.
 
 ## Table of Contents
 
@@ -29,20 +61,18 @@ See the experience in action in the [preview](#preview) below!
   - [Quick Start (Local Version) 🚀](#quick-start-local-version-)
   - [Environment Variables](#environment-variables)
 - [📘 Guides](#-guides)
-    - [🔌 MCP Server Setup \& Tool Testing](#-mcp-server-setup--tool-testing)
-    - [🐳 Docker Hosting Guide](#-docker-hosting-guide)
-    - [▲ Vercel Hosting Guide](#-vercel-hosting-guide)
-    - [🎯 System Prompts \& Chat Customization](#-system-prompts--chat-customization)
-    - [🔐 OAuth Sign-In Setup](#-oauth-sign-in-setup)
-    - [🕵🏿 Adding openAI like providers](#-adding-openai-like-providers)
+  - [🔌 MCP Server Setup \& Tool Testing](#-mcp-server-setup--tool-testing)
+  - [🐳 Docker Hosting Guide](#-docker-hosting-guide)
+  - [▲ Vercel Hosting Guide](#-vercel-hosting-guide)
+  - [🎯 System Prompts \& Chat Customization](#-system-prompts--chat-customization)
+  - [🔐 OAuth Sign-In Setup](#-oauth-sign-in-setup)
+  - [🕵🏿 Adding openAI like providers](#-adding-openai-like-providers)
 - [💡 Tips](#-tips)
-    - [🧠 Agentic Chatbot with Project Instructions](#-agentic-chatbot-with-project-instructions)
-    - [💬 Temporary Chat Windows](#-temporary-chat-windows)
+  - [🧠 Agentic Chatbot with Project Instructions](#-agentic-chatbot-with-project-instructions)
+  - [💬 Temporary Chat Windows](#-temporary-chat-windows)
 - [🗺️ Roadmap](#️-roadmap)
 - [🙌 Contributing](#-contributing)
 - [💬 Join Our Discord](#-join-our-discord)
-
-
 
 ## Preview
 
@@ -51,7 +81,6 @@ Get a feel for the UX — here's a quick look at what's possible.
 ### 🧩 Browser Automation with Playwright MCP
 
 ![preview](https://github.com/user-attachments/assets/86855a59-dfe0-4452-8891-dd390c131225)
-
 
 **Example:** Control a web browser using Microsoft's [playwright-mcp](https://github.com/microsoft/playwright-mcp) tool.
 
@@ -98,11 +127,11 @@ Talk to the assistant naturally, and watch it execute tools in real time.
 
 <img src="https://github.com/user-attachments/assets/eb690c07-cb9f-4a61-8397-9f39518e1b6c" alt="mention" loading="lazy"/>
 
-
 Quickly call any registered MCP tool during chat by typing `@toolname`.
 No need to memorize — just type `@` and select from the list!
 
 **Tool Selection vs. Mentions:**
+
 - **Tool Select**: Choose which tools are automatically available in LLM context for all conversations
 - **Mentions (`@`)**: Temporarily bind only the mentioned tools for that response, overriding Tool Select (saves tokens and improves performance)
 
@@ -112,7 +141,6 @@ Switch between presets instantly with a click — perfect for organizing tools b
 ### 🧭 Tool Choice Mode
 
 <img width="1225" alt="image" src="https://github.com/user-attachments/assets/c0ade861-3622-466a-be13-74643e8cc9bc" loading="lazy"/>
-
 
 Control how tools are used in each chat with **Tool Choice Mode** — switch anytime with `⌘P`.
 
@@ -125,7 +153,6 @@ This lets you flexibly choose between autonomous, guided, or tool-free interacti
 ### 🌐 Web Search (Default Tool)
 
 <img width="1394" alt="web-search" src="https://github.com/user-attachments/assets/14e2dc33-b702-4b93-a05f-bc36edde18f1" loading="lazy"/>
-
 
 Built-in web search powered by [Tavily API](https://app.tavily.com/home). Search the web and extract content from URLs directly in your chats.
 
@@ -220,7 +247,7 @@ BETTER_AUTH_URL=
 POSTGRES_URL=postgres://your_username:your_password@localhost:5432/your_database_name
 
 # (Optional)
-# === Tools === 
+# === Tools ===
 # Tavily for web search and content extraction (optional, but recommended for @web and research features)
 TAVILY_API_KEY=your_tavily_api_key_here
 
@@ -228,7 +255,7 @@ TAVILY_API_KEY=your_tavily_api_key_here
 # Whether to use file-based MCP config (default: false)
 FILE_BASED_MCP_CONFIG=false
 
-# (Optional) 
+# (Optional)
 # === OAuth Settings ===
 # Fill in these values only if you want to enable Google/GitHub login
 GOOGLE_CLIENT_ID=
