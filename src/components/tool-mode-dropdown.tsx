@@ -6,9 +6,14 @@ import {
   isShortcutEvent,
   Shortcuts,
 } from "lib/keyboard-shortcuts";
-import { capitalizeFirstLetter, cn } from "lib/utils";
-import { Check, ClipboardCheck, Infinity, PenOff } from "lucide-react";
-import { useEffect } from "react";
+import {
+  Check,
+  ClipboardCheck,
+  Infinity,
+  PenOff,
+  Settings2,
+} from "lucide-react";
+import { useEffect, useState } from "react";
 import { Button } from "ui/button";
 import { useTranslations } from "next-intl";
 
@@ -22,14 +27,16 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "ui/dropdown-menu";
-import { Separator } from "ui/separator";
+
 import { useShallow } from "zustand/shallow";
+import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 
 export const ToolModeDropdown = ({ disabled }: { disabled?: boolean }) => {
   const t = useTranslations("Chat.Tool");
   const [toolChoice, appStoreMutate] = appStore(
     useShallow((state) => [state.toolChoice, state.mutate]),
   );
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -53,21 +60,24 @@ export const ToolModeDropdown = ({ disabled }: { disabled?: boolean }) => {
   }, []);
 
   return (
-    <DropdownMenu>
+    <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild disabled={disabled}>
-        <Button
-          variant={"outline"}
-          className={cn(
-            toolChoice == "none" ? "text-muted-foreground" : "",
-            "font-semibold mr-1 rounded-full flex items-center gap-2 bg-transparent data-[state=open]:bg-input/80!",
-          )}
-        >
-          <span>{capitalizeFirstLetter(toolChoice)}</span>
-          <Separator orientation="vertical" className="h-4 hidden sm:block" />
-          <span className="text-xs text-muted-foreground hidden sm:block">
-            ⌘P
-          </span>
-        </Button>
+        <div>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant={"ghost"}
+                size={"sm"}
+                className="rounded-full p-2! data-[state=open]:bg-input! hover:bg-input!"
+                onClick={() => setOpen(true)}
+              >
+                {/* <span>{capitalizeFirstLetter(toolChoice)}</span> */}
+                <Settings2 />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent> {t("selectToolMode")}</TooltipContent>
+          </Tooltip>
+        </div>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start">
         <DropdownMenuLabel className="text-muted-foreground flex items-center gap-2">

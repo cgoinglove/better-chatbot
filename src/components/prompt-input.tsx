@@ -138,7 +138,7 @@ export default function PromptInput({
     <div className="max-w-3xl mx-auto fade-in animate-in">
       <div className="z-10 mx-auto w-full max-w-3xl relative">
         <fieldset className="flex w-full min-w-0 max-w-full flex-col px-2">
-          <div className="rounded-4xl backdrop-blur-sm transition-all duration-200 bg-muted/80 relative flex w-full flex-col cursor-text z-10 border items-stretch focus-within:border-muted-foreground hover:border-muted-foreground p-3">
+          <div className="rounded-4xl backdrop-blur-sm transition-all duration-200 bg-muted/60 relative flex w-full flex-col cursor-text z-10 items-stretch focus-within:bg-muted hover:bg-muted p-3">
             <div className="flex flex-col gap-3.5 px-1">
               <div className="relative min-h-[2rem]">
                 <ChatMentionInput
@@ -150,13 +150,15 @@ export default function PromptInput({
                   ref={editorRef}
                 />
               </div>
-              <div className="flex w-full items-center z-30 gap-1.5">
-                <div
-                  className="cursor-pointer text-muted-foreground hover:ring ring-input rounded-full p-2 bg-transparent hover:bg-muted transition-all duration-200"
+              <div className="flex w-full items-center gap-[1px]  z-30">
+                <Button
+                  variant={"ghost"}
+                  size={"sm"}
+                  className="rounded-full hover:bg-input! p-2!"
                   onClick={notImplementedToast}
                 >
-                  <Paperclip className="size-4" />
-                </div>
+                  <Paperclip />
+                </Button>
 
                 {!toolDisabled && (
                   <>
@@ -174,7 +176,8 @@ export default function PromptInput({
                 <SelectModel onSelect={setChatModel} defaultModel={chatModel}>
                   <Button
                     variant={"ghost"}
-                    className="rounded-full data-[state=open]:bg-input! hover:bg-input!"
+                    size={"sm"}
+                    className="rounded-full data-[state=open]:bg-input! hover:bg-input! mr-1"
                   >
                     {chatModel?.model ?? (
                       <span className="text-muted-foreground">model</span>
@@ -185,7 +188,8 @@ export default function PromptInput({
                 {!isLoading && !input.length && !voiceDisabled ? (
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <div
+                      <Button
+                        size={"sm"}
                         onClick={() => {
                           appStoreMutate((state) => ({
                             voiceChat: {
@@ -196,10 +200,10 @@ export default function PromptInput({
                             },
                           }));
                         }}
-                        className="border fade-in animate-in cursor-pointer text-background rounded-full p-2 bg-primary hover:bg-primary/90 transition-all duration-200"
+                        className="rounded-full p-2!"
                       >
                         <AudioWaveformIcon size={16} />
-                      </div>
+                      </Button>
                     </TooltipTrigger>
                     <TooltipContent>{t("VoiceChat.title")}</TooltipContent>
                   </Tooltip>
