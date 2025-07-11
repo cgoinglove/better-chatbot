@@ -14,7 +14,7 @@ export const MCPStdioConfigZodSchema = z.object({
 
 export const AllowedMCPServerZodSchema = z.object({
   tools: z.array(z.string()),
-  // resources: z.array(z.string()).optional(),
+  resources: z.array(z.string()).optional(),
 });
 
 export type AllowedMCPServer = z.infer<typeof AllowedMCPServerZodSchema>;
@@ -34,12 +34,36 @@ export type MCPToolInfo = {
   };
 };
 
+export type MCPResourceInfo = {
+  uri: string;
+  name: string;
+  description?: string;
+  mimeType?: string;
+  size?: number;
+};
+
+export type MCPResourceTemplateInfo = {
+  uriTemplate: string;
+  name: string;
+  description?: string;
+  mimeType?: string;
+};
+
+export type MCPResourceContent = {
+  uri: string;
+  mimeType?: string;
+  text?: string;
+  blob?: string;
+};
+
 export type MCPServerInfo = {
   name: string;
   config: MCPServerConfig;
   error?: unknown;
   status: "connected" | "disconnected" | "loading";
   toolInfo: MCPToolInfo[];
+  resourceInfo: MCPResourceInfo[];
+  resourceTemplateInfo: MCPResourceTemplateInfo[];
 };
 
 export type McpServerInsert = {

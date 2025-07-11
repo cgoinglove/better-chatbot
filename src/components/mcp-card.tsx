@@ -1,8 +1,10 @@
 "use client";
 import {
+  ChevronDown,
   ChevronRight,
   FlaskConical,
   Loader,
+  Package,
   Pencil,
   RotateCw,
   Settings,
@@ -25,9 +27,15 @@ import {
   refreshMcpClientAction,
   removeMcpClientAction,
 } from "@/app/api/mcp/actions";
-import type { MCPServerInfo, MCPToolInfo } from "app-types/mcp";
+import type {
+  MCPServerInfo,
+  MCPToolInfo,
+  MCPResourceInfo,
+  MCPResourceTemplateInfo,
+} from "app-types/mcp";
 
 import { ToolDetailPopup } from "./tool-detail-popup";
+import { ResourceDetailPopup } from "./resource-detail-popup";
 import { useTranslations } from "next-intl";
 import { Separator } from "ui/separator";
 import { appStore } from "@/app/store";
@@ -40,8 +48,11 @@ export const MCPCard = memo(function MCPCard({
   status,
   name,
   toolInfo,
+  resourceInfo,
+  resourceTemplateInfo,
 }: MCPServerInfo & { id: string }) {
   const [isProcessing, setIsProcessing] = useState(false);
+  const [resourcesExpanded, setResourcesExpanded] = useState(true);
   const t = useTranslations("MCP");
   const appStoreMutate = appStore((state) => state.mutate);
 
@@ -100,6 +111,8 @@ export const MCPCard = memo(function MCPCard({
                     config,
                     status,
                     toolInfo,
+                    resourceInfo: resourceInfo || [],
+                    resourceTemplateInfo: resourceTemplateInfo || [],
                     error,
                   },
                 })
@@ -198,6 +211,35 @@ export const MCPCard = memo(function MCPCard({
                 </p>
               </div>
             )}
+
+            {/* Resources Section */}
+            {(resourceInfo.length > 0 || resourceTemplateInfo.length > 0) && (
+              <>
+                <div
+                  className="flex items-center gap-2 mb-4 pt-4 pb-1 z-10 cursor-pointer hover:bg-secondary/50 rounded px-2 py-1 -mx-2"
+                  onClick={() => setResourcesExpanded(!resourcesExpanded)}
+                >
+                  <Package size={14} className="text-muted-foreground" />
+                  <h5 className="text-muted-foreground text-sm font-medium flex-1">
+                    Available Resources (
+                    {resourceInfo.length + resourceTemplateInfo.length})
+                  </h5>
+                  {resourcesExpanded ? (
+                    <ChevronDown size={14} className="text-muted-foreground" />
+                  ) : (
+                    <ChevronRight size={14} className="text-muted-foreground" />
+                  )}
+                </div>
+
+                {resourcesExpanded && (
+                  <ResourcesList
+                    resources={resourceInfo}
+                    resourceTemplates={resourceTemplateInfo}
+                    serverId={id}
+                  />
+                )}
+              </>
+            )}
           </div>
         </CardContent>
       </div>
@@ -233,6 +275,84 @@ const ToolsList = memo(
 );
 
 ToolsList.displayName = "ToolsList";
+
+// Resources list component
+const ResourcesList = memo(
+  ({
+    resources,
+    resourceTemplates,
+    serverId,
+  }: {
+    resources: MCPResourceInfo[];
+    resourceTemplates: MCPResourceTemplateInfo[];
+    serverId: string;
+  }) => (
+    <div className="space-y-2 pr-2">
+      {/* Static Resources */}
+      {resources.map((resource) => (
+        <ResourceDetailPopup
+          key={resource.uri}
+          resource={resource}
+          serverId={serverId}
+        >
+          <div className="flex items-start gap-2 bg-secondary rounded-md p-2 hover:bg-input transition-colors cursor-pointer">
+            <div className="flex-1 min-w-0">
+              <p className="font-medium text-sm mb-1 truncate">
+                {resource.name}
+              </p>
+              <p className="text-xs text-muted-foreground line-clamp-1 mb-1">
+                {resource.description || "No description"}
+              </p>
+              <p className="text-xs text-muted-foreground font-mono truncate">
+                {resource.uri}
+              </p>
+              {resource.mimeType && (
+                <p className="text-xs text-muted-foreground">
+                  Type: {resource.mimeType}
+                </p>
+              )}
+              {resource.size && (
+                <p className="text-xs text-muted-foreground">
+                  Size: {(resource.size / 1024).toFixed(1)} KB
+                </p>
+              )}
+            </div>
+          </div>
+        </ResourceDetailPopup>
+      ))}
+
+      {/* Resource Templates */}
+      {resourceTemplates.map((template) => (
+        <ResourceDetailPopup
+          key={template.uriTemplate}
+          resource={template}
+          serverId={serverId}
+        >
+          <div className="flex items-start gap-2 bg-secondary/50 rounded-md p-2 hover:bg-input transition-colors border border-dashed cursor-pointer">
+            <div className="flex-1 min-w-0">
+              <p className="font-medium text-sm mb-1 truncate">
+                {template.name}
+              </p>
+              <p className="text-xs text-muted-foreground line-clamp-1 mb-1">
+                {template.description || "No description"}
+              </p>
+              <p className="text-xs text-muted-foreground font-mono truncate">
+                Template: {template.uriTemplate}
+              </p>
+              {template.mimeType && (
+                <p className="text-xs text-muted-foreground">
+                  Type: {template.mimeType}
+                </p>
+              )}
+            </div>
+          </div>
+        </ResourceDetailPopup>
+      ))}
+    </div>
+  ),
+);
+
+ResourcesList.displayName = "ResourcesList";
 
 // Error alert component
 const ErrorAlert = memo(({ error }: { error: string }) => (

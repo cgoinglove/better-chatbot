@@ -8,6 +8,9 @@ import {
   MCPStdioConfigZodSchema,
   type MCPServerConfig,
   type MCPToolInfo,
+  type MCPResourceInfo,
+  type MCPResourceTemplateInfo,
+  type MCPResourceContent,
 } from "app-types/mcp";
 import { jsonSchema, Tool, tool, ToolExecutionOptions } from "ai";
 import { isMaybeRemoteConfig, isMaybeStdioConfig } from "./is-mcp-config";
@@ -42,6 +45,10 @@ export class MCPClient {
   toolInfo: MCPToolInfo[] = [];
   // Tool instances that can be used for AI functions
   tools: { [key: string]: Tool } = {};
+  // Information about available resources from the server
+  resourceInfo: MCPResourceInfo[] = [];
+  // Information about available resource templates from the server
+  resourceTemplateInfo: MCPResourceTemplateInfo[] = [];
 
   constructor(
     private name: string,
@@ -65,6 +72,8 @@ export class MCPClient {
           : "disconnected",
       error: this.error,
       toolInfo: this.toolInfo,
+      resourceInfo: this.resourceInfo,
+      resourceTemplateInfo: this.resourceTemplateInfo,
     };
   }
 
@@ -157,6 +166,8 @@ export class MCPClient {
       this.isConnected = true;
       this.error = undefined;
       this.client = client;
+
+      // Fetch tools
       const toolResponse = await client.listTools();
       this.toolInfo = toolResponse.tools.map(
         (tool) =>
@@ -166,6 +177,50 @@ export class MCPClient {
             inputSchema: tool.inputSchema,
           }) as MCPToolInfo,
       );
+
+      // Fetch resources
+      try {
+        const resourceResponse = await client.listResources();
+        this.resourceInfo = resourceResponse.resources.map(
+          (resource) =>
+            ({
+              uri: resource.uri,
+              name: resource.name,
+              description: resource.description,
+              mimeType: resource.mimeType,
+              size: resource.size,
+            }) as MCPResourceInfo,
+        );
+      } catch (error) {
+        // Resources might not be supported by this server
+        this.log.warn(
+          "Failed to fetch resources, server may not support them:",
+          error,
+        );
+        this.resourceInfo = [];
+      }
+
+      // Fetch resource templates
+      try {
+        const resourceTemplateResponse = await client.listResourceTemplates();
+        this.resourceTemplateInfo =
+          resourceTemplateResponse.resourceTemplates.map(
+            (template) =>
+              ({
+                uriTemplate: template.uriTemplate,
+                name: template.name,
+                description: template.description,
+                mimeType: template.mimeType,
+              }) as MCPResourceTemplateInfo,
+          );
+      } catch (error) {
+        // Resource templates might not be supported by this server
+        this.log.warn(
+          "Failed to fetch resource templates, server may not support them:",
+          error,
+        );
+        this.resourceTemplateInfo = [];
+      }
 
       // Create AI SDK tool wrappers for each MCP tool
       this.tools = toolResponse.tools.reduce((prev, _tool) => {
@@ -253,6 +308,38 @@ export class MCPClient {
         };
       })
       .unwrap();
+  }
+
+  async readResource(uri: string): Promise<MCPResourceContent[]> {
+    try {
+      this.log.info("resource read", uri);
+
+      if (this.error) {
+        throw new Error(
+          "MCP Server is currently in an error state. Please check the configuration and try refreshing the server.",
+        );
+      }
+
+      this.scheduleAutoDisconnect();
+      const client = await this.connect();
+
+      if (!client) {
+        throw new Error("Failed to connect to MCP server");
+      }
+
+      const result = await client.readResource({ uri });
+      this.scheduleAutoDisconnect();
+
+      return result.contents.map((content) => ({
+        uri: content.uri,
+        mimeType: content.mimeType,
+        text: content.text,
+        blob: content.blob,
+      })) as MCPResourceContent[];
+    } catch (error) {
+      this.log.error("Resource read failed", uri, error);
+      throw error;
+    }
   }
 }
 

@@ -42,6 +42,7 @@ import {
   getAllowedDefaultToolkit,
   filterToolsByAllowedMCPServers,
   filterMcpServerCustomizations,
+  createResourceAwareToolDescriptions,
 } from "./helper";
 import {
   generateTitleFromUserMessageAction,
@@ -175,11 +176,18 @@ export async function POST(request: Request) {
             ? "required"
             : "auto";
 
-        const vercelAITooles = safe(tools)
-          .map((t) => {
+        const vercelAITooles = await safe(tools)
+          .map(async (t) => {
             if (!t) return undefined;
+
+            // Create resource-aware tools with enhanced descriptions
+            const resourceAwareTools =
+              await createResourceAwareToolDescriptions(t);
+
             const bindingTools =
-              toolChoice === "manual" ? excludeToolExecution(t) : t;
+              toolChoice === "manual"
+                ? excludeToolExecution(resourceAwareTools)
+                : resourceAwareTools;
 
             return {
               ...getAllowedDefaultToolkit(allowedAppDefaultToolkit),
