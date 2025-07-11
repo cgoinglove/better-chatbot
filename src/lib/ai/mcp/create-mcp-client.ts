@@ -8,8 +8,11 @@ import {
   MCPStdioConfigZodSchema,
   type MCPServerConfig,
   type MCPToolInfo,
+  type MCPResourceInfo,
+  type MCPResourceTemplateInfo,
+  type MCPResourceContent,
 } from "app-types/mcp";
-
+import { jsonSchema, Tool, tool, ToolExecutionOptions } from "ai";
 import { isMaybeRemoteConfig, isMaybeStdioConfig } from "./is-mcp-config";
 import logger from "logger";
 import type { ConsolaInstance } from "consola";
@@ -17,26 +20,17 @@ import { colorize } from "consola/utils";
 import {
   createDebounce,
   errorToString,
-  generateUUID,
   isNull,
   Locker,
-  withTimeout,
+  toAny,
 } from "lib/utils";
 
 import { safe } from "ts-safe";
-import { BASE_URL, IS_MCP_SERVER_REMOTE_ONLY, IS_VERCEL_ENV } from "lib/const";
-import { UnauthorizedError } from "@modelcontextprotocol/sdk/client/auth.js";
-import { PgOAuthClientProvider } from "./pg-oauth-provider";
-import { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
+import { IS_MCP_SERVER_REMOTE_ONLY } from "lib/const";
 
 type ClientOptions = {
   autoDisconnectSeconds?: number;
 };
-
-const CONNET_TIMEOUT = IS_VERCEL_ENV ? 30000 : 120000;
-const MCP_MAX_TOTAL_TIMEOUT = process.env.MCP_MAX_TOTAL_TIMEOUT
-  ? parseInt(process.env.MCP_MAX_TOTAL_TIMEOUT, 10)
-  : undefined;
 
 /**
  * Client class for Model Context Protocol (MCP) server connections
@@ -44,157 +38,72 @@ const MCP_MAX_TOTAL_TIMEOUT = process.env.MCP_MAX_TOTAL_TIMEOUT
 export class MCPClient {
   private client?: Client;
   private error?: unknown;
-  private authorizationUrl?: URL;
-  protected isConnected = false;
-  private logger: ConsolaInstance;
+  private isConnected = false;
+  private log: ConsolaInstance;
   private locker = new Locker();
-  private transport?: Transport;
-  private oauthProvider?: PgOAuthClientProvider;
   // Information about available tools from the server
   toolInfo: MCPToolInfo[] = [];
-  private disconnectDebounce = createDebounce();
-  private needOauthProvider = false;
-  private inProgressToolCallIds: string[] = [];
+  // Tool instances that can be used for AI functions
+  tools: { [key: string]: Tool } = {};
+  // Information about available resources from the server
+  resourceInfo: MCPResourceInfo[] = [];
+  // Information about available resource templates from the server
+  resourceTemplateInfo: MCPResourceTemplateInfo[] = [];
+
   constructor(
-    private id: string,
     private name: string,
     private serverConfig: MCPServerConfig,
-
     private options: ClientOptions = {},
+    private disconnectDebounce = createDebounce(),
   ) {
-    this.logger = logger.withDefaults({
-      message: colorize(
-        "cyan",
-        `[${this.id.slice(0, 4)}] MCP Client ${this.name}: `,
-      ),
+    this.log = logger.withDefaults({
+      message: colorize("cyan", `MCP Client ${this.name}: `),
     });
-  }
-
-  get status() {
-    if (this.locker.isLocked) return "loading";
-    if (this.authorizationUrl) return "authorizing";
-    if (this.isConnected) return "connected";
-    return "disconnected";
-  }
-
-  get hasActiveToolCalls() {
-    return this.inProgressToolCallIds.length > 0;
-  }
-
-  getAuthorizationUrl(): URL | undefined {
-    return this.authorizationUrl;
-  }
-
-  async finishAuth(code: string, state: string) {
-    if (!isMaybeRemoteConfig(this.serverConfig))
-      throw new Error("OAuth flow requires a remote MCP server");
-
-    if (this.status != "authorizing" || this.oauthProvider?.state() != state) {
-      if (this.oauthProvider && this.oauthProvider.state() != state) {
-        await this.oauthProvider.adoptState(state);
-      } else {
-        await this.disconnect();
-        await this.connect(state);
-      }
-    }
-    const finish = (this.transport as StreamableHTTPClientTransport)
-      ?.finishAuth;
-
-    if (!finish) throw new Error("Not Found finishAuth");
-
-    this.logger.info("OAuth authorization: exchanging code for token");
-
-    await finish.call(this.transport, code);
-    this.authorizationUrl = undefined;
-    this.logger.info("OAuth authorization: token exchange completed");
   }
 
   getInfo(): MCPServerInfo {
     return {
-      id: this.id,
       name: this.name,
       config: this.serverConfig,
-      status: this.status,
+      status: this.locker.isLocked
+        ? "loading"
+        : this.isConnected
+          ? "connected"
+          : "disconnected",
       error: this.error,
       toolInfo: this.toolInfo,
-      visibility: "private" as const,
-      enabled: true,
-      userId: "", // This will be filled by the manager
+      resourceInfo: this.resourceInfo,
+      resourceTemplateInfo: this.resourceTemplateInfo,
     };
   }
 
-  private createOAuthProvider(oauthState?: string) {
-    if (isMaybeRemoteConfig(this.serverConfig) && this.needOauthProvider) {
-      this.logger.info("Creating OAuth provider for MCP server authentication");
-      if (this.oauthProvider) {
-        if (oauthState && oauthState != this.oauthProvider.state()) {
-          this.oauthProvider.adoptState(oauthState);
-        }
-        return this.oauthProvider;
-      }
-      this.oauthProvider = new PgOAuthClientProvider({
-        name: this.name,
-        mcpServerId: this.id,
-        serverUrl: this.serverConfig.url,
-        state: oauthState,
-        _clientMetadata: {
-          client_name: `better-chatbot-${this.name}`,
-          grant_types: ["authorization_code", "refresh_token"],
-          response_types: ["code"],
-          token_endpoint_auth_method: "none", // PKCE flow
-          scope: "mcp:tools",
-          redirect_uris: [`${BASE_URL}/api/mcp/oauth/callback`],
-          software_id: "better-chatbot",
-          software_version: "1.0.0",
-        },
-        onRedirectToAuthorization: async (authorizationUrl: URL) => {
-          this.logger.info(
-            "OAuth authorization required - user interaction needed",
-          );
-          this.authorizationUrl = authorizationUrl;
-          throw new OAuthAuthorizationRequiredError(authorizationUrl);
-        },
-      });
-      return this.oauthProvider;
-    }
-    return undefined;
-  }
-
   private scheduleAutoDisconnect() {
-    if (!isNull(this.options.autoDisconnectSeconds)) {
+    if (this.options.autoDisconnectSeconds) {
       this.disconnectDebounce(() => {
-        // Don't disconnect if there are tool calls in progress
-        if (this.inProgressToolCallIds.length === 0) {
-          this.disconnect();
-        } else {
-          this.logger.info(
-            `Skipping auto-disconnect: ${this.inProgressToolCallIds.length} tool calls in progress`,
-          );
-          // Reschedule the disconnect check
-          this.scheduleAutoDisconnect();
-        }
+        this.disconnect();
       }, this.options.autoDisconnectSeconds * 1000);
     }
   }
 
-  async connect(oauthState?: string): Promise<Client | undefined> {
-    if (this.status === "loading") {
+  /**
+   * Connect to the MCP server
+   * Do not throw Error
+   * @returns this
+   */
+  async connect() {
+    if (this.locker.isLocked) {
       await this.locker.wait();
       return this.client;
     }
-    if (this.status === "connected") {
+    if (this.isConnected) {
       return this.client;
     }
     try {
       const startedAt = Date.now();
       this.locker.lock();
-      this.error = undefined;
-      this.authorizationUrl = undefined;
-      this.isConnected = false;
-      this.client = undefined;
 
       const client = new Client({
-        name: `better-chatbot-${this.name}`,
+        name: "mcp-chatbot-client",
         version: "1.0.0",
       });
 
@@ -202,11 +111,11 @@ export class MCPClient {
       if (isMaybeStdioConfig(this.serverConfig)) {
         // Skip stdio transport
         if (IS_MCP_SERVER_REMOTE_ONLY) {
-          throw new Error("VERCEL: Stdio transport is not supported");
+          throw new Error("Stdio transport is not supported");
         }
 
         const config = MCPStdioConfigZodSchema.parse(this.serverConfig);
-        this.transport = new StdioClientTransport({
+        const transport = new StdioClientTransport({
           command: config.command,
           args: config.args,
           // Merge process.env with config.env, ensuring PATH is preserved and filtering out undefined values
@@ -222,125 +131,44 @@ export class MCPClient {
           cwd: process.cwd(),
         });
 
-        await withTimeout(
-          client.connect(this.transport, {
-            maxTotalTimeout: MCP_MAX_TOTAL_TIMEOUT,
-          }),
-          CONNET_TIMEOUT,
-        );
+        await client.connect(transport);
       } else if (isMaybeRemoteConfig(this.serverConfig)) {
         const config = MCPRemoteConfigZodSchema.parse(this.serverConfig);
         const abortController = new AbortController();
         const url = new URL(config.url);
         try {
-          this.transport = new StreamableHTTPClientTransport(url, {
+          const transport = new StreamableHTTPClientTransport(url, {
             requestInit: {
               headers: config.headers,
               signal: abortController.signal,
             },
-            authProvider: this.createOAuthProvider(oauthState),
           });
-          await withTimeout(
-            client.connect(this.transport, {
-              maxTotalTimeout: MCP_MAX_TOTAL_TIMEOUT,
-            }),
-            CONNET_TIMEOUT,
+          await client.connect(transport);
+        } catch {
+          this.log.info(
+            "Streamable HTTP connection failed, falling back to SSE transport",
           );
-        } catch (streamableHttpError: any) {
-          // Check if it's OAuth error and we haven't tried OAuth yet
-          if (isUnauthorized(streamableHttpError) && !this.needOauthProvider) {
-            this.logger.info(
-              "OAuth authentication required, retrying with OAuth provider",
-            );
-            this.needOauthProvider = true;
-            this.locker.unlock();
-            await this.disconnect();
-            return this.connect(oauthState); // Recursive call with OAuth
-          }
-
-          if (!isOAuthAuthorizationRequired(streamableHttpError)) {
-            this.logger.warn(
-              `Streamable HTTP connection failed, Because ${streamableHttpError.message}, falling back to SSE transport`,
-            );
-
-            this.transport = new SSEClientTransport(url, {
-              requestInit: {
-                headers: config.headers,
-                signal: abortController.signal,
-              },
-              authProvider: this.createOAuthProvider(oauthState),
-            });
-
-            try {
-              await withTimeout(
-                client.connect(this.transport, {
-                  maxTotalTimeout: MCP_MAX_TOTAL_TIMEOUT,
-                }),
-                CONNET_TIMEOUT,
-              );
-            } catch (sseError) {
-              if (isUnauthorized(sseError) && !this.needOauthProvider) {
-                this.logger.info(
-                  "OAuth authentication required for SSE, retrying with OAuth provider",
-                );
-                this.needOauthProvider = true;
-                this.locker.unlock();
-                await this.disconnect();
-                return this.connect(oauthState); // Recursive call with OAuth
-              }
-
-              if (!isOAuthAuthorizationRequired(sseError)) throw sseError;
-            }
-          }
+          const transport = new SSEClientTransport(url, {
+            requestInit: {
+              headers: config.headers,
+              signal: abortController.signal,
+            },
+          });
+          await client.connect(transport);
         }
       } else {
         throw new Error("Invalid server config");
       }
 
-      this.logger.info(
+      this.log.info(
         `Connected to MCP server in ${((Date.now() - startedAt) / 1000).toFixed(2)}s`,
       );
-      this.client = client;
       this.isConnected = true;
+      this.error = undefined;
+      this.client = client;
 
-      this.scheduleAutoDisconnect();
-    } catch (error) {
-      this.logger.error(error);
-      this.isConnected = false;
-      this.error = errorToString(error);
-      this.transport = undefined;
-      throw error;
-    } finally {
-      this.locker.unlock();
-    }
-
-    await this.updateToolInfo();
-
-    return this.client;
-  }
-
-  /**
-   * Ensure the underlying OAuth provider adopts the callback state
-   * so that PKCE code_verifier matches in multi-instance environments.
-   */
-  async ensureOAuthState(state: string): Promise<void> {
-    if (!state) return;
-    await this.oauthProvider?.adoptState(state);
-  }
-
-  async disconnect() {
-    this.logger.info("Disconnecting from MCP server");
-    await this.locker.wait();
-    this.isConnected = false;
-    const client = this.client;
-    this.client = undefined;
-    this.transport = undefined;
-    void client?.close?.().catch((e) => this.logger.error(e));
-  }
-  async updateToolInfo() {
-    if (this.status === "connected" && this.client) {
-      this.logger.info("Updating tool info");
-      const toolResponse = await this.client.listTools();
+      // Fetch tools
+      const toolResponse = await client.listTools();
       this.toolInfo = toolResponse.tools.map(
         (tool) =>
           ({
@@ -349,32 +177,105 @@ export class MCPClient {
             inputSchema: tool.inputSchema,
           }) as MCPToolInfo,
       );
-    }
-  }
 
-  async callTool(toolName: string, input?: unknown) {
-    const id = generateUUID();
-    this.inProgressToolCallIds.push(id);
-    const execute = async () => {
-      const client = await this.connect();
-      if (this.status === "authorizing") {
-        throw new Error("OAuth authorization required. Try Refresh MCP Client");
+      // Fetch resources
+      try {
+        const resourceResponse = await client.listResources();
+        this.resourceInfo = resourceResponse.resources.map(
+          (resource) =>
+            ({
+              uri: resource.uri,
+              name: resource.name,
+              description: resource.description,
+              mimeType: resource.mimeType,
+              size: resource.size,
+            }) as MCPResourceInfo,
+        );
+      } catch (error) {
+        // Resources might not be supported by this server
+        this.log.warn(
+          "Failed to fetch resources, server may not support them:",
+          error,
+        );
+        this.resourceInfo = [];
       }
-      return client?.callTool({
-        name: toolName,
-        arguments: input as Record<string, unknown>,
-      });
-    };
-    return safe(() => this.logger.info("tool call", toolName))
-      .ifOk(() => this.scheduleAutoDisconnect()) // disconnect if autoDisconnectSeconds is set
-      .map(() => execute())
-      .ifFail(async (err) => {
-        if (err?.message?.includes("Transport is closed")) {
-          this.logger.info("Transport is closed, reconnecting...");
-          await this.disconnect();
-          return execute();
+
+      // Fetch resource templates
+      try {
+        const resourceTemplateResponse = await client.listResourceTemplates();
+        this.resourceTemplateInfo =
+          resourceTemplateResponse.resourceTemplates.map(
+            (template) =>
+              ({
+                uriTemplate: template.uriTemplate,
+                name: template.name,
+                description: template.description,
+                mimeType: template.mimeType,
+              }) as MCPResourceTemplateInfo,
+          );
+      } catch (error) {
+        // Resource templates might not be supported by this server
+        this.log.warn(
+          "Failed to fetch resource templates, server may not support them:",
+          error,
+        );
+        this.resourceTemplateInfo = [];
+      }
+
+      // Create AI SDK tool wrappers for each MCP tool
+      this.tools = toolResponse.tools.reduce((prev, _tool) => {
+        const parameters = jsonSchema(
+          toAny({
+            ..._tool.inputSchema,
+            properties: _tool.inputSchema.properties ?? {},
+            additionalProperties: false,
+          }),
+        );
+        prev[_tool.name] = tool({
+          parameters,
+          description: _tool.description,
+          execute: (params, options: ToolExecutionOptions) => {
+            options?.abortSignal?.throwIfAborted();
+            return this.callTool(_tool.name, params);
+          },
+        });
+        return prev;
+      }, {});
+      this.scheduleAutoDisconnect();
+    } catch (error) {
+      this.log.error(error);
+      this.isConnected = false;
+      this.error = error;
+    }
+
+    this.locker.unlock();
+    return this.client;
+  }
+  async disconnect() {
+    this.log.info("Disconnecting from MCP server");
+    await this.locker.wait();
+    this.isConnected = false;
+    const client = this.client;
+    this.client = undefined;
+    await client?.close().catch((e) => this.log.error(e));
+  }
+  async callTool(toolName: string, input?: unknown) {
+    return safe(() => this.log.info("tool call", toolName))
+
+      .ifOk(() => {
+        if (this.error) {
+          throw new Error(
+            "MCP Server is currently in an error state. Please check the configuration and try refreshing the server.",
+          );
         }
-        throw err;
+      })
+      .ifOk(() => this.scheduleAutoDisconnect()) // disconnect if autoDisconnectSeconds is set
+      .map(async () => {
+        const client = await this.connect();
+        return client?.callTool({
+          name: toolName,
+          arguments: input as Record<string, unknown>,
+        });
       })
       .ifOk((v) => {
         if (isNull(v)) {
@@ -383,33 +284,62 @@ export class MCPClient {
         return v;
       })
       .ifOk(() => this.scheduleAutoDisconnect())
-      .watch(() => {
-        this.inProgressToolCallIds = this.inProgressToolCallIds.filter(
-          (toolId) => toolId !== id,
-        );
-      })
       .watch((status) => {
         if (!status.isOk) {
-          this.logger.error("Tool call failed", toolName, status.error);
+          this.log.error("Tool call failed", toolName, status.error);
         } else if (status.value?.isError) {
-          this.logger.error(
-            "Tool call failed content",
-            toolName,
-            status.value.content,
-          );
+          this.log.error("Tool call failed", toolName, status.value.content);
         }
       })
-      .ifFail((err) => {
+      .ifFail((error) => {
         return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({
+                error: {
+                  message: errorToString(error),
+                  name: error?.name,
+                },
+              }),
+            },
+          ],
           isError: true,
-          error: {
-            message: errorToString(err),
-            name: err?.name || "ERROR",
-          },
-          content: [],
         };
       })
       .unwrap();
+  }
+
+  async readResource(uri: string): Promise<MCPResourceContent[]> {
+    try {
+      this.log.info("resource read", uri);
+
+      if (this.error) {
+        throw new Error(
+          "MCP Server is currently in an error state. Please check the configuration and try refreshing the server.",
+        );
+      }
+
+      this.scheduleAutoDisconnect();
+      const client = await this.connect();
+
+      if (!client) {
+        throw new Error("Failed to connect to MCP server");
+      }
+
+      const result = await client.readResource({ uri });
+      this.scheduleAutoDisconnect();
+
+      return result.contents.map((content) => ({
+        uri: content.uri,
+        mimeType: content.mimeType,
+        text: content.text,
+        blob: content.blob,
+      })) as MCPResourceContent[];
+    } catch (error) {
+      this.log.error("Resource read failed", uri, error);
+      throw error;
+    }
   }
 }
 
@@ -417,30 +347,7 @@ export class MCPClient {
  * Factory function to create a new MCP client
  */
 export const createMCPClient = (
-  id: string,
   name: string,
   serverConfig: MCPServerConfig,
   options: ClientOptions = {},
-): MCPClient => new MCPClient(id, name, serverConfig, options);
-
-class OAuthAuthorizationRequiredError extends Error {
-  constructor(public authorizationUrl: URL) {
-    super("OAuth user authorization required");
-    this.name = "OAuthAuthorizationRequiredError";
-  }
-}
-
-function isUnauthorized(error: any): boolean {
-  return (
-    error instanceof UnauthorizedError ||
-    error?.status === 401 ||
-    error?.message?.includes("401") ||
-    error?.message?.includes("Unauthorized") ||
-    error?.message?.includes("invalid_token") ||
-    error?.message?.includes("HTTP 401")
-  );
-}
-
-function isOAuthAuthorizationRequired(error: any): boolean {
-  return error instanceof OAuthAuthorizationRequiredError;
-}
+): MCPClient => new MCPClient(name, serverConfig, options);

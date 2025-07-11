@@ -163,6 +163,24 @@ export async function callMcpToolAction(
   return mcpClientsManager.toolCall(id, toolName, input);
 }
 
+export async function callMcpToolWithResourcesAction(
+  id: string,
+  toolName: string,
+  input?: unknown,
+): Promise<{ result: any; resources?: string }> {
+  // First, resolve any resources referenced by this tool
+  const { resolveResourcesForTool } = await import("../chat/helper");
+  const resourceContent = await resolveResourcesForTool(id, toolName);
+
+  // Then call the tool
+  const toolResult = await callMcpToolAction(id, toolName, input);
+
+  return {
+    result: toolResult,
+    resources: resourceContent,
+  };
+}
+
 export async function callMcpToolByServerNameAction(
   serverName: string,
   toolName: string,

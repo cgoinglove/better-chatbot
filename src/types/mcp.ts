@@ -19,7 +19,7 @@ export const MCPStdioConfigZodSchema = z.object({
 
 export const AllowedMCPServerZodSchema = z.object({
   tools: z.array(z.string()),
-  // resources: z.array(z.string()).optional(),
+  resources: z.array(z.string()).optional(),
 });
 
 export type AllowedMCPServer = z.infer<typeof AllowedMCPServerZodSchema>;
@@ -39,42 +39,47 @@ export type MCPToolInfo = {
   };
 };
 
+export type MCPResourceInfo = {
+  uri: string;
+  name: string;
+  description?: string;
+  mimeType?: string;
+  size?: number;
+};
+
+export type MCPResourceTemplateInfo = {
+  uriTemplate: string;
+  name: string;
+  description?: string;
+  mimeType?: string;
+};
+
+export type MCPResourceContent = {
+  uri: string;
+  mimeType?: string;
+  text?: string;
+  blob?: string;
+};
+
 export type MCPServerInfo = {
-  id: string;
   name: string;
   config: MCPServerConfig;
-  visibility: "public" | "private";
   error?: unknown;
-  enabled: boolean;
-  userId: string;
   status: "connected" | "disconnected" | "loading" | "authorizing";
   toolInfo: MCPToolInfo[];
-  createdAt?: Date | string;
-  updatedAt?: Date | string;
-  userName?: string | null;
-  userAvatar?: string | null;
-  description?: string; // For ShareableCard compatibility
-  icon?: {
-    value?: string;
-    style?: {
-      backgroundColor?: string;
-    };
-  };
+  resourceInfo: MCPResourceInfo[];
+  resourceTemplateInfo: MCPResourceTemplateInfo[];
 };
 
 export type McpServerInsert = {
   name: string;
   config: MCPServerConfig;
   id?: string;
-  userId: string;
-  visibility?: "public" | "private";
 };
 export type McpServerSelect = {
   name: string;
   config: MCPServerConfig;
   id: string;
-  userId: string;
-  visibility: "public" | "private";
 };
 
 export type VercelAIMcpTool = Tool & {
@@ -90,10 +95,8 @@ export interface MCPRepository {
   selectById(id: string): Promise<McpServerSelect | null>;
   selectByServerName(name: string): Promise<McpServerSelect | null>;
   selectAll(): Promise<McpServerSelect[]>;
-  selectAllForUser(userId: string): Promise<McpServerSelect[]>;
   deleteById(id: string): Promise<void>;
   existsByServerName(name: string): Promise<boolean>;
-  updateVisibility(id: string, visibility: "public" | "private"): Promise<void>;
 }
 
 export const McpToolCustomizationZodSchema = z.object({
