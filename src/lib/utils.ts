@@ -255,7 +255,7 @@ export function objectFlow<T extends Record<string, any>>(obj: T) {
 
 export function capitalizeFirstLetter(str: string): string {
   if (!str || str.length === 0) return str;
-  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+  return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
 export function truncateString(str: string, maxLength: number): string {

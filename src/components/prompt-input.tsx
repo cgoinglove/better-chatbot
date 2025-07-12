@@ -151,7 +151,7 @@ export default function PromptInput({
                   ref={editorRef}
                 />
               </div>
-              <div className="flex w-full items-center gap-[1px]  z-30">
+              <div className="flex w-full items-center gap-[2px] z-30">
                 <Button
                   variant={"ghost"}
                   size={"sm"}

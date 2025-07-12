@@ -87,14 +87,16 @@ export function AppSidebarProjects() {
             ) : projectList.length == 0 ? (
               <div className="px-2 mt-1">
                 <CreateProjectPopup>
-                  <div className="py-4 px-4 hover:bg-accent rounded-2xl cursor-pointer flex justify-between items-center">
+                  <div className="py-4 px-4 hover:bg-input rounded-2xl cursor-pointer flex justify-between items-center text-xs">
                     <div className="gap-1">
-                      <p className="font-semibold mb-1">{t("createProject")}</p>
+                      <div className="flex items-center mb-1 gap-1">
+                        <p className="font-semibold">{t("createProject")}</p>
+                        <FolderOpen className="size-3" />
+                      </div>
                       <p className="text-muted-foreground">
                         {t("toOrganizeIdeas")}
                       </p>
                     </div>
-                    <FolderOpen className="size-4" />
                   </div>
                 </CreateProjectPopup>
               </div>

@@ -92,42 +92,36 @@ export function ChatMentionInputMentionItem({
     if (item.type == "defaultTool") {
       switch (item.name) {
         case DefaultToolName.CreatePieChart:
-          appDefaultToolIcon = <ChartPie className="size-3 text-blue-500" />;
+          appDefaultToolIcon = <ChartPie className="size-3 text-blu" />;
           break;
         case DefaultToolName.CreateBarChart:
-          appDefaultToolIcon = (
-            <ChartColumnIcon className="size-3 text-blue-500" />
-          );
+          appDefaultToolIcon = <ChartColumnIcon className="size-3" />;
           break;
         case DefaultToolName.CreateLineChart:
-          appDefaultToolIcon = (
-            <TrendingUpIcon className="size-3 text-blue-500" />
-          );
+          appDefaultToolIcon = <TrendingUpIcon className="size-3" />;
           break;
         case DefaultToolName.WebSearch:
-          appDefaultToolIcon = <GlobalIcon className="size-3 text-blue-500" />;
+          appDefaultToolIcon = <GlobalIcon className="size-3" />;
           break;
         case DefaultToolName.WebContent:
-          appDefaultToolIcon = <GlobalIcon className="size-3 text-blue-500" />;
+          appDefaultToolIcon = <GlobalIcon className="size-3" />;
           break;
         case DefaultToolName.Http:
-          appDefaultToolIcon = (
-            <HardDriveUploadIcon className="size-3 text-blue-500" />
-          );
+          appDefaultToolIcon = <HardDriveUploadIcon className="size-3" />;
           break;
         case DefaultToolName.JavascriptExecution:
-          appDefaultToolIcon = <CodeIcon className="size-3 text-blue-500" />;
+          appDefaultToolIcon = <CodeIcon className="size-3" />;
           break;
       }
     }
     return (
       <div
         className={cn(
-          "flex items-center text-sm gap-2 mx-1 px-2 py-0.5 font-semibold rounded-lg ring ring-blue-500/20 bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 hover:ring-blue-500 transition-colors",
-          item.type == "workflow" &&
-            "ring-pink-500/20 bg-pink-500/10 text-pink-500 hover:bg-pink-500/20 hover:ring-pink-500",
-          item.type == "mcpServer" &&
-            "ring-indigo-500/20 bg-indigo-500/10 text-indigo-500 hover:bg-indigo-500/20 hover:ring-indigo-500",
+          "shadow flex items-center text-sm gap-2 mx-1 px-2 py-0.5 font-semibold rounded-lg bg-primary/80 ring ring-primary-foreground/40 text-primary-foreground hover:ring-primary-foreground transition-colors",
+          // item.type == "workflow" &&
+          //   "ring-pink-500/20 bg-pink-500/10 text-pink-500 hover:bg-pink-500/20 hover:ring-pink-500",
+          // item.type == "mcpServer" &&
+          //   "ring-indigo-500/20 bg-indigo-500/10 text-indigo-500 hover:bg-indigo-500/20 hover:ring-indigo-500",
           className,
         )}
       >
@@ -143,14 +137,14 @@ export function ChatMentionInputMentionItem({
         ) : (
           <WrenchIcon className="size-3" />
         )}
-        <span
+        {/* <span
           className={cn(
             "ml-auto text-xs opacity-60",
             item.type == "defaultTool" && "hidden",
           )}
         >
           {capitalizeFirstLetter(item.type)}
-        </span>
+        </span> */}
         {toAny(item).label || item.name}
       </div>
     );
@@ -239,6 +233,7 @@ function ChatMentionInputSuggestion({
   }, [mcpList]);
 
   const workflowMentions = useMemo(() => {
+    if (!workflowList.length) return;
     return (
       <CommandGroup heading="Workflows" key="workflows">
         {workflowList.map((workflow) => {
