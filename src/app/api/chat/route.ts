@@ -121,8 +121,8 @@ export async function POST(request: Request) {
     const inProgressToolStep = extractInProgressToolPart(messages.slice(-2));
 
     const isToolCallAllowed =
-      (!isToolCallUnsupportedModel(model) && toolChoice != "none") ||
-      mentions.length > 0;
+      !isToolCallUnsupportedModel(model) &&
+      (toolChoice != "none" || mentions.length > 0);
 
     return createDataStreamResponse({
       execute: async (dataStream) => {
