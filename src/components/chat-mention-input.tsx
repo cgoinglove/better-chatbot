@@ -28,7 +28,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 import { createPortal } from "react-dom";
 import { appStore } from "@/app/store";
-import { capitalizeFirstLetter, cn, toAny } from "lib/utils";
+import { cn, toAny } from "lib/utils";
 import { useShallow } from "zustand/shallow";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Editor } from "@tiptap/react";
