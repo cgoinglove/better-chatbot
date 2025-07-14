@@ -4,6 +4,11 @@ import {
   Tool,
   ToolInvocation,
   tool as createTool,
+  streamText,
+  generateText,
+  CoreMessage,
+  LanguageModel,
+  smoothStream,
 } from "ai";
 import {
   ChatMention,
@@ -186,6 +191,130 @@ export async function createResourceAwareToolDescriptions(
   }
 
   return enhancedTools;
+}
+
+/**
+ * Multi-phase resource-aware chat orchestrator
+ * Phase 1: Tool selection with basic tool descriptions
+ * Phase 2: Resource fetching for selected tools
+ * Phase 3: Enhanced tool call generation with resource context
+ */
+export async function createMultiPhaseResourceAwareFlow(
+  model: LanguageModel,
+  systemPrompt: string,
+  messages: Message[],
+  tools: Record<string, VercelAIMcpTool>,
+  toolChoice: string,
+  _dataStream: any,
+  onFinishCallback?: (result: any) => Promise<void>,
+) {
+  // Phase 1: Initial tool selection with basic tools (no resources)
+  logger.info("Phase 1: Tool selection with basic descriptions");
+
+  const basicTools = excludeToolExecution(tools); // Tools without execute for selection only
+
+  // Convert messages to CoreMessage format for generateText
+  const coreMessages: CoreMessage[] = messages.map((msg) => ({
+    role: msg.role as "system" | "user" | "assistant",
+    content: msg.content || "",
+  }));
+
+  const selectionResult = await generateText({
+    model,
+    system: systemPrompt,
+    messages: coreMessages,
+    tools: basicTools,
+    toolChoice: toolChoice === "manual" ? "required" : "auto",
+  });
+
+  // Extract selected tools from the result
+  const selectedTools: Array<{
+    toolName: string;
+    serverId: string;
+    originToolName: string;
+  }> = [];
+
+  for (const toolCall of selectionResult.toolCalls || []) {
+    const tool = tools[toolCall.toolName];
+    if (tool && "_mcpServerId" in tool) {
+      selectedTools.push({
+        toolName: toolCall.toolName,
+        serverId: tool._mcpServerId,
+        originToolName: tool._originToolName,
+      });
+    }
+  }
+
+  if (selectedTools.length === 0) {
+    // No tools selected, return basic response
+    logger.info("No tools selected, returning basic response");
+    return streamText({
+      model,
+      system: systemPrompt,
+      messages,
+      experimental_transform: smoothStream({ chunking: "word" }),
+      onFinish: onFinishCallback,
+    });
+  }
+
+  // Phase 2: Fetch resources for selected tools only
+  logger.info(
+    `Phase 2: Fetching resources for ${selectedTools.length} selected tools`,
+  );
+
+  const resourcesByTool: Record<string, string> = {};
+  for (const { serverId, originToolName, toolName } of selectedTools) {
+    const resourceContent = await resolveResourcesForTool(
+      serverId,
+      originToolName,
+    );
+    if (resourceContent) {
+      resourcesByTool[toolName] = resourceContent;
+    }
+  }
+
+  // Phase 3: Enhanced tool call generation with resource context
+  logger.info("Phase 3: Enhanced tool call generation with resource context");
+
+  let enhancedTools = tools;
+  if (Object.keys(resourcesByTool).length > 0) {
+    enhancedTools = createResourceEnhancedTools(tools, resourcesByTool);
+
+    // Add resource context to system prompt
+    const resourceContextPrompt = `
+
+--- RESOURCE CONTEXT FOR SELECTED TOOLS ---
+You have selected tools that have additional resource context available. Use this context to generate more accurate and informed tool call parameters.
+
+${Object.entries(resourcesByTool)
+  .map(([toolName, content]) => `Tool: ${toolName}\n${content}`)
+  .join("\n\n")}
+---`;
+
+    systemPrompt += resourceContextPrompt;
+  }
+
+  // Create messages including the selection result
+  const updatedMessages: CoreMessage[] = [
+    ...coreMessages,
+    {
+      role: "assistant" as const,
+      content: selectionResult.text,
+    },
+  ];
+
+  // Stream the final response with enhanced tools
+  return streamText({
+    model,
+    system: systemPrompt,
+    messages: updatedMessages,
+    tools: enhancedTools,
+    toolChoice: "auto",
+    maxSteps: 10,
+    experimental_continueSteps: true,
+    experimental_transform: smoothStream({ chunking: "word" }),
+    onFinish: onFinishCallback,
+  });
 }
 
 /**
