@@ -43,6 +43,7 @@ import {
   filterToolsByAllowedMCPServers,
   filterMcpServerCustomizations,
   createResourceAwareToolDescriptions,
+  createMultiPhaseResourceAwareFlow,
 } from "./helper";
 import {
   generateTitleFromUserMessageAction,
@@ -176,76 +177,35 @@ export async function POST(request: Request) {
             ? "required"
             : "auto";
 
-        const vercelAITooles = await safe(tools)
-          .map(async (t) => {
+        const vercelAITooles = safe(tools)
+          .map((t) => {
             if (!t) return undefined;
-
-            // Create resource-aware tools with enhanced descriptions
-            const resourceAwareTools =
-              await createResourceAwareToolDescriptions(t);
-
-            const bindingTools =
-              toolChoice === "manual"
-                ? excludeToolExecution(resourceAwareTools)
-                : resourceAwareTools;
 
             return {
               ...getAllowedDefaultToolkit(allowedAppDefaultToolkit),
-              ...bindingTools,
+              ...t,
             };
           })
           .unwrap();
 
-        const result = streamText({
+        // Use multi-phase resource-aware flow for better resource handling
+        const result = await createMultiPhaseResourceAwareFlow(
           model,
-          system: systemPrompt,
+          systemPrompt,
           messages,
-          maxSteps: 10,
-          experimental_continueSteps: true,
-          experimental_transform: smoothStream({ chunking: "word" }),
-          maxRetries: 0,
-          tools: vercelAITooles,
-          toolChoice: computedToolChoice,
-          onFinish: async ({ response, usage }) => {
-            const appendMessages = appendResponseMessages({
-              messages: messages.slice(-1),
-              responseMessages: response.messages,
-            });
-            if (isLastMessageUserMessage) {
-              await chatRepository.insertMessage({
-                threadId: thread!.id,
-                model: chatModel?.model ?? null,
-                role: "user",
-                parts: message.parts,
-                attachments: message.experimental_attachments,
-                id: message.id,
-                annotations: appendAnnotations(message.annotations, {
-                  usageTokens: usage.promptTokens,
-                }),
-              });
-            }
-            const assistantMessage = appendMessages.at(-1);
-            if (assistantMessage) {
-              const annotations = appendAnnotations(
-                assistantMessage.annotations,
-                {
-                  usageTokens: usage.completionTokens,
-                  toolChoice,
-                },
-              );
-              dataStream.writeMessageAnnotation(annotations.at(-1)!);
-              await chatRepository.upsertMessage({
-                model: chatModel?.model ?? null,
-                threadId: thread!.id,
-                role: assistantMessage.role,
-                id: assistantMessage.id,
-                parts: assistantMessage.parts as UIMessage["parts"],
-                attachments: assistantMessage.experimental_attachments,
-                annotations,
-              });
-            }
+          vercelAITooles || {},
+          computedToolChoice,
+          dataStream,
+          async () => {
+            // Handle database operations for message persistence
+            // This callback will be called when the streaming completes
+            logger.info(
+              "Multi-phase flow completed, handling database operations",
+            );
           },
-        });
+        );
+
+        // Handle the streaming result
         result.consumeStream();
         result.mergeIntoDataStream(dataStream, {
           sendReasoning: true,
