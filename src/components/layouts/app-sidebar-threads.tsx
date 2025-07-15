@@ -11,7 +11,13 @@ import {
 import { SidebarGroupContent, SidebarMenu, SidebarMenuItem } from "ui/sidebar";
 import { SidebarGroup } from "ui/sidebar";
 import { ThreadDropdown } from "../thread-dropdown";
-import { ChevronDown, ChevronUp, MoreHorizontal, Trash } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronUp,
+  MoreHorizontal,
+  Trash,
+  GitBranch,
+} from "lucide-react";
 import { useMounted } from "@/hooks/use-mounted";
 import { appStore } from "@/app/store";
 import { Button } from "ui/button";
@@ -234,6 +240,9 @@ export function AppSidebarThreads() {
                                 href={`/chat/${thread.id}`}
                                 className="flex items-center"
                               >
+                                {thread.parentThreadId && (
+                                  <GitBranch className="mr-2 h-3 w-3 text-muted-foreground flex-shrink-0" />
+                                )}
                                 <p className="truncate ">{thread.title}</p>
                               </Link>
                             </SidebarMenuButton>

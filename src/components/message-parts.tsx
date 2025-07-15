@@ -16,6 +16,7 @@ import {
   Loader2,
   AlertTriangleIcon,
   Percent,
+  GitBranch,
   HammerIcon,
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
@@ -39,6 +40,7 @@ import { useCopy } from "@/hooks/use-copy";
 import { AnimatePresence, motion } from "framer-motion";
 import { SelectModel } from "./select-model";
 import {
+  branchOutAction,
   deleteMessageAction,
   deleteMessagesByChatIdAfterTimestampAction,
 } from "@/app/api/chat/actions";
@@ -75,6 +77,7 @@ import { TavilyResponse } from "lib/ai/tools/web/web-search";
 
 import { CodeBlock } from "ui/CodeBlock";
 import { SafeJsExecutionResult, safeJsRun } from "lib/safe-js-run";
+import { useRouter } from "next/navigation";
 
 type MessagePart = UIMessage["parts"][number];
 
@@ -247,6 +250,9 @@ export const AssistMessagePart = memo(function AssistMessagePart({
   const { copied, copy } = useCopy();
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isBranching, setIsBranching] = useState(false);
+
+  const router = useRouter();
 
   const deleteMessage = useCallback(() => {
     safe(() => setIsDeleting(true))
@@ -294,6 +300,20 @@ export const AssistMessagePart = memo(function AssistMessagePart({
       .watch(() => setIsLoading(false))
       .unwrap();
   };
+
+  const handleBranchOut = useCallback(async () => {
+    safe(() => setIsBranching(true))
+      .ifOk(async () => {
+        if (!threadId) {
+          throw new Error("Thread ID is required");
+        }
+        const newThread = await branchOutAction(threadId, message.id);
+        router.push(`/chat/${newThread.id}`);
+      })
+      .ifFail((error) => toast.error(error.message))
+      .watch(() => setIsBranching(false))
+      .unwrap();
+  }, [message.id]);
 
   return (
     <div
@@ -343,6 +363,24 @@ export const AssistMessagePart = memo(function AssistMessagePart({
               </div>
             </TooltipTrigger>
             <TooltipContent>Change Model</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                disabled={isBranching}
+                onClick={handleBranchOut}
+                className="size-3! p-4! opacity-0 group-hover/message:opacity-100"
+              >
+                {isBranching ? (
+                  <Loader className="animate-spin" />
+                ) : (
+                  <GitBranch />
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Branch Out</TooltipContent>
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>

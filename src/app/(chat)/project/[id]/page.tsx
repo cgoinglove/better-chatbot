@@ -16,6 +16,7 @@ import {
   FileUp,
   Pencil,
   MessagesSquare,
+  GitBranch,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
@@ -225,8 +226,10 @@ export default function ProjectPage() {
                   >
                     <MessagesSquare size={16} className="text-primary" />
                     <div className="flex-1 truncate">
-                      <div className="font-medium truncate">
-                        {thread.title}
+                      <div className="font-medium truncate flex items-center">
+                        {thread.parentThreadId && (
+                          <GitBranch className="mr-2 h-3 w-3 text-muted-foreground flex-shrink-0" />
+                        )}
                         {thread.title}
                       </div>
                     </div>

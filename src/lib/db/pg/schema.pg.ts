@@ -23,6 +23,7 @@ export const ChatThreadSchema = pgTable("chat_thread", {
     .references(() => UserSchema.id),
   createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   projectId: uuid("project_id"),
+  parentThreadId: uuid("parent_thread_id"),
 });
 
 export const ChatMessageSchema = pgTable("chat_message", {

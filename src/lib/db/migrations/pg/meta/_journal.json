@@ -57,6 +57,13 @@
       "when": 1750508915812,
       "tag": "0007_eager_clint_barton",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1752418588075,
+      "tag": "0008_amazing_chat",
+      "breakpoints": true
     }
   ]
 }

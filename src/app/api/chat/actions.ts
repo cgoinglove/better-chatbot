@@ -13,7 +13,12 @@ import {
   generateExampleToolSchemaPrompt,
 } from "lib/ai/prompts";
 
-import type { ChatModel, ChatThread, Project } from "app-types/chat";
+import type {
+  ChatMessage,
+  ChatModel,
+  ChatThread,
+  Project,
+} from "app-types/chat";
 
 import {
   chatRepository,
@@ -31,6 +36,7 @@ import logger from "logger";
 import { JSONSchema7 } from "json-schema";
 import { ObjectJsonSchema7 } from "app-types/util";
 import { jsonSchemaToZod } from "lib/json-schema-to-zod";
+import { randomUUID } from "crypto";
 
 export async function getUserId() {
   const session = await getSession();
@@ -44,7 +50,10 @@ export async function getUserId() {
 export async function generateTitleFromUserMessageAction({
   message,
   model,
-}: { message: Message; model: LanguageModel }) {
+}: {
+  message: Message;
+  model: LanguageModel;
+}) {
   await getSession();
   const prompt = toAny(message.parts?.at(-1))?.text || "unknown";
 
@@ -85,6 +94,64 @@ export async function deleteMessagesByChatIdAfterTimestampAction(
 ) {
   "use server";
   await chatRepository.deleteMessagesByChatIdAfterTimestamp(messageId);
+}
+
+export async function branchOutAction(
+  threadId: string,
+  messageId: string,
+): Promise<{
+  id: string;
+}> {
+  const userId = await getUserId();
+  console.log("userId", userId);
+
+  if (!userId) {
+    throw new Error("User not found");
+  }
+
+  const threadDetails = await chatRepository.selectThreadDetails(threadId);
+  if (!threadDetails) {
+    throw new Error("Thread not found");
+  }
+
+  const isMessageInThread = threadDetails.messages.some(
+    (message) => message.id === messageId,
+  );
+  if (!isMessageInThread) {
+    throw new Error("Message not found in thread");
+  }
+
+  const messagesForNewThread: ChatMessage[] = [];
+
+  for (const message of threadDetails.messages) {
+    if (message.id === messageId) {
+      messagesForNewThread.push(message);
+      break;
+    }
+    messagesForNewThread.push(message);
+  }
+
+  const newThread = await chatRepository.insertThread({
+    title: `Branch - ${threadDetails.title}`,
+    userId: threadDetails.userId,
+    projectId: threadDetails.projectId,
+    id: randomUUID(),
+    parentThreadId: threadDetails.id,
+  });
+
+  await chatRepository.insertMessages(
+    messagesForNewThread.map((message) => ({
+      role: message.role,
+      parts: message.parts,
+      model: message.model,
+      attachments: message.attachments,
+      annotations: message.annotations,
+      threadId: newThread.id,
+      id: randomUUID(),
+    })),
+  );
+
+  return { id: newThread.id };
 }
 
 export async function selectThreadListByUserIdAction() {

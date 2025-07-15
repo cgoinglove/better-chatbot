@@ -9,6 +9,7 @@ import {
   ChevronRight,
   MessageCircleDashed,
   PanelLeft,
+  GitBranch,
 } from "lucide-react";
 import { Button } from "ui/button";
 import { Separator } from "ui/separator";
@@ -187,6 +188,9 @@ function ThreadDropdownComponent() {
           variant="ghost"
           className="data-[state=open]:bg-input! hover:text-foreground cursor-pointer flex gap-1 items-center px-2 py-1 rounded-md hover:bg-accent"
         >
+          {currentThread.parentThreadId && (
+            <GitBranch className="mr-1 h-3 w-3 text-muted-foreground flex-shrink-0" />
+          )}
           <p className="truncate max-w-60 min-w-0">{currentThread.title}</p>
 
           <ChevronDown size={14} />

@@ -28,6 +28,7 @@ export const pgChatRepository: ChatRepository = {
         userId: thread.userId,
         projectId: thread.projectId,
         id: thread.id,
+        parentThreadId: thread.parentThreadId || null,
       })
       .returning();
     return result;
@@ -67,6 +68,7 @@ export const pgChatRepository: ChatRepository = {
       userId: thread.chat_thread.userId,
       createdAt: thread.chat_thread.createdAt,
       projectId: thread.chat_thread.projectId,
+      parentThreadId: thread.chat_thread.parentThreadId,
       instructions: thread.project?.instructions ?? null,
       userPreferences: thread.user?.preferences ?? undefined,
       messages,
@@ -160,6 +162,7 @@ export const pgChatRepository: ChatRepository = {
         createdAt: ChatThreadSchema.createdAt,
         userId: ChatThreadSchema.userId,
         projectId: ChatThreadSchema.projectId,
+        parentThreadId: ChatThreadSchema.parentThreadId,
         lastMessageAt: sql<string>`MAX(${ChatMessageSchema.createdAt})`.as(
           "last_message_at",
         ),
@@ -179,6 +182,7 @@ export const pgChatRepository: ChatRepository = {
         title: row.title,
         userId: row.userId,
         projectId: row.projectId,
+        parentThreadId: row.parentThreadId,
         createdAt: row.createdAt,
         lastMessageAt: row.lastMessageAt
           ? new Date(row.lastMessageAt).getTime()
