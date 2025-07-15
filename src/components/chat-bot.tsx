@@ -173,6 +173,7 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
         return false;
       const message = messages[index];
       if (message.role === "user") return false;
+      if (message.parts.at(-1)?.type == "step-start") return false;
       return true;
     },
     [messages, error],
@@ -308,13 +309,14 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
               );
             })}
             {showThink && (
-              <div className="w-full mx-auto max-w-3xl px-6">
-                <Think />
-              </div>
+              <>
+                <div className="w-full mx-auto max-w-3xl px-6 relative">
+                  <Think />
+                </div>
+                <div className="min-h-[calc(55dvh-56px)]" />
+              </>
             )}
-            {status === "submitted" && messages.at(-1)?.role === "user" && (
-              <div className="min-h-[calc(55dvh-56px)]" />
-            )}
+
             {error && <ErrorMessage error={error} />}
             <div className="min-w-0 min-h-52" />
           </div>
