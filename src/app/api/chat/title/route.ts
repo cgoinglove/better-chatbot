@@ -47,7 +47,6 @@ User Message: "${message}"
 
 Generate Title:`,
       maxSteps: 1,
-      maxTokens: 100,
       maxRetries: 1,
       onFinish: (ctx) => {
         console.log(`title: ${ctx.text}`);

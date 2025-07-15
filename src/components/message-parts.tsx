@@ -1086,9 +1086,10 @@ export const SimpleJavascriptExecutionToolPart = memo(
     onResult?: (result?: any) => void;
   }) {
     const isRun = useRef(false);
+    const [isExecuting, setIsExecuting] = useState(false);
 
     const [realtimeLogs, setRealtimeLogs] = useState<
-      SafeJsExecutionResult["logs"]
+      (SafeJsExecutionResult["logs"][number] & { time: number })[]
     >([]);
 
     const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -1097,7 +1098,7 @@ export const SimpleJavascriptExecutionToolPart = memo(
     const runCode = useCallback(
       async (code: string, input: any) => {
         const result = await safeJsRun(code, input, 60000, (log) => {
-          setRealtimeLogs((prev) => [...prev, log]);
+          setRealtimeLogs((prev) => [...prev, { ...log, time: Date.now() }]);
         });
 
         onResult?.({
@@ -1108,6 +1109,10 @@ export const SimpleJavascriptExecutionToolPart = memo(
       },
       [onResult],
     );
+
+    const isRunning = useMemo(() => {
+      return isExecuting || part.state != "result";
+    }, [isExecuting, part.state]);
 
     const scrollToCode = useCallback(() => {
       if (codeResultContainerRef.current && scrollContainerRef.current) {
@@ -1136,14 +1141,29 @@ export const SimpleJavascriptExecutionToolPart = memo(
       const logs = realtimeLogs.length ? realtimeLogs : (result?.logs ?? []);
 
       if (error) {
-        return [{ type: "error", args: [error] }, ...logs];
+        return [{ type: "error", args: [error], time: Date.now() }, ...logs];
       }
 
       return logs;
     }, [part, realtimeLogs]);
 
+    const reExecute = useCallback(async () => {
+      if (isExecuting) return;
+      setIsExecuting(true);
+      setRealtimeLogs([
+        { type: "info", args: ["Re-executing code..."], time: Date.now() },
+      ]);
+      const code = part.args?.code;
+      const input = part.args?.input;
+      safe(() =>
+        safeJsRun(code, input, 60000, (log) => {
+          setRealtimeLogs((prev) => [...prev, { ...log, time: Date.now() }]);
+        }),
+      ).watch(() => setIsExecuting(false));
+    }, [part.args, isExecuting]);
+
     const header = useMemo(() => {
-      if (part.state != "result")
+      if (isRunning)
         return (
           <>
             <Loader className="size-3 animate-spin text-muted-foreground" />
@@ -1166,7 +1186,7 @@ export const SimpleJavascriptExecutionToolPart = memo(
           )}
         </>
       );
-    }, [part.state, result]);
+    }, [part.state, result, isRunning]);
 
     const fallback = useMemo(() => {
       return <CodeFallback />;
@@ -1177,9 +1197,21 @@ export const SimpleJavascriptExecutionToolPart = memo(
       return (
         <div className="p-4 text-[10px] text-foreground flex flex-col gap-1">
           <div className="text-foreground flex items-center gap-1">
-            <div className="w-1 h-1 mr-1 ring ring-border rounded-full" />{" "}
+            {isRunning ? (
+              <Loader className="size-2 animate-spin" />
+            ) : (
+              <div className="w-1 h-1 mr-1 ring ring-border rounded-full" />
+            )}
             better-chatbot
             <Percent className="size-2" />
+            {part.state == "result" && (
+              <div
+                className="hover:text-foreground ml-auto px-2 py-1 rounded-sm cursor-pointer text-muted-foreground/80"
+                onClick={reExecute}
+              >
+                retry
+              </div>
+            )}
           </div>
           {logs.map((log, i) => {
             return (
@@ -1191,7 +1223,10 @@ export const SimpleJavascriptExecutionToolPart = memo(
                   log.type == "warn" && "text-yellow-500",
                 )}
               >
-                <div className="h-[15px] flex items-center pr-2">
+                <div className="w-[8.6rem] hidden md:block">
+                  {new Date(toAny(log).time || Date.now()).toISOString()}
+                </div>
+                <div className="h-[15px] flex items-center">
                   {log.type == "error" ? (
                     <AlertTriangleIcon className="size-2" />
                   ) : log.type == "warn" ? (
@@ -1200,7 +1235,7 @@ export const SimpleJavascriptExecutionToolPart = memo(
                     <ChevronRight className="size-2" />
                   )}
                 </div>
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 whitespace-pre-wrap">
                   {log.args
                     .map((arg) =>
                       isObject(arg) ? JSON.stringify(arg) : arg.toString(),
@@ -1210,9 +1245,14 @@ export const SimpleJavascriptExecutionToolPart = memo(
               </div>
             );
           })}
+          {isRunning && (
+            <div className="ml-3 animate-caret-blink text-muted-foreground">
+              |
+            </div>
+          )}
         </div>
       );
-    }, [logs]);
+    }, [logs, isRunning]);
 
     useEffect(() => {
       if (onResult && part.args && part.state == "call" && !isRun.current) {
@@ -1222,11 +1262,11 @@ export const SimpleJavascriptExecutionToolPart = memo(
     }, [part.state, !!onResult]);
 
     useEffect(() => {
-      if (part.state != "result") {
+      if (isRunning) {
         const closeKey = setInterval(scrollToCode, 300);
         return () => clearInterval(closeKey);
       }
-    }, [part.state, logs.length]);
+    }, [isRunning]);
 
     return (
       <div className="flex flex-col">

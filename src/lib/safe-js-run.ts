@@ -2,7 +2,6 @@
 // Core JavaScript execution engine with security sandbox
 
 import { safe } from "ts-safe";
-import { IS_BROWSER } from "./const";
 
 type LogEntry = {
   type: "log" | "info" | "warn" | "error" | "debug" | "trace";
@@ -204,7 +203,6 @@ async function execute({
     const entry: LogEntry = { type, args };
     logs.push(entry);
     const length = JSON.stringify(logs).length;
-    IS_BROWSER && console.log(type, ...args);
     if (length > 10000) {
       throw new Error(`Logs limit exceeded ${length} characters`);
     }
