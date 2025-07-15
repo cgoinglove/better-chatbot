@@ -243,7 +243,7 @@ export async function POST(request: Request) {
               responseMessages: response.messages,
             });
             if (isLastMessageUserMessage) {
-              await chatRepository.insertMessage({
+              await chatRepository.upsertMessage({
                 threadId: thread!.id,
                 model: chatModel?.model ?? null,
                 role: "user",

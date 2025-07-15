@@ -27,6 +27,7 @@ const staticModels = {
     }),
   },
   google: {
+    "gemini-2.0-flash-lite": google("gemini-2.0-flash-lite"),
     "gemini-2.5-flash": google("gemini-2.5-flash-preview-04-17"),
     "gemini-2.5-pro": google("gemini-2.5-pro-preview-05-06"),
   },
@@ -52,6 +53,7 @@ const staticModels = {
 
 const staticUnsupportedModels = new Set([
   staticModels.openai["o4-mini"],
+  staticModels.google["gemini-2.0-flash-lite"],
   staticModels.ollama["gemma3:1b"],
   staticModels.ollama["gemma3:4b"],
   staticModels.ollama["gemma3:12b"],

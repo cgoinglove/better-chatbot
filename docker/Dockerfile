@@ -36,7 +36,6 @@ COPY --from=builder /app/src/lib/utils.ts ./src/lib/utils.ts
 COPY --from=builder /app/src/lib/load-env.ts ./src/lib/load-env.ts
 COPY --from=builder /app/src/lib/db/migrations ./src/lib/db/migrations
 COPY --from=builder /app/src/types/chat.ts ./src/types/chat.ts
-COPY --from=builder /app/.env ./.env
 COPY --from=builder /app/messages ./messages
 EXPOSE 3000
 

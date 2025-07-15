@@ -24,7 +24,6 @@ import {
 
 import MentionInput from "./mention-input";
 import { useTranslations } from "next-intl";
-import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 import { createPortal } from "react-dom";
 import { appStore } from "@/app/store";
@@ -34,6 +33,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Editor } from "@tiptap/react";
 import { DefaultToolName } from "lib/ai/tools";
 import { GlobalIcon } from "ui/global-icon";
+import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 
 interface ChatMentionInputProps {
   onChange: (text: string) => void;
