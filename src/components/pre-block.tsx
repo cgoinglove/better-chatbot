@@ -13,7 +13,7 @@ import { safe } from "ts-safe";
 import { cn } from "lib/utils";
 import { useTheme } from "next-themes";
 import { Button } from "ui/button";
-import { Clipboard, CheckIcon } from "lucide-react";
+import { CheckIcon, CopyIcon } from "lucide-react";
 import JsonView from "ui/json-view";
 import { useCopy } from "@/hooks/use-copy";
 import dynamic from "next/dynamic";
@@ -55,18 +55,20 @@ const PurePre = ({
 
   return (
     <pre className={cn("relative ", className)}>
-      <div className="w-full flex z-20 py-2 px-4 items-center">
-        <span className="text-sm text-muted-foreground">{lang}</span>
-        <Button
-          size="icon"
-          variant={copied ? "secondary" : "ghost"}
-          className="ml-auto z-10 p-3! size-2! rounded-sm"
-          onClick={() => {
-            copy(code);
-          }}
-        >
-          {copied ? <CheckIcon /> : <Clipboard className="size-3!" />}
-        </Button>
+      <div className="p-1.5">
+        <div className="w-full flex z-20 py-2 px-4 items-center mb-2">
+          <span className="text-sm text-muted-foreground">{lang}</span>
+          <Button
+            size="icon"
+            variant={copied ? "secondary" : "ghost"}
+            className="ml-auto z-10 p-3! size-2! rounded-sm"
+            onClick={() => {
+              copy(code);
+            }}
+          >
+            {copied ? <CheckIcon /> : <CopyIcon className="size-3!" />}
+          </Button>
+        </div>
       </div>
       <div className="relative overflow-x-auto px-6 pb-6">{children}</div>
     </pre>
@@ -142,7 +144,7 @@ export function PreBlock({ children }: { children: any }) {
     <div
       className={cn(
         loading && "animate-pulse",
-        "text-sm flex bg-accent/30 flex-col rounded-2xl relative my-4 overflow-hidden border",
+        "text-sm flex bg-secondary flex-col rounded-2xl relative my-4 overflow-hidden",
       )}
     >
       {component}

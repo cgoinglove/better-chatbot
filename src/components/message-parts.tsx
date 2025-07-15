@@ -613,7 +613,7 @@ export const ToolMessagePart = memo(
                           copyInput(JSON.stringify(toolInvocation.args))
                         }
                       >
-                        <Copy />
+                        <Copy className="size-3" />
                       </Button>
                     )}
                   </div>
@@ -651,7 +651,7 @@ export const ToolMessagePart = memo(
                           className="size-3 text-muted-foreground"
                           onClick={() => copyOutput(JSON.stringify(result))}
                         >
-                          <Copy />
+                          <Copy className="size-3" />
                         </Button>
                       )}
                     </div>
@@ -1009,21 +1009,28 @@ export function WorkflowToolDetail({
     if (!result.result) return null;
 
     return (
-      <div className="w-full max-h-96 overflow-y-auto bg-card p-4 border text-xs transition-colors fade-300 rounded-lg ">
-        <div className="flex justify-end">
-          <Button
-            variant={"ghost"}
-            size={"icon"}
-            onClick={() => copy(JSON.stringify(result.result))}
-          >
-            {copied ? (
-              <Check className="size-3" />
-            ) : (
+      <div className="w-full bg-card p-4 border text-xs rounded-lg text-muted-foreground">
+        <div className="flex items-center">
+          <h5 className="text-muted-foreground font-medium select-none">
+            Response
+          </h5>
+          <div className="flex-1" />
+          {copied ? (
+            <Check className="size-3" />
+          ) : (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-3 text-muted-foreground"
+              onClick={() => copy(JSON.stringify(result.result))}
+            >
               <Copy className="size-3" />
-            )}
-          </Button>
+            </Button>
+          )}
         </div>
-        <JsonView data={result.result} />
+        <div className="p-2 max-h-[300px] overflow-y-auto">
+          <JsonView data={result.result} />
+        </div>
       </div>
     );
   }, [result.status, result.error, result.result, copied]);
@@ -1092,7 +1099,7 @@ export function WorkflowToolDetail({
           </NodeResultPopup>
         );
       })}
-      <div className="px-2 mt-2">{output}</div>
+      <div className="mt-2">{output}</div>
     </div>
   );
 }
