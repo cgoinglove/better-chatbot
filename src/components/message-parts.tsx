@@ -168,7 +168,7 @@ export const UserMessagePart = memo(function UserMessagePart({
       <div
         data-testid="message-content"
         className={cn(
-          "flex flex-col gap-4 max-w-full",
+          "flex flex-col gap-4 max-w-full ring ring-input",
           {
             "bg-accent text-accent-foreground px-4 py-3 rounded-2xl": isLast,
             "opacity-50": isError,

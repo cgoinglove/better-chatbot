@@ -159,7 +159,7 @@ export function ToolSelectDropdown({
               (mentions?.length ?? 0 > 0) ? "text-muted-foreground" : ""
             }
           >
-            Tools
+            {(mentions?.length ?? 0 > 0) ? "Mention" : "Tools"}
           </span>
           {(bindingTools.length > 0 || isLoading) && (
             <>
