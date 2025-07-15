@@ -256,7 +256,7 @@ export function AppSidebarThreads() {
                                   </Link>
                                 </SidebarMenuButton>
                               </TooltipTrigger>
-                              <TooltipContent>
+                              <TooltipContent className="max-w-[200px] p-4 break-all overflow-y-auto max-h-[200px]">
                                 {thread.title || "New Chat"}
                               </TooltipContent>
                             </Tooltip>

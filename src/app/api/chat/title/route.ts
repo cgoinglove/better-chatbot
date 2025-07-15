@@ -41,7 +41,14 @@ export async function POST(request: Request) {
       model: customModelProvider.getModel(chatModel),
       system: CREATE_THREAD_TITLE_PROMPT,
       experimental_transform: smoothStream({ chunking: "word" }),
-      prompt: message,
+      prompt: `Based on this user message, create a concise chat title:
+
+User Message: "${message}"
+
+Generate Title:`,
+      maxSteps: 1,
+      maxTokens: 100,
+      maxRetries: 1,
       onFinish: (ctx) => {
         console.log(`title: ${ctx.text}`);
         chatRepository.upsertThread({

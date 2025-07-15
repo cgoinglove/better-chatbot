@@ -5,11 +5,15 @@ import { Project } from "app-types/chat";
 import { User } from "better-auth";
 import { createMCPToolId } from "./mcp/mcp-tool-id";
 
-export const CREATE_THREAD_TITLE_PROMPT = `\n
-      - you will generate a short title based on the first message a user begins a conversation with
-      - ensure it is not more than 80 characters long
-      - the title should be a summary of the user's message
-      - do not use quotes or colons`;
+export const CREATE_THREAD_TITLE_PROMPT = `
+You are a chat title generation expert.
+
+Critical rules:
+- Generate a concise title based on the first user message
+- Title must be under 80 characters (absolutely no more than 80 characters)
+- Summarize only the core content clearly
+- Do not use quotes, colons, or special characters
+- Use the same language as the user's message`;
 
 export const buildUserSystemPrompt = (
   user?: User,
