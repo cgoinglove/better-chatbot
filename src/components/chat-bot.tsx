@@ -60,6 +60,7 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
     allowedAppDefaultToolkit,
     allowedMcpServers,
     threadList,
+    threadMentions,
   ] = appStore(
     useShallow((state) => [
       state.mutate,
@@ -68,6 +69,7 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
       state.allowedAppDefaultToolkit,
       state.allowedMcpServers,
       state.threadList,
+      state.threadMentions,
     ]),
   );
 
@@ -96,6 +98,7 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
         toolChoice: latestRef.current.toolChoice,
         allowedAppDefaultToolkit: latestRef.current.allowedAppDefaultToolkit,
         allowedMcpServers: latestRef.current.allowedMcpServers,
+        mentions: latestRef.current.mentions,
         message: lastMessage,
       };
       return request;
@@ -127,6 +130,7 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
     allowedMcpServers,
     messages,
     threadId,
+    mentions: threadMentions[threadId],
   });
 
   const isLoading = useMemo(
@@ -302,6 +306,7 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
       <div className={clsx(messages.length && "absolute bottom-14", "w-full")}>
         <PromptInput
           input={input}
+          threadId={threadId}
           append={append}
           setInput={setInput}
           isLoading={isLoading || isPendingToolCall}

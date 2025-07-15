@@ -77,7 +77,6 @@ export const ChatMentionSchema = z.discriminatedUnion("type", [
 export type ChatMention = z.infer<typeof ChatMentionSchema>;
 
 export type ChatMessageAnnotation = {
-  mentions?: ChatMention[];
   usageTokens?: number;
   toolChoice?: "auto" | "none" | "manual";
   [key: string]: any;
@@ -94,6 +93,7 @@ export const chatApiSchemaRequestBodySchema = z.object({
     })
     .optional(),
   toolChoice: z.enum(["auto", "none", "manual"]),
+  mentions: z.array(ChatMentionSchema).optional(),
   allowedMcpServers: z.record(z.string(), AllowedMCPServerZodSchema).optional(),
   allowedAppDefaultToolkit: z.array(z.string()).optional(),
 });

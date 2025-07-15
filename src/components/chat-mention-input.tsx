@@ -1,14 +1,7 @@
 "use client";
 import React, { RefObject, useCallback, useMemo } from "react";
 
-import {
-  ChartColumnIcon,
-  ChartPie,
-  CodeIcon,
-  HardDriveUploadIcon,
-  TrendingUpIcon,
-  WrenchIcon,
-} from "lucide-react";
+import { HammerIcon } from "lucide-react";
 import { MCPIcon } from "ui/mcp-icon";
 
 import { ChatMention } from "app-types/chat";
@@ -32,8 +25,8 @@ import { useShallow } from "zustand/shallow";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Editor } from "@tiptap/react";
 import { DefaultToolName } from "lib/ai/tools";
-import { GlobalIcon } from "ui/global-icon";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
+import { DefaultToolIcon } from "./default-tool-icon";
 
 interface ChatMentionInputProps {
   onChange: (text: string) => void;
@@ -88,52 +81,14 @@ export function ChatMentionInputMentionItem({
 }) {
   const item = useMemo(() => JSON.parse(id) as ChatMention, [id]);
   const label = useMemo(() => {
-    let appDefaultToolIcon;
-    if (item.type == "defaultTool") {
-      switch (item.name) {
-        case DefaultToolName.CreatePieChart:
-          appDefaultToolIcon = <ChartPie className="size-3 text-blu" />;
-          break;
-        case DefaultToolName.CreateBarChart:
-          appDefaultToolIcon = <ChartColumnIcon className="size-3" />;
-          break;
-        case DefaultToolName.CreateLineChart:
-          appDefaultToolIcon = <TrendingUpIcon className="size-3" />;
-          break;
-        case DefaultToolName.WebSearch:
-          appDefaultToolIcon = <GlobalIcon className="size-3" />;
-          break;
-        case DefaultToolName.WebContent:
-          appDefaultToolIcon = <GlobalIcon className="size-3" />;
-          break;
-        case DefaultToolName.Http:
-          appDefaultToolIcon = <HardDriveUploadIcon className="size-3" />;
-          break;
-        case DefaultToolName.JavascriptExecution:
-          appDefaultToolIcon = <CodeIcon className="size-3" />;
-          break;
-      }
-    }
     return (
       <div
         className={cn(
-          "flex items-center text-sm gap-2 mx-1 px-2 py-0.5 font-semibold rounded-lg  transition-colors",
-          "ring ring-blue-500/40 text-blue-500 bg-blue-500/10 hover:ring-blue-500",
+          "flex items-center text-sm px-1 font-semibold transition-colors",
+          "text-blue-500",
           className,
         )}
       >
-        {item.type == "defaultTool" ? (
-          appDefaultToolIcon
-        ) : item.type == "mcpServer" ? (
-          <MCPIcon className="size-3" />
-        ) : item.type == "workflow" ? (
-          <Avatar className="size-3 ring ring-input rounded-full">
-            <AvatarImage src={item.icon?.value} />
-            <AvatarFallback>{item.name.slice(0, 1)}</AvatarFallback>
-          </Avatar>
-        ) : (
-          <WrenchIcon className="size-3" />
-        )}
         {toAny(item).label || item.name}
       </div>
     );
@@ -211,7 +166,7 @@ function ChatMentionInputSuggestion({
                     })
                   }
                 >
-                  <WrenchIcon className="size-3.5" />
+                  <HammerIcon className="size-3.5" />
                   <span className="truncate min-w-0">{tool.name}</span>
                 </CommandItem>
               );
@@ -261,42 +216,35 @@ function ChatMentionInputSuggestion({
   const defaultToolMentions = useMemo(() => {
     const items = Object.values(DefaultToolName).map((toolName) => {
       let label = toolName as string;
-      let icon = <WrenchIcon className="size-3.5" />;
+      const icon = <DefaultToolIcon name={toolName} />;
       let description = "";
       switch (toolName) {
         case DefaultToolName.CreatePieChart:
           label = "pie-chart";
-          icon = <ChartPie className="size-3.5 text-blue-500" />;
           description = "Create a pie chart";
           break;
         case DefaultToolName.CreateBarChart:
           label = "bar-chart";
-          icon = <ChartColumnIcon className="size-3.5 text-blue-500" />;
           description = "Create a bar chart";
           break;
         case DefaultToolName.CreateLineChart:
           label = "line-chart";
-          icon = <TrendingUpIcon className="size-3.5 text-blue-500" />;
           description = "Create a line chart";
           break;
         case DefaultToolName.WebSearch:
           label = "web-search";
-          icon = <GlobalIcon className="size-3.5 text-blue-400" />;
           description = "Search the web";
           break;
         case DefaultToolName.WebContent:
           label = "web-content";
-          icon = <GlobalIcon className="size-3.5 text-blue-400" />;
           description = "Get the content of a web page";
           break;
         case DefaultToolName.Http:
           label = "HTTP";
-          icon = <HardDriveUploadIcon className="size-3.5 text-blue-300" />;
           description = "Send an http request";
           break;
         case DefaultToolName.JavascriptExecution:
           label = "js-execution";
-          icon = <CodeIcon className="size-3.5 text-yellow-400" />;
           description = "Execute simple javascript code";
           break;
       }
