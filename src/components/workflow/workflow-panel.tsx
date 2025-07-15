@@ -205,7 +205,6 @@ export const WorkflowPanel = memo(
                   disabled={isProcessing || !hasEditAccess}
                   onClick={onSave}
                   variant="default"
-                  className="w-16"
                 >
                   {isProcessing ? (
                     <Loader className="size-3.5 animate-spin" />
