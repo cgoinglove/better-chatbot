@@ -5,8 +5,10 @@ import { ProjectDropdown } from "@/components/project-dropdown";
 import { ProjectSystemMessagePopup } from "@/components/project-system-message-popup";
 import PromptInput from "@/components/prompt-input";
 import { ThreadDropdown } from "@/components/thread-dropdown";
+import { useGenerateThreadTitle } from "@/hooks/queries/use-generate-thread-title";
 import { useToRef } from "@/hooks/use-latest";
 import { useChat } from "@ai-sdk/react";
+import { TextPart } from "ai";
 import { ChatApiSchemaRequestBody, Project } from "app-types/chat";
 import { generateUUID } from "lib/utils";
 
@@ -79,6 +81,7 @@ export default function ProjectPage() {
   const [
     appStoreMutate,
     model,
+    threadMentions,
     toolChoice,
     allowedMcpServers,
     allowedAppDefaultToolkit,
@@ -86,14 +89,21 @@ export default function ProjectPage() {
     useShallow((state) => [
       state.mutate,
       state.chatModel,
+      state.threadMentions,
       state.toolChoice,
       state.allowedMcpServers,
       state.allowedAppDefaultToolkit,
     ]),
   );
 
+  const generateTitle = useGenerateThreadTitle({
+    threadId,
+    projectId: id as string,
+  });
+
   const latestRef = useToRef({
     model,
+    mentions: threadMentions[threadId] ?? [],
     toolChoice,
     allowedMcpServers,
     allowedAppDefaultToolkit,
@@ -103,11 +113,18 @@ export default function ProjectPage() {
     id: threadId,
     api: "/api/chat",
     experimental_prepareRequestBody: ({ messages }) => {
+      const part = messages
+        .at(-1)!
+        .parts.findLast((v) => v.type === "text")! as TextPart;
+      if (part) {
+        generateTitle(part.text);
+      }
       const request: ChatApiSchemaRequestBody = {
         id: threadId,
         chatModel: latestRef.current.model,
         toolChoice: latestRef.current.toolChoice,
         allowedAppDefaultToolkit: latestRef.current.allowedAppDefaultToolkit,
+        mentions: latestRef.current.mentions,
         allowedMcpServers: latestRef.current.allowedMcpServers,
         projectId: id as string,
         message: messages.at(-1)!,

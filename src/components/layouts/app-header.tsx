@@ -21,6 +21,7 @@ import Link from "next/link";
 import { useShallow } from "zustand/shallow";
 import { getShortcutKeyList, Shortcuts } from "lib/keyboard-shortcuts";
 import { useTranslations } from "next-intl";
+import { TextShimmer } from "ui/text-shimmer";
 
 export function AppHeader() {
   const t = useTranslations();
@@ -142,13 +143,15 @@ export function AppHeader() {
 }
 
 function ThreadDropdownComponent() {
-  const [threadList, currentThreadId, projectList] = appStore(
-    useShallow((state) => [
-      state.threadList,
-      state.currentThreadId,
-      state.projectList,
-    ]),
-  );
+  const [threadList, currentThreadId, projectList, generatingTitleThreadIds] =
+    appStore(
+      useShallow((state) => [
+        state.threadList,
+        state.currentThreadId,
+        state.projectList,
+        state.generatingTitleThreadIds,
+      ]),
+    );
   const currentThread = useMemo(() => {
     return threadList.find((thread) => thread.id === currentThreadId);
   }, [threadList, currentThreadId]);
@@ -183,14 +186,29 @@ function ThreadDropdownComponent() {
         threadId={currentThread.id}
         beforeTitle={currentThread.title}
       >
-        <Button
-          variant="ghost"
-          className="data-[state=open]:bg-input! hover:text-foreground cursor-pointer flex gap-1 items-center px-2 py-1 rounded-md hover:bg-accent"
-        >
-          <p className="truncate max-w-60 min-w-0">{currentThread.title}</p>
+        <div>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                className="data-[state=open]:bg-input! hover:text-foreground cursor-pointer flex gap-1 items-center px-2 py-1 rounded-md hover:bg-accent"
+              >
+                {generatingTitleThreadIds.includes(currentThread.id) ? (
+                  <TextShimmer className="truncate max-w-60 min-w-0 mr-1">
+                    {currentThread.title || "New Chat"}
+                  </TextShimmer>
+                ) : (
+                  <p className="truncate max-w-60 min-w-0 mr-1">
+                    {currentThread.title || "New Chat"}
+                  </p>
+                )}
 
-          <ChevronDown size={14} />
-        </Button>
+                <ChevronDown size={14} />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{currentThread.title || "New Chat"}</TooltipContent>
+          </Tooltip>
+        </div>
       </ThreadDropdown>
     </div>
   );

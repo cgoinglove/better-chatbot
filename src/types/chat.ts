@@ -155,6 +155,10 @@ export type ChatRepository = {
 
   deleteThread(id: string): Promise<void>;
 
+  upsertThread(
+    thread: PartialBy<Omit<ChatThread, "createdAt">, "projectId" | "userId">,
+  ): Promise<ChatThread>;
+
   insertMessage(message: Omit<ChatMessage, "createdAt">): Promise<ChatMessage>;
   upsertMessage(message: Omit<ChatMessage, "createdAt">): Promise<ChatMessage>;
 

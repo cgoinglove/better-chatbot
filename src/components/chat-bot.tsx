@@ -39,6 +39,7 @@ import {
 } from "ui/dialog";
 import { useTranslations } from "next-intl";
 import { Think } from "ui/think";
+import { useGenerateThreadTitle } from "@/hooks/queries/use-generate-thread-title";
 
 type Props = {
   threadId: string;
@@ -73,6 +74,10 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
     ]),
   );
 
+  const generateTitle = useGenerateThreadTitle({
+    threadId,
+  });
+
   const {
     messages,
     input,
@@ -89,6 +94,17 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
     api: "/api/chat",
     initialMessages,
     experimental_prepareRequestBody: ({ messages }) => {
+      const isNewThread =
+        !latestRef.current.threadList.some((v) => v.id === threadId) &&
+        messages.filter((v) => v.role === "user" || v.role === "assistant")
+          .length < 2 &&
+        messages.at(-1)?.role === "user";
+      if (isNewThread) {
+        const part = messages.at(-1)!.parts.findLast((v) => v.type === "text");
+        if (part) {
+          generateTitle(part.text);
+        }
+      }
       window.history.replaceState({}, "", `/chat/${threadId}`);
       const lastMessage = messages.at(-1)!;
       vercelAISdkV4ToolInvocationIssueCatcher(lastMessage);
@@ -129,6 +145,7 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
     allowedAppDefaultToolkit,
     allowedMcpServers,
     messages,
+    threadList,
     threadId,
     mentions: threadMentions[threadId],
   });

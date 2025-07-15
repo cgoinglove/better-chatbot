@@ -41,10 +41,7 @@ import {
   filterMcpServerCustomizations,
   workflowToVercelAITools,
 } from "./shared.chat";
-import {
-  generateTitleFromUserMessageAction,
-  rememberMcpServerCustomizationsAction,
-} from "./actions";
+import { rememberMcpServerCustomizationsAction } from "./actions";
 import { getSession } from "auth/server";
 import { colorize } from "consola/utils";
 import { isVercelAIWorkflowTool } from "app-types/workflow";
@@ -81,14 +78,10 @@ export async function POST(request: Request) {
     let thread = await chatRepository.selectThreadDetails(id);
 
     if (!thread) {
-      const title = await generateTitleFromUserMessageAction({
-        message,
-        model,
-      });
       const newThread = await chatRepository.insertThread({
         id,
         projectId: projectId ?? null,
-        title,
+        title: "",
         userId: session.user.id,
       });
       thread = await chatRepository.selectThreadDetails(newThread.id);

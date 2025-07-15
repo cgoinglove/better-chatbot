@@ -33,6 +33,8 @@ import { handleErrorWithToast } from "ui/shared-toast";
 import { useMemo, useState } from "react";
 
 import { useTranslations } from "next-intl";
+import { TextShimmer } from "ui/text-shimmer";
+import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 
 type ThreadGroup = {
   label: string;
@@ -45,8 +47,12 @@ export function AppSidebarThreads() {
   const mounted = useMounted();
   const router = useRouter();
   const t = useTranslations("Layout");
-  const [storeMutate, currentThreadId] = appStore(
-    useShallow((state) => [state.mutate, state.currentThreadId]),
+  const [storeMutate, currentThreadId, generatingTitleThreadIds] = appStore(
+    useShallow((state) => [
+      state.mutate,
+      state.currentThreadId,
+      state.generatingTitleThreadIds,
+    ]),
   );
   // State to track if expanded view is active
   const [isExpanded, setIsExpanded] = useState(false);
@@ -225,18 +231,35 @@ export function AppSidebarThreads() {
                           beforeTitle={thread.title}
                         >
                           <div className="flex items-center data-[state=open]:bg-input! group-hover/thread:bg-input! rounded-lg">
-                            <SidebarMenuButton
-                              asChild
-                              className="group-hover/thread:bg-transparent!"
-                              isActive={currentThreadId === thread.id}
-                            >
-                              <Link
-                                href={`/chat/${thread.id}`}
-                                className="flex items-center"
-                              >
-                                <p className="truncate ">{thread.title}</p>
-                              </Link>
-                            </SidebarMenuButton>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <SidebarMenuButton
+                                  asChild
+                                  className="group-hover/thread:bg-transparent!"
+                                  isActive={currentThreadId === thread.id}
+                                >
+                                  <Link
+                                    href={`/chat/${thread.id}`}
+                                    className="flex items-center"
+                                  >
+                                    {generatingTitleThreadIds.includes(
+                                      thread.id,
+                                    ) ? (
+                                      <TextShimmer className="truncate min-w-0">
+                                        {thread.title || "New Chat"}
+                                      </TextShimmer>
+                                    ) : (
+                                      <p className="truncate min-w-0">
+                                        {thread.title || "New Chat"}
+                                      </p>
+                                    )}
+                                  </Link>
+                                </SidebarMenuButton>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                {thread.title || "New Chat"}
+                              </TooltipContent>
+                            </Tooltip>
 
                             <SidebarMenuAction className="data-[state=open]:bg-input data-[state=open]:opacity-100 opacity-0 group-hover/thread:opacity-100">
                               <MoreHorizontal />

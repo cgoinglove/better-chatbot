@@ -16,6 +16,7 @@ export interface AppState {
   toolChoice: "auto" | "none" | "manual";
   allowedMcpServers?: Record<string, AllowedMCPServer>;
   allowedAppDefaultToolkit?: AppDefaultToolkit[];
+  generatingTitleThreadIds: string[];
   threadMentions: {
     [threadId: string]: ChatMention[];
   };
@@ -51,6 +52,7 @@ export interface AppDispatch {
 const initialState: AppState = {
   threadList: [],
   projectList: [],
+  generatingTitleThreadIds: [],
   threadMentions: {},
   mcpList: [],
   workflowToolList: [],
