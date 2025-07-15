@@ -21,7 +21,7 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { Button } from "ui/button";
 import { Markdown } from "./markdown";
-import { cn, isObject, safeJSONParse, toAny, wait } from "lib/utils";
+import { cn, isObject, safeJSONParse, toAny } from "lib/utils";
 import JsonView from "ui/json-view";
 import {
   useMemo,
@@ -1087,12 +1087,19 @@ export const SimpleJavascriptExecutionToolPart = memo(
   }) {
     const isRun = useRef(false);
 
+    const [realtimeLogs, setRealtimeLogs] = useState<
+      SafeJsExecutionResult["logs"]
+    >([]);
+
     const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const codeResultContainerRef = useRef<HTMLDivElement>(null);
 
     const runCode = useCallback(
-      async (code: string, input: any, timeout?: number) => {
-        await wait(2000);
-        const result = await safeJsRun(code, input, timeout);
+      async (code: string, input: any) => {
+        const result = await safeJsRun(code, input, 60000, (log) => {
+          setRealtimeLogs((prev) => [...prev, log]);
+        });
+
         onResult?.({
           ...toAny(result),
           guide:
@@ -1103,28 +1110,21 @@ export const SimpleJavascriptExecutionToolPart = memo(
     );
 
     const scrollToCode = useCallback(() => {
-      scrollContainerRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "nearest",
-        inline: "nearest",
-      });
+      if (codeResultContainerRef.current && scrollContainerRef.current) {
+        const container = codeResultContainerRef.current;
+        const target = scrollContainerRef.current;
+
+        const containerRect = container.getBoundingClientRect();
+        const targetRect = target.getBoundingClientRect();
+        const relativeTop =
+          targetRect.top - containerRect.top + container.scrollTop;
+
+        container.scrollTo({
+          top: relativeTop,
+          behavior: "smooth",
+        });
+      }
     }, []);
-
-    useEffect(() => {
-      if (onResult && part.args && part.state == "call" && !isRun.current) {
-        isRun.current = true;
-        runCode(part.args.code, part.args.input, part.args.timeout);
-      }
-    }, [part.state, !!onResult]);
-
-    useEffect(() => {
-      if (part.state != "result") {
-        const closeKey = setInterval(scrollToCode, 300);
-        return () => clearInterval(closeKey);
-      } else {
-        scrollToCode();
-      }
-    }, [part.state]);
 
     const result = useMemo(() => {
       if (part.state != "result") return null;
@@ -1133,21 +1133,41 @@ export const SimpleJavascriptExecutionToolPart = memo(
 
     const logs = useMemo(() => {
       const error = result?.error;
-      const logs = result?.logs || [];
+      const logs = realtimeLogs.length ? realtimeLogs : (result?.logs ?? []);
 
       if (error) {
         return [{ type: "error", args: [error] }, ...logs];
       }
 
       return logs;
-    }, [part]);
+    }, [part, realtimeLogs]);
+
+    useEffect(() => {
+      if (onResult && part.args && part.state == "call" && !isRun.current) {
+        isRun.current = true;
+        runCode(part.args.code, part.args.input);
+      }
+    }, [part.state, !!onResult]);
+
+    useEffect(() => {
+      if (part.state != "result") {
+        const closeKey = setInterval(scrollToCode, 300);
+        return () => clearInterval(closeKey);
+      }
+    }, [part.state, logs.length]);
 
     return (
       <div className="flex flex-col">
         <div className="px-6 py-3">
           {!!part.args?.code && (
-            <div className="border relative rounded-lg overflow-hidden bg-background shadow fade-in animate-in duration-500">
-              <div className="py-2.5 px-4 flex items-center gap-1.5 z-20 border-b bg-background min-h-[37px]">
+            <div
+              ref={codeResultContainerRef}
+              className="border overflow-y-auto overflow-x-hidden max-h-[70vh] relative rounded-lg shadow fade-in animate-in duration-500"
+            >
+              <div
+                onClick={scrollToCode}
+                className="sticky top-0 py-2.5 px-4 flex items-center gap-1.5 z-10 border-b bg-background min-h-[37px]"
+              >
                 {part.state != "result" ? (
                   <>
                     <Loader className="size-3 animate-spin text-muted-foreground" />
@@ -1176,34 +1196,16 @@ export const SimpleJavascriptExecutionToolPart = memo(
                 <div className="w-1.5 h-1.5 rounded-full bg-input" />
                 <div className="w-1.5 h-1.5 rounded-full bg-input" />
               </div>
-              <div className="relative">
-                <div
-                  className={`z-10 absolute inset-0 w-full h-1/4 bg-gradient-to-b to-90%  from-background to-transparent ${part.state != "result" ? "" : "h-1/8 pointer-events-none"}`}
-                />
-                <div
-                  className={`z-10 absolute inset-0 w-1/4 h-full bg-gradient-to-r from-background to-transparent ${part.state != "result" ? "" : "w-1/8 pointer-events-none"}`}
-                />
-                <div
-                  className={`z-10 absolute left-0 bottom-0 w-full h-1/4 bg-gradient-to-t from-background to-transparent ${part.state != "result" ? "" : "h-1/8 pointer-events-none"}`}
-                />
-                <div
-                  className={`z-10 absolute right-0 bottom-0 w-1/4 h-full bg-gradient-to-l from-background to-transparent ${part.state != "result" ? "" : "w-1/8 pointer-events-none"}`}
-                />
 
-                <div
-                  className={`min-h-14 p-6 text-xs overflow-y-auto transition-height duration-1000 max-h-60`}
-                >
-                  <div>
-                    <CodeBlock
-                      className="bg-background p-4 text-[10px]"
-                      code={part.args?.code}
-                      lang="javascript"
-                      fallback={<CodeFallback />}
-                    />
-                    <div ref={scrollContainerRef} />
-                  </div>
-                </div>
+              <div className={`min-h-14 p-6 text-xs`}>
+                <CodeBlock
+                  className="p-4 text-[10px] overflow-x-auto"
+                  code={part.args?.code}
+                  lang="javascript"
+                  fallback={<CodeFallback />}
+                />
               </div>
+
               {logs.length > 0 && (
                 <div className="p-4 text-[10px] text-foreground flex flex-col gap-1">
                   <div className="text-foreground flex items-center gap-1">
@@ -1244,6 +1246,7 @@ export const SimpleJavascriptExecutionToolPart = memo(
                   })}
                 </div>
               )}
+              <div ref={scrollContainerRef} />
             </div>
           )}
         </div>
