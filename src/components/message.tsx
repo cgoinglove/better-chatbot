@@ -17,7 +17,6 @@ import { Terminal, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "ui/button";
 import { useTranslations } from "next-intl";
 import { ChatMessageAnnotation, ClientToolInvocation } from "app-types/chat";
-import { Think } from "ui/think";
 
 interface Props {
   message: UIMessage;
@@ -47,16 +46,6 @@ const PurePreviewMessage = ({
   isError,
 }: Props) => {
   const isUserMessage = useMemo(() => message.role === "user", [message.role]);
-
-  const showThink = useMemo(() => {
-    if (isLoading && isLastMessage) {
-      const lastPart = message.parts.at(-1);
-      if (lastPart?.type == "text" && !lastPart.text?.trim()) {
-        return true;
-      }
-    }
-    return false;
-  }, [isLoading, isLastMessage, message.parts]);
 
   if (message.role == "system") {
     return null; // system message is not shown
@@ -156,7 +145,6 @@ const PurePreviewMessage = ({
               );
             }
           })}
-          {showThink && <Think />}
         </div>
       </div>
     </div>

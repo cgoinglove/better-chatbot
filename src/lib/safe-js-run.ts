@@ -130,6 +130,8 @@ function createSafeEnvironment(
     trace: (...args: any[]) => logCapture("trace", ...args),
   };
 
+  const self = typeof window !== "undefined" ? window : undefined;
+
   // Safe global objects and functions
   const safeGlobals = {
     // Input data
@@ -160,22 +162,31 @@ function createSafeEnvironment(
 
     // Safe browser APIs (if available)
     ...(typeof self !== "undefined" && {
-      fetch: self.fetch.bind(self),
-      setTimeout: self.setTimeout.bind(self),
-      setInterval: self.setInterval.bind(self),
-      clearTimeout: self.clearTimeout.bind(self),
-      clearInterval: self.clearInterval.bind(self),
-      btoa: self.btoa.bind(self),
-      atob: self.atob.bind(self),
+      fetch: self.fetch,
+      setTimeout: self.setTimeout,
+      setInterval: self.setInterval,
+      clearTimeout: self.clearTimeout,
+      clearInterval: self.clearInterval,
+      btoa: self.btoa,
+      atob: self.atob,
     }),
+
+    // Node.js environment APIs (for testing)
+    ...(typeof global !== "undefined" &&
+      typeof self === "undefined" && {
+        setTimeout: global.setTimeout.bind(global),
+        setInterval: global.setInterval.bind(global),
+        clearTimeout: global.clearTimeout.bind(global),
+        clearInterval: global.clearInterval.bind(global),
+      }),
   };
 
   return { safeGlobals };
 }
 
-// Simple code wrapper - no complex result detection needed
+// Wrap code in async function to enable await
 function wrapCode(code: string): string {
-  return `"use strict";\n${code}`;
+  return `"use strict";\nreturn (async () => {\n${code}\n})()`;
 }
 
 async function execute({
@@ -217,10 +228,15 @@ async function execute({
   try {
     await Promise.race([
       // Code execution
-      new Promise((resolve, reject) => {
+      new Promise(async (resolve, reject) => {
         try {
           const func = new Function(...Object.keys(safeGlobals), wrappedCode);
-          func(...Object.values(safeGlobals));
+          const result = func(...Object.values(safeGlobals));
+
+          if (result && typeof result.then === "function") {
+            await result;
+          }
+
           resolve(undefined);
         } catch (error: any) {
           reject(error);

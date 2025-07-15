@@ -206,7 +206,9 @@ function ThreadDropdownComponent() {
                 <ChevronDown size={14} />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>{currentThread.title || "New Chat"}</TooltipContent>
+            <TooltipContent className="max-w-[200px] p-4 break-all overflow-y-auto max-h-[200px]">
+              {currentThread.title || "New Chat"}
+            </TooltipContent>
           </Tooltip>
         </div>
       </ThreadDropdown>

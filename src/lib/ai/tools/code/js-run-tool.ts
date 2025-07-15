@@ -8,7 +8,7 @@ export const jsExecutionSchema: JSONSchema7 = {
     code: {
       type: "string",
       description:
-        "JavaScript code to execute. Use console.log() to output results and console.error() for errors. Can include calculations, data processing, API calls, and logic operations. Avoid DOM manipulation, file system access, or server-side operations. IMPORTANT: Use proper line breaks (\\n) between statements for better code readability and formatting.",
+        'JavaScript code executed inside async function context. Use top-level await directly - NO need for (async () => {...})(). Use console.log() for output, NOT return. Use await with Promises, NOT .then() chains. CRITICAL: When creating async functions for user requests, you MUST call them with await to ensure the code executor waits for all async operations to complete. Example: "async function solution() { const delay = ms => new Promise(r => setTimeout(r, ms)); await delay(1000); console.log(\\"done\\"); } await solution();" Without await, async functions will not complete properly. Use \\n for line breaks.',
     },
     input: {
       type: "object",
@@ -18,38 +18,11 @@ export const jsExecutionSchema: JSONSchema7 = {
       additionalProperties: true,
       default: {},
     },
-    timeout: {
-      type: "number",
-      description:
-        "Execution timeout in milliseconds to prevent infinite loops",
-      default: 5000,
-      minimum: 100,
-      maximum: 30000,
-    },
   },
   required: ["code"],
 };
 
 export const jsExecutionTool = createTool({
-  description: `Execute JavaScript code for data calculations and processing only.
-
-IMPORTANT: This is NOT for building apps, UI components, or websites. Use only for:
-- Mathematical calculations
-- Data processing and analysis  
-- Simple computations
-- Testing simple functions (vanilla JS only, no external modules)
-
-LIMITATIONS: Browser Web Worker environment - no import/require, no DOM, no React/frameworks.
-Use console.log(),console.error() to output results.
-
-CODE FORMATTING: Always use proper line breaks (\\n) between statements for better readability. Format your code clearly with appropriate spacing.
-
-USAGE: When using this tool, you don't need to show the full code to the user beforehand. Just use the tool directly - the code will be visible in the tool execution.
-
-Example: Calculate sum of numbers
-{
-  input: {numbers: [1,2,3]},
-  code: "const sum = numbers.reduce((a, b) => a + b, 0);\nconsole.log('Total:', sum);"
-}`,
+  description: `Execute JavaScript code for calculations and data processing. Code runs in async function context - use console.log() for output, not return statements. No DOM/React/frameworks. Web Worker environment with Math, JSON, fetch, etc. For long delays/loops, set timeout to 30000. CRITICAL: When defining async functions, MUST call them with await to ensure completion. eg: "async function test() { await delay(1000); console.log('done'); } await test();"`,
   parameters: jsonSchemaToZod(jsExecutionSchema),
 });
