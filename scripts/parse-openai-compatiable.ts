@@ -1,12 +1,13 @@
 import * as fs from "fs";
 import * as path from "path";
+import { pathToFileURL } from "node:url";
 import "load-env";
 import logger from "logger";
 import { openaiCompatibleModelsSafeParse } from "lib/ai/create-openai-compatiable";
 
 const ROOT = process.cwd();
 const FILE_NAME = "openai-compatible.config.ts";
-const CONFIG_PATH = path.join(ROOT, FILE_NAME);
+const CONFIG_PATH = pathToFileURL(path.join(ROOT, FILE_NAME)).href;
 
 async function load() {
   try {
