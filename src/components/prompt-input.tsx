@@ -5,7 +5,7 @@ import {
   ChevronDown,
   CornerRightUp,
   Paperclip,
-  Pause,
+  Square,
   XIcon,
 } from "lucide-react";
 import { useCallback, useMemo, useRef } from "react";
@@ -313,7 +313,7 @@ export default function PromptInput({
                     className="fade-in animate-in cursor-pointer text-muted-foreground rounded-full p-2 bg-secondary hover:bg-accent-foreground hover:text-accent transition-all duration-200"
                   >
                     {isLoading ? (
-                      <Pause
+                      <Square
                         size={16}
                         className="fill-muted-foreground text-muted-foreground"
                       />
