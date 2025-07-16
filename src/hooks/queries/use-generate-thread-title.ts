@@ -16,39 +16,8 @@ export function useGenerateThreadTitle(option: {
     api: "/api/chat/title",
   });
 
-  const generateTitle = useCallback(
-    (message: string) => {
-      const { threadId, chatModel, projectId } = option;
-      if (appStore.getState().generatingTitleThreadIds.includes(threadId))
-        return;
-      appStore.setState((prev) => ({
-        generatingTitleThreadIds: [...prev.generatingTitleThreadIds, threadId],
-      }));
-      safe(() =>
-        complete("", {
-          body: {
-            message,
-            threadId,
-            chatModel: chatModel ?? appStore.getState().chatModel,
-            projectId,
-          },
-        }),
-      )
-        .ifOk(() => mutate("threads"))
-        .watch(() => {
-          appStore.setState((prev) => ({
-            generatingTitleThreadIds: prev.generatingTitleThreadIds.filter(
-              (v) => v !== threadId,
-            ),
-          }));
-        });
-    },
-    [option],
-  );
-
-  useEffect(() => {
-    const title = completion.trim();
-    if (title) {
+  const updateTitle = useCallback(
+    (title: string) => {
       appStore.setState((prev) => {
         if (prev.threadList.some((v) => v.id !== option.threadId)) {
           return {
@@ -71,8 +40,52 @@ export function useGenerateThreadTitle(option: {
           ),
         };
       });
+    },
+    [
+      option.projectId,
+      option.threadId,
+      option.chatModel?.model,
+      option.chatModel?.provider,
+    ],
+  );
+
+  const generateTitle = useCallback(
+    (message: string) => {
+      const { threadId, chatModel, projectId } = option;
+      if (appStore.getState().generatingTitleThreadIds.includes(threadId))
+        return;
+      appStore.setState((prev) => ({
+        generatingTitleThreadIds: [...prev.generatingTitleThreadIds, threadId],
+      }));
+      safe(() => {
+        updateTitle("");
+        return complete("", {
+          body: {
+            message,
+            threadId,
+            chatModel: chatModel ?? appStore.getState().chatModel,
+            projectId,
+          },
+        });
+      })
+        .ifOk(() => mutate("threads"))
+        .watch(() => {
+          appStore.setState((prev) => ({
+            generatingTitleThreadIds: prev.generatingTitleThreadIds.filter(
+              (v) => v !== threadId,
+            ),
+          }));
+        });
+    },
+    [updateTitle],
+  );
+
+  useEffect(() => {
+    const title = completion.trim();
+    if (title) {
+      updateTitle(title);
     }
-  }, [completion, option.threadId]);
+  }, [completion, updateTitle]);
 
   return generateTitle;
 }

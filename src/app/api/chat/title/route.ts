@@ -15,6 +15,7 @@ const logger = globalLogger.withDefaults({
 export async function POST(request: Request) {
   try {
     const json = await request.json();
+
     const {
       chatModel,
       message = "hello",
@@ -27,10 +28,10 @@ export async function POST(request: Request) {
       threadId: string;
     };
 
-    logger.debug(
+    logger.info(
       `chatModel: ${chatModel?.provider}/${chatModel?.model}, threadId: ${threadId}, projectId: ${projectId}`,
     );
-    logger.debug(`message: ${message}`);
+    logger.info(`message: ${message}`);
 
     const session = await getSession();
     if (!session) {
@@ -49,13 +50,14 @@ Generate Title:`,
       maxSteps: 1,
       maxRetries: 1,
       onFinish: (ctx) => {
-        console.log(`title: ${ctx.text}`);
-        chatRepository.upsertThread({
-          id: threadId,
-          title: ctx.text,
-          projectId,
-          userId: session.user.id,
-        });
+        chatRepository
+          .upsertThread({
+            id: threadId,
+            title: ctx.text,
+            projectId,
+            userId: session.user.id,
+          })
+          .catch((err) => logger.error(err));
       },
     });
 
