@@ -13,6 +13,7 @@ import {
   Loader,
   LockIcon,
   PlayIcon,
+  AlignHorizontalSpaceAround,
 } from "lucide-react";
 import { Button } from "ui/button";
 
@@ -38,6 +39,7 @@ import {
 import { allNodeValidate } from "lib/ai/workflow/node-validate";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
+import { arrangeNodes } from "lib/ai/workflow/arrange-nodes";
 
 export const WorkflowPanel = memo(
   function WorkflowPanel({
@@ -58,6 +60,16 @@ export const WorkflowPanel = memo(
     const { setNodes, getNodes, getEdges } = useReactFlow();
     const [showExecutePanel, setShowExecutePanel] = useState(false);
     const t = useTranslations();
+
+    const handleArrangeNodes = useCallback(() => {
+      const nodes = getNodes() as UINode[];
+      const edges = getEdges();
+
+      const { nodes: arrangedNodes } = arrangeNodes(nodes, edges);
+
+      setNodes(arrangedNodes);
+      toast.success(t("Workflow.nodesArranged"));
+    }, [getNodes, getEdges, setNodes, t]);
     const updateVisibility = useCallback(
       (visibility: DBWorkflow["visibility"]) => {
         const close = addProcess();
@@ -149,6 +161,21 @@ export const WorkflowPanel = memo(
               <p>{workflow?.name}</p>
             </TooltipContent>
           </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="secondary"
+                size="icon"
+                disabled={isProcessing || !hasEditAccess}
+                onClick={handleArrangeNodes}
+              >
+                <AlignHorizontalSpaceAround className="size-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              <p>{t("Workflow.arrangeNodes")}</p>
+            </TooltipContent>
+          </Tooltip>
           <div className="h-6">
             <Separator orientation="vertical" />
           </div>
@@ -178,7 +205,6 @@ export const WorkflowPanel = memo(
                   disabled={isProcessing || !hasEditAccess}
                   onClick={onSave}
                   variant="default"
-                  className="w-16"
                 >
                   {isProcessing ? (
                     <Loader className="size-3.5 animate-spin" />
@@ -204,7 +230,7 @@ export const WorkflowPanel = memo(
                 className="w-20"
               >
                 {workflow.isPublished
-                  ? t("Workflow.draft")
+                  ? t("Common.edit")
                   : t("Workflow.publish")}
               </Button>
             </TooltipTrigger>

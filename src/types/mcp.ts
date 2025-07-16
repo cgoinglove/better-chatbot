@@ -143,3 +143,70 @@ export type McpServerCustomizationsPrompt = {
     [toolName: string]: string;
   };
 };
+
+const TextContent = z.object({
+  type: z.literal("text"),
+  text: z.string(),
+  _meta: z.object({}).passthrough().optional(),
+});
+
+const ImageContent = z.object({
+  type: z.literal("image"),
+  data: z.string(),
+  mimeType: z.string(),
+  _meta: z.object({}).passthrough().optional(),
+});
+
+const AudioContent = z.object({
+  type: z.literal("audio"),
+  data: z.string(),
+  mimeType: z.string(),
+  _meta: z.object({}).passthrough().optional(),
+});
+
+const ResourceLinkContent = z.object({
+  type: z.literal("resource_link"),
+  name: z.string(),
+  title: z.string().optional(),
+  uri: z.string(),
+  description: z.string().optional(),
+  mimeType: z.string().optional(),
+  _meta: z.object({}).passthrough().optional(),
+});
+
+const ResourceText = z.object({
+  uri: z.string(),
+  mimeType: z.string().optional(),
+  _meta: z.object({}).passthrough().optional(),
+  text: z.string(),
+});
+
+const ResourceBlob = z.object({
+  uri: z.string(),
+  mimeType: z.string().optional(),
+  _meta: z.object({}).passthrough().optional(),
+  blob: z.string(),
+});
+
+const ResourceContent = z.object({
+  type: z.literal("resource"),
+  resource: z.union([ResourceText, ResourceBlob]),
+  _meta: z.object({}).passthrough().optional(),
+});
+
+const ContentUnion = z.union([
+  TextContent,
+  ImageContent,
+  AudioContent,
+  ResourceLinkContent,
+  ResourceContent,
+]);
+
+export const CallToolResultSchema = z.object({
+  _meta: z.object({}).passthrough().optional(),
+  content: z.array(ContentUnion).default([]),
+  structuredContent: z.object({}).passthrough().optional(),
+  isError: z.boolean().optional(),
+});
+
+export type CallToolResult = z.infer<typeof CallToolResultSchema>;

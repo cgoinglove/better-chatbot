@@ -22,10 +22,7 @@ import { UIMessage } from "ai";
 
 import { safe } from "ts-safe";
 import { mutate } from "swr";
-import {
-  ChatApiSchemaRequestBody,
-  ChatMessageAnnotation,
-} from "app-types/chat";
+import { ChatApiSchemaRequestBody, ClientToolInvocation } from "app-types/chat";
 import { useToRef } from "@/hooks/use-latest";
 import { isShortcutEvent, Shortcuts } from "lib/keyboard-shortcuts";
 import { Button } from "ui/button";
@@ -41,6 +38,8 @@ import {
   DialogTitle,
 } from "ui/dialog";
 import { useTranslations } from "next-intl";
+import { Think } from "ui/think";
+import { useGenerateThreadTitle } from "@/hooks/queries/use-generate-thread-title";
 
 type Props = {
   threadId: string;
@@ -62,6 +61,7 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
     allowedAppDefaultToolkit,
     allowedMcpServers,
     threadList,
+    threadMentions,
   ] = appStore(
     useShallow((state) => [
       state.mutate,
@@ -70,8 +70,13 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
       state.allowedAppDefaultToolkit,
       state.allowedMcpServers,
       state.threadList,
+      state.threadMentions,
     ]),
   );
+
+  const generateTitle = useGenerateThreadTitle({
+    threadId,
+  });
 
   const {
     messages,
@@ -98,6 +103,7 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
         toolChoice: latestRef.current.toolChoice,
         allowedAppDefaultToolkit: latestRef.current.allowedAppDefaultToolkit,
         allowedMcpServers: latestRef.current.allowedMcpServers,
+        mentions: latestRef.current.mentions,
         message: lastMessage,
       };
       return request;
@@ -106,13 +112,25 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
     generateId: generateUUID,
     experimental_throttle: 100,
     onFinish() {
-      if (threadList[0]?.id !== threadId) {
+      const messages = latestRef.current.messages;
+      const prevThread = latestRef.current.threadList.find(
+        (v) => v.id === threadId,
+      );
+      const isNewThread =
+        !prevThread?.title &&
+        messages.filter((v) => v.role === "user" || v.role === "assistant")
+          .length < 3;
+      if (isNewThread) {
+        const part = messages.at(-1)!.parts.findLast((v) => v.type === "text");
+        if (part) {
+          generateTitle(part.text);
+        }
+      } else if (latestRef.current.threadList[0]?.id !== threadId) {
         mutate("threads");
       }
     },
     onError: (error) => {
       console.error(error);
-
       toast.error(
         truncateString(error.message, 100) ||
           "An error occured, please try again!",
@@ -128,7 +146,9 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
     allowedAppDefaultToolkit,
     allowedMcpServers,
     messages,
+    threadList,
     threadId,
+    mentions: threadMentions[threadId],
   });
 
   const isLoading = useMemo(
@@ -154,6 +174,7 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
         return false;
       const message = messages[index];
       if (message.role === "user") return false;
+      if (message.parts.at(-1)?.type == "step-start") return false;
       return true;
     },
     [messages, error],
@@ -166,18 +187,15 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
     if (status != "ready") return false;
     const lastMessage = messages.at(-1);
     if (lastMessage?.role != "assistant") return false;
-    const annotation = lastMessage.annotations?.at(-1) as ChatMessageAnnotation;
-    if (annotation?.toolChoice != "manual") return false;
     const lastPart = lastMessage.parts.at(-1);
     if (!lastPart) return false;
     if (lastPart.type != "tool-invocation") return false;
-    if (lastPart.toolInvocation.state != "call") return false;
+    if (lastPart.toolInvocation.state == "result") return false;
     return true;
   }, [status, messages]);
 
   const proxyToolCall = useCallback(
-    (answer: boolean) => {
-      if (!isPendingToolCall) throw new Error("Tool call is not supported");
+    (result: ClientToolInvocation) => {
       setIsExecutingProxyToolCall(true);
       return safe(async () => {
         const lastMessage = messages.at(-1)!;
@@ -187,14 +205,24 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
         >;
         return addToolResult({
           toolCallId: lastPart.toolInvocation.toolCallId,
-          result: answer,
+          result,
         });
       })
         .watch(() => setIsExecutingProxyToolCall(false))
         .unwrap();
     },
-    [isPendingToolCall, addToolResult],
+    [addToolResult],
   );
+
+  const showThink = useMemo(() => {
+    if (!isLoading) return false;
+    const lastMessage = messages.at(-1);
+    if (lastMessage?.role == "user") return true;
+    const lastPart = lastMessage?.parts.at(-1);
+
+    if (lastPart?.type == "step-start") return true;
+    return false;
+  }, [isLoading, messages.at(-1)]);
 
   useEffect(() => {
     appStoreMutate({ currentThreadId: threadId });
@@ -266,9 +294,9 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
                   message={message}
                   status={status}
                   onPoxyToolCall={
-                    isLastMessage &&
                     isPendingToolCall &&
-                    !isExecutingProxyToolCall
+                    !isExecutingProxyToolCall &&
+                    isLastMessage
                       ? proxyToolCall
                       : undefined
                   }
@@ -281,9 +309,15 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
                 />
               );
             })}
-            {status === "submitted" && messages.at(-1)?.role === "user" && (
-              <div className="min-h-[calc(55dvh-56px)]" />
+            {showThink && (
+              <>
+                <div className="w-full mx-auto max-w-3xl px-6 relative">
+                  <Think />
+                </div>
+                <div className="min-h-[calc(55dvh-56px)]" />
+              </>
             )}
+
             {error && <ErrorMessage error={error} />}
             <div className="min-w-0 min-h-52" />
           </div>
@@ -292,6 +326,7 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
       <div className={clsx(messages.length && "absolute bottom-14", "w-full")}>
         <PromptInput
           input={input}
+          threadId={threadId}
           append={append}
           setInput={setInput}
           isLoading={isLoading || isPendingToolCall}

@@ -21,11 +21,11 @@ import { jsonSchemaToZod } from "lib/json-schema-to-zod";
 import { callMcpToolAction } from "@/app/api/mcp/actions";
 import { toAny } from "lib/utils";
 import { AppError } from "lib/errors";
-import { DefaultToolName } from "lib/ai/tools/app-default-tool-name";
+import { DefaultToolName } from "lib/ai/tools";
 import {
   tavilySearchToolForWorkflow,
   tavilyWebContentToolForWorkflow,
-} from "lib/ai/tools/web-search";
+} from "lib/ai/tools/web/web-search";
 
 /**
  * Interface for node executor functions.

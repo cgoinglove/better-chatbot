@@ -87,7 +87,7 @@
     "addOutputVariable": "Add Output Variable",
     "outputSchema": "Output Schema",
     "addMessage": "Add Message",
-    "messagesDescription": "Generate data through LLM processing.\n\nUse '/' to mention and reference data\nfrom previous nodes as input.",
+    "messagesDescription": "Generate data through LLM processing.\n\nUse '/' to mention and reference data from previous nodes as input.\n\nWith Structured Output enabled, perfect for data transformation, formatting, and validation.",
     "descriptionAndSchema": "Description & Schema",
     "noDescriptionAndSchema": "No description and schema",
     "toolDescription": "Provide information needed for LLM to generate tool parameters.\n\nUse '/' to mention data from previous nodes.",
@@ -121,13 +121,13 @@
       "soonMessage": "Coming soon."
     },
     "example": {
-      "storyGenerator": "Story Generator",
+      "babyResearch": "Baby Research",
       "getWeather": "Get Weather"
     },
     "kindsDescription": {
       "input": "Define input parameters that the chatbot will provide when using this workflow as a tool.\n\nSpecify the data structure and validation rules for tool execution.",
       "output": "Collect and return the final results from your workflow execution.\n\nCombine data from multiple nodes into the final tool response.",
-      "llm": "Generate text or structured data using AI models.\n\nReference previous node outputs with '/' mentions to create context-aware responses.",
+      "llm": "Generate text or structured data using AI models.\n\nReference previous node outputs with '/' mentions to create context-aware responses.\n\nUse Structured Output to transform, format, and validate data - not just for text generation.",
       "tool": "Execute MCP tools or external services.\n\nWrite instructions in messages, and LLM will generate the required tool parameters from your context.",
       "note": "Add documentation and comments to organize your workflow logic.\n\nHelp team members understand complex workflow processes.",
       "code": "Execute custom code scripts with access to previous node data.\n\nRun JavaScript, Python, or other languages within your workflow (coming soon).",
@@ -138,7 +138,9 @@
     "structuredOutputSwitchConfirm": "You currently have structured output enabled.\n What would you like to do?",
     "structuredOutputSwitchConfirmOk": "Edit Structured Output",
     "structuredOutputSwitchConfirmCancel": "Change to Text Output",
-    "noTools": "No published workflows available.\nCreate workflows to build custom tools."
+    "noTools": "No published workflows available.\nCreate workflows to build custom tools.",
+    "arrangeNodes": "Auto Layout",
+    "nodesArranged": "Layout applied successfully"
   },
   "Auth": {
     "SignIn": {
@@ -165,7 +167,7 @@
       "createAccount": "Create account"
     },
     "Intro": {
-      "description": "Welcome to MCP Chat Bot. Sign in to experience our AI-powered conversational tools."
+      "description": "Welcome to better-chatbot. Sign in to experience our AI-powered conversational tools."
     }
   },
   "Chat": {
@@ -196,11 +198,11 @@
     "Tool": {
       "webSearching": "Searching the Web...",
       "searchedTheWeb": "Searched the Web",
-      "toolsSetupDescription": "Select tools for your chat.\nUse '@' to mention and call tools\nduring conversation.",
+      "toolsSetupDescription": "Select tools that the chatbot can use.\nThe chatbot will use selected tools based on its own judgment.\n\nYou can also force the use of specific tools through @mention.",
       "selectToolMode": "Select a tool mode",
       "autoToolModeDescription": "Decides when to use tools without asking you",
       "manualToolModeDescription": "Asks your permission before using any tools",
-      "noneToolModeDescription": "Do not use tools",
+      "noneToolModeDescription": "Do not use tools. @mention is still available.",
       "toolsSetup": "Tools Setup",
       "preset": "Preset",
       "toolPresets": "Tool Presets",
@@ -210,11 +212,14 @@
       "presetNameCannotBeEmpty": "Preset name cannot be empty",
       "presetNameAlreadyExists": "Preset name already exists",
       "presetSaved": "Preset saved",
-      "chartTools": "Chart Tools",
-      "webSearchTools": "Search the Web",
       "clickSaveAsPresetToGetStarted": "Click Save As Preset to get started.",
       "searchOptions": "Search Options",
-      "searchOptionsDescription": "You can pass search options to the chatbot, such as the maximum number of search results, the search date, etc."
+      "searchOptionsDescription": "You can pass search options to the chatbot, such as the maximum number of search results, the search date, etc.",
+      "defaultToolKit": {
+        "visualization": "Chart Tools",
+        "webSearch": "Search the Web",
+        "http": "HTTP Request"
+      }
     },
     "VoiceChat": {
       "title": "Voice Chat Mode",

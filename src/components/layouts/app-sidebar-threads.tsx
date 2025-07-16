@@ -33,6 +33,10 @@ import { handleErrorWithToast } from "ui/shared-toast";
 import { useMemo, useState } from "react";
 
 import { useTranslations } from "next-intl";
+import { TextShimmer } from "ui/text-shimmer";
+import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
+import { deduplicateByKey, groupBy } from "lib/utils";
+import { ChatThread } from "app-types/chat";
 
 type ThreadGroup = {
   label: string;
@@ -45,8 +49,12 @@ export function AppSidebarThreads() {
   const mounted = useMounted();
   const router = useRouter();
   const t = useTranslations("Layout");
-  const [storeMutate, currentThreadId] = appStore(
-    useShallow((state) => [state.mutate, state.currentThreadId]),
+  const [storeMutate, currentThreadId, generatingTitleThreadIds] = appStore(
+    useShallow((state) => [
+      state.mutate,
+      state.currentThreadId,
+      state.generatingTitleThreadIds,
+    ]),
   );
   // State to track if expanded view is active
   const [isExpanded, setIsExpanded] = useState(false);
@@ -57,7 +65,33 @@ export function AppSidebarThreads() {
     {
       onError: handleErrorWithToast,
       fallbackData: [],
-      onSuccess: (data) => storeMutate({ threadList: data }),
+      onSuccess: (data) => {
+        storeMutate((prev) => {
+          const groupById = groupBy(prev.threadList, "id");
+
+          const generatingTitleThreads = prev.generatingTitleThreadIds
+            .map((id) => {
+              return groupById[id]?.[0];
+            })
+            .filter(Boolean) as ChatThread[];
+          const list = deduplicateByKey(
+            generatingTitleThreads.concat(data),
+            "id",
+          );
+          return {
+            threadList: list.map((v) => {
+              const target = groupById[v.id]?.[0];
+              if (!target) return v;
+              if (target.title && !v.title)
+                return {
+                  ...v,
+                  title: target.title,
+                };
+              return v;
+            }),
+          };
+        });
+      },
     },
   );
 
@@ -94,7 +128,9 @@ export function AppSidebarThreads() {
     ];
 
     displayThreadList.forEach((thread) => {
-      const threadDate = new Date(thread.lastMessageAt);
+      const threadDate = thread.lastMessageAt
+        ? new Date(thread.lastMessageAt)
+        : thread.createdAt;
       threadDate.setHours(0, 0, 0, 0);
 
       if (threadDate.getTime() === today.getTime()) {
@@ -225,18 +261,35 @@ export function AppSidebarThreads() {
                           beforeTitle={thread.title}
                         >
                           <div className="flex items-center data-[state=open]:bg-input! group-hover/thread:bg-input! rounded-lg">
-                            <SidebarMenuButton
-                              asChild
-                              className="group-hover/thread:bg-transparent!"
-                              isActive={currentThreadId === thread.id}
-                            >
-                              <Link
-                                href={`/chat/${thread.id}`}
-                                className="flex items-center"
-                              >
-                                <p className="truncate ">{thread.title}</p>
-                              </Link>
-                            </SidebarMenuButton>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <SidebarMenuButton
+                                  asChild
+                                  className="group-hover/thread:bg-transparent!"
+                                  isActive={currentThreadId === thread.id}
+                                >
+                                  <Link
+                                    href={`/chat/${thread.id}`}
+                                    className="flex items-center"
+                                  >
+                                    {generatingTitleThreadIds.includes(
+                                      thread.id,
+                                    ) ? (
+                                      <TextShimmer className="truncate min-w-0">
+                                        {thread.title || "New Chat"}
+                                      </TextShimmer>
+                                    ) : (
+                                      <p className="truncate min-w-0">
+                                        {thread.title || "New Chat"}
+                                      </p>
+                                    )}
+                                  </Link>
+                                </SidebarMenuButton>
+                              </TooltipTrigger>
+                              <TooltipContent className="max-w-[200px] p-4 break-all overflow-y-auto max-h-[200px]">
+                                {thread.title || "New Chat"}
+                              </TooltipContent>
+                            </Tooltip>
 
                             <SidebarMenuAction className="data-[state=open]:bg-input data-[state=open]:opacity-100 opacity-0 group-hover/thread:opacity-100">
                               <MoreHorizontal />

@@ -20,12 +20,10 @@ import {
   buildMcpServerCustomizationsSystemPrompt,
   buildProjectInstructionsSystemPrompt,
   buildUserSystemPrompt,
+  buildToolCallUnsupportedModelSystemPrompt,
+  mentionPrompt,
 } from "lib/ai/prompts";
-import {
-  chatApiSchemaRequestBodySchema,
-  ChatMention,
-  ChatMessageAnnotation,
-} from "app-types/chat";
+import { chatApiSchemaRequestBodySchema } from "app-types/chat";
 
 import { errorIf, safe } from "ts-safe";
 
@@ -39,9 +37,9 @@ import {
   convertToMessage,
   extractInProgressToolPart,
   assignToolResult,
-  workflowToVercelAITools,
   filterMCPToolsByAllowedMCPServers,
   filterMcpServerCustomizations,
+  workflowToVercelAITools,
 } from "./shared.chat";
 import {
   generateTitleFromUserMessageAction,
@@ -49,12 +47,9 @@ import {
 } from "./actions";
 import { getSession } from "auth/server";
 import { colorize } from "consola/utils";
-import {
-  isVercelAIWorkflowTool,
-  VercelAIWorkflowTool,
-} from "app-types/workflow";
+import { isVercelAIWorkflowTool } from "app-types/workflow";
 import { objectFlow } from "lib/utils";
-import { defaultTools } from "lib/ai/tools";
+import { APP_DEFAULT_TOOL_KIT } from "lib/ai/tools/tool-kit";
 
 const logger = globalLogger.withDefaults({
   message: colorize("blackBright", `Chat API: `),
@@ -76,8 +71,10 @@ export async function POST(request: Request) {
       chatModel,
       toolChoice,
       allowedAppDefaultToolkit,
+      autoTitle,
       allowedMcpServers,
       projectId,
+      mentions = [],
     } = chatApiSchemaRequestBodySchema.parse(json);
 
     const model = customModelProvider.getModel(chatModel);
@@ -85,14 +82,13 @@ export async function POST(request: Request) {
     let thread = await chatRepository.selectThreadDetails(id);
 
     if (!thread) {
-      const title = await generateTitleFromUserMessageAction({
-        message,
-        model,
-      });
+      logger.info(`create chat thread: ${id}`);
       const newThread = await chatRepository.insertThread({
         id,
         projectId: projectId ?? null,
-        title,
+        title: autoTitle
+          ? await generateTitleFromUserMessageAction({ message, model })
+          : "",
         userId: session.user.id,
       });
       thread = await chatRepository.selectThreadDetails(newThread.id);
@@ -107,26 +103,18 @@ export async function POST(request: Request) {
 
     const previousMessages = (thread?.messages ?? []).map(convertToMessage);
 
-    if (!thread) {
-      return new Response("Thread not found", { status: 404 });
-    }
-
-    const annotations = (message?.annotations as ChatMessageAnnotation[]) ?? [];
-
-    const mentions = annotations
-      .flatMap((annotation) => annotation.mentions)
-      .filter(Boolean) as ChatMention[];
-
-    const isToolCallAllowed =
-      (!isToolCallUnsupportedModel(model) && toolChoice != "none") ||
-      mentions.length > 0;
-
     const messages: Message[] = isLastMessageUserMessage
       ? appendClientMessage({
           messages: previousMessages,
           message,
         })
       : previousMessages;
+
+    const inProgressToolStep = extractInProgressToolPart(messages.slice(-2));
+
+    const isToolCallAllowed =
+      !isToolCallUnsupportedModel(model) &&
+      (toolChoice != "none" || mentions.length > 0);
 
     return createDataStreamResponse({
       execute: async (dataStream) => {
@@ -142,33 +130,19 @@ export async function POST(request: Request) {
           })
           .orElse({});
 
-        const WORKFLOW_TOOLS = await safe(() =>
-          workflowRepository.selectToolByIds(
-            mentions
-              .filter((m) => m.type == "workflow")
-              .map((v) => v.workflowId),
-          ),
-        )
-          .map((v) =>
-            v.map((workflow) =>
-              workflowToVercelAITools({
-                ...workflow,
-                dataStream,
-              }),
+        const WORKFLOW_TOOLS = await safe()
+          .map(errorIf(() => !isToolCallAllowed && "Not allowed"))
+          .map(() =>
+            workflowRepository.selectToolByIds(
+              mentions
+                .filter((m) => m.type == "workflow")
+                .map((v) => v.workflowId),
             ),
           )
-          .map((workflowTools) =>
-            workflowTools.reduce(
-              (prev, cur) => {
-                prev[cur._toolName] = cur;
-                return prev;
-              },
-              {} as Record<string, VercelAIWorkflowTool>,
-            ),
-          )
+          .map((v) => workflowToVercelAITools(v, dataStream))
           .orElse({});
 
-        const APP_DEFAULT_TOOLS = safe(defaultTools)
+        const APP_DEFAULT_TOOLS = safe(APP_DEFAULT_TOOL_KIT)
           .map(errorIf(() => !isToolCallAllowed && "Not allowed"))
           .map((tools) => {
             if (mentions.length) {
@@ -193,15 +167,11 @@ export async function POST(request: Request) {
           })
           .orElse({});
 
-        const inProgressToolStep = extractInProgressToolPart(
-          messages.slice(-2),
-        );
-
         if (inProgressToolStep) {
           const toolResult = await manualToolExecuteByLastMessage(
             inProgressToolStep,
             message,
-            { ...MCP_TOOLS, ...WORKFLOW_TOOLS },
+            { ...MCP_TOOLS, ...WORKFLOW_TOOLS, ...APP_DEFAULT_TOOLS },
             request.signal,
           );
           assignToolResult(inProgressToolStep, toolResult);
@@ -228,52 +198,46 @@ export async function POST(request: Request) {
           buildUserSystemPrompt(session.user, userPreferences),
           buildProjectInstructionsSystemPrompt(thread?.instructions),
           buildMcpServerCustomizationsSystemPrompt(mcpServerCustomizations),
+          mentions.length > 0 && mentionPrompt,
+          isToolCallUnsupportedModel(model) &&
+            buildToolCallUnsupportedModelSystemPrompt,
         );
 
-        // Precompute toolChoice to avoid repeated tool calls
-        const computedToolChoice =
-          isToolCallAllowed && mentions.length > 0 && inProgressToolStep
-            ? "required"
-            : "auto";
-
-        const vercelAITooles = safe(MCP_TOOLS)
+        const vercelAITooles = safe({ ...MCP_TOOLS, ...WORKFLOW_TOOLS })
           .map((t) => {
             const bindingTools =
               toolChoice === "manual" ? excludeToolExecution(t) : t;
             return {
               ...bindingTools,
-              ...APP_DEFAULT_TOOLS,
-              ...WORKFLOW_TOOLS, // Workflow Tool Not Supported Manual
+              ...APP_DEFAULT_TOOLS, // APP_DEFAULT_TOOLS Not Supported Manual
             };
           })
           .unwrap();
 
-        logger.debug(
-          `tool mode: ${toolChoice}, tool choice: ${computedToolChoice}`,
-        );
-        logger.debug(
+        logger.info(`tool mode: ${toolChoice}, mentions: ${mentions.length}`);
+        logger.info(
           `binding tool count APP_DEFAULT: ${Object.keys(APP_DEFAULT_TOOLS ?? {}).length}, MCP: ${Object.keys(MCP_TOOLS ?? {}).length}, Workflow: ${Object.keys(WORKFLOW_TOOLS ?? {}).length}`,
         );
-        logger.debug(`model: ${chatModel?.provider}/${chatModel?.model}`);
+        logger.info(`model: ${chatModel?.provider}/${chatModel?.model}`);
 
         const result = streamText({
           model,
           system: systemPrompt,
           messages,
           maxSteps: 10,
-          experimental_continueSteps: true,
           toolCallStreaming: true,
           experimental_transform: smoothStream({ chunking: "word" }),
           maxRetries: 1,
           tools: vercelAITooles,
-          toolChoice: computedToolChoice,
+          toolChoice: "auto",
+          abortSignal: request.signal,
           onFinish: async ({ response, usage }) => {
             const appendMessages = appendResponseMessages({
               messages: messages.slice(-1),
               responseMessages: response.messages,
             });
             if (isLastMessageUserMessage) {
-              await chatRepository.insertMessage({
+              await chatRepository.upsertMessage({
                 threadId: thread!.id,
                 model: chatModel?.model ?? null,
                 role: "user",
@@ -337,6 +301,11 @@ export async function POST(request: Request) {
         result.consumeStream();
         result.mergeIntoDataStream(dataStream, {
           sendReasoning: true,
+        });
+        result.usage.then((useage) => {
+          logger.debug(
+            `usage input: ${useage.promptTokens}, usage output: ${useage.completionTokens}, usage total: ${useage.totalTokens}`,
+          );
         });
       },
       onError: handleError,

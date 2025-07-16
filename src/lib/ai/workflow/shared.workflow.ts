@@ -230,6 +230,8 @@ export function convertTiptapJsonToText({
           data += ` ${part.text}`;
         } else if (part.type === "mention") {
           data += parser(part);
+        } else if (part.type === "hardBreak") {
+          data += "\n\n";
         }
 
         return prev + data;

@@ -22,13 +22,14 @@ import { MCPIcon } from "ui/mcp-icon";
 import { useTranslations } from "next-intl";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { useMcpList } from "@/hooks/queries/use-mcp-list";
-import { DefaultToolName } from "lib/ai/tools/app-default-tool-name";
+
 import {
   tavilySearchSchema,
   tavilySearchTool,
   tavilyWebContentSchema,
   tavilyWebContentTool,
-} from "lib/ai/tools/web-search";
+} from "lib/ai/tools/web/web-search";
+import { DefaultToolName } from "lib/ai/tools";
 
 export const ToolNodeDataConfig = memo(function ({
   data,

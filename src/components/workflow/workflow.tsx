@@ -313,7 +313,7 @@ export default function Workflow({
           className="h-full w-full m-0! pointer-events-none!"
         >
           <div className="z-10 absolute inset-0 w-full h-1/12 bg-gradient-to-b to-90% from-background to-transparent  pointer-events-none" />
-          <div className="z-10 absolut  e inset-0 w-1/12 h-full bg-gradient-to-r from-background to-transparent  pointer-events-none" />
+          <div className="z-10 absolute inset-0 w-1/12 h-full bg-gradient-to-r from-background to-transparent  pointer-events-none" />
           <div className="z-10 absolute left-0 bottom-0 w-full h-1/12 bg-gradient-to-t from-background to-transparent  pointer-events-none" />
           <div className="z-10 absolute right-0 bottom-0 w-1/12 h-full bg-gradient-to-l from-background to-transparent  pointer-events-none" />
         </Panel>

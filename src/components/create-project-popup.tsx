@@ -23,9 +23,9 @@ import {
   DialogTrigger,
 } from "ui/dialog";
 import { Input } from "ui/input";
-import { Label } from "ui/label";
 import { handleErrorWithToast } from "ui/shared-toast";
 import { useTranslations } from "next-intl";
+import { FlipWords } from "ui/flip-words";
 
 export function CreateProjectPopup({ children }: PropsWithChildren) {
   const t = useTranslations();
@@ -60,27 +60,31 @@ export function CreateProjectPopup({ children }: PropsWithChildren) {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-[500px] bg-card">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>{t("Chat.Project.project")}</DialogTitle>
-          <DialogDescription asChild>
+          <DialogDescription asChild className="bg-transparent my-0!">
             <div className="my-2 p-4 flex bg-muted rounded-lg gap-2">
-              <div className="px-2">
+              <div className="px-2 mt-1">
                 <Lightbulb className="size-4 text-accent-foreground animate-pulse" />
               </div>
               <div className="">
                 <p className="font-semibold text-accent-foreground mb-1">
                   {t("Chat.Project.whatIsAProject")}
                 </p>
-                {t(
-                  "Chat.Project.aProjectAllowsYouToOrganizeYourFilesAndCustomInstructionsInOneConvenientPlace",
-                )}
+                <FlipWords
+                  className="text-muted-foreground px-0"
+                  words={[
+                    t(
+                      "Chat.Project.aProjectAllowsYouToOrganizeYourFilesAndCustomInstructionsInOneConvenientPlace",
+                    ),
+                  ]}
+                />
               </div>
             </div>
           </DialogDescription>
         </DialogHeader>
-        <div className="flex items-center gap-2 w-full">
-          <Label htmlFor="name">{t("Chat.Project.projectName")}</Label>
+        <div className="w-full">
           <Input
             autoFocus
             id="name"
@@ -88,7 +92,7 @@ export function CreateProjectPopup({ children }: PropsWithChildren) {
             onChange={(e) => setName(e.target.value)}
             onKeyDown={handleEnterKey}
             placeholder={t("Chat.Project.enterNameForNewProject")}
-            className="w-full bg-card"
+            className="bg-card flex-1"
           />
         </div>
         <DialogFooter>

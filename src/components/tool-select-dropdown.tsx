@@ -1,23 +1,29 @@
 import { appStore } from "@/app/store";
-import { AppDefaultToolkit } from "app-types/chat";
 import { AllowedMCPServer, MCPServerInfo } from "app-types/mcp";
-import { cn } from "lib/utils";
+import { cn, objectFlow } from "lib/utils";
 import {
   AtSign,
   ChartColumn,
+  Check,
   ChevronRight,
+  ClipboardCheck,
+  CodeIcon,
+  HardDriveUploadIcon,
+  Infinity,
   InfoIcon,
   Loader,
   MousePointer2,
   Package,
+  PenOffIcon,
   Plus,
+  Settings2Icon,
   Waypoints,
   Wrench,
   WrenchIcon,
   X,
 } from "lucide-react";
 import Link from "next/link";
-import { PropsWithChildren, useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "ui/badge";
 import { Button } from "ui/button";
@@ -38,6 +44,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuPortal,
   DropdownMenuSeparator,
+  DropdownMenuShortcut,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
@@ -50,18 +57,24 @@ import { useTranslations } from "next-intl";
 
 import { Switch } from "ui/switch";
 import { useShallow } from "zustand/shallow";
-import { Separator } from "ui/separator";
 import { useMcpList } from "@/hooks/queries/use-mcp-list";
 import { useWorkflowToolList } from "@/hooks/queries/use-workflow-tool-list";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { WorkflowSummary } from "app-types/workflow";
 import { WorkflowGreeting } from "./workflow/workflow-greeting";
 import { GlobalIcon } from "ui/global-icon";
+import { AppDefaultToolkit } from "lib/ai/tools";
+import { ChatMention } from "app-types/chat";
+import { CountAnimation } from "ui/count-animation";
+
+import { getShortcutKeyList, Shortcuts } from "lib/keyboard-shortcuts";
+import { Separator } from "ui/separator";
 
 interface ToolSelectDropdownProps {
   align?: "start" | "end" | "center";
   side?: "left" | "right" | "top" | "bottom";
   disabled?: boolean;
+  mentions?: ChatMention[];
   onSelectWorkflow?: (workflow: WorkflowSummary) => void;
 }
 
@@ -77,49 +90,111 @@ const calculateToolCount = (
 };
 
 export function ToolSelectDropdown({
-  children,
   align,
   side,
-  disabled,
   onSelectWorkflow,
-}: PropsWithChildren<ToolSelectDropdownProps>) {
-  const [toolChoice] = appStore(useShallow((state) => [state.toolChoice]));
+  mentions,
+}: ToolSelectDropdownProps) {
+  const [toolChoice, allowedAppDefaultToolkit, allowedMcpServers, mcpList] =
+    appStore(
+      useShallow((state) => [
+        state.toolChoice,
+        state.allowedAppDefaultToolkit,
+        state.allowedMcpServers,
+        state.mcpList,
+      ]),
+    );
   const t = useTranslations("Chat.Tool");
   const { isLoading } = useMcpList({
     refreshInterval: 1000 * 60 * 5,
   });
+
   useWorkflowToolList({
     refreshInterval: 1000 * 60 * 5,
   });
+
+  const bindingTools = useMemo<string[]>(() => {
+    if (mentions?.length) {
+      return mentions.map((m) => m.name);
+    }
+    if (toolChoice == "none") return [];
+    const translate = t.raw("defaultToolKit");
+    const defaultTools = Object.values(AppDefaultToolkit)
+      .filter((t) => allowedAppDefaultToolkit?.includes(t))
+      .map((t) => translate[t]);
+    const mcpIds = mcpList.map((v) => v.id);
+    const mcpTools = Object.values(
+      objectFlow(allowedMcpServers ?? {}).filter((_, id) =>
+        mcpIds.includes(id),
+      ),
+    )
+      .map((v) => v.tools)
+      .flat();
+
+    return [...defaultTools, ...mcpTools];
+  }, [
+    mentions,
+    allowedAppDefaultToolkit,
+    allowedMcpServers,
+    toolChoice,
+    mcpList,
+  ]);
+
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild disabled={disabled}>
-        {children ?? (
-          <Button
-            variant={"outline"}
-            className={cn(
-              "rounded-full font-semibold bg-secondary data-[state=open]:bg-input/80!",
-              toolChoice == "none" && "text-muted-foreground bg-transparent",
-            )}
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size={"sm"}
+          className={cn(
+            "gap-0.5 bg-input/60 border rounded-full data-[state=open]:bg-input! hover:bg-input!",
+            !bindingTools.length &&
+              !isLoading &&
+              "text-muted-foreground bg-transparent border-transparent",
+            isLoading && "bg-input/60",
+          )}
+        >
+          <span
+            className={
+              (mentions?.length ?? 0 > 0) ? "text-muted-foreground" : ""
+            }
           >
-            Tools
-            <Separator orientation="vertical" className="h-4 hidden sm:block" />
-            {isLoading ? (
-              <Loader className="size-3 animate-spin" />
-            ) : (
-              <AtSign className="size-3 hidden sm:block" />
-            )}
-          </Button>
-        )}
+            {(mentions?.length ?? 0 > 0) ? "Mention" : "Tools"}
+          </span>
+          {(bindingTools.length > 0 || isLoading) && (
+            <>
+              <div className="h-4 hidden sm:block mx-1">
+                <Separator orientation="vertical" />
+              </div>
+              <div className="min-w-5 flex justify-center">
+                {isLoading ? (
+                  <Loader className="animate-spin size-3.5" />
+                ) : (mentions?.length ?? 0) > 0 ? (
+                  <AtSign className="size-3.5" />
+                ) : (
+                  <CountAnimation
+                    number={bindingTools.length}
+                    className="text-xs"
+                  />
+                )}
+              </div>
+            </>
+          )}
+        </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="md:w-72" align={align} side={side}>
         <DropdownMenuLabel className="flex items-center gap-2">
           <WrenchIcon className="size-3.5" />
           {t("toolsSetup")}
         </DropdownMenuLabel>
-        <p className="text-xs text-muted-foreground w-full pl-8 pr-4 mb-2">
+
+        <p className="text-xs text-muted-foreground w-full pl-8 pr-4 mb-2 whitespace-pre-wrap">
           {t("toolsSetupDescription")}
         </p>
+        <div className="py-1 ">
+          <DropdownMenuSeparator />
+        </div>
+        <ToolModeSelector />
         <div className="py-1 ">
           <DropdownMenuSeparator />
         </div>
@@ -394,6 +469,97 @@ function WorkflowToolSelector({
   );
 }
 
+function ToolModeSelector() {
+  const t = useTranslations("Chat.Tool");
+  const [toolChoice, appStoreMutate] = appStore(
+    useShallow((state) => [state.toolChoice, state.mutate]),
+  );
+
+  return (
+    <DropdownMenuGroup>
+      <DropdownMenuSub>
+        <DropdownMenuSubTrigger className="text-xs flex items-center gap-2 font-semibold cursor-pointer">
+          <Settings2Icon className="size-3.5" />
+          {t("selectToolMode")}
+        </DropdownMenuSubTrigger>
+        <DropdownMenuPortal>
+          <DropdownMenuSubContent className="w-80 relative">
+            <DropdownMenuLabel className="text-muted-foreground flex items-center gap-2">
+              {t("selectToolMode")}
+              <DropdownMenuShortcut>
+                <span className="text-xs text-muted-foreground bg-muted rounded-md px-2 py-0.5">
+                  {getShortcutKeyList(Shortcuts.toolMode).join("")}
+                </span>
+              </DropdownMenuShortcut>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.preventDefault();
+                  appStoreMutate({ toolChoice: "auto" });
+                }}
+              >
+                <div className="flex flex-col gap-2 w-full">
+                  <div className="flex items-center gap-2">
+                    <Infinity />
+                    <span className="font-bold">Auto</span>
+                    {toolChoice == "auto" && <Check className="ml-auto" />}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {t("autoToolModeDescription")}
+                  </p>
+                </div>
+              </DropdownMenuItem>
+              <div className="px-2 py-1">
+                <DropdownMenuSeparator />
+              </div>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.preventDefault();
+                  appStoreMutate({ toolChoice: "manual" });
+                }}
+              >
+                <div className="flex flex-col gap-2 w-full">
+                  <div className="flex items-center gap-2">
+                    <ClipboardCheck />
+                    <span className="font-bold">Manual</span>
+                    {toolChoice == "manual" && <Check className="ml-auto" />}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {t("manualToolModeDescription")}
+                  </p>
+                </div>
+              </DropdownMenuItem>
+              <div className="px-2 py-1">
+                <DropdownMenuSeparator />
+              </div>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.preventDefault();
+                  appStoreMutate({ toolChoice: "none" });
+                }}
+              >
+                <div className="flex flex-col gap-2 w-full">
+                  <div className="flex items-center gap-2">
+                    <PenOffIcon />
+                    <span className="font-bold">None</span>
+                    {toolChoice == "none" && <Check className="ml-auto" />}
+                  </div>
+
+                  <p className="text-xs text-muted-foreground">
+                    {t("noneToolModeDescription")}
+                  </p>
+                </div>
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+          </DropdownMenuSubContent>
+        </DropdownMenuPortal>
+      </DropdownMenuSub>
+    </DropdownMenuGroup>
+  );
+}
+
 function McpServerSelector() {
   const [appStoreMutate, allowedMcpServers, mcpServerList] = appStore(
     useShallow((state) => [
@@ -615,7 +781,7 @@ function AppDefaultToolKitSelector() {
   const [appStoreMutate, allowedAppDefaultToolkit] = appStore(
     useShallow((state) => [state.mutate, state.allowedAppDefaultToolkit]),
   );
-  const t = useTranslations("Chat.Tool");
+  const t = useTranslations();
   const toggleAppDefaultToolkit = useCallback((toolkit: AppDefaultToolkit) => {
     appStoreMutate((prev) => {
       const newAllowedAppDefaultToolkit = [
@@ -633,40 +799,55 @@ function AppDefaultToolKitSelector() {
     });
   }, []);
 
+  const defaultToolInfo = useMemo(() => {
+    const raw = t.raw("Chat.Tool.defaultToolKit");
+    return Object.values(AppDefaultToolkit).map((toolkit) => {
+      const label = raw[toolkit] || toolkit;
+      const id = toolkit;
+      let icon = <Wrench className="size-3.5 text-primary" />;
+      switch (toolkit) {
+        case AppDefaultToolkit.Visualization:
+          icon = <ChartColumn className="size-3.5 text-blue-500 stroke-3" />;
+          break;
+        case AppDefaultToolkit.WebSearch:
+          icon = <GlobalIcon className="text-blue-400 size-3.5" />;
+          break;
+        case AppDefaultToolkit.Http:
+          icon = <HardDriveUploadIcon className="size-3.5 text-blue-400" />;
+          break;
+        case AppDefaultToolkit.Code:
+          icon = <CodeIcon className="size-3.5 text-yellow-400" />;
+          break;
+      }
+      return {
+        label,
+        id,
+        icon,
+      };
+    });
+  }, []);
+
   return (
     <DropdownMenuGroup>
-      <DropdownMenuItem
-        className="cursor-pointer font-semibold text-xs"
-        onClick={(e) => {
-          e.preventDefault();
-          toggleAppDefaultToolkit(AppDefaultToolkit.Visualization);
-        }}
-      >
-        <ChartColumn className="size-3.5 text-blue-500 stroke-3" />
-        {t("chartTools")}
-        <Switch
-          className="ml-auto"
-          checked={allowedAppDefaultToolkit?.includes(
-            AppDefaultToolkit.Visualization,
-          )}
-        />
-      </DropdownMenuItem>
-      <DropdownMenuItem
-        className="cursor-pointer font-semibold text-xs"
-        onClick={(e) => {
-          e.preventDefault();
-          toggleAppDefaultToolkit(AppDefaultToolkit.WebSearch);
-        }}
-      >
-        <GlobalIcon className="text-blue-400 size-3.5" />
-        {t("webSearchTools")}
-        <Switch
-          className="ml-auto"
-          checked={allowedAppDefaultToolkit?.includes(
-            AppDefaultToolkit.WebSearch,
-          )}
-        />
-      </DropdownMenuItem>
+      {defaultToolInfo.map((tool) => {
+        return (
+          <DropdownMenuItem
+            key={tool.id}
+            className="cursor-pointer font-semibold text-xs"
+            onClick={(e) => {
+              e.preventDefault();
+              toggleAppDefaultToolkit(tool.id);
+            }}
+          >
+            {tool.icon}
+            {tool.label}
+            <Switch
+              className="ml-auto"
+              checked={allowedAppDefaultToolkit?.includes(tool.id)}
+            />
+          </DropdownMenuItem>
+        );
+      })}
     </DropdownMenuGroup>
   );
 }

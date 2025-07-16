@@ -65,7 +65,7 @@
       "createAccount": "Créer un compte"
     },
     "Intro": {
-      "description": "Bienvenue sur MCP Chat Bot. Connectez-vous pour découvrir nos outils de conversation alimentés par l'IA."
+      "description": "Bienvenue sur better-chatbot. Connectez-vous pour découvrir nos outils de conversation alimentés par l'IA."
     }
   },
   "Chat": {
@@ -97,11 +97,11 @@
       "webSearching": "Recherche sur le web...",
       "searchedTheWeb": "Recherché sur le web",
       "toolModeDescription": "Choisissez comment les outils sont utilisés:\n• Auto: L'IA décide quand utiliser les outils\n• Manuel: Demande permission avant d'utiliser les outils\n• Aucun: Désactive tous les outils",
-      "toolsSetupDescription": "Sélectionnez les outils pour votre chat.\nUtilisez '@' pour mentionner et appeler\nles outils pendant la conversation.",
+      "toolsSetupDescription": "Sélectionnez les outils que le chatbot peut utiliser.\nLe chatbot utilisera les outils sélectionnés selon son propre jugement.\n\nVous pouvez aussi forcer l'utilisation d'outils spécifiques via @mention.",
       "selectToolMode": "Sélectionner le mode d'outils",
       "autoToolModeDescription": "Décide quand utiliser les outils sans vous demander",
       "manualToolModeDescription": "Demande votre permission avant d'utiliser des outils",
-      "noneToolModeDescription": "Ne pas utiliser d'outils",
+      "noneToolModeDescription": "Ne pas utiliser d'outils. @mention est toujours disponible.",
       "toolsSetup": "Configuration des Outils",
       "preset": "Préréglage",
       "toolPresets": "Préréglages d'Outils",
@@ -111,11 +111,13 @@
       "presetNameCannotBeEmpty": "Le nom du préréglage ne peut pas être vide",
       "presetNameAlreadyExists": "Le nom du préréglage existe déjà",
       "presetSaved": "Préréglage enregistré",
-      "chartTools": "Outils de Graphiques",
-      "webSearchTools": "Rechercher sur le web",
       "clickSaveAsPresetToGetStarted": "Cliquez sur Enregistrer comme Préréglage pour commencer.",
       "searchOptions": "Options de Recherche",
-      "searchOptionsDescription": "Vous pouvez passer des options de recherche au chatbot, comme le nombre maximum de résultats de recherche, la date de recherche, etc."
+      "searchOptionsDescription": "Vous pouvez passer des options de recherche au chatbot, comme le nombre maximum de résultats de recherche, la date de recherche, etc.",
+      "defaultToolKit": {
+        "visualization": "Outils graphiques",
+        "webSearch": "Rechercher sur le le Web"
+      }
     },
     "VoiceChat": {
       "title": "Mode Chat Vocal",
@@ -321,13 +323,13 @@
     "addOutputVariable": "Ajouter Variable de Sortie",
     "outputSchema": "Schéma de Sortie",
     "addMessage": "Ajouter Message",
-    "messagesDescription": "Générer des données par traitement LLM.\n\nUtilisez '/' pour mentionner et référencer des données\nde nœuds précédents comme entrée.",
+    "messagesDescription": "Générer des données par traitement LLM.\n\nUtilisez '/' pour mentionner et référencer des données de nœuds précédents comme entrée.\n\nAvec Sortie Structurée activée, parfait pour la transformation, le formatage et la validation de données.",
     "descriptionAndSchema": "Description et Schéma",
     "noDescriptionAndSchema": "Pas de description et schéma",
     "toolDescription": "Fournissez les informations nécessaires pour que LLM génère les paramètres d'outil.\n\nUtilisez '/' pour mentionner des données de nœuds précédents.",
     "generateInputWithAIDescription": "Écrivez un prompt pour générer une entrée pour le flux de travail",
     "example": {
-      "storyGenerator": "Générateur d'Histoire",
+      "babyResearch": "Recherche de Bébé",
       "getWeather": "Obtenir Météo"
     },
     "selectVariable": "Sélectionner Variable",
@@ -347,7 +349,7 @@
     "kindsDescription": {
       "input": "Définit les paramètres d'entrée que le chatbot fournira en utilisant ce flux de travail comme outil.\n\nSpécifie la structure des données et les règles de validation pour l'exécution de l'outil.",
       "output": "Collecte et retourne les résultats finaux de l'exécution de votre flux de travail.\n\nCombine les données de plusieurs nœuds dans la réponse finale de l'outil.",
-      "llm": "Génère du texte ou des données structurées en utilisant des modèles IA.\n\nRéférence les sorties de nœuds précédents avec des mentions '/' pour créer des réponses conscientes du contexte.",
+      "llm": "Génère du texte ou des données structurées en utilisant des modèles IA.\n\nRéférence les sorties de nœuds précédents avec des mentions '/' pour créer des réponses conscientes du contexte.\n\nUtilisez Sortie Structurée pour transformer, formater et valider les données - pas seulement pour la génération de texte.",
       "tool": "Exécute des outils MCP ou des services externes.\n\nÉcrivez des instructions dans les messages, et LLM générera les paramètres d'outil requis à partir de votre contexte.",
       "note": "Ajoute de la documentation et des commentaires pour organiser la logique de votre flux de travail.\n\nAide les membres de l'équipe à comprendre les processus complexes de flux de travail.",
       "code": "Exécute des scripts de code personnalisé avec accès aux données de nœuds précédents.\n\nExécute JavaScript, Python ou d'autres langages dans votre flux de travail (bientôt disponible).",
@@ -368,6 +370,8 @@
       "upcomingNodesTitle": "Nœuds à Venir",
       "ctaMessage": "Commencez à créer des flux de travail maintenant pour étendre les capacités de votre chatbot !",
       "soonMessage": "Bientôt disponible."
-    }
+    },
+    "arrangeNodes": "Auto Layout",
+    "nodesArranged": "Layout appliqué avec succès"
   }
 }

@@ -46,12 +46,12 @@ export const DefaultNode = memo(function DefaultNode({
     updateNode,
   } = useReactFlow();
   const update = useUpdate();
-  const edges = getEdges();
-  const nodes = getNodes() as UINode[];
 
   const appendNode = useCallback(
     (kind: NodeKind) => {
       setOpenNodeSelect(false);
+      const edges = getEdges();
+      const nodes = getNodes() as UINode[];
 
       const { node: newNode, edge: newEdge } = createAppendNode({
         sourceNode: getNode(data.id)! as UINode,
@@ -69,7 +69,7 @@ export const DefaultNode = memo(function DefaultNode({
         });
       });
     },
-    [id, nodes, edges, addNodes],
+    [id, addNodes],
   );
 
   useEffect(() => {
@@ -129,7 +129,9 @@ export const DefaultNode = memo(function DefaultNode({
                 type="source"
                 onConnect={() => update()}
                 position={Position.Right}
-                className="z-10 border-none! -right-0! bg-transparent! w-4! h-4!"
+                className={cn(
+                  "z-10 border-none! -right-0! bg-transparent! w-4! h-4!",
+                )}
                 id="right"
                 isConnectable={isConnectable}
                 onMouseUp={() => {

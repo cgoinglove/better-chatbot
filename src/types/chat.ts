@@ -40,7 +40,7 @@ export type ChatMessage = {
 
 export const ChatMentionSchema = z.discriminatedUnion("type", [
   z.object({
-    type: z.literal("tool"),
+    type: z.literal("mcpTool"),
     name: z.string(),
     description: z.string().optional(),
     serverName: z.string().optional(),
@@ -49,6 +49,7 @@ export const ChatMentionSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("defaultTool"),
     name: z.string(),
+    label: z.string(),
     description: z.string().optional(),
   }),
   z.object({
@@ -76,16 +77,10 @@ export const ChatMentionSchema = z.discriminatedUnion("type", [
 export type ChatMention = z.infer<typeof ChatMentionSchema>;
 
 export type ChatMessageAnnotation = {
-  mentions?: ChatMention[];
   usageTokens?: number;
   toolChoice?: "auto" | "none" | "manual";
   [key: string]: any;
 };
-
-export enum AppDefaultToolkit {
-  Visualization = "visualization",
-  WebSearch = "webSearch",
-}
 
 export const chatApiSchemaRequestBodySchema = z.object({
   id: z.string(),
@@ -98,8 +93,10 @@ export const chatApiSchemaRequestBodySchema = z.object({
     })
     .optional(),
   toolChoice: z.enum(["auto", "none", "manual"]),
+  mentions: z.array(ChatMentionSchema).optional(),
   allowedMcpServers: z.record(z.string(), AllowedMCPServerZodSchema).optional(),
   allowedAppDefaultToolkit: z.array(z.string()).optional(),
+  autoTitle: z.boolean().optional(),
 });
 
 export type ChatApiSchemaRequestBody = z.infer<
@@ -159,6 +156,10 @@ export type ChatRepository = {
 
   deleteThread(id: string): Promise<void>;
 
+  upsertThread(
+    thread: PartialBy<Omit<ChatThread, "createdAt">, "projectId" | "userId">,
+  ): Promise<ChatThread>;
+
   insertMessage(message: Omit<ChatMessage, "createdAt">): Promise<ChatMessage>;
   upsertMessage(message: Omit<ChatMessage, "createdAt">): Promise<ChatMessage>;
 
@@ -193,3 +194,12 @@ export type ChatRepository = {
     messages: PartialBy<ChatMessage, "createdAt">[],
   ): Promise<ChatMessage[]>;
 };
+
+export const ClientToolInvocationZodSchema = z.object({
+  action: z.enum(["manual", "direct"]),
+  result: z.any().optional(),
+});
+
+export type ClientToolInvocation = z.infer<
+  typeof ClientToolInvocationZodSchema
+>;

@@ -1,12 +1,7 @@
 "use client";
 import React, { RefObject, useCallback, useMemo } from "react";
 
-import {
-  ChartColumnIcon,
-  ChartPie,
-  TrendingUpIcon,
-  WrenchIcon,
-} from "lucide-react";
+import { HammerIcon } from "lucide-react";
 import { MCPIcon } from "ui/mcp-icon";
 
 import { ChatMention } from "app-types/chat";
@@ -22,16 +17,16 @@ import {
 
 import MentionInput from "./mention-input";
 import { useTranslations } from "next-intl";
-import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 import { createPortal } from "react-dom";
 import { appStore } from "@/app/store";
-import { capitalizeFirstLetter, cn } from "lib/utils";
+import { cn, toAny } from "lib/utils";
 import { useShallow } from "zustand/shallow";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Editor } from "@tiptap/react";
-import { DefaultToolName } from "lib/ai/tools/app-default-tool-name";
-import { GlobalIcon } from "ui/global-icon";
+import { DefaultToolName } from "lib/ai/tools";
+import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
+import { DefaultToolIcon } from "./default-tool-icon";
 
 interface ChatMentionInputProps {
   onChange: (text: string) => void;
@@ -84,40 +79,20 @@ export function ChatMentionInputMentionItem({
   id: string;
   className?: string;
 }) {
-  const item = JSON.parse(id) as ChatMention;
-
-  const label = (
-    <div
-      className={cn(
-        "flex items-center text-sm gap-2 mx-1 px-2 py-0.5 font-semibold rounded-lg ring ring-blue-500/20 bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 hover:ring-blue-500 transition-colors",
-        item.type == "workflow" &&
-          "ring-pink-500/20 bg-pink-500/10 text-pink-500 hover:bg-pink-500/20 hover:ring-pink-500",
-        item.type == "mcpServer" &&
-          "ring-indigo-500/20 bg-indigo-500/10 text-indigo-500 hover:bg-indigo-500/20 hover:ring-indigo-500",
-        className,
-      )}
-    >
-      {item.type == "mcpServer" ? (
-        <MCPIcon className="size-3" />
-      ) : item.type == "workflow" ? (
-        <Avatar className="size-3 ring ring-input rounded-full">
-          <AvatarImage src={item.icon?.value} />
-          <AvatarFallback>{item.name.slice(0, 1)}</AvatarFallback>
-        </Avatar>
-      ) : (
-        <WrenchIcon className="size-3" />
-      )}
-      <span
+  const item = useMemo(() => JSON.parse(id) as ChatMention, [id]);
+  const label = useMemo(() => {
+    return (
+      <div
         className={cn(
-          "ml-auto text-xs opacity-60",
-          item.type == "defaultTool" && "hidden",
+          "flex items-center text-sm px-1 font-semibold transition-colors",
+          "text-blue-500",
+          className,
         )}
       >
-        {capitalizeFirstLetter(item.type)}
-      </span>
-      {item.name}
-    </div>
-  );
+        {toAny(item).label || item.name}
+      </div>
+    );
+  }, [item]);
 
   return (
     <Tooltip>
@@ -156,7 +131,7 @@ function ChatMentionInputSuggestion({
               className="cursor-pointer text-foreground"
               onSelect={() =>
                 onSelectMention({
-                  label: mcp.name,
+                  label: `mcp("${mcp.name}")`,
                   id: JSON.stringify({
                     type: "mcpServer",
                     name: mcp.name,
@@ -182,7 +157,7 @@ function ChatMentionInputSuggestion({
                     onSelectMention({
                       label: `tool("${tool.name}") `,
                       id: JSON.stringify({
-                        type: "tool",
+                        type: "mcpTool",
                         name: tool.name,
                         serverId: mcp.id,
                         description: tool.description,
@@ -191,7 +166,7 @@ function ChatMentionInputSuggestion({
                     })
                   }
                 >
-                  <WrenchIcon className="size-3.5" />
+                  <HammerIcon className="size-3.5" />
                   <span className="truncate min-w-0">{tool.name}</span>
                 </CommandItem>
               );
@@ -202,6 +177,7 @@ function ChatMentionInputSuggestion({
   }, [mcpList]);
 
   const workflowMentions = useMemo(() => {
+    if (!workflowList.length) return;
     return (
       <CommandGroup heading="Workflows" key="workflows">
         {workflowList.map((workflow) => {
@@ -211,7 +187,7 @@ function ChatMentionInputSuggestion({
               className="cursor-pointer text-foreground"
               onSelect={() =>
                 onSelectMention({
-                  label: workflow.name,
+                  label: `tool("${workflow.name}")`,
                   id: JSON.stringify({
                     type: "workflow",
                     name: workflow.name,
@@ -238,86 +214,72 @@ function ChatMentionInputSuggestion({
   }, [workflowList]);
 
   const defaultToolMentions = useMemo(() => {
+    const items = Object.values(DefaultToolName).map((toolName) => {
+      let label = toolName as string;
+      const icon = <DefaultToolIcon name={toolName} />;
+      let description = "";
+      switch (toolName) {
+        case DefaultToolName.CreatePieChart:
+          label = "pie-chart";
+          description = "Create a pie chart";
+          break;
+        case DefaultToolName.CreateBarChart:
+          label = "bar-chart";
+          description = "Create a bar chart";
+          break;
+        case DefaultToolName.CreateLineChart:
+          label = "line-chart";
+          description = "Create a line chart";
+          break;
+        case DefaultToolName.WebSearch:
+          label = "web-search";
+          description = "Search the web";
+          break;
+        case DefaultToolName.WebContent:
+          label = "web-content";
+          description = "Get the content of a web page";
+          break;
+        case DefaultToolName.Http:
+          label = "HTTP";
+          description = "Send an http request";
+          break;
+        case DefaultToolName.JavascriptExecution:
+          label = "js-execution";
+          description = "Execute simple javascript code";
+          break;
+      }
+      return {
+        id: toolName,
+        label,
+        icon,
+        description,
+      };
+    });
+
     return (
       <>
-        <CommandGroup heading="Chart" key="visual-toolkits">
-          <CommandItem
-            onSelect={() =>
-              onSelectMention({
-                label: "pie-chart",
-                id: JSON.stringify({
-                  type: "defaultTool",
-                  name: DefaultToolName.CreatePieChart,
-                  description: "Create a pie chart",
-                }),
-              })
-            }
-          >
-            <ChartPie className="size-3.5 text-blue-500" />
-            <span className="truncate min-w-0">pie-chart</span>
-          </CommandItem>
-          <CommandItem
-            onSelect={() =>
-              onSelectMention({
-                label: "bar-chart",
-                id: JSON.stringify({
-                  type: "defaultTool",
-                  name: DefaultToolName.CreateBarChart,
-                  description: "Create a bar chart",
-                }),
-              })
-            }
-          >
-            <ChartColumnIcon className="size-3.5 text-blue-500" />
-            <span className="truncate min-w-0">bar-chart</span>
-          </CommandItem>
-          <CommandItem
-            onSelect={() =>
-              onSelectMention({
-                label: "line-chart",
-                id: JSON.stringify({
-                  type: "defaultTool",
-                  name: DefaultToolName.CreateLineChart,
-                  description: "Create a line chart",
-                }),
-              })
-            }
-          >
-            <TrendingUpIcon className="size-3.5 text-blue-500" />
-            <span className="truncate min-w-0">line-chart</span>
-          </CommandItem>
-        </CommandGroup>
-        <CommandGroup heading="Web" key="web-toolkits">
-          <CommandItem
-            onSelect={() =>
-              onSelectMention({
-                label: "web-search",
-                id: JSON.stringify({
-                  type: "defaultTool",
-                  name: DefaultToolName.WebSearch,
-                  description: "Search the web",
-                }),
-              })
-            }
-          >
-            <GlobalIcon className="size-3.5 text-blue-400" />
-            <span className="truncate min-w-0">web-search</span>
-          </CommandItem>
-          <CommandItem
-            onSelect={() =>
-              onSelectMention({
-                label: "web-content",
-                id: JSON.stringify({
-                  type: "defaultTool",
-                  name: DefaultToolName.WebContent,
-                  description: "Get the content of a web page",
-                }),
-              })
-            }
-          >
-            <GlobalIcon className="size-3.5 text-blue-400" />
-            <span className="truncate min-w-0">web-content</span>
-          </CommandItem>
+        <CommandGroup heading="App Tools" key="default-tool">
+          {items.map((item) => {
+            return (
+              <CommandItem
+                key={item.id}
+                onSelect={() =>
+                  onSelectMention({
+                    label: `tool('${item.label}')`,
+                    id: JSON.stringify({
+                      type: "defaultTool",
+                      name: item.id,
+                      label: item.label,
+                      description: item.description,
+                    }),
+                  })
+                }
+              >
+                {item.icon}
+                <span className="truncate min-w-0">{item.label}</span>
+              </CommandItem>
+            );
+          })}
         </CommandGroup>
       </>
     );

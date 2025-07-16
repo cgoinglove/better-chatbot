@@ -98,11 +98,11 @@
       "webSearching": "正在搜索网络...",
       "searchedTheWeb": "搜索网络",
       "toolModeDescription": "选择工具使用方式:\n• 自动: AI 自动决定何时使用工具\n• 手动: 使用工具前询问许可\n• 无: 禁用所有工具",
-      "toolsSetupDescription": "为聊天选择工具。\n在对话中使用 '@' 提及\n并调用工具。",
+      "toolsSetupDescription": "选择聊天机器人可以使用的工具。\n聊天机器人将根据自己的判断使用选定的工具。\n\n您也可以通过 @mention 强制使用特定工具。",
       "selectToolMode": "选择工具模式",
       "autoToolModeDescription": "自动决定何时使用工具，无需询问您",
       "manualToolModeDescription": "在使用任何工具前询问您的许可",
-      "noneToolModeDescription": "不使用工具",
+      "noneToolModeDescription": "不使用工具。@mention仍然可用。",
       "toolsSetup": "工具设置",
       "preset": "预设",
       "toolPresets": "工具预设",
@@ -112,11 +112,13 @@
       "presetNameCannotBeEmpty": "预设名称不能为空",
       "presetNameAlreadyExists": "预设名称已存在",
       "presetSaved": "预设已保存",
-      "chartTools": "图表工具",
-      "webSearchTools": "网络搜索",
       "clickSaveAsPresetToGetStarted": "点击保存为预设开始。",
       "searchOptions": "搜索选项",
-      "searchOptionsDescription": "您可以向聊天机器人传递搜索选项，例如搜索结果的最大数量、搜索日期等。"
+      "searchOptionsDescription": "您可以向聊天机器人传递搜索选项，例如搜索结果的最大数量、搜索日期等。",
+      "defaultToolKit": {
+        "visualization": "图表工具",
+        "webSearch": "网页搜寻"
+      }
     },
     "VoiceChat": {
       "title": "语音聊天模式",
@@ -322,13 +324,13 @@
     "addOutputVariable": "添加输出变量",
     "outputSchema": "输出架构",
     "addMessage": "添加消息",
-    "messagesDescription": "通过 LLM 处理生成数据。\n\n使用 '/' 提及和引用\n前一个节点的数据作为输入。",
+    "messagesDescription": "通过 LLM 处理生成数据。\n\n使用 '/' 提及和引用前一个节点的数据作为输入。\n\n启用结构化输出时，非常适合数据转换、格式化和验证。",
     "descriptionAndSchema": "描述和架构",
     "noDescriptionAndSchema": "无描述和架构",
     "toolDescription": "提供 LLM 生成工具参数所需的信息。\n\n使用 '/' 提及前一个节点的数据。",
     "generateInputWithAIDescription": "编写提示为工作流生成输入",
     "example": {
-      "storyGenerator": "故事生成器",
+      "babyResearch": "婴儿研究",
       "getWeather": "获取天气"
     },
     "selectVariable": "选择变量",
@@ -348,7 +350,7 @@
     "kindsDescription": {
       "input": "定义聊天机器人将此工作流用作工具时提供的输入参数。\n\n指定工具执行的数据结构和验证规则。",
       "output": "收集并返回工作流执行的最终结果。\n\n将多个节点的数据合并为最终工具响应。",
-      "llm": "使用 AI 模型生成文本或结构化数据。\n\n使用 '/' 提及引用前一个节点的输出，创建上下文感知的响应。",
+      "llm": "使用 AI 模型生成文本或结构化数据。\n\n使用 '/' 提及引用前一个节点的输出，创建上下文感知的响应。\n\n使用结构化输出进行数据转换、格式化和验证 - 不仅仅是文本生成。",
       "tool": "执行 MCP 工具或外部服务。\n\n在消息中写入指令，LLM 将从您的上下文生成所需的工具参数。",
       "note": "添加文档和注释来组织您的工作流逻辑。\n\n帮助团队成员理解复杂的工作流过程。",
       "code": "执行可访问前一个节点数据的自定义代码脚本。\n\n在工作流中运行 JavaScript、Python 或其他语言（即将推出）。",
@@ -369,6 +371,8 @@
       "upcomingNodesTitle": "即将推出的节点",
       "ctaMessage": "现在就开始创建工作流来扩展您的聊天机器人能力！",
       "soonMessage": "即将推出。"
-    }
+    },
+    "arrangeNodes": "自动布局",
+    "nodesArranged": "布局已成功应用"
   }
 }

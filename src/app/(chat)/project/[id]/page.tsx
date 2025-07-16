@@ -7,6 +7,7 @@ import PromptInput from "@/components/prompt-input";
 import { ThreadDropdown } from "@/components/thread-dropdown";
 import { useToRef } from "@/hooks/use-latest";
 import { useChat } from "@ai-sdk/react";
+
 import { ChatApiSchemaRequestBody, Project } from "app-types/chat";
 import { generateUUID } from "lib/utils";
 
@@ -79,6 +80,7 @@ export default function ProjectPage() {
   const [
     appStoreMutate,
     model,
+    threadMentions,
     toolChoice,
     allowedMcpServers,
     allowedAppDefaultToolkit,
@@ -86,6 +88,7 @@ export default function ProjectPage() {
     useShallow((state) => [
       state.mutate,
       state.chatModel,
+      state.threadMentions,
       state.toolChoice,
       state.allowedMcpServers,
       state.allowedAppDefaultToolkit,
@@ -94,6 +97,7 @@ export default function ProjectPage() {
 
   const latestRef = useToRef({
     model,
+    mentions: threadMentions[threadId] ?? [],
     toolChoice,
     allowedMcpServers,
     allowedAppDefaultToolkit,
@@ -108,21 +112,23 @@ export default function ProjectPage() {
         chatModel: latestRef.current.model,
         toolChoice: latestRef.current.toolChoice,
         allowedAppDefaultToolkit: latestRef.current.allowedAppDefaultToolkit,
+        mentions: latestRef.current.mentions,
         allowedMcpServers: latestRef.current.allowedMcpServers,
         projectId: id as string,
+        autoTitle: true,
         message: messages.at(-1)!,
       };
       return request;
     },
     initialMessages: [],
-    sendExtraMessageFields: true,
-    generateId: generateUUID,
-    experimental_throttle: 100,
     onFinish: () => {
       mutate("threads").then(() => {
         router.push(`/chat/${threadId}`);
       });
     },
+    sendExtraMessageFields: true,
+    generateId: generateUUID,
+    experimental_throttle: 100,
   });
 
   const isCreatingThread = useMemo(() => {
@@ -183,6 +189,7 @@ export default function ProjectPage() {
           setInput={setInput}
           isLoading={isLoading}
           onStop={stop}
+          threadId={threadId}
         />
         <div className="flex my-4 mx-2 gap-4">
           <FeatureCard

@@ -66,7 +66,7 @@
       "createAccount": "계정 생성"
     },
     "Intro": {
-      "description": "MCP Chat Bot에 오신 것을 환영합니다. 우리의 AI 기반 대화 도구를 경험하세요."
+      "description": "better-chatbot에 오신 것을 환영합니다. 우리의 AI 기반 대화 도구를 경험하세요."
     }
   },
   "Chat": {
@@ -98,11 +98,11 @@
       "webSearching": "웹에서 찾아보는 중...",
       "searchedTheWeb": "참고한 웹 사이트",
       "toolModeDescription": "도구 사용 방식을 선택하세요:\n• 자동: AI가 도구 사용 여부를 자동으로 결정\n• 수동: 도구 사용 전 권한 요청\n• 사용 안함: 모든 도구 비활성화",
-      "toolsSetupDescription": "채팅에서 사용할 도구를 선택하세요.\n대화 중 '@'로 도구를 멘션하여\n호출할 수 있습니다.",
+      "toolsSetupDescription": "chatbot이 사용할 수 있는 도구를 선택하세요.\n선택된 도구를 스스로 판단하여 사용하게 됩니다.\n\n@mention을 하여 직접 특정 도구 사용을 강제 할 수 도 있습니다.",
       "selectToolMode": "도구 사용 모드",
       "autoToolModeDescription": "도구 사용 여부를 자동으로 결정합니다",
       "manualToolModeDescription": "도구 사용 여부를 물어봅니다",
-      "noneToolModeDescription": "도구를 사용하지 않습니다",
+      "noneToolModeDescription": "도구를 사용하지 않습니다. @mention은 여전히 가능합니다.",
       "toolsSetup": "도구 설정",
       "preset": "프리셋",
       "toolPresets": "도구 프리셋",
@@ -112,11 +112,13 @@
       "presetNameCannotBeEmpty": "프리셋 이름을 입력해주세요",
       "presetNameAlreadyExists": "이미 존재하는 프리셋 이름입니다",
       "presetSaved": "프리셋이 저장되었습니다",
-      "chartTools": "차트 도구",
-      "webSearchTools": "웹에서 검색하기",
       "clickSaveAsPresetToGetStarted": "프리셋으로 저장하여 시작합니다.",
       "searchOptions": "검색 옵션",
-      "searchOptionsDescription": "검색 결과의 최대 개수, 검색 날짜 등의 검색 옵션을 챗봇에 전달할 수 있습니다."
+      "searchOptionsDescription": "검색 결과의 최대 개수, 검색 날짜 등의 검색 옵션을 챗봇에 전달할 수 있습니다.",
+      "defaultToolKit": {
+        "visualization": "차트 도구",
+        "webSearch": "웹 검색"
+      }
     },
     "VoiceChat": {
       "title": "음성 채팅 모드",
@@ -322,13 +324,13 @@
     "addOutputVariable": "출력 변수 추가",
     "outputSchema": "출력 스키마",
     "addMessage": "메시지 추가",
-    "messagesDescription": "LLM 처리를 통해 데이터를 생성합니다.\n\n'/'를 사용하여 이전 노드의 데이터를\n입력으로 언급하고 참조하세요.",
+    "messagesDescription": "LLM 처리를 통해 데이터를 생성합니다.\n\n'/'를 사용하여 이전 노드의 데이터를 입력으로 언급하고 참조하세요.\n\n구조화된 출력을 활성화하면 데이터 변환, 포맷팅, 검증에 완벽합니다.",
     "descriptionAndSchema": "설명 및 스키마",
     "noDescriptionAndSchema": "설명 및 스키마가 없습니다",
     "toolDescription": "LLM이 도구 매개변수를 생성하는 데 필요한 정보를 제공합니다.\n\n'/'를 사용하여 이전 노드의 데이터를 언급하세요.",
     "generateInputWithAIDescription": "워크플로우에 대한 입력을 생성하는 프롬프트를 작성하세요",
     "example": {
-      "storyGenerator": "스토리 생성기",
+      "babyResearch": "베이비 리서치",
       "getWeather": "날씨 조회"
     },
     "selectVariable": "변수 선택",
@@ -348,7 +350,7 @@
     "kindsDescription": {
       "input": "챗봇이 이 워크플로우를 도구로 사용할 때 제공할 입력 매개변수를 정의합니다.\n\n도구 실행을 위한 데이터 구조와 검증 규칙을 지정합니다.",
       "output": "워크플로우 실행의 최종 결과를 수집하고 반환합니다.\n\n여러 노드의 데이터를 최종 도구 응답으로 결합합니다.",
-      "llm": "AI 모델을 사용하여 텍스트나 구조화된 데이터를 생성합니다.\n\n'/' 멘션으로 이전 노드 출력을 참조하여 컨텍스트 인식 응답을 생성합니다.",
+      "llm": "AI 모델을 사용하여 텍스트나 구조화된 데이터를 생성합니다.\n\n'/' 멘션으로 이전 노드 출력을 참조하여 컨텍스트 인식 응답을 생성합니다.\n\n구조화된 출력을 사용하여 데이터 변환, 포맷팅, 검증 - 단순한 텍스트 생성이 아닙니다.",
       "tool": "MCP 도구나 외부 서비스를 실행합니다.\n\n메시지에 지시사항을 작성하면 LLM이 컨텍스트에서 필요한 도구 매개변수를 생성합니다.",
       "note": "워크플로우 로직을 정리하기 위한 문서와 주석을 추가합니다.\n\n팀원들이 복잡한 워크플로우 프로세스를 이해하는 데 도움을 줍니다.",
       "code": "이전 노드 데이터에 접근할 수 있는 커스텀 코드 스크립트를 실행합니다.\n\n워크플로우 내에서 JavaScript, Python 또는 기타 언어를 실행합니다 (곧 출시).",
@@ -369,6 +371,8 @@
       "upcomingNodesTitle": "곧 출시될 노드",
       "ctaMessage": "지금 바로 워크플로우를 만들어 챗봇의 능력을 확장해보세요!",
       "soonMessage": "곧 제공될 예정입니다."
-    }
+    },
+    "arrangeNodes": "자동 레이아웃",
+    "nodesArranged": "레이아웃이 성공적으로 적용되었습니다"
   }
 }

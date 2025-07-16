@@ -65,7 +65,7 @@
       "createAccount": "アカウントを作成"
     },
     "Intro": {
-      "description": "MCP Chat Botへようこそ。AIを活用した会話ツールを体験するためにサインインしてください。"
+      "description": "better-chatbot へようこそ。AIを活用した会話ツールを体験するためにサインインしてください。"
     }
   },
   "Chat": {
@@ -97,11 +97,11 @@
       "webSearching": "ウェブを検索中...",
       "searchedTheWeb": "ウェブを検索しました",
       "toolModeDescription": "ツールの使用方法を選択:\n• 自動: AIがツールの使用を自動で決定\n• 手動: ツール使用前に許可を求める\n• なし: すべてのツールを無効化",
-      "toolsSetupDescription": "チャットで使用するツールを選択。\n会話中に '@' でツールを\nメンションして呼び出せます。",
+      "toolsSetupDescription": "チャットボットが使用できるツールを選択してください。\nチャットボットは選択されたツールを自分の判断で使用します。\n\n@mention を使って特定のツールの使用を強制することもできます。",
       "selectToolMode": "ツールモードを選択",
       "autoToolModeDescription": "あなたに尋ねることなく、ツールをいつ使用するかを決定します",
       "manualToolModeDescription": "ツールを使用する前にあなたの許可を求めます",
-      "noneToolModeDescription": "ツールを使用しません",
+      "noneToolModeDescription": "ツールを使用しません。@mentionは引き続き利用可能です。",
       "toolsSetup": "ツール設定",
       "preset": "プリセット",
       "toolPresets": "ツールプリセット",
@@ -111,11 +111,13 @@
       "presetNameCannotBeEmpty": "プリセット名を空にすることはできません",
       "presetNameAlreadyExists": "プリセット名が既に存在します",
       "presetSaved": "プリセットが保存されました",
-      "chartTools": "チャートツール",
-      "webSearchTools": "ウェブを検索",
       "clickSaveAsPresetToGetStarted": "開始するには「プリセットとして保存」をクリックしてください。",
       "searchOptions": "検索オプション",
-      "searchOptionsDescription": "検索結果の最大数、検索日時など、チャットボットに検索オプションを渡すことができます。"
+      "searchOptionsDescription": "検索結果の最大数、検索日時など、チャットボットに検索オプションを渡すことができます。",
+      "defaultToolKit": {
+        "visualization": "チャートツール",
+        "webSearch": "ウェブを検索"
+      }
     },
     "VoiceChat": {
       "title": "音声チャットモード",
@@ -321,13 +323,13 @@
     "addOutputVariable": "出力変数を追加",
     "outputSchema": "出力スキーマ",
     "addMessage": "メッセージを追加",
-    "messagesDescription": "LLM処理を通じてデータを生成します。\n\n'/'を使用して前のノードのデータを\n入力として言及・参照してください。",
+    "messagesDescription": "LLM処理を通じてデータを生成します。\n\n'/'を使用して前のノードのデータを入力として言及・参照してください。\n\n構造化出力を有効にすると、データの変換、フォーマット、検証に最適です。",
     "descriptionAndSchema": "説明とスキーマ",
     "noDescriptionAndSchema": "説明とスキーマがありません",
     "toolDescription": "LLMがツールパラメータを生成するために必要な情報を提供します。\n\n'/'を使用して前のノードのデータを言及してください。",
     "generateInputWithAIDescription": "ワークフローの入力を生成するプロンプトを書いてください",
     "example": {
-      "storyGenerator": "ストーリージェネレーター",
+      "babyResearch": "ベビーリサーチ",
       "getWeather": "天気取得"
     },
     "selectVariable": "変数を選択",
@@ -347,7 +349,7 @@
     "kindsDescription": {
       "input": "チャットボットがこのワークフローをツールとして使用する際に提供する入力パラメータを定義します。\n\nツール実行のためのデータ構造と検証ルールを指定します。",
       "output": "ワークフロー実行の最終結果を収集して返します。\n\n複数のノードからのデータを最終ツールレスポンスに結合します。",
-      "llm": "AIモデルを使用してテキストや構造化データを生成します。\n\n'/'メンションで前のノード出力を参照してコンテキスト認識レスポンスを作成します。",
+      "llm": "AIモデルを使用してテキストや構造化データを生成します。\n\n'/'メンションで前のノード出力を参照してコンテキスト認識レスポンスを作成します。\n\n構造化出力を使用してデータの変換、フォーマット、検証を行う - 単なるテキスト生成ではありません。",
       "tool": "MCPツールや外部サービスを実行します。\n\nメッセージに指示を書けば、LLMがコンテキストから必要なツールパラメータを生成します。",
       "note": "ワークフローロジックを整理するためのドキュメントとコメントを追加します。\n\nチームメンバーが複雑なワークフロープロセスを理解するのに役立ちます。",
       "code": "前のノードデータにアクセスできるカスタムコードスクリプトを実行します。\n\nワークフロー内でJavaScript、Python、その他の言語を実行します（近日公開）。",
@@ -368,6 +370,8 @@
       "upcomingNodesTitle": "近日公開予定のノード",
       "ctaMessage": "今すぐワークフローを作成してチャットボットの機能を拡張しましょう！",
       "soonMessage": "近日公開予定です。"
-    }
+    },
+    "arrangeNodes": "自動レイアウト",
+    "nodesArranged": "レイアウトが正常に適用されました"
   }
 }

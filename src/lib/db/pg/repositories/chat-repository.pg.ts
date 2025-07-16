@@ -201,6 +201,21 @@ export const pgChatRepository: ChatRepository = {
       .returning();
     return result;
   },
+  upsertThread: async (
+    thread: Omit<ChatThread, "createdAt">,
+  ): Promise<ChatThread> => {
+    const [result] = await db
+      .insert(ChatThreadSchema)
+      .values(thread)
+      .onConflictDoUpdate({
+        target: [ChatThreadSchema.id],
+        set: {
+          title: thread.title,
+        },
+      })
+      .returning();
+    return result;
+  },
 
   deleteThread: async (id: string): Promise<void> => {
     await db

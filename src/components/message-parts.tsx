@@ -9,18 +9,19 @@ import {
   ChevronDownIcon,
   RefreshCw,
   X,
-  Wrench,
   Trash2,
   ChevronRight,
   TriangleAlert,
   XIcon,
   Loader2,
   AlertTriangleIcon,
+  Percent,
+  HammerIcon,
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { Button } from "ui/button";
 import { Markdown } from "./markdown";
-import { cn, safeJSONParse } from "lib/utils";
+import { cn, isObject, safeJSONParse, toAny } from "lib/utils";
 import JsonView from "ui/json-view";
 import {
   useMemo,
@@ -44,12 +45,8 @@ import {
 
 import { toast } from "sonner";
 import { safe } from "ts-safe";
-import {
-  ChatMentionSchema,
-  ChatMessageAnnotation,
-  ChatModel,
-} from "app-types/chat";
-import { DefaultToolName } from "lib/ai/tools/app-default-tool-name";
+import { ChatModel, ClientToolInvocation } from "app-types/chat";
+
 import { Skeleton } from "ui/skeleton";
 import { PieChart } from "./tool-invocation/pie-chart";
 import { BarChart } from "./tool-invocation/bar-chart";
@@ -57,7 +54,7 @@ import { LineChart } from "./tool-invocation/line-chart";
 import { useTranslations } from "next-intl";
 import { extractMCPToolId } from "lib/ai/mcp/mcp-tool-id";
 import { Separator } from "ui/separator";
-import { ChatMentionInputMentionItem } from "./chat-mention-input";
+
 import { TextShimmer } from "ui/text-shimmer";
 import equal from "lib/equal";
 import {
@@ -70,9 +67,14 @@ import { NodeResultPopup } from "./workflow/node-result-popup";
 import { Alert, AlertDescription, AlertTitle } from "ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { GlobalIcon } from "ui/global-icon";
-import { TavilyResponse } from "lib/ai/tools/web-search";
+
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "ui/hover-card";
 import { notify } from "lib/notify";
+import { DefaultToolName } from "lib/ai/tools";
+import { TavilyResponse } from "lib/ai/tools/web/web-search";
+
+import { CodeBlock } from "ui/CodeBlock";
+import { SafeJsExecutionResult, safeJsRun } from "lib/safe-js-run";
 
 type MessagePart = UIMessage["parts"][number];
 
@@ -105,7 +107,8 @@ interface ToolMessagePartProps {
   messageId: string;
   showActions: boolean;
   isLast?: boolean;
-  onPoxyToolCall?: (answer: boolean) => void;
+  isManualToolInvocation?: boolean;
+  onPoxyToolCall?: (result: ClientToolInvocation) => void;
   isError?: boolean;
   setMessages?: UseChatHelpers["setMessages"];
 }
@@ -123,15 +126,7 @@ export const UserMessagePart = memo(function UserMessagePart({
   const [mode, setMode] = useState<"view" | "edit">("view");
   const [isDeleting, setIsDeleting] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const mentions = useMemo(() => {
-    return (message.annotations ?? [])
-      .flatMap((annotation) => {
-        return (annotation as ChatMessageAnnotation).mentions ?? [];
-      })
-      .filter((mention) => {
-        return ChatMentionSchema.safeParse(mention).success;
-      });
-  }, [message.annotations]);
+  const scrolledRef = useRef(false);
 
   const deleteMessage = useCallback(() => {
     safe(() => setIsDeleting(true))
@@ -151,7 +146,9 @@ export const UserMessagePart = memo(function UserMessagePart({
   }, [message.id]);
 
   useEffect(() => {
-    if (status === "submitted" && isLast) {
+    if (status === "submitted" && isLast && !scrolledRef.current) {
+      scrolledRef.current = true;
+
       ref.current?.scrollIntoView({ behavior: "smooth" });
     }
   }, [status]);
@@ -174,7 +171,7 @@ export const UserMessagePart = memo(function UserMessagePart({
       <div
         data-testid="message-content"
         className={cn(
-          "flex flex-col gap-4 max-w-full",
+          "flex flex-col gap-4 max-w-full ring ring-input",
           {
             "bg-accent text-accent-foreground px-4 py-3 rounded-2xl": isLast,
             "opacity-50": isError,
@@ -186,19 +183,6 @@ export const UserMessagePart = memo(function UserMessagePart({
           {part.text}
         </p>
       </div>
-      {isLast && mentions.length > 0 && (
-        <div className="flex items-center gap-2 flex-wrap">
-          {mentions.map((mention, i) => {
-            return (
-              <ChatMentionInputMentionItem
-                key={i}
-                id={JSON.stringify(mention)}
-                className="mx-0"
-              />
-            );
-          })}
-        </div>
-      )}
       {isLast && (
         <div className="flex w-full justify-end opacity-0 group-hover/message:opacity-100 transition-opacity duration-300">
           <Tooltip>
@@ -395,6 +379,7 @@ export const ToolMessagePart = memo(
     isError,
     messageId,
     setMessages,
+    isManualToolInvocation,
   }: ToolMessagePartProps) => {
     const t = useTranslations("");
     const { toolInvocation } = part;
@@ -440,7 +425,7 @@ export const ToolMessagePart = memo(
           : toolInvocation.result;
       }
       return null;
-    }, [state, toolInvocation]);
+    }, [toolInvocation, onPoxyToolCall]);
 
     const CustomToolComponent = useMemo(() => {
       if (
@@ -448,6 +433,23 @@ export const ToolMessagePart = memo(
         toolName === DefaultToolName.WebContent
       ) {
         return <SearchToolPart part={toolInvocation} />;
+      }
+
+      if (toolName === DefaultToolName.JavascriptExecution) {
+        return (
+          <SimpleJavascriptExecutionToolPart
+            part={toolInvocation}
+            onResult={
+              onPoxyToolCall
+                ? (result) =>
+                    onPoxyToolCall?.({
+                      action: "direct",
+                      result,
+                    })
+                : undefined
+            }
+          />
+        );
       }
 
       if (state === "result") {
@@ -488,7 +490,7 @@ export const ToolMessagePart = memo(
         }
       }
       return null;
-    }, [toolName, state]);
+    }, [toolName, state, onPoxyToolCall, result, args]);
 
     const isWorkflowTool = isVercelAIWorkflowTool(result);
 
@@ -528,7 +530,7 @@ export const ToolMessagePart = memo(
                     </AvatarFallback>
                   </Avatar>
                 ) : (
-                  <Wrench className="size-3.5" />
+                  <HammerIcon className="size-3.5" />
                 )}
               </div>
               <span className="font-bold flex items-center gap-2">
@@ -587,7 +589,7 @@ export const ToolMessagePart = memo(
                           copyInput(JSON.stringify(toolInvocation.args))
                         }
                       >
-                        <Copy />
+                        <Copy className="size-3" />
                       </Button>
                     )}
                   </div>
@@ -625,7 +627,7 @@ export const ToolMessagePart = memo(
                           className="size-3 text-muted-foreground"
                           onClick={() => copyOutput(JSON.stringify(result))}
                         >
-                          <Copy />
+                          <Copy className="size-3" />
                         </Button>
                       )}
                     </div>
@@ -637,13 +639,15 @@ export const ToolMessagePart = memo(
                   </div>
                 )}
 
-                {onPoxyToolCall && (
+                {onPoxyToolCall && isManualToolInvocation && (
                   <div className="flex flex-row gap-2 items-center mt-2">
                     <Button
                       variant="secondary"
                       size="sm"
                       className="rounded-full text-xs hover:ring"
-                      onClick={() => onPoxyToolCall(true)}
+                      onClick={() =>
+                        onPoxyToolCall({ action: "manual", result: true })
+                      }
                     >
                       <Check />
                       {t("Common.approve")}
@@ -652,7 +656,9 @@ export const ToolMessagePart = memo(
                       variant="outline"
                       size="sm"
                       className="rounded-full text-xs"
-                      onClick={() => onPoxyToolCall(false)}
+                      onClick={() =>
+                        onPoxyToolCall({ action: "manual", result: false })
+                      }
                     >
                       <X />
                       {t("Common.reject")}
@@ -696,6 +702,8 @@ export const ToolMessagePart = memo(
     if (prev.isLast !== next.isLast) return false;
     if (prev.showActions !== next.showActions) return false;
     if (!!prev.onPoxyToolCall !== !!next.onPoxyToolCall) return false;
+    if (prev.isManualToolInvocation !== next.isManualToolInvocation)
+      return false;
     if (prev.messageId !== next.messageId) return false;
     if (!equal(prev.part.toolInvocation, next.part.toolInvocation))
       return false;
@@ -712,6 +720,7 @@ function SearchToolPart({ part }: { part: ToolMessagePart["toolInvocation"] }) {
     if (part.state != "result") return null;
     return part.result as TavilyResponse & { isError: boolean; error?: string };
   }, [part.state]);
+  const [errorSrc, setErrorSrc] = useState<string[]>([]);
 
   const options = useMemo(() => {
     return (
@@ -732,6 +741,18 @@ function SearchToolPart({ part }: { part: ToolMessagePart["toolInvocation"] }) {
       </HoverCard>
     );
   }, [part.args]);
+
+  const onError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    const target = e.currentTarget;
+    if (errorSrc.includes(target.src)) return;
+    setErrorSrc([...errorSrc, target.src]);
+  };
+
+  const images = useMemo(() => {
+    return (
+      result?.images?.filter((image) => !errorSrc.includes(image.url)) ?? []
+    );
+  }, [result?.images, errorSrc]);
 
   if (part.state != "result")
     return (
@@ -757,9 +778,9 @@ function SearchToolPart({ part }: { part: ToolMessagePart["toolInvocation"] }) {
           />
         </div>
         <div className="flex flex-col gap-2 pb-2">
-          {result?.images?.length && (
+          {images?.length && (
             <div className="grid grid-cols-3 gap-3 max-w-2xl">
-              {result?.images?.map((image, i) => {
+              {images.map((image, i) => {
                 if (!image.url) return null;
                 return (
                   <Tooltip key={i}>
@@ -772,10 +793,12 @@ function SearchToolPart({ part }: { part: ToolMessagePart["toolInvocation"] }) {
                             children: (
                               <div className="flex flex-col h-full gap-4">
                                 <div className="flex-1 flex items-center justify-center min-h-0 py-6">
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
                                   <img
                                     src={image.url}
                                     className="max-w-[80vw] max-h-[80vh] object-contain rounded-lg"
                                     alt={image.description}
+                                    onError={onError}
                                   />
                                 </div>
                               </div>
@@ -784,10 +807,13 @@ function SearchToolPart({ part }: { part: ToolMessagePart["toolInvocation"] }) {
                         }}
                         className="block shadow rounded-lg overflow-hidden ring ring-input cursor-pointer"
                       >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           loading="lazy"
                           src={image.url}
+                          alt={image.description}
                           className="w-full h-36 object-cover hover:scale-120 transition-transform duration-300"
+                          onError={onError}
                         />
                       </div>
                     </TooltipTrigger>
@@ -944,12 +970,14 @@ ReasoningPart.displayName = "ReasoningPart";
 export function WorkflowToolDetail({
   result,
 }: { result: VercelAIWorkflowToolStreamingResult }) {
+  const { copied, copy } = useCopy();
+  const savedResult = useRef<VercelAIWorkflowToolStreamingResult>(result);
   const output = useMemo(() => {
     if (result.status == "running") return null;
     if (result.status == "fail")
       return (
         <Alert variant={"destructive"} className="border-destructive">
-          <AlertTriangleIcon />
+          <AlertTriangleIcon className="size-3" />
           <AlertTitle>{result?.error?.name || "ERROR"}</AlertTitle>
           <AlertDescription>{result.error?.message}</AlertDescription>
         </Alert>
@@ -957,26 +985,52 @@ export function WorkflowToolDetail({
     if (!result.result) return null;
 
     return (
-      <div className="w-full max-h-96 overflow-y-auto bg-card p-4 border text-xs transition-colors fade-300 rounded-lg ">
-        <JsonView data={result.result} />
+      <div className="w-full bg-card p-4 border text-xs rounded-lg text-muted-foreground">
+        <div className="flex items-center">
+          <h5 className="text-muted-foreground font-medium select-none">
+            Response
+          </h5>
+          <div className="flex-1" />
+          {copied ? (
+            <Check className="size-3" />
+          ) : (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-3 text-muted-foreground"
+              onClick={() => copy(JSON.stringify(result.result))}
+            >
+              <Copy className="size-3" />
+            </Button>
+          )}
+        </div>
+        <div className="p-2 max-h-[300px] overflow-y-auto">
+          <JsonView data={result.result} />
+        </div>
       </div>
     );
-  }, [result.status, result.error, result.result]);
+  }, [result.status, result.error, result.result, copied]);
+  useEffect(() => {
+    if (result.status == "running") {
+      savedResult.current = result;
+    }
+  }, [result]);
 
   return (
     <div className="w-full flex flex-col gap-1">
-      {result.history.map((item) => {
+      {result.history.map((item, i) => {
+        const result = item.result || savedResult.current.history[i]?.result;
         return (
           <NodeResultPopup
             key={item.id}
-            disabled={!item.result}
+            disabled={!result}
             history={{
               name: item.name,
               status: item.status,
               startedAt: item.startedAt,
               endedAt: item.endedAt,
               error: item.error?.message,
-              result: item.result,
+              result,
             }}
           >
             <div
@@ -984,7 +1038,7 @@ export function WorkflowToolDetail({
               className={cn(
                 "flex items-center gap-2 text-sm rounded-sm px-2 py-1.5 relative",
                 item.status == "fail" && "text-destructive",
-                item.result && "cursor-pointer hover:bg-secondary",
+                !!result && "cursor-pointer hover:bg-secondary",
               )}
             >
               <div className="border rounded overflow-hidden">
@@ -1021,7 +1075,232 @@ export function WorkflowToolDetail({
           </NodeResultPopup>
         );
       })}
-      <div className="px-2 mt-2">{output}</div>
+      <div className="mt-2">{output}</div>
+    </div>
+  );
+}
+
+export const SimpleJavascriptExecutionToolPart = memo(
+  function SimpleJavascriptExecutionToolPart({
+    part,
+    onResult,
+  }: {
+    part: ToolMessagePart["toolInvocation"];
+    onResult?: (result?: any) => void;
+  }) {
+    const isRun = useRef(false);
+    const [isExecuting, setIsExecuting] = useState(false);
+
+    const [realtimeLogs, setRealtimeLogs] = useState<
+      (SafeJsExecutionResult["logs"][number] & { time: number })[]
+    >([]);
+
+    const codeResultContainerRef = useRef<HTMLDivElement>(null);
+
+    const runCode = useCallback(
+      async (code: string, input: any) => {
+        const result = await safeJsRun(code, input, 60000, (log) => {
+          setRealtimeLogs((prev) => [...prev, { ...log, time: Date.now() }]);
+        });
+
+        onResult?.({
+          ...toAny(result),
+          guide:
+            "The code has already been executed and displayed to the user. Please provide only the output results from console.log() or error details if any occurred. Do not repeat the code itself.",
+        });
+      },
+      [onResult],
+    );
+
+    const isRunning = useMemo(() => {
+      return isExecuting || part.state != "result";
+    }, [isExecuting, part.state]);
+
+    const scrollToCode = useCallback(() => {
+      codeResultContainerRef.current?.scrollTo({
+        top: codeResultContainerRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }, []);
+
+    const result = useMemo(() => {
+      if (part.state != "result") return null;
+      return part.result as SafeJsExecutionResult;
+    }, [part]);
+
+    const logs = useMemo(() => {
+      const error = result?.error;
+      const logs = realtimeLogs.length ? realtimeLogs : (result?.logs ?? []);
+
+      if (error) {
+        return [{ type: "error", args: [error], time: Date.now() }, ...logs];
+      }
+
+      return logs;
+    }, [part, realtimeLogs]);
+
+    const reExecute = useCallback(async () => {
+      if (isExecuting) return;
+      setIsExecuting(true);
+      setRealtimeLogs([
+        { type: "info", args: ["Re-executing code..."], time: Date.now() },
+      ]);
+      const code = part.args?.code;
+      const input = part.args?.input;
+      safe(() =>
+        safeJsRun(code, input, 60000, (log) => {
+          setRealtimeLogs((prev) => [...prev, { ...log, time: Date.now() }]);
+        }),
+      ).watch(() => setIsExecuting(false));
+    }, [part.args, isExecuting]);
+
+    const header = useMemo(() => {
+      if (isRunning)
+        return (
+          <>
+            <Loader className="size-3 animate-spin text-muted-foreground" />
+            <TextShimmer className="text-xs">Generating Code...</TextShimmer>
+          </>
+        );
+      return (
+        <>
+          {result?.error ? (
+            <>
+              <AlertTriangleIcon className="size-3 text-destructive" />
+              <span className="text-destructive text-xs">ERROR</span>
+            </>
+          ) : (
+            <>
+              <div className="text-[7px] bg-border rounded-xs w-4 h-4 p-0.5 flex items-end justify-end font-bold">
+                JS
+              </div>
+            </>
+          )}
+        </>
+      );
+    }, [part.state, result, isRunning]);
+
+    const fallback = useMemo(() => {
+      return <CodeFallback />;
+    }, []);
+
+    const logContainer = useMemo(() => {
+      if (!logs.length) return null;
+      return (
+        <div className="p-4 text-[10px] text-foreground flex flex-col gap-1">
+          <div className="text-foreground flex items-center gap-1">
+            {isRunning ? (
+              <Loader className="size-2 animate-spin" />
+            ) : (
+              <div className="w-1 h-1 mr-1 ring ring-border rounded-full" />
+            )}
+            better-chatbot
+            <Percent className="size-2" />
+            {part.state == "result" && (
+              <div
+                className="hover:text-foreground ml-auto px-2 py-1 rounded-sm cursor-pointer text-muted-foreground/80"
+                onClick={reExecute}
+              >
+                retry
+              </div>
+            )}
+          </div>
+          {logs.map((log, i) => {
+            return (
+              <div
+                key={i}
+                className={cn(
+                  "flex gap-1 text-muted-foreground pl-3",
+                  log.type == "error" && "text-destructive",
+                  log.type == "warn" && "text-yellow-500",
+                )}
+              >
+                <div className="w-[8.6rem] hidden md:block">
+                  {new Date(toAny(log).time || Date.now()).toISOString()}
+                </div>
+                <div className="h-[15px] flex items-center">
+                  {log.type == "error" ? (
+                    <AlertTriangleIcon className="size-2" />
+                  ) : log.type == "warn" ? (
+                    <AlertTriangleIcon className="size-2" />
+                  ) : (
+                    <ChevronRight className="size-2" />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0 whitespace-pre-wrap">
+                  {log.args
+                    .map((arg) =>
+                      isObject(arg) ? JSON.stringify(arg) : arg.toString(),
+                    )
+                    .join(" ")}
+                </div>
+              </div>
+            );
+          })}
+          {isRunning && (
+            <div className="ml-3 animate-caret-blink text-muted-foreground">
+              |
+            </div>
+          )}
+        </div>
+      );
+    }, [logs, isRunning]);
+
+    useEffect(() => {
+      if (onResult && part.args && part.state == "call" && !isRun.current) {
+        isRun.current = true;
+        runCode(part.args.code, part.args.input);
+      }
+    }, [part.state, !!onResult]);
+
+    useEffect(() => {
+      if (isRunning) {
+        const closeKey = setInterval(scrollToCode, 300);
+        return () => clearInterval(closeKey);
+      } else if (part.state == "result" && isRun.current) {
+        scrollToCode();
+      }
+    }, [isRunning]);
+
+    return (
+      <div className="flex flex-col">
+        <div className="px-6 py-3">
+          <div
+            ref={codeResultContainerRef}
+            onClick={scrollToCode}
+            className="border overflow-y-auto overflow-x-hidden max-h-[70vh] relative rounded-lg shadow fade-in animate-in duration-500"
+          >
+            <div className="sticky top-0 py-2.5 px-4 flex items-center gap-1.5 z-10 border-b bg-background min-h-[37px]">
+              {header}
+              <div className="flex-1" />
+              <div className="w-1.5 h-1.5 rounded-full bg-input" />
+              <div className="w-1.5 h-1.5 rounded-full bg-input" />
+              <div className="w-1.5 h-1.5 rounded-full bg-input" />
+            </div>
+
+            <div className={`min-h-14 p-6 text-xs`}>
+              <CodeBlock
+                className="p-4 text-[10px] overflow-x-auto"
+                code={part.args?.code}
+                lang="javascript"
+                fallback={fallback}
+              />
+            </div>
+            {logContainer}
+          </div>
+        </div>
+      </div>
+    );
+  },
+);
+
+function CodeFallback() {
+  return (
+    <div className="flex flex-col gap-2">
+      <Skeleton className="h-3 w-1/6" />
+      <Skeleton className="h-3 w-1/3" />
+      <Skeleton className="h-3 w-1/2" />
+      <Skeleton className="h-3 w-1/4" />
     </div>
   );
 }

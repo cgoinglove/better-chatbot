@@ -1,17 +1,51 @@
-<img width="1274" alt="thumbnail" src="https://github.com/user-attachments/assets/bd018edb-69c9-43bb-a8c8-ffbc3f816ce5" />
+<img width="1647" alt="thumbnail" loading="lazy" src="https://github.com/user-attachments/assets/7b0f279a-8771-42a0-b8b6-128b3b1a076c" />
 
 [![MCP Supported](https://img.shields.io/badge/MCP-Supported-00c853)](https://modelcontextprotocol.io/introduction)
 [![Local First](https://img.shields.io/badge/Local-First-blue)](https://localfirstweb.dev/)
 [![Discord](https://img.shields.io/discord/1374047276074537103?label=Discord&logo=discord&color=5865F2)](https://discord.gg/gCRu69Upnp)
 
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/cgoinglove/mcp-client-chatbot&env=BETTER_AUTH_SECRET&env=OPENAI_API_KEY&env=GOOGLE_GENERATIVE_AI_API_KEY&env=ANTHROPIC_API_KEY&envDescription=Learn+more+about+how+to+get+the+API+Keys+for+the+application&envLink=https://github.com/cgoinglove/mcp-client-chatbot/blob/main/.env.example&demo-title=MCP+Client+Chatbot&demo-description=An+Open-Source+MCP+Chatbot+Template+Built+With+Next.js+and+the+AI+SDK+by+Vercel.&products=[{"type":"integration","protocol":"storage","productSlug":"neon","integrationSlug":"neon"}])
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/better-chatbot/better-chatbot&env=BETTER_AUTH_SECRET&env=OPENAI_API_KEY&env=GOOGLE_GENERATIVE_AI_API_KEY&env=ANTHROPIC_API_KEY&envDescription=Learn+more+about+how+to+get+the+API+Keys+for+the+application&envLink=https://github.com/better-chatbot/better-chatbot/blob/main/.env.example&demo-title=better-chatbot&demo-description=An+Open-Source+Chatbot+Template+Built+With+Next.js+and+the+AI+SDK+by+Vercel.&products=[{"type":"integration","protocol":"storage","productSlug":"neon","integrationSlug":"neon"}])
 
 Our goal is to create the best possible chatbot UX — focusing on the joy and intuitiveness users feel when calling and interacting with AI tools.
+
 
 See the experience in action in the [preview](#preview) below!
 
 > Built with [Vercel AI SDK](https://sdk.vercel.ai) and [Next.js](https://nextjs.org/), this app adopts modern patterns for building AI chat interfaces. It leverages the power of the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) to seamlessly integrate external tools into your chat experience. You can also create custom workflows that become callable tools in chat, allowing you to chain multiple MCP tools, LLM interactions, and logic into powerful automated sequences.
+
+### Quick Start 🚀
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/better-chatbot/better-chatbot.git
+cd better-chatbot
+
+# 2. (Optional) Install pnpm if you don't have it
+npm install -g pnpm
+
+# 3. Install dependencies
+pnpm i
+
+# 4. Create the environment variable file and fill in your .env values
+pnpm initial:env # This runs automatically in postinstall, so you can usually skip it.
+
+# 5. (Optional) If you already have PostgreSQL running and .env is configured, skip this step
+pnpm docker:pg
+
+# 6. Run database migrations
+pnpm db:migrate
+
+# 7. Start the development server
+pnpm dev
+
+# 8. (Optional) Build & start for local production-like testing
+pnpm build:local && pnpm start
+# Use build:local for local start to ensure correct cookie settings
+```
+
+> **⚠️ Important:** When updating to a new version of the project (after `git pull`), always run `pnpm db:migrate` to ensure your database schema is up to date.
+
+Open [http://localhost:3000](http://localhost:3000) in your browser to get started.
 
 ## Table of Contents
 
@@ -22,7 +56,9 @@ See the experience in action in the [preview](#preview) below!
   - [🎙️ Realtime Voice Assistant + MCP Tools](#️-realtime-voice-assistant--mcp-tools)
   - [⚡️ Quick Tool Mentions (`@`) \& Presets](#️-quick-tool-mentions---presets)
   - [🧭 Tool Choice Mode](#-tool-choice-mode)
-  - [🌐 Web Search (Default Tool)](#-web-search-default-tool)
+  - [🛠️ Default Tools](#️-default-tools)
+    - [🌐 Web Search](#-web-search)
+    - [⚡️ JS Executor](#️-js-executor)
 - [Getting Started](#getting-started)
   - [Quick Start (Docker Compose Version) 🐳](#quick-start-docker-compose-version-)
   - [Quick Start (Local Version) 🚀](#quick-start-local-version-)
@@ -41,7 +77,8 @@ See the experience in action in the [preview](#preview) below!
 - [🙌 Contributing](#-contributing)
 - [💬 Join Our Discord](#-join-our-discord)
 
----
+
+> This project is evolving at lightning speed! ⚡️ We're constantly shipping new features and smashing bugs. **Star this repo** to join the ride and stay in the loop with the latest updates!
 
 ## Preview
 
@@ -49,7 +86,7 @@ Get a feel for the UX — here's a quick look at what's possible.
 
 ### 🧩 Browser Automation with Playwright MCP
 
-![playwright](https://github.com/user-attachments/assets/67f23b93-b48d-4eaa-9ced-6a14c591b3e1)
+![preview](https://github.com/user-attachments/assets/58b4c561-9b59-40db-9c62-9fd5aeea4432)
 
 **Example:** Control a web browser using Microsoft's [playwright-mcp](https://github.com/microsoft/playwright-mcp) tool.
 
@@ -58,10 +95,14 @@ Get a feel for the UX — here's a quick look at what's possible.
 Sample prompt:
 
 ```prompt
-Please go to GitHub and visit the cgoinglove/mcp-client-chatbot project.
-Then, click on the README.md file.
-After that, close the browser.
-Finally, tell me how to install the package.
+1. Use the @tool('web-search') to look up information about “modelcontetprotocol.”  
+
+2. Then, using : @mcp("playwright")
+   - navigate Google (https://www.google.com)  
+   - Click the “Login” button  
+   - Enter my email address (neo.cgoing@gmail.com)  
+   - Clock the "Next"  button
+   - Close the browser
 ```
 
 <br/>
@@ -70,7 +111,7 @@ Finally, tell me how to install the package.
 
 <img width="1755" alt="workflow" src="https://github.com/user-attachments/assets/afa895f0-cc59-4c2f-beb3-4b7a1dc1f891" loading="lazy" />
 
-<img width="1567" alt="workflow-mention" loading="lazy" src="https://github.com/user-attachments/assets/097526d6-54c1-4bc3-87f8-47d3f885a9c3" />
+<img width="1567" alt="workflow-mention" loading="lazy" src="https://github.com/user-attachments/assets/cf3e1339-ee44-4615-a71d-f6b46833e41f" />
 
 **Example:** Create custom workflows that become callable tools in your chat conversations.
 
@@ -91,23 +132,27 @@ Talk to the assistant naturally, and watch it execute tools in real time.
 
 ### ⚡️ Quick Tool Mentions (`@`) & Presets
 
-![tool](https://github.com/user-attachments/assets/eb690c07-cb9f-4a61-8397-9f39518e1b6c)
+<img width="1225" alt="image" src="https://github.com/user-attachments/assets/4d56dd25-a94c-4c19-9efa-fd7b5d3d2187" loading="lazy"/>
 
 
-Quickly call any registered MCP tool during chat by typing `@toolname`.
-No need to memorize — just type `@` and select from the list!
+Quickly call tool during chat by typing `@toolname`.
+No need to memorize — just type `@` and pick from the list!
 
-**Tool Selection vs. Mentions:**
-- **Tool Select**: Choose which tools are automatically available in LLM context for all conversations
-- **Mentions (`@`)**: Temporarily bind only the mentioned tools for that response, overriding Tool Select (saves tokens and improves performance)
+**Tool Selection vs. Mentions (`@`) — When to Use What:**
 
-You can also create **tool presets** by selecting only the MCP servers or tools you want.
+* **Tool Selection**: Make frequently used tools always available to the LLM across all chats. Great for convenience and maintaining consistent context over time.
+* **Mentions (`@`)**: Temporarily bind only the mentioned tools for that specific response. Since only the mentioned tools are sent to the LLM, this saves tokens and can improve speed and accuracy.
+
+Each method has its own strengths — use them together to balance efficiency and performance.
+
+You can also create **tool presets** by selecting only the MCP servers or tools you need.
 Switch between presets instantly with a click — perfect for organizing tools by task or workflow.
+
+
 
 ### 🧭 Tool Choice Mode
 
-<img width="1225" alt="image" src="https://github.com/user-attachments/assets/c0ade861-3622-466a-be13-74643e8cc9bc" loading="lazy"/>
-
+<img width="1225" alt="image" src="https://github.com/user-attachments/assets/8fc64c6a-30c9-41a4-a5e5-4e8804f73473" loading="lazy"/>
 
 Control how tools are used in each chat with **Tool Choice Mode** — switch anytime with `⌘P`.
 
@@ -117,10 +162,11 @@ Control how tools are used in each chat with **Tool Choice Mode** — switch any
 
 This lets you flexibly choose between autonomous, guided, or tool-free interaction depending on the situation.
 
-### 🌐 Web Search (Default Tool)
+### 🛠️ Default Tools
 
-<img width="1394" alt="web-search" src="https://github.com/user-attachments/assets/14e2dc33-b702-4b93-a05f-bc36edde18f1" loading="lazy"/>
+#### 🌐 Web Search
 
+<img width="1034" height="940" alt="web-search" src="https://github.com/user-attachments/assets/261037d9-e1a7-44ad-b45e-43780390a94e" />
 
 Built-in web search powered by [Tavily API](https://app.tavily.com/home). Search the web and extract content from URLs directly in your chats.
 
@@ -128,7 +174,12 @@ Built-in web search powered by [Tavily API](https://app.tavily.com/home). Search
 - **Free Tier:** 1,000 requests/month at no cost
 - **Easy Setup:** Get your API key with one click at [app.tavily.com](https://app.tavily.com/home)
 
-Works perfectly fine without the API key — web search just won't be available.
+#### ⚡️ JS Executor
+<img width="1225" alt="js-executor-preview" src="https://github.com/user-attachments/assets/24d51665-c500-4c92-89de-7b46216e869f" loading="lazy"/>
+
+It is a simple JS execution tool.
+
+> Additionally, many basic tools are provided, such as visualization tools for drawing charts and tables, and an HTTP tool.
 
 <br/>
 
@@ -215,7 +266,7 @@ BETTER_AUTH_URL=
 POSTGRES_URL=postgres://your_username:your_password@localhost:5432/your_database_name
 
 # (Optional)
-# === Tools === 
+# === Tools ===
 # Tavily for web search and content extraction (optional, but recommended for @web and research features)
 TAVILY_API_KEY=your_tavily_api_key_here
 
@@ -223,7 +274,7 @@ TAVILY_API_KEY=your_tavily_api_key_here
 # Whether to use file-based MCP config (default: false)
 FILE_BASED_MCP_CONFIG=false
 
-# (Optional) 
+# (Optional)
 # === OAuth Settings ===
 # Fill in these values only if you want to enable Google/GitHub login
 GOOGLE_CLIENT_ID=
@@ -242,7 +293,7 @@ NOT_ALLOW_ADD_MCP_SERVERS=
 
 ## 📘 Guides
 
-Step-by-step setup guides for running and configuring MCP Client Chatbot.
+Step-by-step setup guides for running and configuring better-chatbot.
 
 #### [🔌 MCP Server Setup & Tool Testing](./docs/tips-guides/mcp-server-setup-and-tool-testing.md)
 
@@ -283,18 +334,20 @@ Advanced use cases and extra capabilities that enhance your chatbot experience.
 
 ## 🗺️ Roadmap
 
-Planned features coming soon to MCP Client Chatbot:
+Planned features coming soon to better-chatbot:
 
 - [ ] **File Attach & Image Generation**
 - [ ] **Collaborative Document Editing** (like OpenAI Canvas: user & assistant co-editing)
 - [ ] **RAG (Retrieval-Augmented Generation)**
 - [ ] **Web-based Compute** (with [WebContainers](https://webcontainers.io) integration)
 
-💡 If you have suggestions or need specific features, please create an [issue](https://github.com/cgoinglove/mcp-client-chatbot/issues)!
+💡 If you have suggestions or need specific features, please create an [issue](https://github.com/better-chatbot/better-chatbot/issues)!
 
 ## 🙌 Contributing
 
 We welcome all contributions! Bug reports, feature ideas, code improvements — everything helps us build the best local AI assistant.
+
+> **⚠️ Please read our [Contributing Guide](./CONTRIBUTING.md) before submitting any Pull Requests or Issues.** This helps us work together more effectively and saves time for everyone.
 
 **For detailed contribution guidelines**, please see our [Contributing Guide](./CONTRIBUTING.md).
 

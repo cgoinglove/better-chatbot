@@ -32,6 +32,7 @@ import {
 } from "ui/dialog";
 import { DialogTitle } from "@radix-ui/react-dialog";
 import { Textarea } from "ui/textarea";
+import { Think } from "ui/think";
 
 export function ChatBotTemporary() {
   const t = useTranslations("Chat.TemporaryChat");
@@ -224,6 +225,16 @@ function DrawerTemporaryContent({
     useShallow((state) => [state.temporaryChat, state.mutate]),
   );
 
+  const showThink = useMemo(() => {
+    if (!isLoading) return false;
+    const lastMessage = messages.at(-1);
+    if (lastMessage?.role == "user") return true;
+    const lastPart = lastMessage?.parts.at(-1);
+
+    if (lastPart?.type == "step-start") return true;
+    return false;
+  }, [isLoading, messages.at(-1)]);
+
   useEffect(() => {
     containerRef.current?.scrollTo({
       top: containerRef.current?.scrollHeight,
@@ -305,6 +316,11 @@ function DrawerTemporaryContent({
             />
           );
         })}
+        {showThink && (
+          <div className="w-full mx-auto max-w-3xl px-6">
+            <Think />
+          </div>
+        )}
         {error && <ErrorMessage error={error} />}
       </div>
 

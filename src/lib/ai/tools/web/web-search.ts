@@ -369,7 +369,7 @@ export const tavilySearchToolForWorkflow = createTool({
     return fetchTavily(baseURLs.search, {
       ...params,
       topic: params.country ? "general" : params.topic,
-      include_favicon: true,
+      include_favicon: false,
       include_domains: Array.isArray(params.include_domains)
         ? params.include_domains
         : [],
@@ -387,7 +387,10 @@ export const tavilyWebContentToolForWorkflow = createTool({
   execute: async (params) => {
     return fetchTavily(baseURLs.extract, {
       ...params,
-      include_favicon: true,
+      include_favicon: false,
+      include_images: true,
+      include_image_descriptions: true,
+      include_raw_content: false,
     });
   },
 });
@@ -410,9 +413,12 @@ export const tavilySearchTool = createTool({
           : [],
         include_images: true,
         include_image_descriptions: true,
-        include_raw_content: false,
       }),
     )
+      .map((result) => ({
+        ...result,
+        guide: `Use the search results to answer the user's question. Summarize the content and ask if they have any additional questions about the topic.`,
+      }))
       .ifFail((e) => {
         return {
           isError: true,

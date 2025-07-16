@@ -35,7 +35,7 @@ const JsonView = memo(
         : data;
 
     return (
-      <div className="font-mono text-sm transition-all duration-300 ">
+      <div className=" text-sm transition-all duration-300">
         <JsonNode
           data={normalizedData as JsonValue}
           name={name}

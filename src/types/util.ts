@@ -38,6 +38,9 @@ export type TipTapMentionJsonContent = {
             label: string;
           };
         }
+      | {
+          type: "hardBreak";
+        }
     )[];
   }[];
 };
