@@ -8,13 +8,12 @@ services:
     environment:
       - NO_HTTPS=1
     env_file:
-      - .env.docker # docker .env
       - .env
     dns:
       - 8.8.8.8 # Google's public DNS server
       - 8.8.4.4 # Google's public DNS server
     networks:
-      - mcp_client_network
+      - better-chatbot-networks
     depends_on:
       - postgres
     restart: unless-stopped
@@ -22,10 +21,9 @@ services:
   postgres:
     image: postgres:17
     env_file:
-      - .env.docker # docker .env
       - .env
     networks:
-      - mcp_client_network
+      - better-chatbot-networks
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
@@ -34,5 +32,5 @@ volumes:
   postgres_data:
 
 networks:
-  mcp_client_network:
+  better-chatbot-networks:
     driver: bridge

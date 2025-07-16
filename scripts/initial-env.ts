@@ -4,15 +4,16 @@ import path from "path";
 // Get current directory path
 const ROOT = process.cwd();
 
-const DOCKER_ENV_PATH = path.join(ROOT, "docker", ".env.docker");
+const DOCKER_ENV_PATH = path.join(ROOT, "docker");
 
-const DOCKER_ENV_CONTENT =
-  [
-    "POSTGRES_URL=postgres://your_username:your_password@postgres:5432/your_database_name",
-    "POSTGRES_DB=your_database_name",
-    "POSTGRES_USER=your_username",
-    "POSTGRES_PASSWORD=your_password",
-  ].join("\n") + "\n";
+// PostgreSQL settings for Docker environment
+const DOCKER_POSTGRES_SETTINGS = [
+  "# == DOCKER POSTGRES SETTINGS ==",
+  "POSTGRES_URL=postgres://your_username:your_password@postgres:5432/better_chatbot",
+  "POSTGRES_DB=better_chatbot",
+  "POSTGRES_USER=your_username",
+  "POSTGRES_PASSWORD=your_password",
+].join("\n");
 
 /**
  * Copy .env.example to .env if .env doesn't exist
@@ -38,10 +39,21 @@ function copyEnvFile() {
     console.info(".env file already exists. Skipping...");
   }
 
-  if (!fs.existsSync(DOCKER_ENV_PATH)) {
+  if (!fs.existsSync(DOCKER_ENV_PATH + "/.env")) {
     try {
-      fs.writeFileSync(DOCKER_ENV_PATH, DOCKER_ENV_CONTENT, "utf-8");
-      console.log("/docker/.env file has been created.");
+      // Copy .env.example content first
+      const envExampleContent = fs.readFileSync(envExamplePath, "utf-8");
+
+      // Replace existing POSTGRES_URL with all Docker PostgreSQL settings
+      const dockerEnvContent = envExampleContent.replace(
+        /POSTGRES_URL=postgres:\/\/.*$/m,
+        DOCKER_POSTGRES_SETTINGS,
+      );
+
+      fs.writeFileSync(DOCKER_ENV_PATH + "/.env", dockerEnvContent, "utf-8");
+      console.log(
+        "/docker/.env file has been created with PostgreSQL settings.",
+      );
     } catch (error) {
       console.error("Error occurred while creating /docker/.env file.");
       console.error(error);
