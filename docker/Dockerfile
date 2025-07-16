@@ -39,4 +39,4 @@ COPY --from=builder /app/src/types/chat.ts ./src/types/chat.ts
 COPY --from=builder /app/messages ./messages
 EXPOSE 3000
 
-CMD pnpm db:migrate && pnpm start
+CMD pnpm start

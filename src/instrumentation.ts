@@ -4,5 +4,11 @@ export async function register() {
       (m) => m.initMCPManager,
     );
     await init();
+
+    // run DB migration
+    const runMigrate = await import("./lib/db/pg/migrate.pg").then(
+      (m) => m.runMigrate,
+    );
+    await runMigrate();
   }
 }

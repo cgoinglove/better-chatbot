@@ -1,17 +1,8 @@
-import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { join } from "path";
-import { Pool } from "pg";
-import "load-env";
+import { pgDb } from "lib/db/pg/db.pg";
 
-const url = process.env.POSTGRES_URL!;
-
-const runMigrate = async () => {
-  const pool = new Pool({
-    connectionString: url,
-  });
-  const pgDb = drizzle(pool);
-
+export const runMigrate = async () => {
   console.log("⏳ Running PostgreSQL migrations...");
 
   const start = Date.now();
@@ -21,11 +12,4 @@ const runMigrate = async () => {
   const end = Date.now();
 
   console.log("✅ PostgreSQL migrations completed in", end - start, "ms");
-  process.exit(0);
 };
-
-runMigrate().catch((err) => {
-  console.error("❌ PostgreSQL migration failed");
-  console.error(err);
-  process.exit(1);
-});
