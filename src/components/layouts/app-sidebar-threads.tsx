@@ -35,6 +35,8 @@ import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { TextShimmer } from "ui/text-shimmer";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
+import { deduplicateByKey, groupBy } from "lib/utils";
+import { ChatThread } from "app-types/chat";
 
 type ThreadGroup = {
   label: string;
@@ -63,7 +65,33 @@ export function AppSidebarThreads() {
     {
       onError: handleErrorWithToast,
       fallbackData: [],
-      onSuccess: (data) => storeMutate({ threadList: data }),
+      onSuccess: (data) => {
+        storeMutate((prev) => {
+          const groupById = groupBy(prev.threadList, "id");
+
+          const generatingTitleThreads = prev.generatingTitleThreadIds
+            .map((id) => {
+              return groupById[id]?.[0];
+            })
+            .filter(Boolean) as ChatThread[];
+          const list = deduplicateByKey(
+            generatingTitleThreads.concat(data),
+            "id",
+          );
+          return {
+            threadList: list.map((v) => {
+              const target = groupById[v.id]?.[0];
+              if (!target) return v;
+              if (target.title && !v.title)
+                return {
+                  ...v,
+                  title: target.title,
+                };
+              return v;
+            }),
+          };
+        });
+      },
     },
   );
 
@@ -100,7 +128,9 @@ export function AppSidebarThreads() {
     ];
 
     displayThreadList.forEach((thread) => {
-      const threadDate = new Date(thread.lastMessageAt);
+      const threadDate = thread.lastMessageAt
+        ? new Date(thread.lastMessageAt)
+        : thread.createdAt;
       threadDate.setHours(0, 0, 0, 0);
 
       if (threadDate.getTime() === today.getTime()) {

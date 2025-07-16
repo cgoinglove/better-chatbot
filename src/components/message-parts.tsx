@@ -126,6 +126,7 @@ export const UserMessagePart = memo(function UserMessagePart({
   const [mode, setMode] = useState<"view" | "edit">("view");
   const [isDeleting, setIsDeleting] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const scrolledRef = useRef(false);
 
   const deleteMessage = useCallback(() => {
     safe(() => setIsDeleting(true))
@@ -145,7 +146,9 @@ export const UserMessagePart = memo(function UserMessagePart({
   }, [message.id]);
 
   useEffect(() => {
-    if (status === "submitted" && isLast) {
+    if (status === "submitted" && isLast && !scrolledRef.current) {
+      scrolledRef.current = true;
+
       ref.current?.scrollIntoView({ behavior: "smooth" });
     }
   }, [status]);
@@ -1092,7 +1095,6 @@ export const SimpleJavascriptExecutionToolPart = memo(
       (SafeJsExecutionResult["logs"][number] & { time: number })[]
     >([]);
 
-    const scrollContainerRef = useRef<HTMLDivElement>(null);
     const codeResultContainerRef = useRef<HTMLDivElement>(null);
 
     const runCode = useCallback(
@@ -1115,20 +1117,10 @@ export const SimpleJavascriptExecutionToolPart = memo(
     }, [isExecuting, part.state]);
 
     const scrollToCode = useCallback(() => {
-      if (codeResultContainerRef.current && scrollContainerRef.current) {
-        const container = codeResultContainerRef.current;
-        const target = scrollContainerRef.current;
-
-        const containerRect = container.getBoundingClientRect();
-        const targetRect = target.getBoundingClientRect();
-        const relativeTop =
-          targetRect.top - containerRect.top + container.scrollTop;
-
-        container.scrollTo({
-          top: relativeTop,
-          behavior: "smooth",
-        });
-      }
+      codeResultContainerRef.current?.scrollTo({
+        top: codeResultContainerRef.current.scrollHeight,
+        behavior: "smooth",
+      });
     }, []);
 
     const result = useMemo(() => {
@@ -1265,6 +1257,8 @@ export const SimpleJavascriptExecutionToolPart = memo(
       if (isRunning) {
         const closeKey = setInterval(scrollToCode, 300);
         return () => clearInterval(closeKey);
+      } else if (part.state == "result" && isRun.current) {
+        scrollToCode();
       }
     }, [isRunning]);
 
@@ -1273,6 +1267,7 @@ export const SimpleJavascriptExecutionToolPart = memo(
         <div className="px-6 py-3">
           <div
             ref={codeResultContainerRef}
+            onClick={scrollToCode}
             className="border overflow-y-auto overflow-x-hidden max-h-[70vh] relative rounded-lg shadow fade-in animate-in duration-500"
           >
             <div className="sticky top-0 py-2.5 px-4 flex items-center gap-1.5 z-10 border-b bg-background min-h-[37px]">
@@ -1292,7 +1287,6 @@ export const SimpleJavascriptExecutionToolPart = memo(
               />
             </div>
             {logContainer}
-            <div ref={scrollContainerRef} />
           </div>
         </div>
       </div>

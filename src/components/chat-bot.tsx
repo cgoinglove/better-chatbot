@@ -94,17 +94,6 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
     api: "/api/chat",
     initialMessages,
     experimental_prepareRequestBody: ({ messages }) => {
-      const isNewThread =
-        !latestRef.current.threadList.some((v) => v.id === threadId) &&
-        messages.filter((v) => v.role === "user" || v.role === "assistant")
-          .length < 2 &&
-        messages.at(-1)?.role === "user";
-      if (isNewThread) {
-        const part = messages.at(-1)!.parts.findLast((v) => v.type === "text");
-        if (part) {
-          generateTitle(part.text);
-        }
-      }
       window.history.replaceState({}, "", `/chat/${threadId}`);
       const lastMessage = messages.at(-1)!;
       vercelAISdkV4ToolInvocationIssueCatcher(lastMessage);
@@ -123,13 +112,25 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
     generateId: generateUUID,
     experimental_throttle: 100,
     onFinish() {
-      if (threadList[0]?.id !== threadId) {
+      const messages = latestRef.current.messages;
+      const prevThread = latestRef.current.threadList.find(
+        (v) => v.id === threadId,
+      );
+      const isNewThread =
+        !prevThread?.title &&
+        messages.filter((v) => v.role === "user" || v.role === "assistant")
+          .length < 3;
+      if (isNewThread) {
+        const part = messages.at(-1)!.parts.findLast((v) => v.type === "text");
+        if (part) {
+          generateTitle(part.text);
+        }
+      } else if (latestRef.current.threadList[0]?.id !== threadId) {
         mutate("threads");
       }
     },
     onError: (error) => {
       console.error(error);
-
       toast.error(
         truncateString(error.message, 100) ||
           "An error occured, please try again!",

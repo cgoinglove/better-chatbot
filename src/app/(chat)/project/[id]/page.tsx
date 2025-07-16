@@ -5,10 +5,9 @@ import { ProjectDropdown } from "@/components/project-dropdown";
 import { ProjectSystemMessagePopup } from "@/components/project-system-message-popup";
 import PromptInput from "@/components/prompt-input";
 import { ThreadDropdown } from "@/components/thread-dropdown";
-import { useGenerateThreadTitle } from "@/hooks/queries/use-generate-thread-title";
 import { useToRef } from "@/hooks/use-latest";
 import { useChat } from "@ai-sdk/react";
-import { TextPart } from "ai";
+
 import { ChatApiSchemaRequestBody, Project } from "app-types/chat";
 import { generateUUID } from "lib/utils";
 
@@ -96,11 +95,6 @@ export default function ProjectPage() {
     ]),
   );
 
-  const generateTitle = useGenerateThreadTitle({
-    threadId,
-    projectId: id as string,
-  });
-
   const latestRef = useToRef({
     model,
     mentions: threadMentions[threadId] ?? [],
@@ -113,12 +107,6 @@ export default function ProjectPage() {
     id: threadId,
     api: "/api/chat",
     experimental_prepareRequestBody: ({ messages }) => {
-      const part = messages
-        .at(-1)!
-        .parts.findLast((v) => v.type === "text")! as TextPart;
-      if (part) {
-        generateTitle(part.text);
-      }
       const request: ChatApiSchemaRequestBody = {
         id: threadId,
         chatModel: latestRef.current.model,
@@ -127,19 +115,20 @@ export default function ProjectPage() {
         mentions: latestRef.current.mentions,
         allowedMcpServers: latestRef.current.allowedMcpServers,
         projectId: id as string,
+        autoTitle: true,
         message: messages.at(-1)!,
       };
       return request;
     },
     initialMessages: [],
-    sendExtraMessageFields: true,
-    generateId: generateUUID,
-    experimental_throttle: 100,
     onFinish: () => {
       mutate("threads").then(() => {
         router.push(`/chat/${threadId}`);
       });
     },
+    sendExtraMessageFields: true,
+    generateId: generateUUID,
+    experimental_throttle: 100,
   });
 
   const isCreatingThread = useMemo(() => {

@@ -41,7 +41,10 @@ import {
   filterMcpServerCustomizations,
   workflowToVercelAITools,
 } from "./shared.chat";
-import { rememberMcpServerCustomizationsAction } from "./actions";
+import {
+  generateTitleFromUserMessageAction,
+  rememberMcpServerCustomizationsAction,
+} from "./actions";
 import { getSession } from "auth/server";
 import { colorize } from "consola/utils";
 import { isVercelAIWorkflowTool } from "app-types/workflow";
@@ -68,6 +71,7 @@ export async function POST(request: Request) {
       chatModel,
       toolChoice,
       allowedAppDefaultToolkit,
+      autoTitle,
       allowedMcpServers,
       projectId,
       mentions = [],
@@ -78,10 +82,13 @@ export async function POST(request: Request) {
     let thread = await chatRepository.selectThreadDetails(id);
 
     if (!thread) {
+      logger.info(`create chat thread: ${id}`);
       const newThread = await chatRepository.insertThread({
         id,
         projectId: projectId ?? null,
-        title: "",
+        title: autoTitle
+          ? await generateTitleFromUserMessageAction({ message, model })
+          : "",
         userId: session.user.id,
       });
       thread = await chatRepository.selectThreadDetails(newThread.id);
@@ -207,11 +214,11 @@ export async function POST(request: Request) {
           })
           .unwrap();
 
-        logger.debug(`tool mode: ${toolChoice}, mentions: ${mentions.length}`);
-        logger.debug(
+        logger.info(`tool mode: ${toolChoice}, mentions: ${mentions.length}`);
+        logger.info(
           `binding tool count APP_DEFAULT: ${Object.keys(APP_DEFAULT_TOOLS ?? {}).length}, MCP: ${Object.keys(MCP_TOOLS ?? {}).length}, Workflow: ${Object.keys(WORKFLOW_TOOLS ?? {}).length}`,
         );
-        logger.debug(`model: ${chatModel?.provider}/${chatModel?.model}`);
+        logger.info(`model: ${chatModel?.provider}/${chatModel?.model}`);
 
         const result = streamText({
           model,

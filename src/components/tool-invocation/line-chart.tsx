@@ -28,6 +28,7 @@ import {
 
 import { JsonViewPopup } from "../json-view-popup";
 import { sanitizeCssVariableName } from "./shared.tool-invocation";
+import { generateUniqueKey } from "lib/utils";
 // LineChart component props interface
 export interface LineChartProps {
   // Chart title (required)
@@ -58,8 +59,39 @@ const chartColors = [
 export function LineChart(props: LineChartProps) {
   const { title, data, description, yAxisLabel } = props;
 
+  const deduplicateData = React.useMemo(() => {
+    return data.reduce(
+      (acc, item) => {
+        const names = acc.map((item) => item.xAxisLabel);
+        const newXAxisLabel = generateUniqueKey(item.xAxisLabel, names);
+        return [
+          ...acc,
+          {
+            xAxisLabel: newXAxisLabel,
+            series: item.series.reduce(
+              (acc, item) => {
+                const names = acc.map((item) => item.seriesName);
+                const newSeriesName = generateUniqueKey(item.seriesName, names);
+                return [
+                  ...acc,
+                  {
+                    ...item,
+                    seriesName: newSeriesName,
+                  },
+                ];
+              },
+              [] as LineChartProps["data"][number]["series"],
+            ),
+          },
+        ];
+      },
+      [] as LineChartProps["data"],
+    );
+  }, [data]);
+
   // Get series names from the first data item (assuming all items have the same series)
-  const seriesNames = data[0]?.series.map((item) => item.seriesName) || [];
+  const seriesNames =
+    deduplicateData[0]?.series.map((item) => item.seriesName) || [];
 
   // Generate chart configuration dynamically
   const chartConfig = React.useMemo(() => {
@@ -81,7 +113,7 @@ export function LineChart(props: LineChartProps) {
 
   // Generate chart data for Recharts
   const chartData = React.useMemo(() => {
-    return data.map((item) => {
+    return deduplicateData.map((item) => {
       const result: any = {
         name: item.xAxisLabel,
         label: item.xAxisLabel,
@@ -94,7 +126,7 @@ export function LineChart(props: LineChartProps) {
 
       return result;
     });
-  }, [data]);
+  }, [deduplicateData]);
 
   return (
     <Card className="bg-card">
@@ -102,7 +134,12 @@ export function LineChart(props: LineChartProps) {
         <CardTitle className="flex items-center">
           Line Chart - {title}
           <div className="absolute right-4 top-0">
-            <JsonViewPopup data={props} />
+            <JsonViewPopup
+              data={{
+                ...props,
+                data: deduplicateData,
+              }}
+            />
           </div>
         </CardTitle>
         {description && <CardDescription>{description}</CardDescription>}
@@ -138,9 +175,9 @@ export function LineChart(props: LineChartProps) {
                   content={<ChartTooltipContent />}
                 />
                 <Legend />
-                {seriesNames.map((seriesName) => (
+                {seriesNames.map((seriesName, index) => (
                   <Line
-                    key={seriesName}
+                    key={index}
                     type="monotone"
                     name={seriesName}
                     dataKey={sanitizeCssVariableName(seriesName)}
