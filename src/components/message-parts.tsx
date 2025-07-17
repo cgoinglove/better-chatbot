@@ -473,11 +473,9 @@ const WebSearchToolInvocation = dynamic(
   },
 );
 
-const SimpleJavascriptExecutionToolPart = dynamic(
+const CodeExecutor = dynamic(
   () =>
-    import("./tool-invocation/code-executor").then(
-      (mod) => mod.SimpleJavascriptExecutionToolPart,
-    ),
+    import("./tool-invocation/code-executor").then((mod) => mod.CodeExecutor),
   {
     ssr: false,
     loading: () => <Skeleton className="h-64 w-full rounded-md" />,
@@ -552,7 +550,7 @@ export const ToolMessagePart = memo(
 
       if (toolName === DefaultToolName.JavascriptExecution) {
         return (
-          <SimpleJavascriptExecutionToolPart
+          <CodeExecutor
             part={toolInvocation}
             onResult={
               onPoxyToolCall
