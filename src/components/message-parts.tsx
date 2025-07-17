@@ -259,7 +259,7 @@ export const AssistMessagePart = memo(function AssistMessagePart({
       .unwrap();
   }, [message.id]);
 
-  const handleModelChange = (model: ChatModel) => {
+  const handleModelChange = () => {
     safe(() => setIsLoading(true))
       .ifOk(() =>
         threadId
@@ -275,15 +275,7 @@ export const AssistMessagePart = memo(function AssistMessagePart({
           return messages;
         }),
       )
-      .ifOk(() =>
-        reload({
-          body: {
-            model,
-            action: "update-assistant",
-            id: threadId,
-          },
-        }),
-      )
+      .ifOk(() => reload())
       .ifFail((error) => toast.error(error.message))
       .watch(() => setIsLoading(false))
       .unwrap();
@@ -322,21 +314,22 @@ export const AssistMessagePart = memo(function AssistMessagePart({
           <Tooltip>
             <TooltipTrigger asChild>
               <div>
-                <SelectModel onSelect={handleModelChange}>
-                  <Button
-                    data-testid="message-edit-button"
-                    variant="ghost"
-                    size="icon"
-                    className={cn(
-                      "size-3! p-4! opacity-0 group-hover/message:opacity-100",
-                    )}
-                  >
-                    {<RefreshCw />}
-                  </Button>
-                </SelectModel>
+                {/* <SelectModel onSelect={handleModelChange}> */}
+                <Button
+                  data-testid="message-edit-button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleModelChange}
+                  className={cn(
+                    "size-3! p-4! opacity-0 group-hover/message:opacity-100",
+                  )}
+                >
+                  {<RefreshCw />}
+                </Button>
+                {/* </SelectModel> */}
               </div>
             </TooltipTrigger>
-            <TooltipContent>Change Model</TooltipContent>
+            <TooltipContent>Reload Chat</TooltipContent>
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
