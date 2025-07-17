@@ -12,26 +12,14 @@ import {
   Trash2,
   ChevronRight,
   TriangleAlert,
-  XIcon,
-  Loader2,
-  AlertTriangleIcon,
-  Percent,
   HammerIcon,
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { Button } from "ui/button";
 import { Markdown } from "./markdown";
-import { cn, isObject, safeJSONParse, toAny } from "lib/utils";
+import { cn, safeJSONParse } from "lib/utils";
 import JsonView from "ui/json-view";
-import {
-  useMemo,
-  useState,
-  memo,
-  useEffect,
-  useRef,
-  Suspense,
-  useCallback,
-} from "react";
+import { useMemo, useState, memo, useEffect, useRef, useCallback } from "react";
 import { MessageEditor } from "./message-editor";
 import type { UseChatHelpers } from "@ai-sdk/react";
 import { useCopy } from "@/hooks/use-copy";
@@ -45,43 +33,30 @@ import {
 
 import { toast } from "sonner";
 import { safe } from "ts-safe";
-import { ChatModel, ClientToolInvocation } from "app-types/chat";
+import {
+  ChatModel,
+  ClientToolInvocation,
+  ToolInvocationUIPart,
+} from "app-types/chat";
 
 import { Skeleton } from "ui/skeleton";
-import { PieChart } from "./tool-invocation/pie-chart";
-import { BarChart } from "./tool-invocation/bar-chart";
-import { LineChart } from "./tool-invocation/line-chart";
+
 import { useTranslations } from "next-intl";
 import { extractMCPToolId } from "lib/ai/mcp/mcp-tool-id";
 import { Separator } from "ui/separator";
 
 import { TextShimmer } from "ui/text-shimmer";
 import equal from "lib/equal";
-import {
-  isVercelAIWorkflowTool,
-  VercelAIWorkflowToolStreamingResult,
-} from "app-types/workflow";
-import { NodeIcon } from "./workflow/node-icon";
-import { NodeResultPopup } from "./workflow/node-result-popup";
-
-import { Alert, AlertDescription, AlertTitle } from "ui/alert";
+import { isVercelAIWorkflowTool } from "app-types/workflow";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
-import { GlobalIcon } from "ui/global-icon";
-
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "ui/hover-card";
-import { notify } from "lib/notify";
 import { DefaultToolName } from "lib/ai/tools";
-import { TavilyResponse } from "lib/ai/tools/web/web-search";
 
-import { CodeBlock } from "ui/CodeBlock";
-import { SafeJsExecutionResult, safeJsRun } from "lib/safe-js-run";
-import { SafePythonExecutionResult, safePythonRun } from "lib/safe-python-run";
+import { WorkflowInvocation } from "./tool-invocation/workflow-invocation";
+import dynamic from "next/dynamic";
 
 type MessagePart = UIMessage["parts"][number];
-
 type TextMessagePart = Extract<MessagePart, { type: "text" }>;
 type AssistMessagePart = Extract<MessagePart, { type: "text" }>;
-type ToolMessagePart = Extract<MessagePart, { type: "tool-invocation" }>;
 
 interface UserMessagePartProps {
   part: TextMessagePart;
@@ -104,7 +79,7 @@ interface AssistMessagePartProps {
 }
 
 interface ToolMessagePartProps {
-  part: ToolMessagePart;
+  part: ToolInvocationUIPart;
   messageId: string;
   showActions: boolean;
   isLast?: boolean;
@@ -114,129 +89,144 @@ interface ToolMessagePartProps {
   setMessages?: UseChatHelpers["setMessages"];
 }
 
-export const UserMessagePart = memo(function UserMessagePart({
-  part,
-  isLast,
-  status,
-  message,
-  setMessages,
-  reload,
-  isError,
-}: UserMessagePartProps) {
-  const { copied, copy } = useCopy();
-  const [mode, setMode] = useState<"view" | "edit">("view");
-  const [isDeleting, setIsDeleting] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-  const scrolledRef = useRef(false);
+export const UserMessagePart = memo(
+  function UserMessagePart({
+    part,
+    isLast,
+    status,
+    message,
+    setMessages,
+    reload,
+    isError,
+  }: UserMessagePartProps) {
+    const { copied, copy } = useCopy();
+    const [mode, setMode] = useState<"view" | "edit">("view");
+    const [isDeleting, setIsDeleting] = useState(false);
+    const ref = useRef<HTMLDivElement>(null);
+    const scrolledRef = useRef(false);
 
-  const deleteMessage = useCallback(() => {
-    safe(() => setIsDeleting(true))
-      .ifOk(() => deleteMessageAction(message.id))
-      .ifOk(() =>
-        setMessages((messages) => {
-          const index = messages.findIndex((m) => m.id === message.id);
-          if (index !== -1) {
-            return messages.filter((_, i) => i !== index);
-          }
-          return messages;
-        }),
-      )
-      .ifFail((error) => toast.error(error.message))
-      .watch(() => setIsDeleting(false))
-      .unwrap();
-  }, [message.id]);
+    const deleteMessage = useCallback(() => {
+      safe(() => setIsDeleting(true))
+        .ifOk(() => deleteMessageAction(message.id))
+        .ifOk(() =>
+          setMessages((messages) => {
+            const index = messages.findIndex((m) => m.id === message.id);
+            if (index !== -1) {
+              return messages.filter((_, i) => i !== index);
+            }
+            return messages;
+          }),
+        )
+        .ifFail((error) => toast.error(error.message))
+        .watch(() => setIsDeleting(false))
+        .unwrap();
+    }, [message.id]);
 
-  useEffect(() => {
-    if (status === "submitted" && isLast && !scrolledRef.current) {
-      scrolledRef.current = true;
+    useEffect(() => {
+      if (status === "submitted" && isLast && !scrolledRef.current) {
+        scrolledRef.current = true;
 
-      ref.current?.scrollIntoView({ behavior: "smooth" });
+        ref.current?.scrollIntoView({ behavior: "smooth" });
+      }
+    }, [status]);
+
+    if (mode === "edit") {
+      return (
+        <div className="flex flex-row gap-2 items-start w-full">
+          <MessageEditor
+            message={message}
+            setMode={setMode}
+            setMessages={setMessages}
+            reload={reload}
+          />
+        </div>
+      );
     }
-  }, [status]);
 
-  if (mode === "edit") {
     return (
-      <div className="flex flex-row gap-2 items-start w-full">
-        <MessageEditor
-          message={message}
-          setMode={setMode}
-          setMessages={setMessages}
-          reload={reload}
-        />
+      <div className="flex flex-col gap-2 items-end my-2">
+        <div
+          data-testid="message-content"
+          className={cn(
+            "flex flex-col gap-4 max-w-full ring ring-input",
+            {
+              "bg-accent text-accent-foreground px-4 py-3 rounded-2xl": isLast,
+              "opacity-50": isError,
+            },
+            isError && "border-destructive border",
+          )}
+        >
+          <p className={cn("whitespace-pre-wrap text-sm break-words")}>
+            {part.text}
+          </p>
+        </div>
+        {isLast && (
+          <div className="flex w-full justify-end opacity-0 group-hover/message:opacity-100 transition-opacity duration-300">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  data-testid="message-edit-button"
+                  variant="ghost"
+                  size="icon"
+                  className={cn("size-3! p-4!")}
+                  onClick={() => copy(part.text)}
+                >
+                  {copied ? <Check /> : <Copy />}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">Copy</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  data-testid="message-edit-button"
+                  variant="ghost"
+                  size="icon"
+                  className="size-3! p-4!"
+                  onClick={() => setMode("edit")}
+                >
+                  <Pencil />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">Edit</TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  disabled={isDeleting}
+                  onClick={deleteMessage}
+                  variant="ghost"
+                  size="icon"
+                  className="size-3! p-4! hover:text-destructive"
+                >
+                  {isDeleting ? (
+                    <Loader className="animate-spin" />
+                  ) : (
+                    <Trash2 />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent className="text-destructive" side="bottom">
+                Delete Message
+              </TooltipContent>
+            </Tooltip>
+          </div>
+        )}
+        <div ref={ref} className="min-w-0" />
       </div>
     );
-  }
-
-  return (
-    <div className="flex flex-col gap-2 items-end my-2">
-      <div
-        data-testid="message-content"
-        className={cn(
-          "flex flex-col gap-4 max-w-full ring ring-input",
-          {
-            "bg-accent text-accent-foreground px-4 py-3 rounded-2xl": isLast,
-            "opacity-50": isError,
-          },
-          isError && "border-destructive border",
-        )}
-      >
-        <p className={cn("whitespace-pre-wrap text-sm break-words")}>
-          {part.text}
-        </p>
-      </div>
-      {isLast && (
-        <div className="flex w-full justify-end opacity-0 group-hover/message:opacity-100 transition-opacity duration-300">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                data-testid="message-edit-button"
-                variant="ghost"
-                size="icon"
-                className={cn("size-3! p-4!")}
-                onClick={() => copy(part.text)}
-              >
-                {copied ? <Check /> : <Copy />}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom">Copy</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                data-testid="message-edit-button"
-                variant="ghost"
-                size="icon"
-                className="size-3! p-4!"
-                onClick={() => setMode("edit")}
-              >
-                <Pencil />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom">Edit</TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                disabled={isDeleting}
-                onClick={deleteMessage}
-                variant="ghost"
-                size="icon"
-                className="size-3! p-4! hover:text-destructive"
-              >
-                {isDeleting ? <Loader className="animate-spin" /> : <Trash2 />}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent className="text-destructive" side="bottom">
-              Delete Message
-            </TooltipContent>
-          </Tooltip>
-        </div>
-      )}
-      <div ref={ref} className="min-w-0" />
-    </div>
-  );
-});
+  },
+  (prev, next) => {
+    if (prev.part.text != next.part.text) return false;
+    if (prev.isError != next.isError) return false;
+    if (prev.isLast != next.isLast) return false;
+    if (prev.status != next.status) return false;
+    if (prev.message.id != next.message.id) return false;
+    if (!equal(prev.part, next.part)) return false;
+    return true;
+  },
+);
 UserMessagePart.displayName = "UserMessagePart";
 
 export const AssistMessagePart = memo(function AssistMessagePart({
@@ -371,6 +361,127 @@ export const AssistMessagePart = memo(function AssistMessagePart({
 });
 AssistMessagePart.displayName = "AssistMessagePart";
 
+export const ReasoningPart = memo(function ReasoningPart({
+  reasoning,
+  isThinking,
+}: {
+  reasoning: string;
+  isThinking?: boolean;
+}) {
+  const [isExpanded, setIsExpanded] = useState(isThinking);
+
+  const variants = {
+    collapsed: {
+      height: 0,
+      opacity: 0,
+      marginTop: 0,
+      marginBottom: 0,
+    },
+    expanded: {
+      height: "auto",
+      opacity: 1,
+      marginTop: "1rem",
+      marginBottom: "0.5rem",
+    },
+  };
+
+  useEffect(() => {
+    if (!isThinking && isExpanded) {
+      setIsExpanded(false);
+    }
+  }, [isThinking]);
+
+  return (
+    <div
+      className="flex flex-col cursor-pointer"
+      onClick={() => {
+        setIsExpanded(!isExpanded);
+      }}
+    >
+      <div className="flex flex-row gap-2 items-center text-ring hover:text-primary transition-colors">
+        {isThinking ? (
+          <TextShimmer>Reasoned for a few seconds</TextShimmer>
+        ) : (
+          <div className="font-medium">Reasoned for a few seconds</div>
+        )}
+
+        <button
+          data-testid="message-reasoning-toggle"
+          type="button"
+          className="cursor-pointer"
+        >
+          <ChevronDownIcon size={16} />
+        </button>
+      </div>
+
+      <div className="pl-4">
+        <AnimatePresence initial={false}>
+          {isExpanded && (
+            <motion.div
+              data-testid="message-reasoning"
+              key="content"
+              initial="collapsed"
+              animate="expanded"
+              exit="collapsed"
+              variants={variants}
+              transition={{ duration: 0.2, ease: "easeInOut" }}
+              style={{ overflow: "hidden" }}
+              className="pl-6 text-muted-foreground border-l flex flex-col gap-4"
+            >
+              <Markdown>{reasoning}</Markdown>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+});
+ReasoningPart.displayName = "ReasoningPart";
+
+const PieChart = dynamic(
+  () => import("./tool-invocation/pie-chart").then((mod) => mod.PieChart),
+  {
+    ssr: false,
+    loading: () => <Skeleton className="h-64 w-full rounded-md" />,
+  },
+);
+
+const BarChart = dynamic(
+  () => import("./tool-invocation/bar-chart").then((mod) => mod.BarChart),
+  {
+    ssr: false,
+    loading: () => <Skeleton className="h-64 w-full rounded-md" />,
+  },
+);
+
+const LineChart = dynamic(
+  () => import("./tool-invocation/line-chart").then((mod) => mod.LineChart),
+  {
+    ssr: false,
+    loading: () => <Skeleton className="h-64 w-full rounded-md" />,
+  },
+);
+
+const WebSearchToolInvocation = dynamic(
+  () =>
+    import("./tool-invocation/web-search").then(
+      (mod) => mod.WebSearchToolInvocation,
+    ),
+  {
+    ssr: false,
+    loading: () => <Skeleton className="h-64 w-full rounded-md" />,
+  },
+);
+
+const CodeExecutor = dynamic(
+  () =>
+    import("./tool-invocation/code-executor").then((mod) => mod.CodeExecutor),
+  {
+    ssr: false,
+    loading: () => <Skeleton className="h-64 w-full rounded-md" />,
+  },
+);
+
 export const ToolMessagePart = memo(
   ({
     part,
@@ -405,15 +516,16 @@ export const ToolMessagePart = memo(
         .ifFail((error) => toast.error(error.message))
         .watch(() => setIsDeleting(false))
         .unwrap();
-    }, [messageId, setMessages]);
+    }, [messageId]);
 
     const result = useMemo(() => {
       if (state === "result") {
-        return toolInvocation.result?.content
+        return Array.isArray(toolInvocation.result?.content)
           ? {
               ...toolInvocation.result,
               content: toolInvocation.result.content.map((node) => {
-                if (node.type === "text") {
+                // mcp tools
+                if (node?.type === "text" && typeof node?.text === "string") {
                   const parsed = safeJSONParse(node.text);
                   return {
                     ...node,
@@ -426,36 +538,19 @@ export const ToolMessagePart = memo(
           : toolInvocation.result;
       }
       return null;
-    }, [toolInvocation, onPoxyToolCall]);
+    }, [state, (toolInvocation as any).result]);
 
     const CustomToolComponent = useMemo(() => {
       if (
         toolName === DefaultToolName.WebSearch ||
         toolName === DefaultToolName.WebContent
       ) {
-        return <SearchToolPart part={toolInvocation} />;
+        return <WebSearchToolInvocation part={toolInvocation} />;
       }
 
       if (toolName === DefaultToolName.JavascriptExecution) {
         return (
-          <SimpleJavascriptExecutionToolPart
-            part={toolInvocation}
-            onResult={
-              onPoxyToolCall
-                ? (result) =>
-                    onPoxyToolCall?.({
-                      action: "direct",
-                      result,
-                    })
-                : undefined
-            }
-          />
-        );
-      }
-
-      if (toolName === DefaultToolName.PythonExecution) {
-        return (
-          <SimplePythonExecutionToolPart
+          <CodeExecutor
             part={toolInvocation}
             onResult={
               onPoxyToolCall
@@ -474,43 +569,25 @@ export const ToolMessagePart = memo(
         switch (toolName) {
           case DefaultToolName.CreatePieChart:
             return (
-              <Suspense
-                fallback={<Skeleton className="h-64 w-full rounded-md" />}
-              >
-                <PieChart
-                  key={`${toolCallId}-${toolName}`}
-                  {...(args as any)}
-                />
-              </Suspense>
+              <PieChart key={`${toolCallId}-${toolName}`} {...(args as any)} />
             );
           case DefaultToolName.CreateBarChart:
             return (
-              <Suspense
-                fallback={<Skeleton className="h-64 w-full rounded-md" />}
-              >
-                <BarChart
-                  key={`${toolCallId}-${toolName}`}
-                  {...(args as any)}
-                />
-              </Suspense>
+              <BarChart key={`${toolCallId}-${toolName}`} {...(args as any)} />
             );
           case DefaultToolName.CreateLineChart:
             return (
-              <Suspense
-                fallback={<Skeleton className="h-64 w-full rounded-md" />}
-              >
-                <LineChart
-                  key={`${toolCallId}-${toolName}`}
-                  {...(args as any)}
-                />
-              </Suspense>
+              <LineChart key={`${toolCallId}-${toolName}`} {...(args as any)} />
             );
         }
       }
       return null;
     }, [toolName, state, onPoxyToolCall, result, args]);
 
-    const isWorkflowTool = isVercelAIWorkflowTool(result);
+    const isWorkflowTool = useMemo(
+      () => isVercelAIWorkflowTool(result),
+      [result],
+    );
 
     const { serverName: mcpServerName, toolName: mcpToolName } = useMemo(() => {
       return extractMCPToolId(toolName);
@@ -526,7 +603,7 @@ export const ToolMessagePart = memo(
     }, [isWorkflowTool, result, state, isLast, !!onPoxyToolCall]);
 
     return (
-      <div key={toolCallId} className="group w-full">
+      <div className="group w-full">
         {CustomToolComponent ? (
           CustomToolComponent
         ) : (
@@ -618,7 +695,7 @@ export const ToolMessagePart = memo(
                   )}
                 </div>
                 {!result ? null : isWorkflowTool ? (
-                  <WorkflowToolDetail result={result} />
+                  <WorkflowInvocation result={result} />
                 ) : (
                   <div
                     className={cn(
@@ -730,809 +807,3 @@ export const ToolMessagePart = memo(
 );
 
 ToolMessagePart.displayName = "ToolMessagePart";
-
-function SearchToolPart({ part }: { part: ToolMessagePart["toolInvocation"] }) {
-  const t = useTranslations();
-
-  const result = useMemo(() => {
-    if (part.state != "result") return null;
-    return part.result as TavilyResponse & { isError: boolean; error?: string };
-  }, [part.state]);
-  const [errorSrc, setErrorSrc] = useState<string[]>([]);
-
-  const options = useMemo(() => {
-    return (
-      <HoverCard openDelay={200} closeDelay={0}>
-        <HoverCardTrigger asChild>
-          <span className="hover:text-primary transition-colors text-xs text-muted-foreground">
-            {t("Chat.Tool.searchOptions")}
-          </span>
-        </HoverCardTrigger>
-        <HoverCardContent className="max-w-xs md:max-w-md! w-full! overflow-auto flex flex-col">
-          <p className="text-xs text-muted-foreground px-2 mb-2">
-            {t("Chat.Tool.searchOptionsDescription")}
-          </p>
-          <div className="p-2">
-            <JsonView data={part.args} />
-          </div>
-        </HoverCardContent>
-      </HoverCard>
-    );
-  }, [part.args]);
-
-  const onError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-    const target = e.currentTarget;
-    if (errorSrc.includes(target.src)) return;
-    setErrorSrc([...errorSrc, target.src]);
-  };
-
-  const images = useMemo(() => {
-    return (
-      result?.images?.filter((image) => !errorSrc.includes(image.url)) ?? []
-    );
-  }, [result?.images, errorSrc]);
-
-  if (part.state != "result")
-    return (
-      <div className="flex items-center gap-2 text-sm">
-        <GlobalIcon className="size-5 wiggle text-muted-foreground" />
-        <TextShimmer>{t("Chat.Tool.webSearching")}</TextShimmer>
-      </div>
-    );
-  return (
-    <div className="flex flex-col gap-2">
-      <div className="flex items-center gap-2">
-        <GlobalIcon className="size-5 text-muted-foreground" />
-        <span className="text-sm font-semibold">
-          {t("Chat.Tool.searchedTheWeb")}
-        </span>
-        {options}
-      </div>
-      <div className="flex gap-2">
-        <div className="px-2.5">
-          <Separator
-            orientation="vertical"
-            className="bg-gradient-to-b from-border to-transparent from-80%"
-          />
-        </div>
-        <div className="flex flex-col gap-2 pb-2">
-          {Boolean(images?.length) && (
-            <div className="grid grid-cols-3 gap-3 max-w-2xl">
-              {images.map((image, i) => {
-                if (!image.url) return null;
-                return (
-                  <Tooltip key={i}>
-                    <TooltipTrigger asChild>
-                      <div
-                        key={image.url}
-                        onClick={() => {
-                          notify.component({
-                            className: "max-w-[90vw]! max-h-[90vh]! p-6!",
-                            children: (
-                              <div className="flex flex-col h-full gap-4">
-                                <div className="flex-1 flex items-center justify-center min-h-0 py-6">
-                                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                                  <img
-                                    src={image.url}
-                                    className="max-w-[80vw] max-h-[80vh] object-contain rounded-lg"
-                                    alt={image.description}
-                                    onError={onError}
-                                  />
-                                </div>
-                              </div>
-                            ),
-                          });
-                        }}
-                        className="block shadow rounded-lg overflow-hidden ring ring-input cursor-pointer"
-                      >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          loading="lazy"
-                          src={image.url}
-                          alt={image.description}
-                          className="w-full h-36 object-cover hover:scale-120 transition-transform duration-300"
-                          onError={onError}
-                        />
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent className="p-4 max-w-xs whitespace-pre-wrap break-words">
-                      <p className="text-xs text-muted-foreground">
-                        {image.description || image.url}
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                );
-              })}
-            </div>
-          )}
-          <div className="flex flex-wrap gap-1">
-            {result?.isError ? (
-              <p className="text-xs text-destructive flex items-center gap-1">
-                <AlertTriangleIcon className="size-3.5" />
-                {result.error || "Error"}
-              </p>
-            ) : (
-              (result as TavilyResponse)?.results?.map((result, i) => {
-                return (
-                  <HoverCard key={i} openDelay={200} closeDelay={0}>
-                    <HoverCardTrigger asChild>
-                      <a
-                        href={result.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="group rounded-full bg-secondary pl-1.5 pr-2 py-1.5 text-xs flex items-center gap-1 hover:bg-input hover:ring hover:ring-blue-500 transition-all cursor-pointer"
-                      >
-                        <div className="rounded-full bg-input ring ring-input">
-                          <Avatar className="size-3 rounded-full">
-                            <AvatarImage src={result.favicon} />
-                            <AvatarFallback>
-                              {result.title?.slice(0, 1).toUpperCase() || "?"}
-                            </AvatarFallback>
-                          </Avatar>
-                        </div>
-                        <span className="truncate max-w-44">{result.url}</span>
-                      </a>
-                    </HoverCardTrigger>
-
-                    <HoverCardContent className="flex flex-col gap-1 p-6">
-                      <div className="flex items-center gap-2">
-                        <div className="rounded-full ring ring-input">
-                          <Avatar className="size-6 rounded-full">
-                            <AvatarImage src={result.favicon} />
-                            <AvatarFallback>
-                              {result.title?.slice(0, 1).toUpperCase() || "?"}
-                            </AvatarFallback>
-                          </Avatar>
-                        </div>
-                        <span
-                          className={cn(
-                            "font-medium",
-                            !result.title && "truncate",
-                          )}
-                        >
-                          {result.title || result.url}
-                        </span>
-                      </div>
-                      <div className="flex flex-col gap-2 mt-4">
-                        <div className="relative">
-                          <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent to-card from-80% " />
-                          <p className="text-xs text-muted-foreground max-h-60 overflow-y-auto">
-                            {result.content || result.raw_content}
-                          </p>
-                        </div>
-                      </div>
-                    </HoverCardContent>
-                  </HoverCard>
-                );
-              })
-            )}
-          </div>
-          {result?.results?.length && (
-            <p className="text-xs text-muted-foreground ml-1 flex items-center gap-1">
-              {t("Common.resultsFound", {
-                count: result?.results?.length,
-              })}
-            </p>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export const ReasoningPart = memo(function ReasoningPart({
-  reasoning,
-}: {
-  reasoning: string;
-  isThinking?: boolean;
-}) {
-  const [isExpanded, setIsExpanded] = useState(false);
-
-  const variants = {
-    collapsed: {
-      height: 0,
-      opacity: 0,
-      marginTop: 0,
-      marginBottom: 0,
-    },
-    expanded: {
-      height: "auto",
-      opacity: 1,
-      marginTop: "1rem",
-      marginBottom: "0.5rem",
-    },
-  };
-
-  return (
-    <div
-      className="flex flex-col cursor-pointer"
-      onClick={() => {
-        setIsExpanded(!isExpanded);
-      }}
-    >
-      <div className="flex flex-row gap-2 items-center text-ring hover:text-primary transition-colors">
-        <div className="font-medium">Reasoned for a few seconds</div>
-        <button
-          data-testid="message-reasoning-toggle"
-          type="button"
-          className="cursor-pointer"
-        >
-          <ChevronDownIcon size={16} />
-        </button>
-      </div>
-
-      <div className="pl-4">
-        <AnimatePresence initial={false}>
-          {isExpanded && (
-            <motion.div
-              data-testid="message-reasoning"
-              key="content"
-              initial="collapsed"
-              animate="expanded"
-              exit="collapsed"
-              variants={variants}
-              transition={{ duration: 0.2, ease: "easeInOut" }}
-              style={{ overflow: "hidden" }}
-              className="pl-6 text-muted-foreground border-l flex flex-col gap-4"
-            >
-              <Markdown>{reasoning}</Markdown>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    </div>
-  );
-});
-ReasoningPart.displayName = "ReasoningPart";
-
-export function WorkflowToolDetail({
-  result,
-}: { result: VercelAIWorkflowToolStreamingResult }) {
-  const { copied, copy } = useCopy();
-  const savedResult = useRef<VercelAIWorkflowToolStreamingResult>(result);
-  const output = useMemo(() => {
-    if (result.status == "running") return null;
-    if (result.status == "fail")
-      return (
-        <Alert variant={"destructive"} className="border-destructive">
-          <AlertTriangleIcon className="size-3" />
-          <AlertTitle>{result?.error?.name || "ERROR"}</AlertTitle>
-          <AlertDescription>{result.error?.message}</AlertDescription>
-        </Alert>
-      );
-    if (!result.result) return null;
-
-    return (
-      <div className="w-full bg-card p-4 border text-xs rounded-lg text-muted-foreground">
-        <div className="flex items-center">
-          <h5 className="text-muted-foreground font-medium select-none">
-            Response
-          </h5>
-          <div className="flex-1" />
-          {copied ? (
-            <Check className="size-3" />
-          ) : (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-3 text-muted-foreground"
-              onClick={() => copy(JSON.stringify(result.result))}
-            >
-              <Copy className="size-3" />
-            </Button>
-          )}
-        </div>
-        <div className="p-2 max-h-[300px] overflow-y-auto">
-          <JsonView data={result.result} />
-        </div>
-      </div>
-    );
-  }, [result.status, result.error, result.result, copied]);
-  useEffect(() => {
-    if (result.status == "running") {
-      savedResult.current = result;
-    }
-  }, [result]);
-
-  return (
-    <div className="w-full flex flex-col gap-1">
-      {result.history.map((item, i) => {
-        const result = item.result || savedResult.current.history[i]?.result;
-        return (
-          <NodeResultPopup
-            key={item.id}
-            disabled={!result}
-            history={{
-              name: item.name,
-              status: item.status,
-              startedAt: item.startedAt,
-              endedAt: item.endedAt,
-              error: item.error?.message,
-              result,
-            }}
-          >
-            <div
-              key={item.id}
-              className={cn(
-                "flex items-center gap-2 text-sm rounded-sm px-2 py-1.5 relative",
-                item.status == "fail" && "text-destructive",
-                !!result && "cursor-pointer hover:bg-secondary",
-              )}
-            >
-              <div className="border rounded overflow-hidden">
-                <NodeIcon
-                  type={item.kind}
-                  iconClassName="size-3"
-                  className="rounded-none"
-                />
-              </div>
-              {item.status == "running" ? (
-                <TextShimmer className="font-semibold">
-                  {`${item.name} Running...`}
-                </TextShimmer>
-              ) : (
-                <span className="font-semibold">{item.name}</span>
-              )}
-              <span
-                className={cn(
-                  "ml-auto text-xs",
-                  item.status != "fail" && "text-muted-foreground",
-                )}
-              >
-                {item.status != "running" &&
-                  ((item.endedAt! - item.startedAt!) / 1000).toFixed(2)}
-              </span>
-              {item.status == "success" ? (
-                <Check className="size-3" />
-              ) : item.status == "fail" ? (
-                <XIcon className="size-3" />
-              ) : (
-                <Loader2 className="size-3 animate-spin" />
-              )}
-            </div>
-          </NodeResultPopup>
-        );
-      })}
-      <div className="mt-2">{output}</div>
-    </div>
-  );
-}
-
-export const SimpleJavascriptExecutionToolPart = memo(
-  function SimpleJavascriptExecutionToolPart({
-    part,
-    onResult,
-  }: {
-    part: ToolMessagePart["toolInvocation"];
-    onResult?: (result?: any) => void;
-  }) {
-    const isRun = useRef(false);
-    const [isExecuting, setIsExecuting] = useState(false);
-
-    const [realtimeLogs, setRealtimeLogs] = useState<
-      (SafeJsExecutionResult["logs"][number] & { time: number })[]
-    >([]);
-
-    const codeResultContainerRef = useRef<HTMLDivElement>(null);
-
-    const runCode = useCallback(
-      async (code: string, input: any) => {
-        const result = await safeJsRun(code, input, 60000, (log) => {
-          setRealtimeLogs((prev) => [...prev, { ...log, time: Date.now() }]);
-        });
-
-        onResult?.({
-          ...toAny(result),
-          guide:
-            "The code has already been executed and displayed to the user. Please provide only the output results from console.log() or error details if any occurred. Do not repeat the code itself.",
-        });
-      },
-      [onResult],
-    );
-
-    const isRunning = useMemo(() => {
-      return isExecuting || part.state != "result";
-    }, [isExecuting, part.state]);
-
-    const scrollToCode = useCallback(() => {
-      codeResultContainerRef.current?.scrollTo({
-        top: codeResultContainerRef.current.scrollHeight,
-        behavior: "smooth",
-      });
-    }, []);
-
-    const result = useMemo(() => {
-      if (part.state != "result") return null;
-      return part.result as SafeJsExecutionResult;
-    }, [part]);
-
-    const logs = useMemo(() => {
-      const error = result?.error;
-      const logs = realtimeLogs.length ? realtimeLogs : (result?.logs ?? []);
-
-      if (error) {
-        return [{ type: "error", args: [error], time: Date.now() }, ...logs];
-      }
-
-      return logs;
-    }, [part, realtimeLogs]);
-
-    const reExecute = useCallback(async () => {
-      if (isExecuting) return;
-      setIsExecuting(true);
-      setRealtimeLogs([
-        { type: "info", args: ["Re-executing code..."], time: Date.now() },
-      ]);
-      const code = part.args?.code;
-      const input = part.args?.input;
-      safe(() =>
-        safeJsRun(code, input, 60000, (log) => {
-          setRealtimeLogs((prev) => [...prev, { ...log, time: Date.now() }]);
-        }),
-      ).watch(() => setIsExecuting(false));
-    }, [part.args, isExecuting]);
-
-    const header = useMemo(() => {
-      if (isRunning)
-        return (
-          <>
-            <Loader className="size-3 animate-spin text-muted-foreground" />
-            <TextShimmer className="text-xs">Generating Code...</TextShimmer>
-          </>
-        );
-      return (
-        <>
-          {result?.error ? (
-            <>
-              <AlertTriangleIcon className="size-3 text-destructive" />
-              <span className="text-destructive text-xs">ERROR</span>
-            </>
-          ) : (
-            <>
-              <div className="text-[7px] bg-border rounded-xs w-4 h-4 p-0.5 flex items-end justify-end font-bold">
-                JS
-              </div>
-            </>
-          )}
-        </>
-      );
-    }, [part.state, result, isRunning]);
-
-    const fallback = useMemo(() => {
-      return <CodeFallback />;
-    }, []);
-
-    const logContainer = useMemo(() => {
-      if (!logs.length) return null;
-      return (
-        <div className="p-4 text-[10px] text-foreground flex flex-col gap-1">
-          <div className="text-foreground flex items-center gap-1">
-            {isRunning ? (
-              <Loader className="size-2 animate-spin" />
-            ) : (
-              <div className="w-1 h-1 mr-1 ring ring-border rounded-full" />
-            )}
-            better-chatbot
-            <Percent className="size-2" />
-            {part.state == "result" && (
-              <div
-                className="hover:text-foreground ml-auto px-2 py-1 rounded-sm cursor-pointer text-muted-foreground/80"
-                onClick={reExecute}
-              >
-                retry
-              </div>
-            )}
-          </div>
-          {logs.map((log, i) => {
-            return (
-              <div
-                key={i}
-                className={cn(
-                  "flex gap-1 text-muted-foreground pl-3",
-                  log.type == "error" && "text-destructive",
-                  log.type == "warn" && "text-yellow-500",
-                )}
-              >
-                <div className="w-[8.6rem] hidden md:block">
-                  {new Date(toAny(log).time || Date.now()).toISOString()}
-                </div>
-                <div className="h-[15px] flex items-center">
-                  {log.type == "error" ? (
-                    <AlertTriangleIcon className="size-2" />
-                  ) : log.type == "warn" ? (
-                    <AlertTriangleIcon className="size-2" />
-                  ) : (
-                    <ChevronRight className="size-2" />
-                  )}
-                </div>
-                <div className="flex-1 min-w-0 whitespace-pre-wrap">
-                  {log.args
-                    .map((arg) =>
-                      isObject(arg) ? JSON.stringify(arg) : arg.toString(),
-                    )
-                    .join(" ")}
-                </div>
-              </div>
-            );
-          })}
-          {isRunning && (
-            <div className="ml-3 animate-caret-blink text-muted-foreground">
-              |
-            </div>
-          )}
-        </div>
-      );
-    }, [logs, isRunning]);
-
-    useEffect(() => {
-      if (onResult && part.args && part.state == "call" && !isRun.current) {
-        isRun.current = true;
-        runCode(part.args.code, part.args.input);
-      }
-    }, [part.state, !!onResult]);
-
-    useEffect(() => {
-      if (isRunning) {
-        const closeKey = setInterval(scrollToCode, 300);
-        return () => clearInterval(closeKey);
-      } else if (part.state == "result" && isRun.current) {
-        scrollToCode();
-      }
-    }, [isRunning]);
-
-    return (
-      <div className="flex flex-col">
-        <div className="px-6 py-3">
-          <div
-            ref={codeResultContainerRef}
-            onClick={scrollToCode}
-            className="border overflow-y-auto overflow-x-hidden max-h-[70vh] relative rounded-lg shadow fade-in animate-in duration-500"
-          >
-            <div className="sticky top-0 py-2.5 px-4 flex items-center gap-1.5 z-10 border-b bg-background min-h-[37px]">
-              {header}
-              <div className="flex-1" />
-              <div className="w-1.5 h-1.5 rounded-full bg-input" />
-              <div className="w-1.5 h-1.5 rounded-full bg-input" />
-              <div className="w-1.5 h-1.5 rounded-full bg-input" />
-            </div>
-
-            <div className={`min-h-14 p-6 text-xs`}>
-              <CodeBlock
-                className="p-4 text-[10px] overflow-x-auto"
-                code={part.args?.code}
-                lang="javascript"
-                fallback={fallback}
-              />
-            </div>
-            {logContainer}
-          </div>
-        </div>
-      </div>
-    );
-  },
-);
-
-export const SimplePythonExecutionToolPart = memo(
-  function SimplePythonExecutionToolPart({
-    part,
-    onResult,
-  }: {
-    part: ToolMessagePart["toolInvocation"];
-    onResult?: (result?: any) => void;
-  }) {
-    const isRun = useRef(false);
-    const [isExecuting, setIsExecuting] = useState(false);
-
-    const [realtimeLogs, setRealtimeLogs] = useState<
-      (SafePythonExecutionResult["logs"][number] & { time: number })[]
-    >([]);
-
-    const codeResultContainerRef = useRef<HTMLDivElement>(null);
-
-    const runCode = useCallback(
-      async (code: string, input: any) => {
-        const result = await safePythonRun(code, input, 60000, (log) => {
-          setRealtimeLogs((prev) => [...prev, { ...log, time: Date.now() }]);
-        });
-
-        onResult?.({
-          ...toAny(result),
-          guide:
-            "The code has already been executed and displayed to the user. Please provide only the output results from console.log() or error details if any occurred. Do not repeat the code itself.",
-        });
-      },
-      [onResult],
-    );
-
-    const isRunning = useMemo(() => {
-      return isExecuting || part.state != "result";
-    }, [isExecuting, part.state]);
-
-    const scrollToCode = useCallback(() => {
-      codeResultContainerRef.current?.scrollTo({
-        top: codeResultContainerRef.current.scrollHeight,
-        behavior: "smooth",
-      });
-    }, []);
-
-    const result = useMemo(() => {
-      if (part.state != "result") return null;
-      return part.result as SafePythonExecutionResult;
-    }, [part]);
-
-    const logs = useMemo(() => {
-      const error = result?.error;
-      const logs = realtimeLogs.length ? realtimeLogs : (result?.logs ?? []);
-
-      if (error) {
-        return [{ type: "error", args: [error], time: Date.now() }, ...logs];
-      }
-
-      return logs;
-    }, [part, realtimeLogs]);
-
-    const reExecute = useCallback(async () => {
-      if (isExecuting) return;
-      setIsExecuting(true);
-      setRealtimeLogs([
-        { type: "stdout", args: ["Re-executing code..."], time: Date.now() },
-      ]);
-      const code = part.args?.code;
-      const input = part.args?.input;
-      safe(() =>
-        safePythonRun(code, input, 60000, (log) => {
-          setRealtimeLogs((prev) => [...prev, { ...log, time: Date.now() }]);
-        }),
-      ).watch(() => setIsExecuting(false));
-    }, [part.args, isExecuting]);
-
-    const header = useMemo(() => {
-      if (isRunning)
-        return (
-          <>
-            <Loader className="size-3 animate-spin text-muted-foreground" />
-            <TextShimmer className="text-xs">Generating Code...</TextShimmer>
-          </>
-        );
-      return (
-        <>
-          {result?.error ? (
-            <>
-              <AlertTriangleIcon className="size-3 text-destructive" />
-              <span className="text-destructive text-xs">ERROR</span>
-            </>
-          ) : (
-            <>
-              <div className="text-[7px] bg-border rounded-xs w-4 h-4 p-0.5 flex items-end justify-end font-bold">
-                PY
-              </div>
-            </>
-          )}
-        </>
-      );
-    }, [part.state, result, isRunning]);
-
-    const fallback = useMemo(() => {
-      return <CodeFallback />;
-    }, []);
-
-    const logContainer = useMemo(() => {
-      if (!logs.length) return null;
-      return (
-        <div className="p-4 text-[10px] text-foreground flex flex-col gap-1">
-          <div className="text-foreground flex items-center gap-1">
-            {isRunning ? (
-              <Loader className="size-2 animate-spin" />
-            ) : (
-              <div className="w-1 h-1 mr-1 ring ring-border rounded-full" />
-            )}
-            better-chatbot
-            <Percent className="size-2" />
-            {part.state == "result" && (
-              <div
-                className="hover:text-foreground ml-auto px-2 py-1 rounded-sm cursor-pointer text-muted-foreground/80"
-                onClick={reExecute}
-              >
-                retry
-              </div>
-            )}
-          </div>
-          {logs.map((log, i) => {
-            return (
-              <div
-                key={i}
-                className={cn(
-                  "flex gap-1 text-muted-foreground pl-3",
-                  log.type == "error" && "text-destructive",
-                  log.type == "warn" && "text-yellow-500",
-                )}
-              >
-                <div className="w-[8.6rem] hidden md:block">
-                  {new Date(toAny(log).time || Date.now()).toISOString()}
-                </div>
-                <div className="h-[15px] flex items-center">
-                  {log.type == "error" ? (
-                    <AlertTriangleIcon className="size-2" />
-                  ) : log.type == "warn" ? (
-                    <AlertTriangleIcon className="size-2" />
-                  ) : (
-                    <ChevronRight className="size-2" />
-                  )}
-                </div>
-                <div className="flex-1 min-w-0 whitespace-pre-wrap">
-                  {log.args
-                    .map((arg) =>
-                      isObject(arg) ? JSON.stringify(arg) : arg.toString(),
-                    )
-                    .join(" ")}
-                </div>
-              </div>
-            );
-          })}
-          {isRunning && (
-            <div className="ml-3 animate-caret-blink text-muted-foreground">
-              |
-            </div>
-          )}
-        </div>
-      );
-    }, [logs, isRunning]);
-
-    useEffect(() => {
-      if (onResult && part.args && part.state == "call" && !isRun.current) {
-        isRun.current = true;
-        runCode(part.args.code, part.args.input);
-      }
-    }, [part.state, !!onResult]);
-
-    useEffect(() => {
-      if (isRunning) {
-        const closeKey = setInterval(scrollToCode, 300);
-        return () => clearInterval(closeKey);
-      } else if (part.state == "result" && isRun.current) {
-        scrollToCode();
-      }
-    }, [isRunning]);
-
-    return (
-      <div className="flex flex-col">
-        <div className="px-6 py-3">
-          <div
-            ref={codeResultContainerRef}
-            onClick={scrollToCode}
-            className="border overflow-y-auto overflow-x-hidden max-h-[70vh] relative rounded-lg shadow fade-in animate-in duration-500"
-          >
-            <div className="sticky top-0 py-2.5 px-4 flex items-center gap-1.5 z-10 border-b bg-background min-h-[37px]">
-              {header}
-              <div className="flex-1" />
-              <div className="w-1.5 h-1.5 rounded-full bg-input" />
-              <div className="w-1.5 h-1.5 rounded-full bg-input" />
-              <div className="w-1.5 h-1.5 rounded-full bg-input" />
-            </div>
-
-            <div className={`min-h-14 p-6 text-xs`}>
-              <CodeBlock
-                className="p-4 text-[10px] overflow-x-auto"
-                code={part.args?.code}
-                lang="python"
-                fallback={fallback}
-              />
-            </div>
-            {logContainer}
-          </div>
-        </div>
-      </div>
-    );
-  },
-);
-
-function CodeFallback() {
-  return (
-    <div className="flex flex-col gap-2">
-      <Skeleton className="h-3 w-1/6" />
-      <Skeleton className="h-3 w-1/3" />
-      <Skeleton className="h-3 w-1/2" />
-      <Skeleton className="h-3 w-1/4" />
-    </div>
-  );
-}

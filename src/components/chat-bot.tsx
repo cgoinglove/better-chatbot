@@ -194,25 +194,22 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
     return true;
   }, [status, messages]);
 
-  const proxyToolCall = useCallback(
-    (result: ClientToolInvocation) => {
-      setIsExecutingProxyToolCall(true);
-      return safe(async () => {
-        const lastMessage = messages.at(-1)!;
-        const lastPart = lastMessage.parts.at(-1)! as Extract<
-          UIMessage["parts"][number],
-          { type: "tool-invocation" }
-        >;
-        return addToolResult({
-          toolCallId: lastPart.toolInvocation.toolCallId,
-          result,
-        });
-      })
-        .watch(() => setIsExecutingProxyToolCall(false))
-        .unwrap();
-    },
-    [addToolResult],
-  );
+  const proxyToolCall = useCallback((result: ClientToolInvocation) => {
+    setIsExecutingProxyToolCall(true);
+    return safe(async () => {
+      const lastMessage = latestRef.current.messages.at(-1)!;
+      const lastPart = lastMessage.parts.at(-1)! as Extract<
+        UIMessage["parts"][number],
+        { type: "tool-invocation" }
+      >;
+      return addToolResult({
+        toolCallId: lastPart.toolInvocation.toolCallId,
+        result,
+      });
+    })
+      .watch(() => setIsExecutingProxyToolCall(false))
+      .unwrap();
+  }, []);
 
   const showThink = useMemo(() => {
     if (!isLoading) return false;
@@ -290,7 +287,7 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
                 <PreviewMessage
                   threadId={threadId}
                   messageIndex={index}
-                  key={index}
+                  key={message.id}
                   message={message}
                   status={status}
                   onPoxyToolCall={
