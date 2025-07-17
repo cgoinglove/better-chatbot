@@ -1,0 +1,132 @@
+"use client";
+
+import { safe } from "ts-safe";
+
+type LogEntry = { type: "stdout" | "stderr"; args: string[] };
+
+export type SafePythonExecutionResult = {
+  success: boolean;
+  logs: LogEntry[];
+  error?: string;
+  executionTime: number;
+  returnValue?: any;
+};
+
+// Add security validations similar to JS
+
+function validateCodeSafety(code: string): string | null {
+  if (code.includes("os.system")) return "Forbidden: os.system";
+  return null;
+}
+
+// Output handlers from reference
+export const OUTPUT_HANDLERS = {
+  matplotlib: `
+    import io
+    import base64
+    from matplotlib import pyplot as plt
+
+    plt.clf()
+    plt.close('all')
+    plt.switch_backend('agg')
+
+    def setup_matplotlib_output():
+        def custom_show():
+            if plt.gcf().get_size_inches().prod() * plt.gcf().dpi ** 2 > 25_000_000:
+                print("Warning: Plot size too large, reducing quality")
+                plt.gcf().set_dpi(100)
+
+            png_buf = io.BytesIO()
+            plt.savefig(png_buf, format='png')
+            png_buf.seek(0)
+            png_base64 = base64.b64encode(png_buf.read()).decode('utf-8')
+            print(f'data:image/png;base64,{png_base64}')
+            png_buf.close()
+
+            plt.clf()
+            plt.close('all')
+
+        plt.show = custom_show
+  `,
+  basic: ``,
+};
+
+function detectRequiredHandlers(code: string): string[] {
+  const handlers: string[] = ["basic"];
+  if (code.includes("matplotlib") || code.includes("plt.")) {
+    handlers.push("matplotlib");
+  }
+  return handlers;
+}
+
+export async function safePythonRun(
+  code: string,
+  input: Record<string, unknown> = {},
+  timeout: number = 30000,
+  onLog?: (log: LogEntry) => void,
+) {
+  return safe(async () => {
+    const startTime = Date.now();
+    const logs: LogEntry[] = [];
+
+    const securityError = validateCodeSafety(code);
+    if (securityError) throw new Error(securityError);
+
+    // Load Pyodide
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const pyodide = await (globalThis as any).loadPyodide({
+      indexURL: "https://cdn.jsdelivr.net/pyodide/v0.23.4/full/",
+    });
+
+    // Set up stdout capture
+    pyodide.setStdout({
+      batched: (output: string) => {
+        logs.push({ type: "stdout", args: [output] });
+        onLog?.({ type: "stdout", args: [output] });
+      },
+    });
+    pyodide.setStderr({
+      batched: (output: string) => {
+        logs.push({ type: "stderr", args: [output] });
+        onLog?.({ type: "stderr", args: [output] });
+      },
+    });
+
+    // Inject input as globals
+    for (const [key, value] of Object.entries(input)) {
+      pyodide.globals.set(key, value);
+    }
+
+    // Load packages and handlers
+    await pyodide.loadPackagesFromImports(code);
+    const requiredHandlers = detectRequiredHandlers(code);
+    for (const handler of requiredHandlers) {
+      await pyodide.runPythonAsync(
+        OUTPUT_HANDLERS[handler as keyof typeof OUTPUT_HANDLERS],
+      );
+      if (handler === "matplotlib") {
+        await pyodide.runPythonAsync("setup_matplotlib_output()");
+      }
+    }
+
+    // Execute code with timeout
+    const execution = pyodide.runPythonAsync(code);
+    const timer = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("Timeout")), timeout),
+    );
+    const returnValue = await Promise.race([execution, timer]);
+
+    return {
+      success: true,
+      logs,
+      executionTime: Date.now() - startTime,
+      returnValue,
+    };
+  })
+    .ifFail((err) => ({
+      isError: true,
+      error: err.message,
+      solution: "Python execution failed. Check syntax, imports, or timeout.",
+    }))
+    .unwrap();
+}
