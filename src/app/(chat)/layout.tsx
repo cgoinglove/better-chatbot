@@ -6,7 +6,9 @@ import { cookies, headers as getHeaders } from "next/headers";
 import { auth } from "auth/server";
 import { COOKIE_KEY_SIDEBAR_STATE } from "lib/const";
 import { AppPopupProvider } from "@/components/layouts/app-popup-provider";
-import Script from "next/script";
+import { SWRConfigProvider } from "./swr-config";
+
+export const dynamic = "force-dynamic";
 
 export default async function ChatLayout({
   children,
@@ -17,21 +19,18 @@ export default async function ChatLayout({
       headers,
     })
     .catch(() => null);
-
   const isCollapsed =
     cookieStore.get(COOKIE_KEY_SIDEBAR_STATE)?.value !== "true";
   return (
     <SidebarProvider defaultOpen={!isCollapsed}>
-      <Script
-        src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"
-        strategy="beforeInteractive"
-      />
-      <AppPopupProvider />
-      <AppSidebar session={session || undefined} />
-      <main className="relative bg-background  w-full flex flex-col h-screen">
-        <AppHeader />
-        <div className="flex-1 overflow-y-auto">{children}</div>
-      </main>
+      <SWRConfigProvider>
+        <AppPopupProvider />
+        <AppSidebar session={session || undefined} />
+        <main className="relative bg-background  w-full flex flex-col h-screen">
+          <AppHeader />
+          <div className="flex-1 overflow-y-auto">{children}</div>
+        </main>
+      </SWRConfigProvider>
     </SidebarProvider>
   );
 }

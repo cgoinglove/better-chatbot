@@ -46,6 +46,42 @@ export const OUTPUT_HANDLERS = {
   basic: ``,
 };
 
+async function ensurePyodideLoaded(): Promise<any> {
+  if ((globalThis as any).loadPyodide) {
+    return (globalThis as any).loadPyodide;
+  }
+
+  // 이미 script 엘리먼트가 head에 있으면 기다리기만
+  const existingScript = document.querySelector<HTMLScriptElement>(
+    'script[src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"]',
+  );
+
+  if (existingScript) {
+    if ((globalThis as any).loadPyodide) {
+      return (globalThis as any).loadPyodide;
+    }
+    await new Promise<void>((resolve, reject) => {
+      existingScript.addEventListener("load", () => resolve(), { once: true });
+      existingScript.addEventListener(
+        "error",
+        () => reject(new Error("Failed to load Pyodide script")),
+        { once: true },
+      );
+    });
+  } else {
+    await new Promise<void>((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = "https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js";
+      script.async = true;
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error("Failed to load Pyodide script"));
+      document.head.appendChild(script);
+    });
+  }
+
+  return (globalThis as any).loadPyodide;
+}
+
 function detectRequiredHandlers(code: string): string[] {
   const handlers: string[] = ["basic"];
   if (code.includes("matplotlib") || code.includes("plt.")) {
@@ -66,9 +102,11 @@ export async function safePythonRun({
     const securityError = validateCodeSafety(code);
     if (securityError) throw new Error(securityError);
 
+    const loadPyodide = await ensurePyodideLoaded();
+
     // Load Pyodide
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const pyodide = await (globalThis as any).loadPyodide({
+    const pyodide = await loadPyodide({
       indexURL: "https://cdn.jsdelivr.net/pyodide/v0.23.4/full/",
     });
 
