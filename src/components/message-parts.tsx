@@ -12,24 +12,14 @@ import {
   Trash2,
   ChevronRight,
   TriangleAlert,
-  AlertTriangleIcon,
-  Percent,
   HammerIcon,
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { Button } from "ui/button";
 import { Markdown } from "./markdown";
-import { cn, isObject, safeJSONParse, toAny } from "lib/utils";
+import { cn, safeJSONParse } from "lib/utils";
 import JsonView from "ui/json-view";
-import {
-  useMemo,
-  useState,
-  memo,
-  useEffect,
-  useRef,
-  Suspense,
-  useCallback,
-} from "react";
+import { useMemo, useState, memo, useEffect, useRef, useCallback } from "react";
 import { MessageEditor } from "./message-editor";
 import type { UseChatHelpers } from "@ai-sdk/react";
 import { useCopy } from "@/hooks/use-copy";
@@ -50,9 +40,7 @@ import {
 } from "app-types/chat";
 
 import { Skeleton } from "ui/skeleton";
-import { PieChart } from "./tool-invocation/pie-chart";
-import { BarChart } from "./tool-invocation/bar-chart";
-import { LineChart } from "./tool-invocation/line-chart";
+
 import { useTranslations } from "next-intl";
 import { extractMCPToolId } from "lib/ai/mcp/mcp-tool-id";
 import { Separator } from "ui/separator";
@@ -63,13 +51,10 @@ import { isVercelAIWorkflowTool } from "app-types/workflow";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { DefaultToolName } from "lib/ai/tools";
 
-import { CodeBlock } from "ui/CodeBlock";
-import { SafeJsExecutionResult, safeJsRun } from "lib/safe-js-run";
-import { WebSearchToolInvocation } from "./tool-invocation/web-search";
 import { WorkflowInvocation } from "./tool-invocation/workflow-invocation";
+import dynamic from "next/dynamic";
 
 type MessagePart = UIMessage["parts"][number];
-
 type TextMessagePart = Extract<MessagePart, { type: "text" }>;
 type AssistMessagePart = Extract<MessagePart, { type: "text" }>;
 
@@ -376,6 +361,129 @@ export const AssistMessagePart = memo(function AssistMessagePart({
 });
 AssistMessagePart.displayName = "AssistMessagePart";
 
+export const ReasoningPart = memo(function ReasoningPart({
+  reasoning,
+  isThinking,
+}: {
+  reasoning: string;
+  isThinking?: boolean;
+}) {
+  const [isExpanded, setIsExpanded] = useState(isThinking);
+
+  const variants = {
+    collapsed: {
+      height: 0,
+      opacity: 0,
+      marginTop: 0,
+      marginBottom: 0,
+    },
+    expanded: {
+      height: "auto",
+      opacity: 1,
+      marginTop: "1rem",
+      marginBottom: "0.5rem",
+    },
+  };
+
+  useEffect(() => {
+    if (!isThinking && isExpanded) {
+      setIsExpanded(false);
+    }
+  }, [isThinking]);
+
+  return (
+    <div
+      className="flex flex-col cursor-pointer"
+      onClick={() => {
+        setIsExpanded(!isExpanded);
+      }}
+    >
+      <div className="flex flex-row gap-2 items-center text-ring hover:text-primary transition-colors">
+        {isThinking ? (
+          <TextShimmer>Reasoned for a few seconds</TextShimmer>
+        ) : (
+          <div className="font-medium">Reasoned for a few seconds</div>
+        )}
+
+        <button
+          data-testid="message-reasoning-toggle"
+          type="button"
+          className="cursor-pointer"
+        >
+          <ChevronDownIcon size={16} />
+        </button>
+      </div>
+
+      <div className="pl-4">
+        <AnimatePresence initial={false}>
+          {isExpanded && (
+            <motion.div
+              data-testid="message-reasoning"
+              key="content"
+              initial="collapsed"
+              animate="expanded"
+              exit="collapsed"
+              variants={variants}
+              transition={{ duration: 0.2, ease: "easeInOut" }}
+              style={{ overflow: "hidden" }}
+              className="pl-6 text-muted-foreground border-l flex flex-col gap-4"
+            >
+              <Markdown>{reasoning}</Markdown>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+});
+ReasoningPart.displayName = "ReasoningPart";
+
+const PieChart = dynamic(
+  () => import("./tool-invocation/pie-chart").then((mod) => mod.PieChart),
+  {
+    ssr: false,
+    loading: () => <Skeleton className="h-64 w-full rounded-md" />,
+  },
+);
+
+const BarChart = dynamic(
+  () => import("./tool-invocation/bar-chart").then((mod) => mod.BarChart),
+  {
+    ssr: false,
+    loading: () => <Skeleton className="h-64 w-full rounded-md" />,
+  },
+);
+
+const LineChart = dynamic(
+  () => import("./tool-invocation/line-chart").then((mod) => mod.LineChart),
+  {
+    ssr: false,
+    loading: () => <Skeleton className="h-64 w-full rounded-md" />,
+  },
+);
+
+const WebSearchToolInvocation = dynamic(
+  () =>
+    import("./tool-invocation/web-search").then(
+      (mod) => mod.WebSearchToolInvocation,
+    ),
+  {
+    ssr: false,
+    loading: () => <Skeleton className="h-64 w-full rounded-md" />,
+  },
+);
+
+const SimpleJavascriptExecutionToolPart = dynamic(
+  () =>
+    import("./tool-invocation/code-executor").then(
+      (mod) => mod.SimpleJavascriptExecutionToolPart,
+    ),
+  {
+    ssr: false,
+    loading: () => <Skeleton className="h-64 w-full rounded-md" />,
+  },
+);
+
 export const ToolMessagePart = memo(
   ({
     part,
@@ -410,15 +518,16 @@ export const ToolMessagePart = memo(
         .ifFail((error) => toast.error(error.message))
         .watch(() => setIsDeleting(false))
         .unwrap();
-    }, [messageId, setMessages]);
+    }, [messageId]);
 
     const result = useMemo(() => {
       if (state === "result") {
-        return toolInvocation.result?.content
+        return Array.isArray(toolInvocation.result?.content)
           ? {
               ...toolInvocation.result,
               content: toolInvocation.result.content.map((node) => {
-                if (node.type === "text") {
+                // mcp tools
+                if (node?.type === "text" && typeof node?.text === "string") {
                   const parsed = safeJSONParse(node.text);
                   return {
                     ...node,
@@ -431,7 +540,7 @@ export const ToolMessagePart = memo(
           : toolInvocation.result;
       }
       return null;
-    }, [toolInvocation, onPoxyToolCall]);
+    }, [state, (toolInvocation as any).result]);
 
     const CustomToolComponent = useMemo(() => {
       if (
@@ -462,36 +571,15 @@ export const ToolMessagePart = memo(
         switch (toolName) {
           case DefaultToolName.CreatePieChart:
             return (
-              <Suspense
-                fallback={<Skeleton className="h-64 w-full rounded-md" />}
-              >
-                <PieChart
-                  key={`${toolCallId}-${toolName}`}
-                  {...(args as any)}
-                />
-              </Suspense>
+              <PieChart key={`${toolCallId}-${toolName}`} {...(args as any)} />
             );
           case DefaultToolName.CreateBarChart:
             return (
-              <Suspense
-                fallback={<Skeleton className="h-64 w-full rounded-md" />}
-              >
-                <BarChart
-                  key={`${toolCallId}-${toolName}`}
-                  {...(args as any)}
-                />
-              </Suspense>
+              <BarChart key={`${toolCallId}-${toolName}`} {...(args as any)} />
             );
           case DefaultToolName.CreateLineChart:
             return (
-              <Suspense
-                fallback={<Skeleton className="h-64 w-full rounded-md" />}
-              >
-                <LineChart
-                  key={`${toolCallId}-${toolName}`}
-                  {...(args as any)}
-                />
-              </Suspense>
+              <LineChart key={`${toolCallId}-${toolName}`} {...(args as any)} />
             );
         }
       }
@@ -517,7 +605,7 @@ export const ToolMessagePart = memo(
     }, [isWorkflowTool, result, state, isLast, !!onPoxyToolCall]);
 
     return (
-      <div key={toolCallId} className="group w-full">
+      <div className="group w-full">
         {CustomToolComponent ? (
           CustomToolComponent
         ) : (
@@ -721,293 +809,3 @@ export const ToolMessagePart = memo(
 );
 
 ToolMessagePart.displayName = "ToolMessagePart";
-
-export const ReasoningPart = memo(function ReasoningPart({
-  reasoning,
-}: {
-  reasoning: string;
-  isThinking?: boolean;
-}) {
-  const [isExpanded, setIsExpanded] = useState(false);
-
-  const variants = {
-    collapsed: {
-      height: 0,
-      opacity: 0,
-      marginTop: 0,
-      marginBottom: 0,
-    },
-    expanded: {
-      height: "auto",
-      opacity: 1,
-      marginTop: "1rem",
-      marginBottom: "0.5rem",
-    },
-  };
-
-  return (
-    <div
-      className="flex flex-col cursor-pointer"
-      onClick={() => {
-        setIsExpanded(!isExpanded);
-      }}
-    >
-      <div className="flex flex-row gap-2 items-center text-ring hover:text-primary transition-colors">
-        <div className="font-medium">Reasoned for a few seconds</div>
-        <button
-          data-testid="message-reasoning-toggle"
-          type="button"
-          className="cursor-pointer"
-        >
-          <ChevronDownIcon size={16} />
-        </button>
-      </div>
-
-      <div className="pl-4">
-        <AnimatePresence initial={false}>
-          {isExpanded && (
-            <motion.div
-              data-testid="message-reasoning"
-              key="content"
-              initial="collapsed"
-              animate="expanded"
-              exit="collapsed"
-              variants={variants}
-              transition={{ duration: 0.2, ease: "easeInOut" }}
-              style={{ overflow: "hidden" }}
-              className="pl-6 text-muted-foreground border-l flex flex-col gap-4"
-            >
-              <Markdown>{reasoning}</Markdown>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    </div>
-  );
-});
-ReasoningPart.displayName = "ReasoningPart";
-
-export const SimpleJavascriptExecutionToolPart = memo(
-  function SimpleJavascriptExecutionToolPart({
-    part,
-    onResult,
-  }: {
-    part: ToolInvocationUIPart["toolInvocation"];
-    onResult?: (result?: any) => void;
-  }) {
-    const isRun = useRef(false);
-    const [isExecuting, setIsExecuting] = useState(false);
-
-    const [realtimeLogs, setRealtimeLogs] = useState<
-      (SafeJsExecutionResult["logs"][number] & { time: number })[]
-    >([]);
-
-    const codeResultContainerRef = useRef<HTMLDivElement>(null);
-
-    const runCode = useCallback(
-      async (code: string, input: any) => {
-        const result = await safeJsRun(code, input, 60000, (log) => {
-          setRealtimeLogs((prev) => [...prev, { ...log, time: Date.now() }]);
-        });
-
-        onResult?.({
-          ...toAny(result),
-          guide:
-            "The code has already been executed and displayed to the user. Please provide only the output results from console.log() or error details if any occurred. Do not repeat the code itself.",
-        });
-      },
-      [onResult],
-    );
-
-    const isRunning = useMemo(() => {
-      return isExecuting || part.state != "result";
-    }, [isExecuting, part.state]);
-
-    const scrollToCode = useCallback(() => {
-      codeResultContainerRef.current?.scrollTo({
-        top: codeResultContainerRef.current.scrollHeight,
-        behavior: "smooth",
-      });
-    }, []);
-
-    const result = useMemo(() => {
-      if (part.state != "result") return null;
-      return part.result as SafeJsExecutionResult;
-    }, [part]);
-
-    const logs = useMemo(() => {
-      const error = result?.error;
-      const logs = realtimeLogs.length ? realtimeLogs : (result?.logs ?? []);
-
-      if (error) {
-        return [{ type: "error", args: [error], time: Date.now() }, ...logs];
-      }
-
-      return logs;
-    }, [part, realtimeLogs]);
-
-    const reExecute = useCallback(async () => {
-      if (isExecuting) return;
-      setIsExecuting(true);
-      setRealtimeLogs([
-        { type: "info", args: ["Re-executing code..."], time: Date.now() },
-      ]);
-      const code = part.args?.code;
-      const input = part.args?.input;
-      safe(() =>
-        safeJsRun(code, input, 60000, (log) => {
-          setRealtimeLogs((prev) => [...prev, { ...log, time: Date.now() }]);
-        }),
-      ).watch(() => setIsExecuting(false));
-    }, [part.args, isExecuting]);
-
-    const header = useMemo(() => {
-      if (isRunning)
-        return (
-          <>
-            <Loader className="size-3 animate-spin text-muted-foreground" />
-            <TextShimmer className="text-xs">Generating Code...</TextShimmer>
-          </>
-        );
-      return (
-        <>
-          {result?.error ? (
-            <>
-              <AlertTriangleIcon className="size-3 text-destructive" />
-              <span className="text-destructive text-xs">ERROR</span>
-            </>
-          ) : (
-            <>
-              <div className="text-[7px] bg-border rounded-xs w-4 h-4 p-0.5 flex items-end justify-end font-bold">
-                JS
-              </div>
-            </>
-          )}
-        </>
-      );
-    }, [part.state, result, isRunning]);
-
-    const fallback = useMemo(() => {
-      return <CodeFallback />;
-    }, []);
-
-    const logContainer = useMemo(() => {
-      if (!logs.length) return null;
-      return (
-        <div className="p-4 text-[10px] text-foreground flex flex-col gap-1">
-          <div className="text-foreground flex items-center gap-1">
-            {isRunning ? (
-              <Loader className="size-2 animate-spin" />
-            ) : (
-              <div className="w-1 h-1 mr-1 ring ring-border rounded-full" />
-            )}
-            better-chatbot
-            <Percent className="size-2" />
-            {part.state == "result" && (
-              <div
-                className="hover:text-foreground ml-auto px-2 py-1 rounded-sm cursor-pointer text-muted-foreground/80"
-                onClick={reExecute}
-              >
-                retry
-              </div>
-            )}
-          </div>
-          {logs.map((log, i) => {
-            return (
-              <div
-                key={i}
-                className={cn(
-                  "flex gap-1 text-muted-foreground pl-3",
-                  log.type == "error" && "text-destructive",
-                  log.type == "warn" && "text-yellow-500",
-                )}
-              >
-                <div className="w-[8.6rem] hidden md:block">
-                  {new Date(toAny(log).time || Date.now()).toISOString()}
-                </div>
-                <div className="h-[15px] flex items-center">
-                  {log.type == "error" ? (
-                    <AlertTriangleIcon className="size-2" />
-                  ) : log.type == "warn" ? (
-                    <AlertTriangleIcon className="size-2" />
-                  ) : (
-                    <ChevronRight className="size-2" />
-                  )}
-                </div>
-                <div className="flex-1 min-w-0 whitespace-pre-wrap">
-                  {log.args
-                    .map((arg) =>
-                      isObject(arg) ? JSON.stringify(arg) : arg.toString(),
-                    )
-                    .join(" ")}
-                </div>
-              </div>
-            );
-          })}
-          {isRunning && (
-            <div className="ml-3 animate-caret-blink text-muted-foreground">
-              |
-            </div>
-          )}
-        </div>
-      );
-    }, [logs, isRunning]);
-
-    useEffect(() => {
-      if (onResult && part.args && part.state == "call" && !isRun.current) {
-        isRun.current = true;
-        runCode(part.args.code, part.args.input);
-      }
-    }, [part.state, !!onResult]);
-
-    useEffect(() => {
-      if (isRunning) {
-        const closeKey = setInterval(scrollToCode, 300);
-        return () => clearInterval(closeKey);
-      } else if (part.state == "result" && isRun.current) {
-        scrollToCode();
-      }
-    }, [isRunning]);
-
-    return (
-      <div className="flex flex-col">
-        <div className="px-6 py-3">
-          <div
-            ref={codeResultContainerRef}
-            onClick={scrollToCode}
-            className="border overflow-y-auto overflow-x-hidden max-h-[70vh] relative rounded-lg shadow fade-in animate-in duration-500"
-          >
-            <div className="sticky top-0 py-2.5 px-4 flex items-center gap-1.5 z-10 border-b bg-background min-h-[37px]">
-              {header}
-              <div className="flex-1" />
-              <div className="w-1.5 h-1.5 rounded-full bg-input" />
-              <div className="w-1.5 h-1.5 rounded-full bg-input" />
-              <div className="w-1.5 h-1.5 rounded-full bg-input" />
-            </div>
-
-            <div className={`min-h-14 p-6 text-xs`}>
-              <CodeBlock
-                className="p-4 text-[10px] overflow-x-auto"
-                code={part.args?.code}
-                lang="javascript"
-                fallback={fallback}
-              />
-            </div>
-            {logContainer}
-          </div>
-        </div>
-      </div>
-    );
-  },
-);
-
-function CodeFallback() {
-  return (
-    <div className="flex flex-col gap-2">
-      <Skeleton className="h-3 w-1/6" />
-      <Skeleton className="h-3 w-1/3" />
-      <Skeleton className="h-3 w-1/2" />
-      <Skeleton className="h-3 w-1/4" />
-    </div>
-  );
-}

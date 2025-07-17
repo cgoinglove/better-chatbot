@@ -1,5 +1,5 @@
 "use client";
-import React, { useMemo, type JSX } from "react";
+import React, { memo, useMemo, type JSX } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -11,7 +11,7 @@ interface TextShimmerProps {
   spread?: number;
 }
 
-export function TextShimmer({
+export const TextShimmer = memo(function TextShimmer({
   children,
   as: Component = "p",
   className,
@@ -52,4 +52,4 @@ export function TextShimmer({
       {children}
     </MotionComponent>
   );
-}
+});

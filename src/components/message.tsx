@@ -84,7 +84,7 @@ const PurePreviewMessage = ({
                 <ReasoningPart
                   key={key}
                   reasoning={part.reasoning}
-                  isThinking={isLastPart}
+                  isThinking={isLastPart && isLastMessage && isLoading}
                 />
               );
             }
