@@ -50,6 +50,7 @@ const PurePreviewMessage = ({
   if (message.role == "system") {
     return null; // system message is not shown
   }
+
   return (
     <div className="w-full mx-auto max-w-3xl px-6 group/message">
       <div
@@ -162,7 +163,7 @@ export const PreviewMessage = memo(
     if (prevProps.message.annotations !== nextProps.message.annotations)
       return false;
     if (prevProps.isError !== nextProps.isError) return false;
-    if (!!prevProps.onPoxyToolCall !== !!nextProps.onPoxyToolCall) return false;
+    if (prevProps.onPoxyToolCall !== nextProps.onPoxyToolCall) return false;
     if (!equal(prevProps.message.parts, nextProps.message.parts)) return false;
     return true;
   },

@@ -1,5 +1,6 @@
 import { ToolInvocationUIPart } from "app-types/chat";
-import { SafeJsExecutionResult, safeJsRun } from "lib/safe-js-run";
+import { safeJsRun } from "lib/code-runner/safe-js-run";
+import { CodeRunnerResult } from "lib/code-runner/code-runner.interface";
 import { cn, isObject, toAny } from "lib/utils";
 import { AlertTriangleIcon, ChevronRight, Loader, Percent } from "lucide-react";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -7,29 +8,36 @@ import { safe } from "ts-safe";
 import { CodeBlock } from "ui/CodeBlock";
 import { Skeleton } from "ui/skeleton";
 import { TextShimmer } from "ui/text-shimmer";
+import { safePythonRun } from "lib/code-runner/safe-python-run";
 
 export const CodeExecutor = memo(function CodeExecutor({
   part,
   onResult,
+  type,
 }: {
   part: ToolInvocationUIPart["toolInvocation"];
   onResult?: (result?: any) => void;
+  type: "js" | "python";
 }) {
   const isRun = useRef(false);
   const [isExecuting, setIsExecuting] = useState(false);
 
   const [realtimeLogs, setRealtimeLogs] = useState<
-    (SafeJsExecutionResult["logs"][number] & { time: number })[]
+    (CodeRunnerResult["logs"][number] & { time: number })[]
   >([]);
 
   const codeResultContainerRef = useRef<HTMLDivElement>(null);
 
   const runCode = useCallback(
-    async (code: string, input: any) => {
-      const result = await safeJsRun(code, input, 60000, (log) => {
-        setRealtimeLogs((prev) => [...prev, { ...log, time: Date.now() }]);
+    async (code: string) => {
+      const engine = type == "js" ? safeJsRun : safePythonRun;
+      const result = await engine({
+        code,
+        timeout: 30000,
+        onLog: (log) => {
+          setRealtimeLogs((prev) => [...prev, { ...log, time: Date.now() }]);
+        },
       });
-
       onResult?.({
         ...toAny(result),
         guide:
@@ -52,7 +60,7 @@ export const CodeExecutor = memo(function CodeExecutor({
 
   const result = useMemo(() => {
     if (part.state != "result") return null;
-    return part.result as SafeJsExecutionResult;
+    return part.result as CodeRunnerResult;
   }, [part]);
 
   const logs = useMemo(() => {
@@ -73,10 +81,14 @@ export const CodeExecutor = memo(function CodeExecutor({
       { type: "info", args: ["Re-executing code..."], time: Date.now() },
     ]);
     const code = part.args?.code;
-    const input = part.args?.input;
+
     safe(() =>
-      safeJsRun(code, input, 60000, (log) => {
-        setRealtimeLogs((prev) => [...prev, { ...log, time: Date.now() }]);
+      safeJsRun({
+        code,
+        timeout: 60000,
+        onLog: (log) => {
+          setRealtimeLogs((prev) => [...prev, { ...log, time: Date.now() }]);
+        },
       }),
     ).watch(() => setIsExecuting(false));
   }, [part.args, isExecuting]);
@@ -176,7 +188,7 @@ export const CodeExecutor = memo(function CodeExecutor({
   useEffect(() => {
     if (onResult && part.args && part.state == "call" && !isRun.current) {
       isRun.current = true;
-      runCode(part.args.code, part.args.input);
+      runCode(part.args.code);
     }
   }, [part.state, !!onResult]);
 

@@ -1,16 +1,11 @@
 "use client";
 
 import { safe } from "ts-safe";
-
-type LogEntry = { type: "stdout" | "stderr"; args: string[] };
-
-export type SafePythonExecutionResult = {
-  success: boolean;
-  logs: LogEntry[];
-  error?: string;
-  executionTime: number;
-  returnValue?: any;
-};
+import {
+  CodeRunnerOptions,
+  CodeRunnerResult,
+  LogEntry,
+} from "./code-runner.interface";
 
 // Add security validations similar to JS
 
@@ -59,12 +54,11 @@ function detectRequiredHandlers(code: string): string[] {
   return handlers;
 }
 
-export async function safePythonRun(
-  code: string,
-  input: Record<string, unknown> = {},
-  timeout: number = 30000,
-  onLog?: (log: LogEntry) => void,
-) {
+export async function safePythonRun({
+  code,
+  timeout = 30000,
+  onLog,
+}: CodeRunnerOptions): Promise<CodeRunnerResult> {
   return safe(async () => {
     const startTime = Date.now();
     const logs: LogEntry[] = [];
@@ -81,21 +75,16 @@ export async function safePythonRun(
     // Set up stdout capture
     pyodide.setStdout({
       batched: (output: string) => {
-        logs.push({ type: "stdout", args: [output] });
-        onLog?.({ type: "stdout", args: [output] });
+        logs.push({ type: "log", args: [output] });
+        onLog?.({ type: "log", args: [output] });
       },
     });
     pyodide.setStderr({
       batched: (output: string) => {
-        logs.push({ type: "stderr", args: [output] });
-        onLog?.({ type: "stderr", args: [output] });
+        logs.push({ type: "error", args: [output] });
+        onLog?.({ type: "error", args: [output] });
       },
     });
-
-    // Inject input as globals
-    for (const [key, value] of Object.entries(input)) {
-      pyodide.globals.set(key, value);
-    }
 
     // Load packages and handlers
     await pyodide.loadPackagesFromImports(code);
@@ -124,8 +113,9 @@ export async function safePythonRun(
     };
   })
     .ifFail((err) => ({
-      isError: true,
+      success: false,
       error: err.message,
+      logs: [],
       solution: "Python execution failed. Check syntax, imports, or timeout.",
     }))
     .unwrap();
