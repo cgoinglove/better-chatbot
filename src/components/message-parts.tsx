@@ -279,7 +279,6 @@ export const AssistMessagePart = memo(function AssistMessagePart({
         reload({
           body: {
             model,
-            action: "update-assistant",
             id: threadId,
           },
         }),
@@ -565,7 +564,7 @@ export const ToolMessagePart = memo(
           <CodeExecutor
             part={toolInvocation}
             onResult={onToolCallDirect}
-            type="js"
+            type="javascript"
           />
         );
       }

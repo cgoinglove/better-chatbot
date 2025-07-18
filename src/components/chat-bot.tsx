@@ -22,7 +22,11 @@ import { UIMessage } from "ai";
 
 import { safe } from "ts-safe";
 import { mutate } from "swr";
-import { ChatApiSchemaRequestBody, ClientToolInvocation } from "app-types/chat";
+import {
+  ChatApiSchemaRequestBody,
+  ChatModel,
+  ClientToolInvocation,
+} from "app-types/chat";
 import { useToRef } from "@/hooks/use-latest";
 import { isShortcutEvent, Shortcuts } from "lib/keyboard-shortcuts";
 import { Button } from "ui/button";
@@ -93,13 +97,15 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
     id: threadId,
     api: "/api/chat",
     initialMessages,
-    experimental_prepareRequestBody: ({ messages }) => {
+    experimental_prepareRequestBody: ({ messages, requestBody }) => {
       window.history.replaceState({}, "", `/chat/${threadId}`);
       const lastMessage = messages.at(-1)!;
       vercelAISdkV4ToolInvocationIssueCatcher(lastMessage);
       const request: ChatApiSchemaRequestBody = {
         id: latestRef.current.threadId,
-        chatModel: latestRef.current.model,
+        chatModel:
+          (requestBody as { model: ChatModel })?.model ??
+          latestRef.current.model,
         toolChoice: latestRef.current.toolChoice,
         allowedAppDefaultToolkit: latestRef.current.allowedAppDefaultToolkit,
         allowedMcpServers: latestRef.current.allowedMcpServers,

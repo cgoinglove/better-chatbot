@@ -7,8 +7,7 @@ export const pythonExecutionSchema: JSONSchema7 = {
   properties: {
     code: {
       type: "string",
-      description:
-        "Python code to execute. Use print() for output. The last expression's value will be returned if possible. Supports module imports.",
+      description: `Execute Python code directly in the user's browser using Pyodide. Code runs client-side without server dependency.\n\nUse print() for output. Module imports are supported. The last expression's value will be returned if possible.\n\nOutput collection:\n// Set up stdout capture\npyodide.setStdout({\n  batched: (output: string) => {\n    const type = output.startsWith("data:image/png;base64")\n      ? "image"\n      : "data";\n    logs.push({ type: "log", args: [{ type, value: output }] });\n  },\n});\n\npyodide.setStderr({\n  batched: (output: string) => {\n    logs.push({ type: "error", args: [{ type: "data", value: output }] });\n  },\n});`,
     },
   },
   required: ["code"],
@@ -16,6 +15,6 @@ export const pythonExecutionSchema: JSONSchema7 = {
 
 export const pythonExecutionTool = createTool({
   description:
-    "Execute Python code for complex computations, data analysis, visualizations, file operations, etc. Uses Pyodide for browser execution. Output via print().",
+    "Execute Python code directly in the user's browser using Pyodide. Code runs client-side without server dependency.",
   parameters: jsonSchemaToZod(pythonExecutionSchema),
 });

@@ -6,14 +6,20 @@ describe("safe-js-run", () => {
     const result = await safeJsRun({ code: "console.log(2 + 3);" });
     expect(result.success).toBe(true);
     expect(result.logs).toHaveLength(1);
-    expect(result.logs[0]).toEqual({ type: "log", args: [5] });
+    expect(result.logs[0]).toEqual({
+      type: "log",
+      args: [{ type: "data", value: 5 }],
+    });
   });
 
   it("should work with Math API", async () => {
     const result = await safeJsRun({ code: "console.log(Math.max(1, 2, 3));" });
     expect(result.success).toBe(true);
     expect(result.logs).toHaveLength(1);
-    expect(result.logs[0]).toEqual({ type: "log", args: [3] });
+    expect(result.logs[0]).toEqual({
+      type: "log",
+      args: [{ type: "data", value: 3 }],
+    });
   });
 
   it("should work with JSON API", async () => {
@@ -22,7 +28,10 @@ describe("safe-js-run", () => {
     });
     expect(result.success).toBe(true);
     expect(result.logs).toHaveLength(1);
-    expect(result.logs[0]).toEqual({ type: "log", args: ['{"name":"test"}'] });
+    expect(result.logs[0]).toEqual({
+      type: "log",
+      args: [{ type: "data", value: '{"name":"test"}' }],
+    });
   });
 
   it("should capture multiple console methods", async () => {
@@ -31,9 +40,18 @@ describe("safe-js-run", () => {
     });
     expect(result.success).toBe(true);
     expect(result.logs).toHaveLength(3);
-    expect(result.logs[0]).toEqual({ type: "log", args: ["hello"] });
-    expect(result.logs[1]).toEqual({ type: "warn", args: ["warning"] });
-    expect(result.logs[2]).toEqual({ type: "error", args: ["error"] });
+    expect(result.logs[0]).toEqual({
+      type: "log",
+      args: [{ type: "data", value: "hello" }],
+    });
+    expect(result.logs[1]).toEqual({
+      type: "warn",
+      args: [{ type: "data", value: "warning" }],
+    });
+    expect(result.logs[2]).toEqual({
+      type: "error",
+      args: [{ type: "data", value: "error" }],
+    });
   });
 
   it("should capture console.log with multiple arguments", async () => {
@@ -44,7 +62,11 @@ describe("safe-js-run", () => {
     expect(result.logs).toHaveLength(1);
     expect(result.logs[0]).toEqual({
       type: "log",
-      args: ["hello", "world", 42],
+      args: [
+        { type: "data", value: "hello" },
+        { type: "data", value: "world" },
+        { type: "data", value: 42 },
+      ],
     });
   });
 
@@ -57,8 +79,14 @@ describe("safe-js-run", () => {
     });
     expect(result.success).toBe(true);
     expect(onLogSpy).toHaveBeenCalledTimes(2);
-    expect(onLogSpy).toHaveBeenCalledWith({ type: "log", args: ["test"] });
-    expect(onLogSpy).toHaveBeenCalledWith({ type: "warn", args: ["warning"] });
+    expect(onLogSpy).toHaveBeenCalledWith({
+      type: "log",
+      args: [{ type: "data", value: "test" }],
+    });
+    expect(onLogSpy).toHaveBeenCalledWith({
+      type: "warn",
+      args: [{ type: "data", value: "warning" }],
+    });
   });
 
   it("should handle syntax errors", async () => {
@@ -97,9 +125,18 @@ describe("safe-js-run", () => {
     });
     expect(result.success).toBe(true);
     expect(result.logs).toHaveLength(3);
-    expect(result.logs[0]).toEqual({ type: "info", args: ["info"] });
-    expect(result.logs[1]).toEqual({ type: "debug", args: ["debug"] });
-    expect(result.logs[2]).toEqual({ type: "trace", args: ["trace"] });
+    expect(result.logs[0]).toEqual({
+      type: "info",
+      args: [{ type: "data", value: "info" }],
+    });
+    expect(result.logs[1]).toEqual({
+      type: "debug",
+      args: [{ type: "data", value: "debug" }],
+    });
+    expect(result.logs[2]).toEqual({
+      type: "trace",
+      args: [{ type: "data", value: "trace" }],
+    });
   });
 
   it("should handle async/await operations", async () => {
@@ -114,7 +151,10 @@ describe("safe-js-run", () => {
     expect(result.logs).toHaveLength(1);
     expect(result.logs[0]).toEqual({
       type: "log",
-      args: ["async operation", "completed"],
+      args: [
+        { type: "data", value: "async operation" },
+        { type: "data", value: "completed" },
+      ],
     });
   });
 
@@ -129,7 +169,10 @@ describe("safe-js-run", () => {
     expect(result.logs).toHaveLength(1);
     expect(result.logs[0]).toEqual({
       type: "log",
-      args: ["Promise result:", 42],
+      args: [
+        { type: "data", value: "Promise result:" },
+        { type: "data", value: 42 },
+      ],
     });
   });
 
@@ -147,7 +190,10 @@ describe("safe-js-run", () => {
     expect(result.logs).toHaveLength(1);
     expect(result.logs[0]).toEqual({
       type: "error",
-      args: ["Caught async error:", "async error"],
+      args: [
+        { type: "data", value: "Caught async error:" },
+        { type: "data", value: "async error" },
+      ],
     });
   });
 
@@ -194,8 +240,10 @@ describe("safe-js-run", () => {
     });
     expect(result.success).toBe(true);
     expect(result.logs.length).toBeGreaterThanOrEqual(10);
-    expect(result.logs[0].args[0]).toBe("Starting employee processing...");
-    expect(result.logs[result.logs.length - 1].args[0]).toBe(
+    expect(result.logs[0].args[0].value).toBe(
+      "Starting employee processing...",
+    );
+    expect(result.logs[result.logs.length - 1].args[0].value).toBe(
       "All 3 employees processed",
     );
     // Check that delays actually happened (execution time should be > 150ms)
@@ -217,7 +265,7 @@ describe("safe-js-run", () => {
       expect(result.error).toContain("timeout");
     } else {
       expect(result.success).toBe(true);
-      expect(result.logs[0].args[0]).toBe("Starting operation...");
+      expect(result.logs[0].args[0].value).toBe("Starting operation...");
     }
   });
 

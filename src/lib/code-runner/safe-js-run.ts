@@ -182,12 +182,15 @@ async function execute({
 
   // Capture logs
   const logCapture = (type: LogEntry["type"], ...args: any[]) => {
-    const entry: LogEntry = { type, args };
+    const entry: LogEntry = {
+      type,
+      args: args.map((v) => ({
+        type: "data",
+        value: v,
+      })),
+    };
     logs.push(entry);
-    const length = JSON.stringify(logs).length;
-    if (length > 10000) {
-      throw new Error(`Logs limit exceeded ${length} characters`);
-    }
+
     if (onLog) onLog(entry);
   };
 
@@ -244,7 +247,7 @@ async function execute({
   } catch (error: any) {
     logs.push({
       type: "error",
-      args: [error],
+      args: [{ type: "data", value: error }],
     });
     return {
       success: false,

@@ -113,14 +113,17 @@ export async function safePythonRun({
     // Set up stdout capture
     pyodide.setStdout({
       batched: (output: string) => {
-        logs.push({ type: "log", args: [output] });
-        onLog?.({ type: "log", args: [output] });
+        const type = output.startsWith("data:image/png;base64")
+          ? "image"
+          : "data";
+        logs.push({ type: "log", args: [{ type, value: output }] });
+        onLog?.({ type: "log", args: [{ type, value: output }] });
       },
     });
     pyodide.setStderr({
       batched: (output: string) => {
-        logs.push({ type: "error", args: [output] });
-        onLog?.({ type: "error", args: [output] });
+        logs.push({ type: "error", args: [{ type: "data", value: output }] });
+        onLog?.({ type: "error", args: [{ type: "data", value: output }] });
       },
     });
 

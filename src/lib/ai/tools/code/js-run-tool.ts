@@ -3,7 +3,6 @@ import { tool as createTool } from "ai";
 import { jsonSchemaToZod } from "lib/json-schema-to-zod";
 
 const codeDescription = `JavaScript code is placed inside an async function wrapper. Since you're already in an async context, you can use await and return directly.
-
 Examples:
 - \`
 function generateUUID() {
@@ -16,36 +15,7 @@ function generateUUID() {
 const id = generateUUID();
 console.log(\`generated id => \${id}\`);
 \`
-
-- \`
-function delay(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-async function testDelay() {
-  console.log('start!');
-  await delay(2000);
-  console.log('2 seconds later!');
-}
-
-// MUST use await when calling async functions
-await testDelay();
-\`
-
-CRITICAL: When creating async functions, you MUST call them with await to ensure completion:
-❌ Wrong: testDelay(); (function won't complete)
-✅ Correct: await testDelay(); (waits for completion)
-
-
-Guidelines:
-- Use console.log(), console.error(), console.warn() to show logs to users (recommended)
-- Use return to return values (optional)
-- Use \n line breaks for better code readability
-- Define and execute functions to test actual behavior
-- Available: Math, JSON, fetch, and basic JavaScript APIs (no DOM/React/frameworks)
-- Don't create additional async function wrappers - you're already inside one
-
-Your code executes as: \`"use strict"; return (async () => { YOUR_CODE })\``;
+Your code executes as: \`"use strict"; return (async () => { \${YOUR_CODE} })\``;
 
 export const jsExecutionSchema: JSONSchema7 = {
   type: "object",
