@@ -2,25 +2,11 @@
 // Core JavaScript execution engine with security sandbox
 
 import { safe } from "ts-safe";
-
-type LogEntry = {
-  type: "log" | "info" | "warn" | "error" | "debug" | "trace";
-  args: any[];
-};
-
-type SafeRunOptions = {
-  code: string;
-  input?: Record<string, any>;
-  timeout?: number;
-  onLog?: (entry: LogEntry) => void;
-};
-
-export type SafeJsExecutionResult = {
-  success: boolean;
-  logs: LogEntry[];
-  error?: string;
-  executionTime: number;
-};
+import {
+  CodeRunnerOptions,
+  CodeRunnerResult,
+  LogEntry,
+} from "./code-runner.interface";
 
 // Security: Block dangerous keywords that could compromise sandbox
 const FORBIDDEN_KEYWORDS = [
@@ -118,7 +104,6 @@ function validateCodeSafety(code: string): string | null {
 
 // Create a controlled execution environment with safe APIs
 function createSafeEnvironment(
-  input: Record<string, any>,
   logCapture: (type: LogEntry["type"], ...args: any[]) => void,
 ) {
   const safeConsole = {
@@ -134,9 +119,6 @@ function createSafeEnvironment(
 
   // Safe global objects and functions
   const safeGlobals = {
-    // Input data
-    ...input,
-
     // Console for output
     console: safeConsole,
 
@@ -191,21 +173,24 @@ function wrapCode(code: string): string {
 
 async function execute({
   code,
-  input = {},
   timeout = 5000,
   onLog,
-}: SafeRunOptions): Promise<SafeJsExecutionResult> {
+}: CodeRunnerOptions): Promise<CodeRunnerResult> {
   const startTime = Date.now();
   const logs: LogEntry[] = [];
+  let returnValue: any = undefined;
 
   // Capture logs
   const logCapture = (type: LogEntry["type"], ...args: any[]) => {
-    const entry: LogEntry = { type, args };
+    const entry: LogEntry = {
+      type,
+      args: args.map((v) => ({
+        type: "data",
+        value: v,
+      })),
+    };
     logs.push(entry);
-    const length = JSON.stringify(logs).length;
-    if (length > 10000) {
-      throw new Error(`Logs limit exceeded ${length} characters`);
-    }
+
     if (onLog) onLog(entry);
   };
 
@@ -216,12 +201,12 @@ async function execute({
       success: false,
       error: securityError,
       logs,
-      executionTime: Date.now() - startTime,
+      executionTimeMs: Date.now() - startTime,
     };
   }
 
   // Create safe execution environment
-  const { safeGlobals } = createSafeEnvironment(input, logCapture);
+  const { safeGlobals } = createSafeEnvironment(logCapture);
   const wrappedCode = wrapCode(code);
 
   // Execute with timeout protection
@@ -234,7 +219,9 @@ async function execute({
           const result = func(...Object.values(safeGlobals));
 
           if (result && typeof result.then === "function") {
-            await result;
+            returnValue = await result;
+          } else {
+            returnValue = result;
           }
 
           resolve(undefined);
@@ -254,32 +241,31 @@ async function execute({
     return {
       success: true,
       logs,
-      executionTime: Date.now() - startTime,
+      executionTimeMs: Date.now() - startTime,
+      result: returnValue,
     };
   } catch (error: any) {
     logs.push({
       type: "error",
-      args: [error],
+      args: [{ type: "data", value: error }],
     });
     return {
       success: false,
       error: error.message || "Unknown execution error",
       logs,
-      executionTime: Date.now() - startTime,
+      executionTimeMs: Date.now() - startTime,
     };
   }
 }
 
-export async function safeJsRun(
-  code: string,
-  input: Record<string, unknown>,
-  timeout: number = 5000,
-  onLog?: (entry: LogEntry) => void,
-) {
+export async function safeJsRun({
+  code,
+  timeout = 5000,
+  onLog,
+}: CodeRunnerOptions): Promise<CodeRunnerResult> {
   return safe(async () => {
     const result = await execute({
       code,
-      input,
       timeout,
       onLog,
     });
@@ -290,14 +276,16 @@ export async function safeJsRun(
 
     return {
       logs: result.logs,
-      executionTime: `${result.executionTime}ms`,
+      executionTimeMs: result.executionTimeMs,
+      result: result.result,
       success: true,
     };
   })
     .ifFail((err) => {
       return {
-        isError: true,
+        success: false,
         error: err.message,
+        logs: [],
         solution: `JavaScript execution failed. Common issues:
     • Syntax errors: Check for missing semicolons, brackets, or quotes
     • Forbidden operations: Avoid DOM access, eval(), or global object manipulation  
@@ -313,5 +301,3 @@ export async function safeJsRun(
     })
     .unwrap();
 }
-
-export type { LogEntry };
