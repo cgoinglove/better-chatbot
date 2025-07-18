@@ -149,9 +149,9 @@ export async function safePythonRun({
     return {
       success: true,
       logs,
-      executionTime: Date.now() - startTime,
-      returnValue,
-    };
+      executionTimeMs: Date.now() - startTime,
+      result: returnValue,
+    } as CodeRunnerResult;
   })
     .ifFail((err) => ({
       success: false,

@@ -13,7 +13,7 @@ import {
 import { Button } from "ui/button";
 import { Separator } from "ui/separator";
 
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { ThreadDropdown } from "../thread-dropdown";
 import { appStore } from "@/app/store";
 import { usePathname } from "next/navigation";
@@ -161,6 +161,12 @@ function ThreadDropdownComponent() {
       (project) => project.id === currentThread?.projectId,
     );
   }, [currentThread, projectList]);
+
+  useEffect(() => {
+    if (currentThread?.id) {
+      document.title = currentThread.title || "New Chat";
+    }
+  }, [currentThread?.id]);
 
   if (!currentThread) return null;
 

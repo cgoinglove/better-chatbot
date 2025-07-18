@@ -46,7 +46,7 @@ export function CodeBlock({
               >
                 <div className={cn(showLineNumbers && "pl-12 relative")}>
                   {showLineNumbers && (
-                    <div className="absolute left-0 top-0 w-6 flex flex-col select-none text-right">
+                    <div className="absolute left-0 top-0 w-6 flex flex-col select-none text-right text-muted-foreground">
                       {code?.split("\n").map((_, index) => (
                         <span key={index}>{index + 1}</span>
                       ))}

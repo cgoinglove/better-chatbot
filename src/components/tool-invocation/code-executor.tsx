@@ -1,17 +1,27 @@
+import { useCopy } from "@/hooks/use-copy";
 import { ToolInvocationUIPart } from "app-types/chat";
-import { safeJsRun } from "lib/code-runner/safe-js-run";
+import { callCodeRunWorker } from "lib/code-runner/call-worker";
+
 import {
   CodeRunnerResult,
   LogEntry,
 } from "lib/code-runner/code-runner.interface";
 import { cn, isString, toAny } from "lib/utils";
-import { AlertTriangleIcon, ChevronRight, Loader, Percent } from "lucide-react";
+import {
+  AlertTriangleIcon,
+  CheckIcon,
+  ChevronRight,
+  CopyIcon,
+  Loader,
+  Percent,
+  PlayIcon,
+} from "lucide-react";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { safe } from "ts-safe";
+
 import { CodeBlock } from "ui/CodeBlock";
 import { Skeleton } from "ui/skeleton";
 import { TextShimmer } from "ui/text-shimmer";
-import { safePythonRun } from "lib/code-runner/safe-python-run";
 
 export const CodeExecutor = memo(function CodeExecutor({
   part,
@@ -23,7 +33,11 @@ export const CodeExecutor = memo(function CodeExecutor({
   type: "javascript" | "python";
 }) {
   const isRun = useRef(false);
+
+  const { copy, copied } = useCopy();
   const [isExecuting, setIsExecuting] = useState(false);
+
+  const lastStartedAt = useRef<number>(Date.now());
 
   const [realtimeLogs, setRealtimeLogs] = useState<
     (CodeRunnerResult["logs"][number] & { time: number })[]
@@ -32,15 +46,23 @@ export const CodeExecutor = memo(function CodeExecutor({
   const codeResultContainerRef = useRef<HTMLDivElement>(null);
 
   const runCode = useCallback(
-    async (code: string) => {
-      const engine = type == "javascript" ? safeJsRun : safePythonRun;
-      const result = await engine({
+    async (code: string, type: "javascript" | "python") => {
+      lastStartedAt.current = Date.now();
+      const result = await callCodeRunWorker(type, {
         code,
         timeout: 30000,
         onLog: (log) => {
           setRealtimeLogs((prev) => [...prev, { ...log, time: Date.now() }]);
         },
       });
+      return result;
+    },
+    [],
+  );
+
+  const menualToolCall = useCallback(
+    async (code: string) => {
+      const result = await runCode(code, type);
 
       const logstring = JSON.stringify(result.logs);
 
@@ -69,7 +91,6 @@ export const CodeExecutor = memo(function CodeExecutor({
     },
     [onResult],
   );
-
   const isRunning = useMemo(() => {
     return isExecuting || part.state != "result";
   }, [isExecuting, part.state]);
@@ -96,7 +117,7 @@ export const CodeExecutor = memo(function CodeExecutor({
       logs.push({
         type: "error",
         args: [{ type: "data", value: error }],
-        time: Date.now(),
+        time: lastStartedAt.current,
       });
     }
 
@@ -153,16 +174,8 @@ export const CodeExecutor = memo(function CodeExecutor({
       },
     ]);
     const code = part.args?.code;
-    const engine = type == "javascript" ? safeJsRun : safePythonRun;
-    safe(() =>
-      engine({
-        code,
-        timeout: 60000,
-        onLog: (log) => {
-          setRealtimeLogs((prev) => [...prev, { ...log, time: Date.now() }]);
-        },
-      }),
-    ).watch(() => setIsExecuting(false));
+
+    safe(() => runCode(code, type)).watch(() => setIsExecuting(false));
   }, [part.args, isExecuting]);
 
   const header = useMemo(() => {
@@ -181,7 +194,7 @@ export const CodeExecutor = memo(function CodeExecutor({
             <span className="text-destructive text-xs">ERROR</span>
           </>
         ) : (
-          <div className="text-[7px] bg-border rounded-xs w-4 h-4 p-0.5 flex items-end justify-end font-bold">
+          <div className="text-[7px] bg-input rounded-xs w-4 h-4 p-0.5 flex items-end justify-end font-bold">
             {type == "javascript" ? "JS" : type == "python" ? "PY" : ">_"}
           </div>
         )}
@@ -196,7 +209,7 @@ export const CodeExecutor = memo(function CodeExecutor({
   const logContainer = useMemo(() => {
     if (!logs.length) return null;
     return (
-      <div className="p-4 text-[10px] text-foreground flex flex-col gap-1">
+      <div className="p-4 text-[10px] text-foreground flex flex-col gap-1 border-t">
         <div className="text-foreground flex items-center gap-1">
           {isRunning ? (
             <Loader className="size-2 animate-spin" />
@@ -205,14 +218,6 @@ export const CodeExecutor = memo(function CodeExecutor({
           )}
           better-chatbot
           <Percent className="size-2" />
-          {part.state == "result" && (
-            <div
-              className="hover:text-foreground ml-auto px-2 py-1 rounded-sm cursor-pointer text-muted-foreground/80"
-              onClick={reExecute}
-            >
-              retry
-            </div>
-          )}
         </div>
         {logs}
         {isRunning && (
@@ -227,7 +232,7 @@ export const CodeExecutor = memo(function CodeExecutor({
   useEffect(() => {
     if (onResult && part.args && part.state == "call" && !isRun.current) {
       isRun.current = true;
-      runCode(part.args.code);
+      menualToolCall(part.args.code);
     }
   }, [part.state, !!onResult]);
 
@@ -243,26 +248,50 @@ export const CodeExecutor = memo(function CodeExecutor({
   return (
     <div className="flex flex-col">
       <div className="px-6 py-3">
-        <div
-          ref={codeResultContainerRef}
-          onClick={scrollToCode}
-          className="border overflow-y-auto overflow-x-hidden max-h-[70vh] relative rounded-lg shadow fade-in animate-in duration-500"
-        >
-          <div className="sticky top-0 py-2.5 px-4 flex items-center gap-1.5 z-10 border-b bg-background min-h-[37px]">
+        <div className="border overflow-x-hidden relative rounded-lg shadow fade-in animate-in duration-500">
+          <div className="py-2.5 bg-border px-4 flex items-center gap-1.5 z-10 min-h-[37px]">
             {header}
             <div className="flex-1" />
-            <div className="w-1.5 h-1.5 rounded-full bg-input" />
-            <div className="w-1.5 h-1.5 rounded-full bg-input" />
-            <div className="w-1.5 h-1.5 rounded-full bg-input" />
-          </div>
 
-          <div className={`min-h-14 p-6 text-xs`}>
-            <CodeBlock
-              className="p-4 text-[10px] overflow-x-auto"
-              code={part.args?.code}
-              lang={type}
-              fallback={fallback}
-            />
+            {part.state == "result" && (
+              <>
+                <div
+                  className="flex items-center gap-1 text-[10px] text-muted-foreground px-2 py-1 transition-all rounded-sm cursor-pointer hover:bg-input hover:text-foreground font-semibold"
+                  onClick={reExecute}
+                >
+                  <PlayIcon className="size-2" />
+                  Run
+                </div>
+                <div
+                  className="flex items-center gap-1 text-[10px] text-muted-foreground px-2 py-1 transition-all rounded-sm cursor-pointer hover:bg-input hover:text-foreground font-semibold"
+                  onClick={() => copy(part.args?.code ?? "")}
+                >
+                  {copied ? (
+                    <CheckIcon className="size-2" />
+                  ) : (
+                    <CopyIcon className="size-2" />
+                  )}
+                  Copy
+                </div>
+              </>
+            )}
+          </div>
+          <div className="relative">
+            <div className="absolute pointer-events-none top-0 left-0 w-full h-1/6 bg-gradient-to-b from-background to-transparent z-10" />
+            <div className="absolute pointer-events-none bottom-0 left-0 w-full h-1/6 bg-gradient-to-t from-background to-transparent z-10" />
+            <div className="absolute pointer-events-none top-0 left-0 w-1/6 h-full bg-gradient-to-r from-background to-transparent z-10" />
+            <div className="absolute pointer-events-none top-0 right-0 w-1/6 h-full bg-gradient-to-l from-background to-transparent z-10" />
+            <div
+              className="min-h-14 p-6 text-xs overflow-y-auto max-h-[40vh] "
+              ref={codeResultContainerRef}
+            >
+              <CodeBlock
+                className="p-4 text-[10px] overflow-x-auto"
+                code={part.args?.code}
+                lang={type}
+                fallback={fallback}
+              />
+            </div>
           </div>
           {logContainer}
         </div>

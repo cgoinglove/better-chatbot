@@ -115,8 +115,6 @@ function createSafeEnvironment(
     trace: (...args: any[]) => logCapture("trace", ...args),
   };
 
-  const self = typeof window !== "undefined" ? window : undefined;
-
   // Safe global objects and functions
   const safeGlobals = {
     // Console for output

@@ -289,9 +289,7 @@ export const AssistMessagePart = memo(function AssistMessagePart({
   };
 
   return (
-    <div
-      className={cn(isLoading && "animate-pulse", "flex flex-col gap-2 group")}
-    >
+    <div className={cn(isLoading && "animate-pulse", "flex flex-col gap-2")}>
       <div
         data-testid="message-content"
         className={cn("flex flex-col gap-4 px-2", {
@@ -301,16 +299,14 @@ export const AssistMessagePart = memo(function AssistMessagePart({
         <Markdown>{part.text}</Markdown>
       </div>
       {showActions && (
-        <div className="flex w-full ">
+        <div className="flex w-full">
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 data-testid="message-edit-button"
                 variant="ghost"
                 size="icon"
-                className={cn(
-                  "size-3! p-4! opacity-0 group-hover/message:opacity-100",
-                )}
+                className="size-3! p-4!"
                 onClick={() => copy(part.text)}
               >
                 {copied ? <Check /> : <Copy />}
@@ -323,12 +319,10 @@ export const AssistMessagePart = memo(function AssistMessagePart({
               <div>
                 <SelectModel onSelect={handleModelChange}>
                   <Button
-                    data-testid="message-edit-button"
+                    data-testid="message-edit-button data-[state=open]:bg-secondary!"
                     variant="ghost"
                     size="icon"
-                    className={cn(
-                      "size-3! p-4! opacity-0 group-hover/message:opacity-100",
-                    )}
+                    className="size-3! p-4!"
                   >
                     {<RefreshCw />}
                   </Button>
@@ -344,7 +338,7 @@ export const AssistMessagePart = memo(function AssistMessagePart({
                 size="icon"
                 disabled={isDeleting}
                 onClick={deleteMessage}
-                className="size-3! p-4! opacity-0 group-hover/message:opacity-100 hover:text-destructive"
+                className="size-3! p-4! hover:text-destructive"
               >
                 {isDeleting ? <Loader className="animate-spin" /> : <Trash2 />}
               </Button>
@@ -437,11 +431,19 @@ export const ReasoningPart = memo(function ReasoningPart({
 });
 ReasoningPart.displayName = "ReasoningPart";
 
+const loading = memo(function Loading() {
+  return (
+    <div className="px-6 py-4">
+      <Skeleton className="h-44 w-full rounded-md" />
+    </div>
+  );
+});
+
 const PieChart = dynamic(
   () => import("./tool-invocation/pie-chart").then((mod) => mod.PieChart),
   {
     ssr: false,
-    loading: () => <Skeleton className="h-64 w-full rounded-md" />,
+    loading,
   },
 );
 
@@ -449,7 +451,7 @@ const BarChart = dynamic(
   () => import("./tool-invocation/bar-chart").then((mod) => mod.BarChart),
   {
     ssr: false,
-    loading: () => <Skeleton className="h-64 w-full rounded-md" />,
+    loading,
   },
 );
 
@@ -457,7 +459,7 @@ const LineChart = dynamic(
   () => import("./tool-invocation/line-chart").then((mod) => mod.LineChart),
   {
     ssr: false,
-    loading: () => <Skeleton className="h-64 w-full rounded-md" />,
+    loading,
   },
 );
 
@@ -468,7 +470,7 @@ const WebSearchToolInvocation = dynamic(
     ),
   {
     ssr: false,
-    loading: () => <Skeleton className="h-64 w-full rounded-md" />,
+    loading,
   },
 );
 
@@ -477,7 +479,7 @@ const CodeExecutor = dynamic(
     import("./tool-invocation/code-executor").then((mod) => mod.CodeExecutor),
   {
     ssr: false,
-    loading: () => <Skeleton className="h-64 w-full rounded-md" />,
+    loading,
   },
 );
 

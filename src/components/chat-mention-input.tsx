@@ -247,6 +247,10 @@ function ChatMentionInputSuggestion({
           label = "js-execution";
           description = "Execute simple javascript code";
           break;
+        case DefaultToolName.PythonExecution:
+          label = "python-execution";
+          description = "Execute simple python code";
+          break;
       }
       return {
         id: toolName,
