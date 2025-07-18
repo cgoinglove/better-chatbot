@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.17.0](https://github.com/better-chatbot/better-chatbot/compare/v1.16.0...v1.17.0) (2025-07-18)
+
+
+### Features
+
+* add Python execution tool and integrate Pyodide support ([#176](https://github.com/better-chatbot/better-chatbot/issues/176)) ([de2cf7b](https://github.com/better-chatbot/better-chatbot/commit/de2cf7b66444fe64791ed142216277a5f2cdc551))
+
+
+### Bug Fixes
+
+* generate title by user message ([9ee4be6](https://github.com/better-chatbot/better-chatbot/commit/9ee4be69c6b90f44134d110e90f9c3da5219c79f))
+* generate title sync ([5f3afdc](https://github.com/better-chatbot/better-chatbot/commit/5f3afdc4cb7304460606b3480f54f513ef24940c))
+
 ## [1.16.0](https://github.com/better-chatbot/better-chatbot/compare/v1.15.0...v1.16.0) (2025-07-15)
 
 
