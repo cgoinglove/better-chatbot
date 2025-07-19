@@ -29,6 +29,10 @@ import equal from "lib/equal";
 import { MCPIcon } from "ui/mcp-icon";
 import { DefaultToolName } from "lib/ai/tools";
 import { DefaultToolIcon } from "./default-tool-icon";
+import { OpenAIIcon } from "ui/openai-icon";
+import { GrokIcon } from "ui/grok-icon";
+import { ClaudeIcon } from "ui/claude-icon";
+import { GeminiIcon } from "ui/gemini-icon";
 
 interface PromptInputProps {
   placeholder?: string;
@@ -266,16 +270,40 @@ export default function PromptInput({
                   </>
                 )}
                 <div className="flex-1" />
+                <Button
+                  variant={"secondary"}
+                  size={"sm"}
+                  className="rounded-full hover:bg-input! p-2!"
+                  onClick={notImplementedToast}
+                >
+                  think
+                </Button>
 
                 <SelectModel onSelect={setChatModel} defaultModel={chatModel}>
                   <Button
                     variant={"ghost"}
                     size={"sm"}
-                    className="rounded-full data-[state=open]:bg-input! hover:bg-input! mr-1"
+                    className="rounded-full group data-[state=open]:bg-input! hover:bg-input! mr-1"
                   >
-                    {chatModel?.model ?? (
+                    {chatModel?.model ? (
+                      <>
+                        {chatModel.provider === "openai" ? (
+                          <OpenAIIcon className="size-3 opacity-0 group-data-[state=open]:opacity-100 group-hover:opacity-100" />
+                        ) : chatModel.provider === "xai" ? (
+                          <GrokIcon className="size-3 opacity-0 group-data-[state=open]:opacity-100 group-hover:opacity-100" />
+                        ) : chatModel.provider === "anthropic" ? (
+                          <ClaudeIcon className="size-3 opacity-0 group-data-[state=open]:opacity-100 group-hover:opacity-100" />
+                        ) : chatModel.provider === "google" ? (
+                          <GeminiIcon className="size-3 opacity-0 group-data-[state=open]:opacity-100 group-hover:opacity-100" />
+                        ) : null}
+                        <span className="text-muted-foreground group-data-[state=open]:text-foreground group-hover:text-foreground">
+                          {chatModel.model}
+                        </span>
+                      </>
+                    ) : (
                       <span className="text-muted-foreground">model</span>
                     )}
+
                     <ChevronDown className="size-3" />
                   </Button>
                 </SelectModel>

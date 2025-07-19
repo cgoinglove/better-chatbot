@@ -46,8 +46,10 @@ export const SelectModel = (props: PropsWithChildren<SelectModelProps>) => {
             size={"sm"}
             className="data-[state=open]:bg-input! hover:bg-input! "
           >
-            <p className="mr-auto">
-              {model?.model ?? (
+            <p className="mr-auto flex items-center gap-1">
+              {model?.model ? (
+                <span className="text-muted-foreground">{model.model}</span>
+              ) : (
                 <span className="text-muted-foreground">model</span>
               )}
             </p>

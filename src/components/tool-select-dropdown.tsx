@@ -4,19 +4,14 @@ import { cn, objectFlow } from "lib/utils";
 import {
   AtSign,
   ChartColumn,
-  Check,
   ChevronRight,
-  ClipboardCheck,
   CodeIcon,
   HardDriveUploadIcon,
-  Infinity,
   InfoIcon,
   Loader,
   MousePointer2,
   Package,
-  PenOffIcon,
   Plus,
-  Settings2Icon,
   Waypoints,
   Wrench,
   WrenchIcon,
@@ -44,7 +39,6 @@ import {
   DropdownMenuLabel,
   DropdownMenuPortal,
   DropdownMenuSeparator,
-  DropdownMenuShortcut,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
@@ -67,7 +61,6 @@ import { AppDefaultToolkit } from "lib/ai/tools";
 import { ChatMention } from "app-types/chat";
 import { CountAnimation } from "ui/count-animation";
 
-import { getShortcutKeyList, Shortcuts } from "lib/keyboard-shortcuts";
 import { Separator } from "ui/separator";
 
 interface ToolSelectDropdownProps {
@@ -140,61 +133,60 @@ export function ToolSelectDropdown({
     mcpList,
   ]);
 
+  const triggerButton = useMemo(() => {
+    return (
+      <Button
+        variant="ghost"
+        size={"sm"}
+        className={cn(
+          "gap-0.5 bg-input/60 border rounded-full data-[state=open]:bg-input! hover:bg-input!",
+          !bindingTools.length &&
+            !isLoading &&
+            "text-muted-foreground bg-transparent border-transparent",
+          isLoading && "bg-input/60",
+        )}
+      >
+        <span
+          className={(mentions?.length ?? 0 > 0) ? "text-muted-foreground" : ""}
+        >
+          {(mentions?.length ?? 0 > 0) ? "Mention" : "Tools"}
+        </span>
+        {(bindingTools.length > 0 || isLoading) && (
+          <>
+            <div className="h-4 hidden sm:block mx-1">
+              <Separator orientation="vertical" />
+            </div>
+
+            <div className="min-w-5 flex justify-center">
+              {isLoading ? (
+                <Loader className="animate-spin size-3.5" />
+              ) : (mentions?.length ?? 0) > 0 ? (
+                <AtSign className="size-3.5" />
+              ) : (
+                <CountAnimation
+                  number={bindingTools.length}
+                  className="text-xs"
+                />
+              )}
+            </div>
+          </>
+        )}
+      </Button>
+    );
+  }, [mentions?.length, bindingTools.length, isLoading]);
+
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size={"sm"}
-          className={cn(
-            "gap-0.5 bg-input/60 border rounded-full data-[state=open]:bg-input! hover:bg-input!",
-            !bindingTools.length &&
-              !isLoading &&
-              "text-muted-foreground bg-transparent border-transparent",
-            isLoading && "bg-input/60",
-          )}
-        >
-          <span
-            className={
-              (mentions?.length ?? 0 > 0) ? "text-muted-foreground" : ""
-            }
-          >
-            {(mentions?.length ?? 0 > 0) ? "Mention" : "Tools"}
-          </span>
-          {(bindingTools.length > 0 || isLoading) && (
-            <>
-              <div className="h-4 hidden sm:block mx-1">
-                <Separator orientation="vertical" />
-              </div>
-              <div className="min-w-5 flex justify-center">
-                {isLoading ? (
-                  <Loader className="animate-spin size-3.5" />
-                ) : (mentions?.length ?? 0) > 0 ? (
-                  <AtSign className="size-3.5" />
-                ) : (
-                  <CountAnimation
-                    number={bindingTools.length}
-                    className="text-xs"
-                  />
-                )}
-              </div>
-            </>
-          )}
-        </Button>
-      </DropdownMenuTrigger>
+      <DropdownMenuTrigger asChild>{triggerButton}</DropdownMenuTrigger>
       <DropdownMenuContent className="md:w-72" align={align} side={side}>
         <DropdownMenuLabel className="flex items-center gap-2">
           <WrenchIcon className="size-3.5" />
           {t("toolsSetup")}
         </DropdownMenuLabel>
-
         <p className="text-xs text-muted-foreground w-full pl-8 pr-4 mb-2 whitespace-pre-wrap">
           {t("toolsSetupDescription")}
         </p>
-        <div className="py-1 ">
-          <DropdownMenuSeparator />
-        </div>
-        <ToolModeSelector />
+
         <div className="py-1 ">
           <DropdownMenuSeparator />
         </div>
@@ -465,97 +457,6 @@ function WorkflowToolSelector({
       </DropdownMenuSub>
       {/* ))
   )} */}
-    </DropdownMenuGroup>
-  );
-}
-
-function ToolModeSelector() {
-  const t = useTranslations("Chat.Tool");
-  const [toolChoice, appStoreMutate] = appStore(
-    useShallow((state) => [state.toolChoice, state.mutate]),
-  );
-
-  return (
-    <DropdownMenuGroup>
-      <DropdownMenuSub>
-        <DropdownMenuSubTrigger className="text-xs flex items-center gap-2 font-semibold cursor-pointer">
-          <Settings2Icon className="size-3.5" />
-          {t("selectToolMode")}
-        </DropdownMenuSubTrigger>
-        <DropdownMenuPortal>
-          <DropdownMenuSubContent className="w-80 relative">
-            <DropdownMenuLabel className="text-muted-foreground flex items-center gap-2">
-              {t("selectToolMode")}
-              <DropdownMenuShortcut>
-                <span className="text-xs text-muted-foreground bg-muted rounded-md px-2 py-0.5">
-                  {getShortcutKeyList(Shortcuts.toolMode).join("")}
-                </span>
-              </DropdownMenuShortcut>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.preventDefault();
-                  appStoreMutate({ toolChoice: "auto" });
-                }}
-              >
-                <div className="flex flex-col gap-2 w-full">
-                  <div className="flex items-center gap-2">
-                    <Infinity />
-                    <span className="font-bold">Auto</span>
-                    {toolChoice == "auto" && <Check className="ml-auto" />}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {t("autoToolModeDescription")}
-                  </p>
-                </div>
-              </DropdownMenuItem>
-              <div className="px-2 py-1">
-                <DropdownMenuSeparator />
-              </div>
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.preventDefault();
-                  appStoreMutate({ toolChoice: "manual" });
-                }}
-              >
-                <div className="flex flex-col gap-2 w-full">
-                  <div className="flex items-center gap-2">
-                    <ClipboardCheck />
-                    <span className="font-bold">Manual</span>
-                    {toolChoice == "manual" && <Check className="ml-auto" />}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {t("manualToolModeDescription")}
-                  </p>
-                </div>
-              </DropdownMenuItem>
-              <div className="px-2 py-1">
-                <DropdownMenuSeparator />
-              </div>
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.preventDefault();
-                  appStoreMutate({ toolChoice: "none" });
-                }}
-              >
-                <div className="flex flex-col gap-2 w-full">
-                  <div className="flex items-center gap-2">
-                    <PenOffIcon />
-                    <span className="font-bold">None</span>
-                    {toolChoice == "none" && <Check className="ml-auto" />}
-                  </div>
-
-                  <p className="text-xs text-muted-foreground">
-                    {t("noneToolModeDescription")}
-                  </p>
-                </div>
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-          </DropdownMenuSubContent>
-        </DropdownMenuPortal>
-      </DropdownMenuSub>
     </DropdownMenuGroup>
   );
 }

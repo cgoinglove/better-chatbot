@@ -14,4 +14,9 @@ export enum DefaultToolName {
   Http = "http",
   JavascriptExecution = "mini-javascript-execution",
   PythonExecution = "python-execution",
+  SequentialThinking = "sequential-thinking",
+}
+
+export enum ThinkingToolName {
+  SequentialThinking = "sequential-thinking",
 }

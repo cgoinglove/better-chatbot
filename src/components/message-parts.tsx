@@ -49,7 +49,7 @@ import { TextShimmer } from "ui/text-shimmer";
 import equal from "lib/equal";
 import { isVercelAIWorkflowTool } from "app-types/workflow";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
-import { DefaultToolName } from "lib/ai/tools";
+import { DefaultToolName, ThinkingToolName } from "lib/ai/tools";
 
 import { WorkflowInvocation } from "./tool-invocation/workflow-invocation";
 import dynamic from "next/dynamic";
@@ -483,6 +483,17 @@ const CodeExecutor = dynamic(
   },
 );
 
+const SequentialThinkingToolInvocation = dynamic(
+  () =>
+    import("./tool-invocation/sequential-thinking").then(
+      (mod) => mod.SequentialThinkingToolInvocation,
+    ),
+  {
+    ssr: false,
+    loading,
+  },
+);
+
 export const ToolMessagePart = memo(
   ({
     part,
@@ -579,6 +590,10 @@ export const ToolMessagePart = memo(
             type="python"
           />
         );
+      }
+
+      if (toolName === ThinkingToolName.SequentialThinking) {
+        return <SequentialThinkingToolInvocation part={toolInvocation} />;
       }
 
       if (state === "result") {
