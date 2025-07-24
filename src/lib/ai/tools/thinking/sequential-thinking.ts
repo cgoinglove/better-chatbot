@@ -44,7 +44,15 @@ const parameters = z.object({
     )
     .describe(
       "Complete sequence of thinking steps that form your reasoning process. Include all steps from initial analysis to final conclusion.",
-    ),
+    )
+    .default([
+      {
+        nextThoughtNeeded: false,
+        thoughtNumber: 1,
+        totalThoughts: 1,
+        thought: "Hmm, let's see... 🤔",
+      },
+    ]),
 });
 
 export type ThoughtData = z.infer<typeof parameters>["steps"][number];

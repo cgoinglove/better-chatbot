@@ -248,7 +248,7 @@ export async function POST(request: Request) {
           maxSteps: 10,
           toolCallStreaming: true,
           experimental_transform: smoothStream({ chunking: "word" }),
-          maxRetries: 1,
+          maxRetries: 2,
           tools: vercelAITooles,
           toolChoice: "auto",
           abortSignal: request.signal,

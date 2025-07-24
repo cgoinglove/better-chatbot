@@ -25,7 +25,8 @@ function PureSequentialThinkingToolInvocation({
   part,
 }: SequentialThinkingToolInvocationProps) {
   const createdAt = useRef(Date.now());
-  const [expanded, setExpanded] = useState(false);
+  const initState = useRef(part.state);
+  const [expanded, setExpanded] = useState(initState.current == "result");
 
   const [isDiff, setIsDiff] = useState(false);
 
@@ -49,14 +50,16 @@ function PureSequentialThinkingToolInvocation({
     if (part.state == "result") return message;
     return <TextShimmer>{message}</TextShimmer>;
   }, [part.state, second]);
+
   useEffect(() => {
+    if (initState.current == "result") return;
     return () => {
       setIsDiff(true);
     };
   }, [part.state]);
 
   return (
-    <div className="flex w-full">
+    <div className="flex w-full px-2">
       <div className="flex flex-col">
         <div
           onClick={() => setExpanded(!expanded)}
@@ -76,13 +79,19 @@ function PureSequentialThinkingToolInvocation({
               const isLastStep = index === steps.length - 1;
               const isRunning = isLastStep && part.state !== "result";
               const isStepFinal = part.state === "result" && isLastStep;
+              const isOnlyOneStep = steps.length === 1 && index == 0;
 
               return (
                 <div
                   key={index}
                   className="flex flex-col gap-1 group/step text-muted-foreground relative pb-4"
                 >
-                  <div className="flex items-center gap-2">
+                  <div
+                    className={cn(
+                      "flex items-center gap-2",
+                      isOnlyOneStep && "hidden",
+                    )}
+                  >
                     <div
                       className={cn(
                         "rounded-full flex items-center justify-center p-1 bg-secondary fade-in animate-in duration-500",
@@ -111,7 +120,7 @@ function PureSequentialThinkingToolInvocation({
                           ? `Branch from step ${step.branchFromThought}`
                           : isStepFinal
                             ? `Final Step`
-                            : `Step ${step.thoughtNumber || index + 1}`}
+                            : `Step ${step.thoughtNumber || index + 1}${step.totalThoughts ? `/${step.totalThoughts}` : ""}`}
                     </span>
                   </div>
                   <p className="text-xs text-muted-foreground break-words px-2 ml-4.5 group-hover/step:text-foreground transition-colors">
