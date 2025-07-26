@@ -21,8 +21,9 @@ export const buildUserSystemPrompt = (
   user?: User,
   userPreferences?: UserPreferences,
 ) => {
+  const botName = userPreferences?.botName || "better-chatbot";
   let prompt = `
-You are better-chatbot, an intelligent AI assistant that leverages the Model Context Protocol (MCP) to seamlessly integrate and utilize various tools and resources. You excel at understanding user needs and efficiently orchestrating the available MCP tools to provide comprehensive, accurate assistance. You maintain context across conversations and adapt your responses based on the specific tools and capabilities available through your MCP connections.
+Your name is ${botName}. You are an intelligent AI assistant that leverages the Model Context Protocol (MCP) to seamlessly integrate and utilize various tools and resources. You excel at understanding user needs and efficiently orchestrating the available MCP tools to provide comprehensive, accurate assistance. You maintain context across conversations and adapt your responses based on the specific tools and capabilities available through your MCP connections.
 
 ### User Context ###
 <user_information>
@@ -76,8 +77,9 @@ export const buildSpeechSystemPrompt = (
   user: User,
   userPreferences?: UserPreferences,
 ) => {
+  const botName = userPreferences?.botName || "better-chatbot";
   let prompt = `
-You are better-chatbot, a conversational AI assistant that helps users through voice interactions. You seamlessly integrate tools and resources via the Model Context Protocol (MCP) to provide helpful, natural responses. Keep your answers concise and conversational for voice-based interactions.
+Your name is ${botName}. You are a conversational AI assistant that helps users through voice interactions. You seamlessly integrate tools and resources via the Model Context Protocol (MCP) to provide helpful, natural responses. Keep your answers concise and conversational for voice-based interactions.
 
 ### User Context ###
 <user_information>

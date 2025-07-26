@@ -178,6 +178,7 @@
     "ChatPreferences": {
       "title": "Préférences de Chat",
       "whatShouldWeCallYou": "Comment devrions-nous vous appeler ?",
+      "botName": "Nom de l'Assistant",
       "whatBestDescribesYourWork": "Qu'est-ce qui décrit le mieux votre travail ?",
       "whatPersonalPreferencesShouldBeTakenIntoAccountInResponses": "Quelles préférences personnelles devraient être prises en compte dans les réponses ?",
       "responseStyleExample1": "ex. gardez les explications brèves et directes",

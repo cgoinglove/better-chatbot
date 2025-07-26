@@ -179,6 +179,7 @@
     "ChatPreferences": {
       "title": "聊天偏好",
       "whatShouldWeCallYou": "我们应该怎么称呼您？",
+      "botName": "助手名称",
       "whatBestDescribesYourWork": "什么最能描述您的工作？",
       "whatPersonalPreferencesShouldBeTakenIntoAccountInResponses": "在回应中应该考虑哪些个人偏好？",
       "responseStyleExample1": "例如：保持解释简洁而切题",

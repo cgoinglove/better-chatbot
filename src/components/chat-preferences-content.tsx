@@ -50,6 +50,7 @@ export function UserInstructionsContent() {
     displayName: "",
     responseStyleExample: "",
     profession: "",
+    botName: "",
   });
 
   const {
@@ -94,6 +95,7 @@ export function UserInstructionsContent() {
       (preferences.responseStyleExample || "")
     )
       return true;
+    if ((data?.botName || "") !== (preferences.botName || "")) return true;
     return false;
   }, [preferences, data]);
 
@@ -118,6 +120,23 @@ export function UserInstructionsContent() {
               onChange={(e) => {
                 setPreferences({
                   displayName: e.target.value,
+                });
+              }}
+            />
+          )}
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <Label>{t("Chat.ChatPreferences.botName")}</Label>
+          {isLoading ? (
+            <Skeleton className="h-9" />
+          ) : (
+            <Input
+              placeholder="better-chatbot"
+              value={preferences.botName}
+              onChange={(e) => {
+                setPreferences({
+                  botName: e.target.value,
                 });
               }}
             />

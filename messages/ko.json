@@ -179,6 +179,7 @@
     "ChatPreferences": {
       "title": "채팅 환경설정",
       "whatShouldWeCallYou": "뭐라고 불러드릴까요?",
+      "botName": "어시스턴트 이름",
       "whatBestDescribesYourWork": "어떤 직업을 갖고 계신가요?",
       "whatPersonalPreferencesShouldBeTakenIntoAccountInResponses": "원하시는 응답 스타일을 말씀해주세요",
       "responseStyleExample1": "예) 설명을 간결하게 유지하고 중요한 점만 강조하세요",

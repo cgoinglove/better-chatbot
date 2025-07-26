@@ -178,6 +178,7 @@
     "ChatPreferences": {
       "title": "チャット設定",
       "whatShouldWeCallYou": "何とお呼びすればよろしいですか？",
+      "botName": "アシスタント名",
       "whatBestDescribesYourWork": "あなたの仕事を最もよく表すものは何ですか？",
       "whatPersonalPreferencesShouldBeTakenIntoAccountInResponses": "回答時に考慮すべき個人的な好みは何ですか？",
       "responseStyleExample1": "例：説明は簡潔で要点を押さえたものにしてください",

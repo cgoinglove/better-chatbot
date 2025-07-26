@@ -279,6 +279,7 @@
     "ChatPreferences": {
       "title": "Chat Preferences",
       "whatShouldWeCallYou": "What should we call you?",
+      "botName": "Assistant Name",
       "whatBestDescribesYourWork": "What best describes your work?",
       "whatPersonalPreferencesShouldBeTakenIntoAccountInResponses": "What personal preferences should be taken into account in responses?",
       "responseStyleExample1": "e.g. keep explanations brief and to the point",
