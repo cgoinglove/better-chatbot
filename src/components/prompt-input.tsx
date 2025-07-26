@@ -199,6 +199,7 @@ export default function PromptInput({
       if (isShortcutEvent(e, THINKING_SHORTCUT)) {
         e.preventDefault();
         e.stopPropagation();
+        e.stopImmediatePropagation();
         onThinkingChange(!thinking);
         editorRef.current?.commands.focus();
       }

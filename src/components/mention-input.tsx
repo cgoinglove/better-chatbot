@@ -171,6 +171,7 @@ export default function MentionInput({
         e.key === "Enter" &&
         editor?.getText().trim().length &&
         !e.shiftKey &&
+        !e.metaKey &&
         !e.nativeEvent.isComposing;
       if (isSubmit) onEnter?.();
     },

@@ -26,7 +26,7 @@ function PureSequentialThinkingToolInvocation({
 }: SequentialThinkingToolInvocationProps) {
   const createdAt = useRef(Date.now());
   const initState = useRef(part.state);
-  const [expanded, setExpanded] = useState(initState.current == "result");
+  const [expanded, setExpanded] = useState(true);
 
   const [isDiff, setIsDiff] = useState(false);
 
@@ -69,11 +69,11 @@ function PureSequentialThinkingToolInvocation({
           <ChevronDownIcon
             className={cn(
               "size-3 transition-transform",
-              !expanded && "rotate-180",
+              expanded && "rotate-180",
             )}
           />
         </div>
-        <div className={cn("pl-[7px] flex gap-4", expanded && "hidden")}>
+        <div className={cn("pl-[7px] flex gap-4", !expanded && "hidden")}>
           <div className="flex flex-col py-4 px-2">
             {steps.map((step, index) => {
               const isLastStep = index === steps.length - 1;
@@ -114,13 +114,7 @@ function PureSequentialThinkingToolInvocation({
                         isRunning && "animate-pulse",
                       )}
                     >
-                      {step.isRevision
-                        ? `Revision of step ${step.revisesThought}`
-                        : step.branchFromThought
-                          ? `Branch from step ${step.branchFromThought}`
-                          : isStepFinal
-                            ? `Final Step`
-                            : `Step ${step.thoughtNumber || index + 1}${step.totalThoughts ? `/${step.totalThoughts}` : ""}`}
+                      {isStepFinal ? `Final Step` : `Step ${index + 1}`}
                     </span>
                   </div>
                   <p className="text-xs text-muted-foreground break-words px-2 ml-4.5 group-hover/step:text-foreground transition-colors">
