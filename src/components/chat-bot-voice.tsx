@@ -1,13 +1,13 @@
 "use client";
 
-import { TextPart, UIMessage } from "ai";
+import { TextPart } from "ai";
 import { DEFAULT_VOICE_TOOLS, UIMessageWithCompleted } from "lib/ai/speech";
 
 import {
   OPENAI_VOICE,
   useOpenAIVoiceChat as OpenAIVoiceChat,
 } from "lib/ai/speech/open-ai/use-voice-chat.openai";
-import { cn, nextTick } from "lib/utils";
+import { cn } from "lib/utils";
 import {
   CheckIcon,
   Loader,
@@ -50,41 +50,10 @@ import { EnabledMcpToolsDropdown } from "./enabled-mcp-tools-dropdown";
 import { ToolInvocationUIPart } from "app-types/chat";
 import { appStore } from "@/app/store";
 import { useShallow } from "zustand/shallow";
-import { mutate } from "swr";
 import { useTranslations } from "next-intl";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "ui/dialog";
 import JsonView from "ui/json-view";
-import { useRouter } from "next/navigation";
 import { isShortcutEvent, Shortcuts } from "lib/keyboard-shortcuts";
-
-const isNotEmptyUIMessage = (message: UIMessage) => {
-  return message.parts.some((v) => {
-    if (v.type === "text") {
-      return v.text.trim() !== "";
-    }
-    return true;
-  });
-};
-
-function mergeConsecutiveMessages(messages: UIMessage[]): UIMessage[] {
-  if (messages.length === 0) return [];
-
-  const merged: UIMessage[] = [];
-  let current = { ...messages[0], parts: [...messages[0].parts] };
-
-  for (let i = 1; i < messages.length; i++) {
-    const msg = messages[i];
-    if (msg.role === current.role) {
-      current.parts = [...current.parts, ...msg.parts];
-    } else {
-      merged.push(current);
-      current = { ...msg, parts: [...msg.parts] };
-    }
-  }
-  merged.push(current);
-
-  return merged;
-}
 
 const prependTools = [
   {
@@ -106,7 +75,6 @@ export function ChatBotVoice() {
   const [isClosing, setIsClosing] = useState(false);
   const startAudio = useRef<HTMLAudioElement>(null);
   const [useCompactView, setUseCompactView] = useState(true);
-  const router = useRouter();
 
   // const useVoiceChat = useMemo<VoiceChatHook>(() => {
   //   switch (voiceChat.options.provider) {
@@ -143,35 +111,6 @@ export function ChatBotVoice() {
   const endVoiceChat = useCallback(async () => {
     setIsClosing(true);
     await safe(() => stop());
-    await safe(async () => {
-      if (!voiceChat.threadId) return;
-      const saveMessages = messages.filter(
-        (v) => v.completed && isNotEmptyUIMessage(v),
-      );
-      if (saveMessages.length === 0) {
-        return;
-      }
-      await fetch(`/api/chat/${voiceChat.threadId}`, {
-        method: "POST",
-        body: JSON.stringify({
-          messages: mergeConsecutiveMessages(saveMessages),
-          chatModel: model,
-          projectId: voiceChat.projectId,
-        }),
-      });
-
-      return true;
-    }).ifOk((isSaved) => {
-      if (isSaved) {
-        nextTick().then(() => {
-          mutate("/api/thread/list");
-          router.push(`/chat/${voiceChat.threadId}`);
-          if (window.location.pathname === `/chat/${voiceChat.threadId}`) {
-            router.refresh();
-          }
-        });
-      }
-    });
     setIsClosing(false);
     appStoreMutate({
       voiceChat: {
@@ -179,7 +118,7 @@ export function ChatBotVoice() {
         isOpen: false,
       },
     });
-  }, [messages, voiceChat.threadId, voiceChat.projectId, model]);
+  }, [messages, model]);
 
   const statusMessage = useMemo(() => {
     if (isLoading) {
@@ -262,8 +201,7 @@ export function ChatBotVoice() {
           voiceChat: {
             ...prev.voiceChat,
             isOpen: true,
-            threadId: undefined,
-            projectId: undefined,
+            agentId: undefined,
           },
         }));
       }

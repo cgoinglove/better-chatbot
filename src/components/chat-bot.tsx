@@ -13,7 +13,7 @@ import {
 import PromptInput from "./prompt-input";
 import clsx from "clsx";
 import { appStore } from "@/app/store";
-import { cn, generateUUID, truncateString } from "lib/utils";
+import { cn, createDebounce, generateUUID, truncateString } from "lib/utils";
 import { ErrorMessage, PreviewMessage } from "./message";
 import { ChatGreeting } from "./chat-greeting";
 
@@ -44,6 +44,7 @@ import {
 import { useTranslations } from "next-intl";
 import { Think } from "ui/think";
 import { useGenerateThreadTitle } from "@/hooks/queries/use-generate-thread-title";
+import dynamic from "next/dynamic";
 
 type Props = {
   threadId: string;
@@ -54,6 +55,16 @@ type Props = {
     inputBottomSlot?: ReactNode;
   };
 };
+
+const LightRays = dynamic(() => import("ui/light-rays"), {
+  ssr: false,
+});
+
+const Particles = dynamic(() => import("ui/particles"), {
+  ssr: false,
+});
+
+const debounce = createDebounce();
 
 export default function ChatBot({ threadId, initialMessages, slots }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -84,6 +95,8 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
     threadId,
   });
 
+  const [showParticles, setShowParticles] = useState(false);
+
   const {
     messages,
     input,
@@ -113,8 +126,12 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
           (requestBody as { model: ChatModel })?.model ??
           latestRef.current.model,
         toolChoice: latestRef.current.toolChoice,
-        allowedAppDefaultToolkit: latestRef.current.allowedAppDefaultToolkit,
-        allowedMcpServers: latestRef.current.allowedMcpServers,
+        allowedAppDefaultToolkit: latestRef.current.mentions?.length
+          ? undefined
+          : latestRef.current.allowedAppDefaultToolkit,
+        allowedMcpServers: latestRef.current.mentions?.length
+          ? undefined
+          : latestRef.current.allowedMcpServers,
         mentions: latestRef.current.mentions,
         message: lastMessage,
       };
@@ -138,7 +155,7 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
           generateTitle(part.text);
         }
       } else if (latestRef.current.threadList[0]?.id !== threadId) {
-        mutate("/api/thread/list");
+        mutate("/api/thread");
       }
     },
     onError: (error) => {
@@ -237,6 +254,20 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
     return false;
   }, [isLoading, messages.at(-1)]);
 
+  const particle = useMemo(() => {
+    if (!showParticles) return;
+    return (
+      <>
+        <div className="absolute top-0 left-0 w-full h-full z-10 fade-in animate-in duration-5000">
+          <LightRays />
+        </div>
+        <div className="absolute top-0 left-0 w-full h-full z-10 fade-in animate-in duration-5000">
+          <Particles particleCount={400} particleBaseSize={10} />
+        </div>
+      </>
+    );
+  }, [showParticles]);
+
   useEffect(() => {
     appStoreMutate({ currentThreadId: threadId });
     return () => {
@@ -278,87 +309,97 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  return (
-    <div
-      className={cn(
-        emptyMessage && "justify-center pb-24",
-        "flex flex-col min-w-0 relative h-full",
-      )}
-    >
-      {emptyMessage ? (
-        slots?.emptySlot ? (
-          slots.emptySlot
-        ) : (
-          <ChatGreeting />
-        )
-      ) : (
-        <>
-          <div
-            className={"flex flex-col gap-2 overflow-y-auto py-6"}
-            ref={containerRef}
-          >
-            {messages.map((message, index) => {
-              const isLastMessage = messages.length - 1 === index;
-              return (
-                <PreviewMessage
-                  threadId={threadId}
-                  messageIndex={index}
-                  key={index}
-                  message={message}
-                  status={status}
-                  onPoxyToolCall={
-                    isPendingToolCall &&
-                    !isExecutingProxyToolCall &&
-                    isLastMessage
-                      ? proxyToolCall
-                      : undefined
-                  }
-                  isLoading={isLoading || isPendingToolCall}
-                  isError={!!error && isLastMessage}
-                  isLastMessage={isLastMessage}
-                  setMessages={setMessages}
-                  reload={reload}
-                  className={
-                    needSpaceClass(index) ? "min-h-[calc(55dvh-40px)]" : ""
-                  }
-                />
-              );
-            })}
-            {space && (
-              <>
-                <div className="w-full mx-auto max-w-3xl px-6 relative">
-                  <div className={space == "space" ? "opacity-0" : ""}>
-                    <Think />
-                  </div>
-                </div>
-                <div className="min-h-[calc(55dvh-56px)]" />
-              </>
-            )}
+  useEffect(() => {
+    setShowParticles(false);
+    debounce(() => setShowParticles(true), 60000);
+  }, [input]);
 
-            {error && <ErrorMessage error={error} />}
-            <div className="min-w-0 min-h-52" />
-          </div>
-        </>
-      )}
-      <div className={clsx(messages.length && "absolute bottom-14", "w-full")}>
-        <PromptInput
-          input={input}
+  return (
+    <>
+      {particle}
+      <div
+        className={cn(
+          emptyMessage && "justify-center pb-24",
+          "flex flex-col min-w-0 relative h-full",
+        )}
+      >
+        {emptyMessage ? (
+          slots?.emptySlot ? (
+            slots.emptySlot
+          ) : (
+            <ChatGreeting />
+          )
+        ) : (
+          <>
+            <div
+              className={"flex flex-col gap-2 overflow-y-auto py-6"}
+              ref={containerRef}
+            >
+              {messages.map((message, index) => {
+                const isLastMessage = messages.length - 1 === index;
+                return (
+                  <PreviewMessage
+                    threadId={threadId}
+                    messageIndex={index}
+                    key={index}
+                    message={message}
+                    status={status}
+                    onPoxyToolCall={
+                      isPendingToolCall &&
+                      !isExecutingProxyToolCall &&
+                      isLastMessage
+                        ? proxyToolCall
+                        : undefined
+                    }
+                    isLoading={isLoading || isPendingToolCall}
+                    isError={!!error && isLastMessage}
+                    isLastMessage={isLastMessage}
+                    setMessages={setMessages}
+                    reload={reload}
+                    className={
+                      needSpaceClass(index) ? "min-h-[calc(55dvh-40px)]" : ""
+                    }
+                  />
+                );
+              })}
+              {space && (
+                <>
+                  <div className="w-full mx-auto max-w-3xl px-6 relative">
+                    <div className={space == "space" ? "opacity-0" : ""}>
+                      <Think />
+                    </div>
+                  </div>
+                  <div className="min-h-[calc(55dvh-56px)]" />
+                </>
+              )}
+
+              {error && <ErrorMessage error={error} />}
+              <div className="min-w-0 min-h-52" />
+            </div>
+          </>
+        )}
+        <div
+          className={clsx(messages.length && "absolute bottom-14", "w-full")}
+        >
+          <PromptInput
+            input={input}
+            threadId={threadId}
+            append={append}
+            thinking={thinking}
+            setInput={setInput}
+            onThinkingChange={handleThinkingChange}
+            isLoading={isLoading || isPendingToolCall}
+            onStop={stop}
+          />
+          {slots?.inputBottomSlot}
+        </div>
+        <DeleteThreadPopup
           threadId={threadId}
-          append={append}
-          thinking={thinking}
-          setInput={setInput}
-          onThinkingChange={handleThinkingChange}
-          isLoading={isLoading || isPendingToolCall}
-          onStop={stop}
+          onClose={() => setIsDeleteThreadPopupOpen(false)}
+          open={isDeleteThreadPopupOpen}
         />
-        {slots?.inputBottomSlot}
       </div>
-      <DeleteThreadPopup
-        threadId={threadId}
-        onClose={() => setIsDeleteThreadPopupOpen(false)}
-        open={isDeleteThreadPopupOpen}
-      />
-    </div>
+    </>
   );
 }
 

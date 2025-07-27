@@ -3,7 +3,7 @@ import {
   OutputSchemaSourceKey,
   UINode,
 } from "lib/ai/workflow/workflow.interface";
-import { useCallback, useMemo, useRef } from "react";
+import { memo, useCallback, useMemo, useRef } from "react";
 
 import { VariableSelectContent } from "./variable-select";
 import { TipTapMentionJsonContent } from "app-types/util";
@@ -18,7 +18,6 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "ui/dropdown-menu";
-import { createPortal } from "react-dom";
 
 interface OutputSchemaMentionInputProps {
   currentNodeId: string;
@@ -109,19 +108,23 @@ export function OutputSchemaMentionInput({
   );
 }
 
-const outputSchemaMentionInputSuggestionBuilder =
-  (
-    nodeId: string,
-  ): React.FC<{
-    onClose: () => void;
-    onSelectMention: (item: { label: string; id: string }) => void;
-    top: number;
-    left: number;
-  }> =>
-  ({ onSelectMention, top, left, onClose }) => {
+const outputSchemaMentionInputSuggestionBuilder = (
+  nodeId: string,
+): React.FC<{
+  onClose: () => void;
+  onSelectMention: (item: { label: string; id: string }) => void;
+  top: number;
+  left: number;
+}> =>
+  memo(function OutputSchemaMentionInputSuggestion({
+    onSelectMention,
+    top,
+    left,
+    onClose,
+  }) {
     const mentionRef = useRef<HTMLDivElement>(null);
 
-    return createPortal(
+    return (
       <div
         className="fixed z-50"
         style={{
@@ -147,7 +150,6 @@ const outputSchemaMentionInputSuggestionBuilder =
             />
           </DropdownMenuContent>
         </DropdownMenu>
-      </div>,
-      document.body,
+      </div>
     );
-  };
+  });

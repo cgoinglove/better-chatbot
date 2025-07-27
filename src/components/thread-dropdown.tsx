@@ -2,7 +2,7 @@
 import { deleteThreadAction, updateThreadAction } from "@/app/api/chat/actions";
 import { appStore } from "@/app/store";
 import { useToRef } from "@/hooks/use-latest";
-import { Loader, PencilLine, Trash, WandSparkles } from "lucide-react";
+import { Loader, PencilLine, Trash } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { type PropsWithChildren, useState } from "react";
 import { toast } from "sonner";
@@ -20,7 +20,6 @@ import {
   DialogTrigger,
 } from "ui/dialog";
 import { Input } from "ui/input";
-import { CreateProjectWithThreadPopup } from "./create-project-with-thread-popup";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 import {
   Command,
@@ -65,7 +64,7 @@ export function ThreadDropdown({
         }
       })
       .ifOk(() => updateThreadAction(threadId, { title }))
-      .ifOk(() => mutate("/api/thread/list"))
+      .ifOk(() => mutate("/api/thread"))
       .watch(({ isOk, error }) => {
         if (isOk) {
           toast.success(t("threadUpdated"));
@@ -93,7 +92,7 @@ export function ThreadDropdown({
         if (currentThreadId === threadId) {
           push.current("/");
         }
-        mutate("/api/thread/list");
+        mutate("/api/thread");
       })
       .unwrap();
   };
@@ -109,17 +108,6 @@ export function ThreadDropdown({
 
           <CommandList>
             <CommandGroup>
-              <CommandItem className="cursor-pointer">
-                <CreateProjectWithThreadPopup
-                  threadId={threadId}
-                  onClose={() => setOpen(false)}
-                >
-                  <div className="flex items-center gap-2 w-full">
-                    <WandSparkles className="text-foreground" />
-                    <span className="mr-4">{t("summarizeAsProject")}</span>
-                  </div>
-                </CreateProjectWithThreadPopup>
-              </CommandItem>
               <CommandItem className="cursor-pointer p-0">
                 <UpdateThreadNameDialog
                   initialTitle={beforeTitle ?? ""}

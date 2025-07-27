@@ -211,7 +211,9 @@ export default function WorkflowPage() {
                         <div className="flex items-center gap-1.5 w-full">
                           <Avatar className="size-4 rounded-full ring ml-auto">
                             <AvatarImage src={workflow.userAvatar} />
-                            <AvatarFallback>{workflow.userName}</AvatarFallback>
+                            <AvatarFallback>
+                              {workflow.userName.slice(0, 1)}
+                            </AvatarFallback>
                           </Avatar>
                           <span className="text-xs text-muted-foreground font-medium ">
                             {workflow.userName}

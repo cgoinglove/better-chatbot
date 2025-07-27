@@ -37,6 +37,8 @@ import {
 import { createWorkflowExecutor } from "lib/ai/workflow/executor/workflow-executor";
 import { NodeKind } from "lib/ai/workflow/workflow.interface";
 import { mcpClientsManager } from "lib/ai/mcp/mcp-manager";
+import { APP_DEFAULT_TOOL_KIT } from "lib/ai/tools/tool-kit";
+import { AppDefaultToolkit } from "lib/ai/tools";
 
 export function filterMCPToolsByMentions(
   tools: Record<string, VercelAIMcpTool>,
@@ -442,3 +444,70 @@ export const workflowToVercelAITools = (
       {} as Record<string, VercelAIWorkflowTool>,
     );
 };
+
+export const loadMcpTools = (opt?: {
+  mentions?: ChatMention[];
+  allowedMcpServers?: Record<string, AllowedMCPServer>;
+}) =>
+  safe(() => mcpClientsManager.tools())
+    .map((tools) => {
+      if (opt?.mentions) {
+        return filterMCPToolsByMentions(tools, opt.mentions);
+      }
+      if (opt?.allowedMcpServers) {
+        return filterMCPToolsByAllowedMCPServers(tools, opt.allowedMcpServers);
+      }
+      return tools;
+    })
+    .orElse({} as Record<string, VercelAIMcpTool>);
+
+export const loadWorkFlowTools = (opt: {
+  mentions?: ChatMention[];
+  dataStream: DataStreamWriter;
+}) =>
+  safe(() =>
+    opt?.mentions?.length
+      ? workflowRepository.selectToolByIds(
+          opt?.mentions
+            ?.filter((m) => m.type == "workflow")
+            .map((v) => v.workflowId),
+        )
+      : [],
+  )
+    .map((tools) => workflowToVercelAITools(tools, opt.dataStream))
+    .orElse({} as Record<string, VercelAIWorkflowTool>);
+
+export const loadAppDefaultTools = (opt?: {
+  mentions?: ChatMention[];
+  allowedAppDefaultToolkit?: string[];
+}) =>
+  safe(APP_DEFAULT_TOOL_KIT)
+    .map((tools) => {
+      if (opt?.mentions?.length) {
+        const defaultToolMentions = opt.mentions.filter(
+          (m) => m.type == "defaultTool",
+        );
+        return Array.from(Object.values(tools)).reduce((acc, t) => {
+          const allowed = objectFlow(t).filter((_, k) => {
+            return defaultToolMentions.some((m) => m.name == k);
+          });
+          return { ...acc, ...allowed };
+        }, {});
+      }
+      const allowedAppDefaultToolkit =
+        opt?.allowedAppDefaultToolkit ?? Object.values(AppDefaultToolkit);
+
+      return (
+        allowedAppDefaultToolkit.reduce(
+          (acc, key) => {
+            return { ...acc, ...tools[key] };
+          },
+          {} as Record<string, Tool>,
+        ) || {}
+      );
+    })
+    .ifFail((e) => {
+      console.error(e);
+      throw e;
+    })
+    .orElse({} as Record<string, Tool>);

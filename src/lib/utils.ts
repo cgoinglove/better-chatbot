@@ -8,10 +8,11 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export const fetcher = async (url: string) => {
+export const fetcher = async (url: string, options?: RequestInit) => {
   const res = await fetch(url, {
     redirect: "follow",
     cache: "no-store",
+    ...options,
   });
 
   if (!res.ok) {

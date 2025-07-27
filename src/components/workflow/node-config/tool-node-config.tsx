@@ -6,7 +6,7 @@ import {
   WorkflowToolKey,
 } from "lib/ai/workflow/workflow.interface";
 import { memo, useEffect, useMemo } from "react";
-import { ChevronDown, InfoIcon, VariableIcon, WrenchIcon } from "lucide-react";
+import { InfoIcon, VariableIcon, WrenchIcon } from "lucide-react";
 
 import { useEdges, useNodes, useReactFlow } from "@xyflow/react";
 import { appStore } from "@/app/store";
@@ -15,7 +15,6 @@ import { WorkflowToolSelect } from "../workflow-tool-select";
 import { isString, toAny } from "lib/utils";
 import { Separator } from "ui/separator";
 import { SelectModel } from "@/components/select-model";
-import { Button } from "ui/button";
 import { OutputSchemaMentionInput } from "../output-schema-mention-input";
 import { useWorkflowStore } from "@/app/store/workflow.store";
 import { MCPIcon } from "ui/mcp-icon";
@@ -152,20 +151,8 @@ export const ToolNodeDataConfig = memo(function ({
               model,
             });
           }}
-        >
-          <Button
-            variant={"outline"}
-            size={"sm"}
-            className="data-[state=open]:bg-input! hover:bg-input! ml-auto"
-          >
-            <p className="mr-auto">
-              {data.model?.model ?? (
-                <span className="text-muted-foreground">model</span>
-              )}
-            </p>
-            <ChevronDown className="size-3" />
-          </Button>
-        </SelectModel>
+        />
+
         <Tooltip>
           <TooltipTrigger asChild>
             <div className="p-1 hover:bg-secondary rounded cursor-pointer">

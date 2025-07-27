@@ -3,7 +3,6 @@ import { LLMNodeData, UINode } from "lib/ai/workflow/workflow.interface";
 import { SelectModel } from "../../select-model";
 import { Button } from "ui/button";
 import {
-  ChevronDown,
   InfoIcon,
   MessageCirclePlusIcon,
   TrashIcon,
@@ -108,19 +107,7 @@ export const LLMNodeDataConfig = memo(function ({
             model,
           });
         }}
-      >
-        <Button
-          variant={"outline"}
-          className="data-[state=open]:bg-input! hover:bg-input! w-full "
-        >
-          <p className="mr-auto">
-            {model?.model ?? (
-              <span className="text-muted-foreground">model</span>
-            )}
-          </p>
-          <ChevronDown className="size-3" />
-        </Button>
-      </SelectModel>
+      />
 
       <div className="flex items-center justify-between">
         <Label className="text-sm">LLM {t("Workflow.outputSchema")}</Label>

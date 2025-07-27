@@ -7,21 +7,18 @@ import {
   formatDataStreamPart,
   appendClientMessage,
   Message,
-  Tool,
 } from "ai";
 
 import { customModelProvider, isToolCallUnsupportedModel } from "lib/ai/models";
 
 import { mcpClientsManager } from "lib/ai/mcp/mcp-manager";
 
-import { chatRepository, workflowRepository } from "lib/db/repository";
+import { chatRepository } from "lib/db/repository";
 import globalLogger from "logger";
 import {
   buildMcpServerCustomizationsSystemPrompt,
-  buildProjectInstructionsSystemPrompt,
   buildUserSystemPrompt,
   buildToolCallUnsupportedModelSystemPrompt,
-  mentionPrompt,
   buildThinkingSystemPrompt,
 } from "lib/ai/prompts";
 import { chatApiSchemaRequestBodySchema } from "app-types/chat";
@@ -31,26 +28,25 @@ import { errorIf, safe } from "ts-safe";
 import {
   appendAnnotations,
   excludeToolExecution,
-  filterMCPToolsByMentions,
   handleError,
   manualToolExecuteByLastMessage,
   mergeSystemPrompt,
   convertToMessage,
   extractInProgressToolPart,
   assignToolResult,
-  filterMCPToolsByAllowedMCPServers,
   filterMcpServerCustomizations,
-  workflowToVercelAITools,
+  loadMcpTools,
+  loadWorkFlowTools,
+  loadAppDefaultTools,
 } from "./shared.chat";
 import {
   generateTitleFromUserMessageAction,
+  rememberAgentAction,
   rememberMcpServerCustomizationsAction,
 } from "./actions";
 import { getSession } from "auth/server";
 import { colorize } from "consola/utils";
 import { isVercelAIWorkflowTool } from "app-types/workflow";
-import { objectFlow } from "lib/utils";
-import { APP_DEFAULT_TOOL_KIT } from "lib/ai/tools/tool-kit";
 import { SequentialThinkingToolName } from "lib/ai/tools";
 import { sequentialThinkingTool } from "lib/ai/tools/thinking/sequential-thinking";
 
@@ -75,7 +71,6 @@ export async function POST(request: Request) {
       allowedAppDefaultToolkit,
       autoTitle,
       allowedMcpServers,
-      projectId,
       thinking,
       mentions = [],
     } = chatApiSchemaRequestBodySchema.parse(json);
@@ -88,7 +83,6 @@ export async function POST(request: Request) {
       logger.info(`create chat thread: ${id}`);
       const newThread = await chatRepository.insertThread({
         id,
-        projectId: projectId ?? null,
         title: autoTitle
           ? await generateTitleFromUserMessageAction({ message, model })
           : "",
@@ -117,6 +111,14 @@ export async function POST(request: Request) {
 
     const supportToolCall = !isToolCallUnsupportedModel(model);
 
+    const agentId = mentions.find((m) => m.type === "agent")?.agentId;
+
+    const agent = await rememberAgentAction(agentId, session.user.id);
+
+    if (agent?.instructions?.mentions) {
+      mentions.push(...agent.instructions.mentions);
+    }
+
     const isToolCallAllowed =
       supportToolCall && (toolChoice != "none" || mentions.length > 0);
 
@@ -124,53 +126,34 @@ export async function POST(request: Request) {
       execute: async (dataStream) => {
         const mcpClients = await mcpClientsManager.getClients();
         logger.info(`mcp-server count: ${mcpClients.length}`);
-        const MCP_TOOLS = await safe(mcpClientsManager.tools())
+
+        const MCP_TOOLS = await safe()
           .map(errorIf(() => !isToolCallAllowed && "Not allowed"))
-          .map((tools) => {
-            // filter tools by mentions
-            if (mentions.length) {
-              return filterMCPToolsByMentions(tools, mentions);
-            }
-            // filter tools by allowed mcp servers
-            return filterMCPToolsByAllowedMCPServers(tools, allowedMcpServers);
-          })
+          .map(() =>
+            loadMcpTools({
+              mentions,
+              allowedMcpServers,
+            }),
+          )
           .orElse({});
 
         const WORKFLOW_TOOLS = await safe()
           .map(errorIf(() => !isToolCallAllowed && "Not allowed"))
           .map(() =>
-            workflowRepository.selectToolByIds(
-              mentions
-                .filter((m) => m.type == "workflow")
-                .map((v) => v.workflowId),
-            ),
+            loadWorkFlowTools({
+              mentions,
+              dataStream,
+            }),
           )
-          .map((v) => workflowToVercelAITools(v, dataStream))
           .orElse({});
 
-        const APP_DEFAULT_TOOLS = safe(APP_DEFAULT_TOOL_KIT)
-          .map(errorIf(() => !isToolCallAllowed && "Not allowed"))
-          .map((tools) => {
-            if (mentions.length) {
-              const defaultToolMentions = mentions.filter(
-                (m) => m.type == "defaultTool",
-              );
-              return Array.from(Object.values(tools)).reduce((acc, t) => {
-                const allowed = objectFlow(t).filter((_, k) => {
-                  return defaultToolMentions.some((m) => m.name == k);
-                });
-                return { ...acc, ...allowed };
-              }, {});
-            }
-            return (
-              allowedAppDefaultToolkit?.reduce(
-                (acc, key) => {
-                  return { ...acc, ...tools[key] };
-                },
-                {} as Record<string, Tool>,
-              ) || {}
-            );
-          })
+        const APP_DEFAULT_TOOLS = await safe()
+          .map(() =>
+            loadAppDefaultTools({
+              mentions,
+              allowedAppDefaultToolkit,
+            }),
+          )
           .orElse({});
 
         if (inProgressToolStep) {
@@ -201,10 +184,8 @@ export async function POST(request: Request) {
           .orElse({});
 
         const systemPrompt = mergeSystemPrompt(
-          buildUserSystemPrompt(session.user, userPreferences),
-          buildProjectInstructionsSystemPrompt(thread?.instructions),
+          buildUserSystemPrompt(session.user, userPreferences, agent),
           buildMcpServerCustomizationsSystemPrompt(mcpServerCustomizations),
-          mentions.length > 0 && mentionPrompt,
           !supportToolCall && buildToolCallUnsupportedModelSystemPrompt,
           (!supportToolCall ||
             ["openai", "anthropic"].includes(chatModel?.provider ?? "")) &&
@@ -237,7 +218,7 @@ export async function POST(request: Request) {
           .flat();
 
         logger.info(
-          `tool mode: ${toolChoice}, mentions: ${mentions.length}, allowedMcpTools: ${allowedMcpTools.length} thinking: ${thinking}`,
+          `${agent ? `agent: ${agent}, ` : ""}tool mode: ${toolChoice}, mentions: ${mentions.length}, allowedMcpTools: ${allowedMcpTools.length} thinking: ${thinking}`,
         );
         logger.info(
           `binding tool count APP_DEFAULT: ${Object.keys(APP_DEFAULT_TOOLS ?? {}).length}, MCP: ${Object.keys(MCP_TOOLS ?? {}).length}, Workflow: ${Object.keys(WORKFLOW_TOOLS ?? {}).length}`,

@@ -1,18 +1,18 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { ChatMention, ChatModel, ChatThread, Project } from "app-types/chat";
+import { ChatMention, ChatModel, ChatThread } from "app-types/chat";
 import { AllowedMCPServer, MCPServerInfo } from "app-types/mcp";
 import { OPENAI_VOICE } from "lib/ai/speech/open-ai/use-voice-chat.openai";
 import { WorkflowSummary } from "app-types/workflow";
 import { AppDefaultToolkit } from "lib/ai/tools";
+import { Agent } from "app-types/agent";
 
 export interface AppState {
   threadList: ChatThread[];
   mcpList: (MCPServerInfo & { id: string })[];
+  agentList: Omit<Agent, "instructions">[];
   workflowToolList: WorkflowSummary[];
-  projectList: Omit<Project, "instructions">[];
   currentThreadId: ChatThread["id"] | null;
-  currentProjectId: Project["id"] | null;
   toolChoice: "auto" | "none" | "manual";
   allowedMcpServers?: Record<string, AllowedMCPServer>;
   allowedAppDefaultToolkit?: AppDefaultToolkit[];
@@ -36,8 +36,7 @@ export interface AppState {
   };
   voiceChat: {
     isOpen: boolean;
-    threadId?: string;
-    projectId?: string;
+    agentId?: string;
     options: {
       provider: string;
       providerOptions?: Record<string, any>;
@@ -51,13 +50,12 @@ export interface AppDispatch {
 
 const initialState: AppState = {
   threadList: [],
-  projectList: [],
   generatingTitleThreadIds: [],
   threadMentions: {},
   mcpList: [],
+  agentList: [],
   workflowToolList: [],
   currentThreadId: null,
-  currentProjectId: null,
   toolChoice: "auto",
   allowedMcpServers: undefined,
   allowedAppDefaultToolkit: [],
@@ -105,8 +103,6 @@ export const appStore = create<AppState & AppDispatch>()(
         voiceChat: {
           ...initialState.voiceChat,
           ...state.voiceChat,
-          threadId: undefined,
-          projectId: undefined,
           isOpen: false,
         },
       }),

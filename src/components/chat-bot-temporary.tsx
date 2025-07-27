@@ -331,6 +331,7 @@ function DrawerTemporaryContent({
         <PromptInput
           input={input}
           append={append}
+          disabledMention={true}
           model={temporaryChat.chatModel}
           setModel={(model) => {
             appStoreMutate({

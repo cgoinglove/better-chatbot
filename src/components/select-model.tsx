@@ -26,6 +26,7 @@ interface SelectModelProps {
   onSelect: (model: ChatModel) => void;
   align?: "start" | "end";
   defaultModel?: ChatModel;
+  showProvider?: boolean;
 }
 
 export const SelectModel = (props: PropsWithChildren<SelectModelProps>) => {
@@ -46,9 +47,15 @@ export const SelectModel = (props: PropsWithChildren<SelectModelProps>) => {
             size={"sm"}
             className="data-[state=open]:bg-input! hover:bg-input! "
           >
-            <p className="mr-auto flex items-center gap-1">
-              {model?.model || "model"}
-            </p>
+            <div className="mr-auto flex items-center gap-1">
+              {(props.showProvider ?? true) && (
+                <ProviderIcon
+                  provider={model?.provider || ""}
+                  className="size-2.5 mr-1"
+                />
+              )}
+              <p>{model?.model || "model"}</p>
+            </div>
             <ChevronDown className="size-3" />
           </Button>
         )}
@@ -113,20 +120,31 @@ export const SelectModel = (props: PropsWithChildren<SelectModelProps>) => {
   );
 };
 
+function ProviderIcon({
+  provider,
+  className,
+}: { provider: string; className?: string }) {
+  return provider === "openai" ? (
+    <OpenAIIcon className={className} />
+  ) : provider === "xai" ? (
+    <GrokIcon className={className} />
+  ) : provider === "anthropic" ? (
+    <ClaudeIcon className={className} />
+  ) : provider === "google" ? (
+    <GeminiIcon className={className} />
+  ) : null;
+}
+
 const ProviderHeader = memo(function ProviderHeader({
   provider,
 }: { provider: string }) {
   return (
     <div className="text-sm text-muted-foreground flex items-center gap-1.5 group-hover:text-foreground transition-colors duration-300">
       {provider === "openai" ? (
-        <OpenAIIcon className="size-3 text-foreground" />
-      ) : provider === "xai" ? (
-        <GrokIcon className="size-3" />
-      ) : provider === "anthropic" ? (
-        <ClaudeIcon className="size-3" />
-      ) : provider === "google" ? (
-        <GeminiIcon className="size-3" />
-      ) : null}
+        <ProviderIcon provider="openai" className="size-3 text-foreground" />
+      ) : (
+        <ProviderIcon provider={provider} className="size-3" />
+      )}
       {provider}
     </div>
   );

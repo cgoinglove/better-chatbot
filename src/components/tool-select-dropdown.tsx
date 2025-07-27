@@ -101,6 +101,7 @@ export function ToolSelectDropdown({
         state.mcpList,
       ]),
     );
+
   const t = useTranslations("Chat.Tool");
   const { isLoading } = useMcpList({
     refreshInterval: 1000 * 30,
@@ -109,6 +110,10 @@ export function ToolSelectDropdown({
   useWorkflowToolList({
     refreshInterval: 1000 * 60 * 5,
   });
+
+  const agentMention = useMemo(() => {
+    return mentions?.find((m) => m.type === "agent");
+  }, [mentions]);
 
   const bindingTools = useMemo<string[]>(() => {
     if (mentions?.length) {
@@ -152,12 +157,24 @@ export function ToolSelectDropdown({
           className,
         )}
       >
+        {agentMention ? (
+          <div className="min-w-5 flex justify-center">
+            <Avatar className="size-3.5">
+              <AvatarImage src={agentMention.icon?.value} />
+            </Avatar>
+          </div>
+        ) : null}
         <span
           className={(mentions?.length ?? 0 > 0) ? "text-muted-foreground" : ""}
         >
-          {(mentions?.length ?? 0 > 0) ? "Mention" : "Tools"}
+          {agentMention
+            ? agentMention.name
+            : (mentions?.length ?? 0 > 0)
+              ? "Mention"
+              : "Tools"}
         </span>
-        {(bindingTools.length > 0 || isLoading) && (
+
+        {((!agentMention && bindingTools.length > 0) || isLoading) && (
           <>
             <div className="h-4 hidden sm:block mx-1">
               <Separator orientation="vertical" />

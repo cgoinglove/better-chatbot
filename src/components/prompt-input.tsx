@@ -51,6 +51,7 @@ interface PromptInputProps {
   setModel?: (model: ChatModel) => void;
   voiceDisabled?: boolean;
   threadId?: string;
+  disabledMention?: boolean;
 }
 
 const ChatMentionInput = dynamic(() => import("./chat-mention-input"), {
@@ -81,21 +82,15 @@ export default function PromptInput({
   threadId,
   onThinkingChange,
   thinking,
+  disabledMention,
 }: PromptInputProps) {
   const t = useTranslations("Chat");
 
-  const [
-    currentThreadId,
-    currentProjectId,
-    globalModel,
-    threadMentions,
-    appStoreMutate,
-  ] = appStore(
+  const [globalModel, threadMentions, appStoreMutate] = appStore(
     useShallow((state) => [
-      state.currentThreadId,
-      state.currentProjectId,
       state.chatModel,
       state.threadMentions,
+
       state.mutate,
     ]),
   );
@@ -208,6 +203,30 @@ export default function PromptInput({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [!!onThinkingChange, thinking]);
 
+  // Handle ESC key to clear mentions
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && mentions.length > 0 && threadId) {
+        e.preventDefault();
+        e.stopPropagation();
+        appStoreMutate((prev) => ({
+          threadMentions: {
+            ...prev.threadMentions,
+            [threadId]: [],
+          },
+          agentId: undefined,
+        }));
+        editorRef.current?.commands.focus();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [mentions.length, threadId, appStoreMutate]);
+
+  useEffect(() => {
+    if (!editorRef.current) return;
+  }, [editorRef.current]);
+
   return (
     <div className="max-w-3xl mx-auto fade-in animate-in">
       <div className="z-10 mx-auto w-full max-w-3xl relative">
@@ -276,6 +295,7 @@ export default function PromptInput({
                   onEnter={submit}
                   placeholder={placeholder ?? t("placeholder")}
                   ref={editorRef}
+                  disabledMention={disabledMention}
                 />
               </div>
               <div className="flex w-full items-center z-30">
@@ -370,8 +390,7 @@ export default function PromptInput({
                             voiceChat: {
                               ...state.voiceChat,
                               isOpen: true,
-                              threadId: currentThreadId ?? undefined,
-                              projectId: currentProjectId ?? undefined,
+                              agentId: undefined,
                             },
                           }));
                         }}

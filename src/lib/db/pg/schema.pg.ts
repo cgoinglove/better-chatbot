@@ -1,4 +1,5 @@
-import { ChatMessage, Project } from "app-types/chat";
+import { ChatMessage } from "app-types/chat";
+import { Agent } from "app-types/agent";
 import { UserPreferences } from "app-types/user";
 import { MCPServerConfig } from "app-types/mcp";
 import { sql } from "drizzle-orm";
@@ -22,7 +23,6 @@ export const ChatThreadSchema = pgTable("chat_thread", {
     .notNull()
     .references(() => UserSchema.id),
   createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
-  projectId: uuid("project_id"),
 });
 
 export const ChatMessageSchema = pgTable("chat_message", {
@@ -38,13 +38,15 @@ export const ChatMessageSchema = pgTable("chat_message", {
   createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
-export const ProjectSchema = pgTable("project", {
+export const AgentSchema = pgTable("agent", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
   name: text("name").notNull(),
+  description: text("description"),
+  icon: json("icon").$type<Agent["icon"]>(),
   userId: uuid("user_id")
     .notNull()
     .references(() => UserSchema.id),
-  instructions: json("instructions").$type<Project["instructions"]>(),
+  instructions: json("instructions").$type<Agent["instructions"]>(),
   createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
@@ -221,7 +223,8 @@ export const WorkflowEdgeSchema = pgTable("workflow_edge", {
 export type McpServerEntity = typeof McpServerSchema.$inferSelect;
 export type ChatThreadEntity = typeof ChatThreadSchema.$inferSelect;
 export type ChatMessageEntity = typeof ChatMessageSchema.$inferSelect;
-export type ProjectEntity = typeof ProjectSchema.$inferSelect;
+
+export type AgentEntity = typeof AgentSchema.$inferSelect;
 export type UserEntity = typeof UserSchema.$inferSelect;
 export type ToolCustomizationEntity =
   typeof McpToolCustomizationSchema.$inferSelect;

@@ -57,7 +57,7 @@ export function AppSidebarThreads() {
   // State to track if expanded view is active
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const { data: threadList, isLoading } = useSWR("/api/thread/list", fetcher, {
+  const { data: threadList, isLoading } = useSWR("/api/thread", fetcher, {
     onError: handleErrorWithToast,
     fallbackData: [],
     onSuccess: (data) => {
@@ -147,7 +147,7 @@ export function AppSidebarThreads() {
     await toast.promise(deleteThreadsAction(), {
       loading: t("deletingAllChats"),
       success: () => {
-        mutate("/api/thread/list");
+        mutate("/api/thread");
         router.push("/");
         return t("allChatsDeleted");
       },
