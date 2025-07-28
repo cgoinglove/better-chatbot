@@ -150,9 +150,15 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
         messages.filter((v) => v.role === "user" || v.role === "assistant")
           .length < 3;
       if (isNewThread) {
-        const part = messages.at(-1)!.parts.find((v) => v.type === "text");
-        if (part) {
-          generateTitle(part.text);
+        const part = messages
+          .slice(0, 2)
+          .flatMap((m) =>
+            m.parts
+              .filter((v) => v.type === "text")
+              .map((p) => `${m.role}: ${truncateString(p.text, 500)}`),
+          );
+        if (part.length > 0) {
+          generateTitle(part.join("\n\n"));
         }
       } else if (latestRef.current.threadList[0]?.id !== threadId) {
         mutate("/api/thread");

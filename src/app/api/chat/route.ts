@@ -40,7 +40,6 @@ import {
   loadAppDefaultTools,
 } from "./shared.chat";
 import {
-  generateTitleFromUserMessageAction,
   rememberAgentAction,
   rememberMcpServerCustomizationsAction,
 } from "./actions";
@@ -69,7 +68,7 @@ export async function POST(request: Request) {
       chatModel,
       toolChoice,
       allowedAppDefaultToolkit,
-      autoTitle,
+
       allowedMcpServers,
       thinking,
       mentions = [],
@@ -83,9 +82,7 @@ export async function POST(request: Request) {
       logger.info(`create chat thread: ${id}`);
       const newThread = await chatRepository.insertThread({
         id,
-        title: autoTitle
-          ? await generateTitleFromUserMessageAction({ message, model })
-          : "",
+        title: "",
         userId: session.user.id,
       });
       thread = await chatRepository.selectThreadDetails(newThread.id);

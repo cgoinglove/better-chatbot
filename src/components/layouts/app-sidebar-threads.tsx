@@ -226,12 +226,12 @@ export function AppSidebarThreads() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="data-[state=open]:bg-input data-[state=open]:opacity-100 opacity-0 group-hover/threads:opacity-100 transition-opacity"
+                            className="data-[state=open]:bg-input! opacity-0 data-[state=open]:opacity-100! group-hover/threads:opacity-100 transition-opacity"
                           >
                             <MoreHorizontal />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent>
+                        <DropdownMenuContent side="right" align="start">
                           <DropdownMenuItem
                             variant="destructive"
                             onClick={handleDeleteAllThreads}
