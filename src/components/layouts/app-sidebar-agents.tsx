@@ -20,22 +20,69 @@ import { Button } from "ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useAgents } from "@/hooks/queries/use-agents";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { AgentDropdown } from "../agent-dropdown";
 
 import DecryptedText from "ui/decrypted-text";
+import { appStore } from "@/app/store";
+import { useRouter } from "next/navigation";
+import { ChatMention } from "app-types/chat";
 
 export function AppSidebarAgents() {
   const mounted = useMounted();
   const t = useTranslations();
-
+  const router = useRouter();
   const [expanded, setExpanded] = useState(false);
   const { data: agents = [], isLoading } = useAgents();
 
   const visibleAgents = expanded ? agents : agents.slice(0, 5);
   const hasMoreAgents = agents.length > 5;
+
+  const handleAgentClick = useCallback(
+    (id: string) => {
+      const currentThreadId = appStore.getState().currentThreadId;
+      if (currentThreadId) {
+        const agent = agents.find((agent) => agent.id === id);
+        if (agent) {
+          appStore.setState((prev) => {
+            const currentMentions = prev.threadMentions[currentThreadId] || [];
+
+            const target = currentMentions.find(
+              (mention) =>
+                mention.type == "agent" && mention.agentId === agent.id,
+            );
+
+            if (target) {
+              return prev;
+            }
+
+            const newMention: ChatMention = {
+              type: "agent",
+              agentId: agent.id,
+              name: agent.name,
+              icon: agent.icon,
+              description: agent.description,
+            };
+
+            return {
+              threadMentions: {
+                ...prev.threadMentions,
+                [currentThreadId]: [
+                  ...currentMentions.filter((v) => v.type != "agent"),
+                  newMention,
+                ],
+              },
+            };
+          });
+        }
+      } else {
+        router.push(`/agent/${id}`);
+      }
+    },
+    [agents],
+  );
 
   return (
     <SidebarGroup>
@@ -101,7 +148,10 @@ export function AppSidebarAgents() {
                 {visibleAgents?.map((agent) => {
                   return (
                     <SidebarMenu key={agent.id} className={"group/agent mr-0"}>
-                      <SidebarMenuItem className="px-2 cursor-pointer">
+                      <SidebarMenuItem
+                        className="px-2 cursor-pointer"
+                        onClick={() => handleAgentClick(agent.id)}
+                      >
                         <SidebarMenuButton
                           asChild
                           className="data-[state=open]:bg-input!"
@@ -130,15 +180,22 @@ export function AppSidebarAgents() {
                             <div className="flex items-center min-w-0 w-full">
                               <p className="truncate">{agent.name}</p>
                             </div>
-                            <AgentDropdown
-                              agent={agent}
-                              side="right"
-                              align="start"
+                            <div
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                e.preventDefault();
+                              }}
                             >
-                              <SidebarMenuAction className="data-[state=open]:bg-input! data-[state=open]:opacity-100  opacity-0 group-hover/agent:opacity-100 mr-2">
-                                <MoreHorizontal className="size-4" />
-                              </SidebarMenuAction>
-                            </AgentDropdown>
+                              <AgentDropdown
+                                agent={agent}
+                                side="right"
+                                align="start"
+                              >
+                                <SidebarMenuAction className="data-[state=open]:bg-input! data-[state=open]:opacity-100  opacity-0 group-hover/agent:opacity-100 mr-2">
+                                  <MoreHorizontal className="size-4" />
+                                </SidebarMenuAction>
+                              </AgentDropdown>
+                            </div>
                           </div>
                         </SidebarMenuButton>
                       </SidebarMenuItem>

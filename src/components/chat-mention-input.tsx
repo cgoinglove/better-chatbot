@@ -245,7 +245,12 @@ export function ChatMentionInputSuggestion({
               }
             >
               <Avatar className="size-3.5 ring-[1px] ring-input rounded-full">
-                <AvatarImage src={agent.icon?.value} />
+                <AvatarImage
+                  src={
+                    agent.icon?.value ||
+                    "https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f604.png"
+                  }
+                />
                 <AvatarFallback>{agent.name.slice(0, 1)}</AvatarFallback>
               </Avatar>
               <span className="truncate min-w-0">{agent.name}</span>

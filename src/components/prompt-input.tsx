@@ -283,7 +283,12 @@ export default function PromptInput({
                           className="size-6 p-1 ring ring-border rounded-full flex-shrink-0"
                           style={mention.icon?.style}
                         >
-                          <AvatarImage src={mention.icon?.value} />
+                          <AvatarImage
+                            src={
+                              mention.icon?.value ||
+                              "https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f604.png"
+                            }
+                          />
                           <AvatarFallback>
                             {mention.name.slice(0, 1)}
                           </AvatarFallback>
