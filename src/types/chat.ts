@@ -58,7 +58,7 @@ export const ChatMentionSchema = z.discriminatedUnion("type", [
         value: z.string(),
         style: z.record(z.string(), z.string()).optional(),
       })
-      .optional(),
+      .nullish(),
   }),
   z.object({
     type: z.literal("agent"),
@@ -71,7 +71,7 @@ export const ChatMentionSchema = z.discriminatedUnion("type", [
         value: z.string(),
         style: z.record(z.string(), z.string()).optional(),
       })
-      .optional(),
+      .nullish(),
   }),
 ]);
 

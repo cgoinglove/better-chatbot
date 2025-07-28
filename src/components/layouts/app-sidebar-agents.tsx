@@ -158,13 +158,13 @@ export function AppSidebarAgents() {
                         >
                           <div className="flex gap-1">
                             <div
-                              className="p-0.5 rounded ring ring-input bg-background"
+                              className="p-1 rounded-full bg-background"
                               style={{
                                 backgroundColor:
                                   agent.icon?.style?.backgroundColor,
                               }}
                             >
-                              <Avatar className="size-4">
+                              <Avatar className="size-4.5">
                                 <AvatarImage
                                   src={
                                     agent.icon?.value ||

@@ -62,13 +62,13 @@ export async function POST(request: Request) {
     if (!session?.user.id) {
       return new Response("Unauthorized", { status: 401 });
     }
+
     const {
       id,
       message,
       chatModel,
       toolChoice,
       allowedAppDefaultToolkit,
-
       allowedMcpServers,
       thinking,
       mentions = [],
