@@ -108,14 +108,19 @@ export function AppSidebarAgents() {
                         >
                           <div className="flex gap-1">
                             <div
-                              className="p-0.5 rounded ring ring-input"
+                              className="p-0.5 rounded ring ring-input bg-background"
                               style={{
                                 backgroundColor:
                                   agent.icon?.style?.backgroundColor,
                               }}
                             >
                               <Avatar className="size-4">
-                                <AvatarImage src={agent.icon?.value} />
+                                <AvatarImage
+                                  src={
+                                    agent.icon?.value ||
+                                    "https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f604.png"
+                                  }
+                                />
                                 <AvatarFallback className="bg-transparent">
                                   {agent.name[0]}
                                 </AvatarFallback>

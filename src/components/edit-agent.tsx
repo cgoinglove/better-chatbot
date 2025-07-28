@@ -123,6 +123,7 @@ export default function EditAgent({ id }: { id?: string }) {
 
   const [open, setOpen] = useState(false);
 
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [agent, setAgent] = useObjectState(defaultConfig());
 
   const assignToolsByNames = useCallback(
@@ -339,6 +340,9 @@ export default function EditAgent({ id }: { id?: string }) {
           };
         }
         if (key == "instructions") {
+          textareaRef.current?.scrollTo({
+            top: textareaRef.current?.scrollHeight,
+          });
           return {
             instructions: {
               ...prev.instructions,
@@ -421,7 +425,7 @@ export default function EditAgent({ id }: { id?: string }) {
               <Skeleton className="w-full h-10" />
             ) : (
               <Input
-                value={agent.name}
+                value={agent.name || ""}
                 onChange={(e) => setAgent({ name: e.target.value })}
                 autoFocus
                 disabled={isLoading}
@@ -499,7 +503,6 @@ export default function EditAgent({ id }: { id?: string }) {
                   className="fade-300"
                   theme={theme == "dark" ? Theme.DARK : Theme.LIGHT}
                   onEmojiClick={(emoji) => {
-                    console.log(emoji);
                     setAgent({
                       icon: {
                         ...agent.icon!,
@@ -525,7 +528,7 @@ export default function EditAgent({ id }: { id?: string }) {
               disabled={isLoading}
               placeholder={t("Agent.agentDescriptionPlaceholder")}
               className="hover:bg-input placeholder:text-xs bg-secondary/40 transition-colors border-transparent border-none! focus-visible:bg-input! ring-0!"
-              value={agent.description}
+              value={agent.description || ""}
               onChange={(e) => setAgent({ description: e.target.value })}
             />
           )}
@@ -568,6 +571,7 @@ export default function EditAgent({ id }: { id?: string }) {
             ) : (
               <Textarea
                 id="agent-prompt"
+                ref={textareaRef}
                 disabled={isLoading}
                 placeholder={t("Agent.agentInstructionsPlaceholder")}
                 className="p-6 hover:bg-input min-h-48 max-h-96 overflow-y-auto resize-none placeholder:text-xs bg-secondary/40 transition-colors border-transparent border-none! focus-visible:bg-input! ring-0!"
@@ -680,11 +684,7 @@ export default function EditAgent({ id }: { id?: string }) {
                 placeholder="input prompt here..."
                 onChange={(e) => setGenerateAgentPrompt(e.target.value)}
                 onKeyDown={(e) => {
-                  if (
-                    e.key === "Enter" &&
-                    e.metaKey &&
-                    !e.nativeEvent.isComposing
-                  ) {
+                  if (e.key === "Enter" && e.metaKey) {
                     e.preventDefault();
                     submitGenerateAgent();
                   }
