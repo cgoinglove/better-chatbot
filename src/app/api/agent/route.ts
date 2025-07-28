@@ -47,6 +47,11 @@ export async function POST(request: Request) {
     }
 
     console.error("Failed to upsert agent:", error);
-    return new Response("Internal Server Error", { status: 500 });
+    return Response.json(
+      { message: "Internal Server Error" },
+      {
+        status: 500,
+      },
+    );
   }
 }

@@ -36,6 +36,7 @@ import { ClaudeIcon } from "ui/claude-icon";
 import { GeminiIcon } from "ui/gemini-icon";
 import { cn } from "lib/utils";
 import { getShortcutKeyList, isShortcutEvent } from "lib/keyboard-shortcuts";
+import { Agent } from "app-types/agent";
 
 interface PromptInputProps {
   placeholder?: string;
@@ -52,6 +53,7 @@ interface PromptInputProps {
   voiceDisabled?: boolean;
   threadId?: string;
   disabledMention?: boolean;
+  onFocus?: () => void;
 }
 
 const ChatMentionInput = dynamic(() => import("./chat-mention-input"), {
@@ -74,6 +76,7 @@ export default function PromptInput({
   model,
   setModel,
   input,
+  onFocus,
   setInput,
   onStop,
   isLoading,
@@ -90,7 +93,6 @@ export default function PromptInput({
     useShallow((state) => [
       state.chatModel,
       state.threadMentions,
-
       state.mutate,
     ]),
   );
@@ -138,7 +140,12 @@ export default function PromptInput({
       if (!threadId) return;
       appStoreMutate((prev) => {
         if (mentions.some((m) => equal(m, mention))) return prev;
-        const newMentions = [...mentions, mention];
+
+        const newMentions =
+          mention.type == "agent"
+            ? [...mentions.filter((m) => m.type !== "agent"), mention]
+            : [...mentions, mention];
+
         return {
           threadMentions: {
             ...prev.threadMentions,
@@ -163,9 +170,43 @@ export default function PromptInput({
     [addMention],
   );
 
+  const onSelectAgent = useCallback(
+    (agent: Omit<Agent, "createdAt" | "updatedAt" | "instructions">) => {
+      appStoreMutate((prev) => {
+        return {
+          threadMentions: {
+            ...prev.threadMentions,
+            [threadId!]: [
+              {
+                type: "agent",
+                name: agent.name,
+                icon: agent.icon,
+                description: agent.description,
+                agentId: agent.id,
+              },
+            ],
+          },
+        };
+      });
+    },
+    [mentions, threadId],
+  );
+
   const onChangeMention = useCallback(
     (mentions: ChatMention[]) => {
-      mentions.forEach(addMention);
+      let hasAgent = false;
+      [...mentions]
+        .reverse()
+        .filter((m) => {
+          if (m.type == "agent") {
+            if (hasAgent) return false;
+            hasAgent = true;
+          }
+
+          return true;
+        })
+        .reverse()
+        .forEach(addMention);
     },
     [addMention],
   );
@@ -178,7 +219,6 @@ export default function PromptInput({
     append!({
       role: "user",
       content: "",
-
       parts: [
         {
           type: "text",
@@ -237,7 +277,8 @@ export default function PromptInput({
                 {mentions.map((mention, i) => {
                   return (
                     <div key={i} className="flex items-center gap-2">
-                      {mention.type === "workflow" ? (
+                      {mention.type === "workflow" ||
+                      mention.type === "agent" ? (
                         <Avatar
                           className="size-6 p-1 ring ring-border rounded-full flex-shrink-0"
                           style={mention.icon?.style}
@@ -296,6 +337,7 @@ export default function PromptInput({
                   placeholder={placeholder ?? t("placeholder")}
                   ref={editorRef}
                   disabledMention={disabledMention}
+                  onFocus={onFocus}
                 />
               </div>
               <div className="flex w-full items-center z-30">
@@ -345,6 +387,7 @@ export default function PromptInput({
                       align="start"
                       side="top"
                       onSelectWorkflow={onSelectWorkflow}
+                      onSelectAgent={onSelectAgent}
                       mentions={mentions}
                     />
                   </>

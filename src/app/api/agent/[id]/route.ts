@@ -40,7 +40,7 @@ export async function DELETE(
   try {
     const { id } = await params;
     await agentRepository.deleteAgent(id, session.user.id);
-    return new Response(JSON.stringify({ success: true }), { status: 204 });
+    return new Response(JSON.stringify({ success: true }), { status: 200 });
   } catch (error) {
     console.error("Failed to delete agent:", error);
     return new Response("Internal Server Error", { status: 500 });

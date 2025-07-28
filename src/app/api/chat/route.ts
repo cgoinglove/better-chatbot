@@ -113,6 +113,13 @@ export async function POST(request: Request) {
 
     const agentId = mentions.find((m) => m.type === "agent")?.agentId;
 
+    if (agentId) {
+      mentions.splice(
+        mentions.findIndex((m) => m.type === "agent"),
+        1,
+      );
+    }
+
     const agent = await rememberAgentAction(agentId, session.user.id);
 
     if (agent?.instructions?.mentions) {

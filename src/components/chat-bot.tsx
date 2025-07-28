@@ -264,9 +264,17 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
         <div className="absolute top-0 left-0 w-full h-full z-10 fade-in animate-in duration-5000">
           <Particles particleCount={400} particleBaseSize={10} />
         </div>
+        <div className="absolute top-0 left-0 w-full h-full z-10 fade-in animate-in duration-5000">
+          <div className="w-full h-full bg-gradient-to-t from-background to-50% to-transparent z-20" />
+        </div>
       </>
     );
   }, [showParticles]);
+
+  const handleFocus = useCallback(() => {
+    setShowParticles(false);
+    debounce(() => setShowParticles(true), 60000);
+  }, []);
 
   useEffect(() => {
     appStoreMutate({ currentThreadId: threadId });
@@ -310,8 +318,7 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
   }, []);
 
   useEffect(() => {
-    setShowParticles(false);
-    debounce(() => setShowParticles(true), 60000);
+    handleFocus();
   }, [input]);
 
   return (
@@ -332,7 +339,7 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
         ) : (
           <>
             <div
-              className={"flex flex-col gap-2 overflow-y-auto py-6"}
+              className={"flex flex-col gap-2 overflow-y-auto py-6 z-10"}
               ref={containerRef}
             >
               {messages.map((message, index) => {
@@ -390,6 +397,7 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
             onThinkingChange={handleThinkingChange}
             isLoading={isLoading || isPendingToolCall}
             onStop={stop}
+            onFocus={handleFocus}
           />
           {slots?.inputBottomSlot}
         </div>

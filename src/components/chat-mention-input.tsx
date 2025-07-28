@@ -1,5 +1,5 @@
 "use client";
-import React, { RefObject, useCallback, useMemo } from "react";
+import React, { RefObject, useCallback, useMemo, useRef } from "react";
 
 import { CheckIcon, HammerIcon } from "lucide-react";
 import { MCPIcon } from "ui/mcp-icon";
@@ -27,6 +27,7 @@ import { Editor } from "@tiptap/react";
 import { DefaultToolName } from "lib/ai/tools";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { DefaultToolIcon } from "./default-tool-icon";
+import equal from "lib/equal";
 
 interface ChatMentionInputProps {
   onChange: (text: string) => void;
@@ -51,17 +52,21 @@ export default function ChatMentionInput({
   onFocus,
   onBlur,
 }: ChatMentionInputProps) {
+  const latestMentions = useRef<string[]>([]);
+
   const handleChange = useCallback(
     ({
       text,
       mentions,
     }: { text: string; mentions: { label: string; id: string }[] }) => {
       onChange(text);
-      const parsedMentions = mentions.map(
-        (mention) => JSON.parse(mention.id) as ChatMention,
+      const mentionsIds = mentions.map((mention) => mention.id);
+      const parsedMentions = mentionsIds.map(
+        (id) => JSON.parse(id) as ChatMention,
       );
-      const agentMention = parsedMentions.find((m) => m.type === "agent");
-      onChangeMention(agentMention ? [agentMention] : parsedMentions);
+      if (equal(latestMentions.current, mentionsIds)) return;
+      latestMentions.current = mentionsIds;
+      onChangeMention(parsedMentions);
     },
     [onChange, onChangeMention],
   );
@@ -239,7 +244,7 @@ export function ChatMentionInputSuggestion({
                 })
               }
             >
-              <Avatar>
+              <Avatar className="size-3.5 ring-[1px] ring-input rounded-full">
                 <AvatarImage src={agent.icon?.value} />
                 <AvatarFallback>{agent.name.slice(0, 1)}</AvatarFallback>
               </Avatar>

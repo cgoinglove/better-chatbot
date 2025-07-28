@@ -2,6 +2,7 @@ import { appStore } from "@/app/store";
 import { AllowedMCPServer, MCPServerInfo } from "app-types/mcp";
 import { cn, objectFlow } from "lib/utils";
 import {
+  ArrowUpRightIcon,
   AtSign,
   ChartColumn,
   ChevronRight,
@@ -10,6 +11,7 @@ import {
   HardDriveUploadIcon,
   InfoIcon,
   Loader,
+  MessageCircle,
   MousePointer2,
   Package,
   Plus,
@@ -63,6 +65,7 @@ import { CountAnimation } from "ui/count-animation";
 
 import { Separator } from "ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
+import { Agent } from "app-types/agent";
 
 interface ToolSelectDropdownProps {
   align?: "start" | "end" | "center";
@@ -70,6 +73,9 @@ interface ToolSelectDropdownProps {
   disabled?: boolean;
   mentions?: ChatMention[];
   onSelectWorkflow?: (workflow: WorkflowSummary) => void;
+  onSelectAgent?: (
+    agent: Omit<Agent, "createdAt" | "updatedAt" | "instructions">,
+  ) => void;
   className?: string;
 }
 
@@ -88,6 +94,7 @@ export function ToolSelectDropdown({
   align,
   side,
   onSelectWorkflow,
+  onSelectAgent,
   mentions,
   className,
 }: ToolSelectDropdownProps) {
@@ -157,18 +164,11 @@ export function ToolSelectDropdown({
           className,
         )}
       >
-        {agentMention ? (
-          <div className="min-w-5 flex justify-center">
-            <Avatar className="size-3.5">
-              <AvatarImage src={agentMention.icon?.value} />
-            </Avatar>
-          </div>
-        ) : null}
         <span
           className={(mentions?.length ?? 0 > 0) ? "text-muted-foreground" : ""}
         >
           {agentMention
-            ? agentMention.name
+            ? "Agent"
             : (mentions?.length ?? 0 > 0)
               ? "Mention"
               : "Tools"}
@@ -219,6 +219,10 @@ export function ToolSelectDropdown({
       </DropdownMenuTrigger>
       <DropdownMenuContent className="md:w-72" align={align} side={side}>
         <WorkflowToolSelector onSelectWorkflow={onSelectWorkflow} />
+        <div className="py-1">
+          <DropdownMenuSeparator />
+        </div>
+        <AgentSelector onSelectAgent={onSelectAgent} />
         <div className="py-1">
           <DropdownMenuSeparator />
         </div>
@@ -314,12 +318,12 @@ function ToolPresets() {
         </DropdownMenuSubTrigger>
         <DropdownMenuPortal>
           <DropdownMenuSubContent className="md:w-80 md:max-h-96 overflow-y-auto">
-            <DropdownMenuLabel className="flex items-center text-muted-foreground gap-2">
+            <DropdownMenuLabel className="flex items-center text-muted-foreground gap-2 text-xs">
               {t("Chat.Tool.toolPresets")}
               <div className="flex-1" />
               <Dialog open={open} onOpenChange={setOpen}>
                 <DialogTrigger asChild>
-                  <Button variant={"secondary"} size={"sm"} className="border">
+                  <Button variant={"secondary"} size={"sm"} className="text-xs">
                     {t("Chat.Tool.saveAsPreset")}
                     <Plus className="size-3.5" />
                   </Button>
@@ -483,8 +487,6 @@ function WorkflowToolSelector({
           </DropdownMenuSubContent>
         </DropdownMenuPortal>
       </DropdownMenuSub>
-      {/* ))
-  )} */}
     </DropdownMenuGroup>
   );
 }
@@ -786,6 +788,75 @@ function AppDefaultToolKitSelector() {
           </DropdownMenuItem>
         );
       })}
+    </DropdownMenuGroup>
+  );
+}
+
+function AgentSelector({
+  onSelectAgent,
+}: {
+  onSelectAgent?: (
+    agent: Omit<Agent, "createdAt" | "updatedAt" | "instructions">,
+  ) => void;
+}) {
+  const t = useTranslations();
+  const agentList = appStore((state) => state.agentList);
+
+  const emptyAgent = useMemo(() => {
+    if (agentList.length) return null;
+    return (
+      <Link
+        href={"/agent/new"}
+        className="py-8 px-4 hover:bg-input/100 rounded-lg cursor-pointer flex justify-between items-center text-xs overflow-hidden"
+      >
+        <div className="gap-1 z-10">
+          <div className="flex items-center mb-4 gap-1">
+            <p className="font-semibold">{t("Layout.createAgent")}</p>
+            <ArrowUpRightIcon className="size-3" />
+          </div>
+          <p className="text-muted-foreground">
+            {t("Layout.createYourOwnAgent")}
+          </p>
+        </div>
+      </Link>
+    );
+  }, [agentList.length]);
+
+  return (
+    <DropdownMenuGroup>
+      <DropdownMenuSub>
+        <DropdownMenuSubTrigger className="text-xs flex items-center gap-2 font-semibold cursor-pointer">
+          <MessageCircle className="size-3.5" />
+          {t("Agent.title")}
+        </DropdownMenuSubTrigger>
+        <DropdownMenuPortal>
+          <DropdownMenuSubContent className="w-80 relative">
+            {emptyAgent}
+            {agentList.map((agent) => (
+              <DropdownMenuItem
+                key={agent.id}
+                className="cursor-pointer"
+                onClick={() => onSelectAgent?.(agent)}
+              >
+                {agent.icon && agent.icon.type === "emoji" ? (
+                  <div
+                    style={{
+                      backgroundColor: agent.icon?.style?.backgroundColor,
+                    }}
+                    className="p-1 rounded flex items-center justify-center ring ring-background border"
+                  >
+                    <Avatar className="size-3">
+                      <AvatarImage src={agent.icon?.value} />
+                      <AvatarFallback>{agent.name.slice(0, 1)}</AvatarFallback>
+                    </Avatar>
+                  </div>
+                ) : null}
+                <span className="truncate min-w-0">{agent.name}</span>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuSubContent>
+        </DropdownMenuPortal>
+      </DropdownMenuSub>
     </DropdownMenuGroup>
   );
 }
