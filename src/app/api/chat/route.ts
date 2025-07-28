@@ -222,7 +222,7 @@ export async function POST(request: Request) {
           .flat();
 
         logger.info(
-          `${agent ? `agent: ${agent}, ` : ""}tool mode: ${toolChoice}, mentions: ${mentions.length}, allowedMcpTools: ${allowedMcpTools.length} thinking: ${thinking}`,
+          `${agent ? `agent: ${agent.name}, ` : ""}tool mode: ${toolChoice}, mentions: ${mentions.length}, allowedMcpTools: ${allowedMcpTools.length} thinking: ${thinking}`,
         );
         logger.info(
           `binding tool count APP_DEFAULT: ${Object.keys(APP_DEFAULT_TOOLS ?? {}).length}, MCP: ${Object.keys(MCP_TOOLS ?? {}).length}, Workflow: ${Object.keys(WORKFLOW_TOOLS ?? {}).length}`,

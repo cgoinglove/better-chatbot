@@ -24,7 +24,6 @@ import { useAgents } from "@/hooks/queries/use-agents";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { AgentDropdown } from "../agent-dropdown";
 
-import DecryptedText from "ui/decrypted-text";
 import { appStore } from "@/app/store";
 import { useRouter } from "next/navigation";
 import { ChatMention } from "app-types/chat";
@@ -126,20 +125,11 @@ export function AppSidebarAgents() {
                 >
                   <div className="gap-1 z-10">
                     <div className="flex items-center mb-4 gap-1">
-                      <p className="font-semibold">
-                        <DecryptedText
-                          text={t("Layout.createAgent")}
-                          animateOn="view"
-                        />
-                      </p>
+                      <p className="font-semibold">{t("Layout.createAgent")}</p>
                       <ArrowUpRightIcon className="size-3" />
                     </div>
                     <p className="text-muted-foreground">
-                      <DecryptedText
-                        maxIterations={20}
-                        text={t("Layout.createYourOwnAgent")}
-                        animateOn="view"
-                      />
+                      {t("Layout.createYourOwnAgent")}
                     </p>
                   </div>
                 </Link>

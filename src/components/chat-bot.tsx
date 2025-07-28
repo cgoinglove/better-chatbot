@@ -131,10 +131,10 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
           latestRef.current.model,
         toolChoice: latestRef.current.toolChoice,
         allowedAppDefaultToolkit: latestRef.current.mentions?.length
-          ? undefined
+          ? []
           : latestRef.current.allowedAppDefaultToolkit,
         allowedMcpServers: latestRef.current.mentions?.length
-          ? undefined
+          ? {}
           : latestRef.current.allowedMcpServers,
         mentions: latestRef.current.mentions,
         message: lastMessage,
