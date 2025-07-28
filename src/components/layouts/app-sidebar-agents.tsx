@@ -10,7 +10,6 @@ import {
   ChevronDown,
   ChevronUp,
   MoreHorizontal,
-  MoreHorizontalIcon,
   Plus,
 } from "lucide-react";
 
