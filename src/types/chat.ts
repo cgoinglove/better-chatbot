@@ -149,6 +149,8 @@ export type ChatRepository = {
 
   deleteAllThreads(userId: string): Promise<void>;
 
+  deleteUnarchivedThreads(userId: string): Promise<void>;
+
   insertMessages(
     messages: PartialBy<ChatMessage, "createdAt">[],
   ): Promise<ChatMessage[]>;

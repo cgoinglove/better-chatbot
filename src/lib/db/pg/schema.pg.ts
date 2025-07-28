@@ -220,6 +220,33 @@ export const WorkflowEdgeSchema = pgTable("workflow_edge", {
   createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
+export const ArchiveSchema = pgTable("archive", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  name: text("name").notNull(),
+  description: text("description"),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => UserSchema.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const ArchiveItemSchema = pgTable(
+  "archive_item",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    archiveId: uuid("archive_id")
+      .notNull()
+      .references(() => ArchiveSchema.id, { onDelete: "cascade" }),
+    itemId: uuid("item_id").notNull(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => UserSchema.id, { onDelete: "cascade" }),
+    addedAt: timestamp("added_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (t) => [index("archive_item_item_id_idx").on(t.itemId)],
+);
+
 export type McpServerEntity = typeof McpServerSchema.$inferSelect;
 export type ChatThreadEntity = typeof ChatThreadSchema.$inferSelect;
 export type ChatMessageEntity = typeof ChatMessageSchema.$inferSelect;
@@ -230,3 +257,6 @@ export type ToolCustomizationEntity =
   typeof McpToolCustomizationSchema.$inferSelect;
 export type McpServerCustomizationEntity =
   typeof McpServerCustomizationSchema.$inferSelect;
+
+export type ArchiveEntity = typeof ArchiveSchema.$inferSelect;
+export type ArchiveItemEntity = typeof ArchiveItemSchema.$inferSelect;

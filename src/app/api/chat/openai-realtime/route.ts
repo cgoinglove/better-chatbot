@@ -18,6 +18,12 @@ import {
   rememberAgentAction,
   rememberMcpServerCustomizationsAction,
 } from "../actions";
+import globalLogger from "lib/logger";
+import { colorize } from "consola/utils";
+
+const logger = globalLogger.withDefaults({
+  message: colorize("blackBright", `OpenAI Realtime API: `),
+});
 
 export async function POST(request: NextRequest) {
   try {
@@ -36,14 +42,10 @@ export async function POST(request: NextRequest) {
       return new Response("Unauthorized", { status: 401 });
     }
 
-    const {
-      voice,
-      allowedMcpServers,
-      agent: agentId,
-    } = (await request.json()) as {
+    const { voice, allowedMcpServers, agentId } = (await request.json()) as {
       model: string;
       voice: string;
-      agent?: string;
+      agentId?: string;
       allowedMcpServers: Record<string, AllowedMCPServer>;
     };
 
@@ -51,11 +53,19 @@ export async function POST(request: NextRequest) {
 
     const agent = await rememberAgentAction(agentId, session.user.id);
 
+    agent && logger.info(`Agent: ${agent.name}`);
+
     const tools = safe(mcpTools)
       .map((tools) => {
         return filterMCPToolsByAllowedMCPServers(tools, allowedMcpServers);
       })
       .orElse(undefined);
+
+    if (tools) {
+      logger.info(`Tools: ${Object.keys(tools).join(", ")}`);
+    } else {
+      logger.info(`No tools found`);
+    }
 
     const userPreferences = await userRepository.getPreferences(
       session.user.id,

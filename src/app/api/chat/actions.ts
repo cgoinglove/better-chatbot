@@ -102,6 +102,11 @@ export async function deleteThreadsAction() {
   await chatRepository.deleteAllThreads(userId);
 }
 
+export async function deleteUnarchivedThreadsAction() {
+  const userId = await getUserId();
+  await chatRepository.deleteUnarchivedThreads(userId);
+}
+
 export async function generateExampleToolSchemaAction(options: {
   model?: ChatModel;
   toolInfo: MCPToolInfo;

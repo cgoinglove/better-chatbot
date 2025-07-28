@@ -21,7 +21,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "ui/dropdown-menu";
-import { deleteThreadsAction } from "@/app/api/chat/actions";
+import {
+  deleteThreadsAction,
+  deleteUnarchivedThreadsAction,
+} from "@/app/api/chat/actions";
 import { fetcher } from "lib/utils";
 import { toast } from "sonner";
 import { useShallow } from "zustand/shallow";
@@ -155,6 +158,17 @@ export function AppSidebarThreads() {
     });
   };
 
+  const handleDeleteUnarchivedThreads = async () => {
+    await toast.promise(deleteUnarchivedThreadsAction(), {
+      loading: t("deletingUnarchivedChats"),
+      success: () => {
+        mutate("/api/thread");
+        return t("unarchivedChatsDeleted");
+      },
+      error: t("failedToDeleteUnarchivedChats"),
+    });
+  };
+
   if (isLoading || threadList?.length === 0)
     return (
       <SidebarGroup>
@@ -165,28 +179,6 @@ export function AppSidebarThreads() {
                 <h4 className="text-xs text-muted-foreground">
                   {t("recentChats")}
                 </h4>
-                <div className="flex-1" />
-
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="opacity-0 group-hover/threads:opacity-100 transition-opacity"
-                    >
-                      <MoreHorizontal />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuItem
-                      variant="destructive"
-                      onClick={handleDeleteAllThreads}
-                    >
-                      <Trash />
-                      {t("deleteAllChats")}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
               </SidebarGroupLabel>
 
               {isLoading ? (
@@ -238,6 +230,13 @@ export function AppSidebarThreads() {
                           >
                             <Trash />
                             {t("deleteAllChats")}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            variant="destructive"
+                            onClick={handleDeleteUnarchivedThreads}
+                          >
+                            <Trash />
+                            {t("deleteUnarchivedChats")}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>

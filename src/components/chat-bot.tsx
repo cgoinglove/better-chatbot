@@ -66,6 +66,10 @@ const Particles = dynamic(() => import("ui/particles"), {
 
 const debounce = createDebounce();
 
+const version = "0.1.0";
+const isFirstTime = !localStorage.getItem(`V_${version}`);
+localStorage.setItem(`V_${version}`, "true");
+
 export default function ChatBot({ threadId, initialMessages, slots }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -95,7 +99,7 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
     threadId,
   });
 
-  const [showParticles, setShowParticles] = useState(false);
+  const [showParticles, setShowParticles] = useState(isFirstTime);
 
   const {
     messages,
@@ -270,6 +274,7 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
         <div className="absolute top-0 left-0 w-full h-full z-10 fade-in animate-in duration-5000">
           <Particles particleCount={400} particleBaseSize={10} />
         </div>
+
         <div className="absolute top-0 left-0 w-full h-full z-10 fade-in animate-in duration-5000">
           <div className="w-full h-full bg-gradient-to-t from-background to-50% to-transparent z-20" />
         </div>
@@ -339,7 +344,7 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
       <div
         className={cn(
           emptyMessage && "justify-center pb-24",
-          "flex flex-col min-w-0 relative h-full",
+          "flex flex-col min-w-0 relative h-full z-40",
         )}
       >
         {emptyMessage ? (

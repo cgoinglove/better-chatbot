@@ -6,6 +6,7 @@ import { OPENAI_VOICE } from "lib/ai/speech/open-ai/use-voice-chat.openai";
 import { WorkflowSummary } from "app-types/workflow";
 import { AppDefaultToolkit } from "lib/ai/tools";
 import { Agent } from "app-types/agent";
+import { ArchiveWithItemCount } from "app-types/archive";
 
 export interface AppState {
   threadList: ChatThread[];
@@ -17,6 +18,7 @@ export interface AppState {
   allowedMcpServers?: Record<string, AllowedMCPServer>;
   allowedAppDefaultToolkit?: AppDefaultToolkit[];
   generatingTitleThreadIds: string[];
+  archiveList: ArchiveWithItemCount[];
   threadMentions: {
     [threadId: string]: ChatMention[];
   };
@@ -50,6 +52,7 @@ export interface AppDispatch {
 
 const initialState: AppState = {
   threadList: [],
+  archiveList: [],
   generatingTitleThreadIds: [],
   threadMentions: {},
   mcpList: [],

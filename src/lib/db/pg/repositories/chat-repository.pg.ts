@@ -1,7 +1,12 @@
 import { ChatMessage, ChatRepository, ChatThread } from "app-types/chat";
 
 import { pgDb as db } from "../db.pg";
-import { ChatMessageSchema, ChatThreadSchema, UserSchema } from "../schema.pg";
+import {
+  ChatMessageSchema,
+  ChatThreadSchema,
+  UserSchema,
+  ArchiveItemSchema,
+} from "../schema.pg";
 
 import { and, desc, eq, gte, sql } from "drizzle-orm";
 
@@ -137,10 +142,15 @@ export const pgChatRepository: ChatRepository = {
   },
 
   deleteThread: async (id: string): Promise<void> => {
+    // 1. Delete all messages in the thread
     await db
       .delete(ChatMessageSchema)
       .where(eq(ChatMessageSchema.threadId, id));
 
+    // 2. Remove thread from all archives
+    await db.delete(ArchiveItemSchema).where(eq(ArchiveItemSchema.itemId, id));
+
+    // 3. Delete the thread itself
     await db.delete(ChatThreadSchema).where(eq(ChatThreadSchema.id, id));
   },
 
@@ -205,6 +215,28 @@ export const pgChatRepository: ChatRepository = {
       .where(eq(ChatThreadSchema.userId, userId));
     await Promise.all(
       threadIds.map((threadId) => pgChatRepository.deleteThread(threadId.id)),
+    );
+  },
+
+  deleteUnarchivedThreads: async (userId: string): Promise<void> => {
+    const unarchivedThreadIds = await db
+      .select({ id: ChatThreadSchema.id })
+      .from(ChatThreadSchema)
+      .leftJoin(
+        ArchiveItemSchema,
+        eq(ChatThreadSchema.id, ArchiveItemSchema.itemId),
+      )
+      .where(
+        and(
+          eq(ChatThreadSchema.userId, userId),
+          sql`${ArchiveItemSchema.id} IS NULL`,
+        ),
+      );
+
+    await Promise.all(
+      unarchivedThreadIds.map((threadId) =>
+        pgChatRepository.deleteThread(threadId.id),
+      ),
     );
   },
 

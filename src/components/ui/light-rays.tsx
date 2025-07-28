@@ -1,3 +1,5 @@
+"use client";
+
 import { useRef, useEffect, useState, useMemo } from "react";
 import { Renderer, Program, Triangle, Mesh } from "ogl";
 import { useTheme } from "next-themes";
