@@ -43,7 +43,7 @@ export const pgAgentRepository: AgentRepository = {
       })
       .from(AgentSchema)
       .where(eq(AgentSchema.userId, userId))
-      .orderBy(desc(AgentSchema.createdAt));
+      .orderBy(desc(AgentSchema.updatedAt));
     return results as Omit<Agent, "instructions">[];
   },
 

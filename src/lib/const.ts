@@ -77,3 +77,11 @@ export const BACKGROUND_COLORS = [
   "oklch(81% 0.117 11.638)",
   "oklch(81% 0.117 11.638)",
 ];
+
+export const EMOJI_DATA = [
+  "https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f604.png",
+  "https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f603.png",
+  "https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f602.png",
+  "https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f601.png",
+  "https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f600.png",
+];

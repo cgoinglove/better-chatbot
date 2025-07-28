@@ -764,7 +764,7 @@
 }
 
 .dark {
-  --background: oklch(0.19 0.004 285.885);
+  --background: hsl(220 6% 9%);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.21 0.006 285.885);
   --card-foreground: oklch(0.985 0 0);
@@ -782,7 +782,7 @@
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.552 0.016 285.938);
-  --sidebar: oklch(0.274 0.006 286.033);
+  --sidebar: hsl(220 6% 9%);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.488 0.243 264.376);
   --sidebar-primary-foreground: oklch(0.985 0 0);

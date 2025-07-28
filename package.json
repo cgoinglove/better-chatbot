@@ -33,7 +33,7 @@
     "docker-compose:logs": "docker-compose -f docker/compose.yml logs -f",
     "docker-compose:ps": "docker-compose -f docker/compose.yml ps",
     "docker-compose:update": "git pull && docker-compose -f docker/compose.yml up -d --build",
-    "docker:pg": "docker run --name mcp-pg -e POSTGRES_PASSWORD=your_password -e POSTGRES_USER=your_username -e POSTGRES_DB=your_database_name -p 5432:5432 -d postgres",
+    "docker:pg": "docker run --name better-chatbot-pg -e POSTGRES_PASSWORD=your_password -e POSTGRES_USER=your_username -e POSTGRES_DB=your_database_name -p 5432:5432 -d postgres",
     "docker:app": "docker build -f docker/Dockerfile -t better-chatbot . && docker run -p 3000:3000 -e NO_HTTPS=1 better-chatbot",
     "prepare": "husky",
     "check": "pnpm lint:fix && pnpm check-types && pnpm test"
@@ -83,7 +83,7 @@
     "dotenv": "^16.6.1",
     "drizzle-orm": "^0.41.0",
     "emoji-picker-react": "^4.13.2",
-    "framer-motion": "^12.23.9",
+    "framer-motion": "^12.23.10",
     "hast-util-to-jsx-runtime": "^2.3.6",
     "json-schema": "^0.4.0",
     "lucide-react": "^0.486.0",

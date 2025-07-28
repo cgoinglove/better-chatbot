@@ -273,13 +273,19 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
         <div className="absolute top-0 left-0 w-full h-full z-10 fade-in animate-in duration-5000">
           <div className="w-full h-full bg-gradient-to-t from-background to-50% to-transparent z-20" />
         </div>
+        <div className="absolute top-0 left-0 w-full h-full z-10 fade-in animate-in duration-5000">
+          <div className="w-full h-full bg-gradient-to-l from-background to-20% to-transparent z-20" />
+        </div>
+        <div className="absolute top-0 left-0 w-full h-full z-10 fade-in animate-in duration-5000">
+          <div className="w-full h-full bg-gradient-to-r from-background to-20% to-transparent z-20" />
+        </div>
       </>
     );
   }, [showParticles]);
 
   const handleFocus = useCallback(() => {
     setShowParticles(false);
-    debounce(() => setShowParticles(true), 60000);
+    debounce(() => setShowParticles(true), 30000);
   }, []);
 
   useEffect(() => {
@@ -392,7 +398,10 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
           </>
         )}
         <div
-          className={clsx(messages.length && "absolute bottom-14", "w-full")}
+          className={clsx(
+            messages.length && "absolute bottom-14",
+            "w-full z-10",
+          )}
         >
           <PromptInput
             input={input}

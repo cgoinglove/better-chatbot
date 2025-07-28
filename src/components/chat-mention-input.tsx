@@ -28,6 +28,7 @@ import { DefaultToolName } from "lib/ai/tools";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { DefaultToolIcon } from "./default-tool-icon";
 import equal from "lib/equal";
+import { EMOJI_DATA } from "lib/const";
 
 interface ChatMentionInputProps {
   onChange: (text: string) => void;
@@ -100,8 +101,8 @@ export function ChatMentionInputMentionItem({
     return (
       <div
         className={cn(
-          "flex items-center text-sm px-1 font-semibold transition-colors",
-          "text-blue-500",
+          "flex items-center text-sm px-2 py-0.5 rounded-sm font-semibold transition-colors",
+          "text-primary font-bold bg-primary/5",
           className,
         )}
       >
@@ -225,7 +226,7 @@ export function ChatMentionInputSuggestion({
     if (!agentList.length) return null;
     return (
       <CommandGroup heading="Agents" key="agent">
-        {agentList.map((agent) => {
+        {agentList.map((agent, i) => {
           const id = JSON.stringify({
             type: "agent",
             name: agent.name,
@@ -244,12 +245,12 @@ export function ChatMentionInputSuggestion({
                 })
               }
             >
-              <Avatar className="size-3.5 ring-[1px] ring-input rounded-full">
+              <Avatar
+                style={agent.icon?.style}
+                className="size-3.5 ring-[1px] ring-input rounded-full"
+              >
                 <AvatarImage
-                  src={
-                    agent.icon?.value ||
-                    "https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f604.png"
-                  }
+                  src={agent.icon?.value || EMOJI_DATA[i % EMOJI_DATA.length]}
                 />
                 <AvatarFallback>{agent.name.slice(0, 1)}</AvatarFallback>
               </Avatar>

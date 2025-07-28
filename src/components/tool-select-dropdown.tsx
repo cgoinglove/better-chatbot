@@ -164,9 +164,7 @@ export function ToolSelectDropdown({
           className,
         )}
       >
-        <span
-          className={(mentions?.length ?? 0 > 0) ? "text-muted-foreground" : ""}
-        >
+        <span className={!bindingTools ? "text-muted-foreground" : ""}>
           {agentMention
             ? "Agent"
             : (mentions?.length ?? 0 > 0)

@@ -37,6 +37,7 @@ import { GeminiIcon } from "ui/gemini-icon";
 import { cn } from "lib/utils";
 import { getShortcutKeyList, isShortcutEvent } from "lib/keyboard-shortcuts";
 import { Agent } from "app-types/agent";
+import { EMOJI_DATA } from "lib/const";
 
 interface PromptInputProps {
   placeholder?: string;
@@ -271,9 +272,9 @@ export default function PromptInput({
     <div className="max-w-3xl mx-auto fade-in animate-in">
       <div className="z-10 mx-auto w-full max-w-3xl relative">
         <fieldset className="flex w-full min-w-0 max-w-full flex-col px-4">
-          <div className="ring-8 ring-muted/60 overflow-hidden rounded-4xl backdrop-blur-sm transition-all duration-200 bg-muted/60 relative flex w-full flex-col cursor-text z-10 items-stretch focus-within:bg-muted hover:bg-muted focus-within:ring-muted hover:ring-muted">
+          <div className="shadow-lg overflow-hidden rounded-4xl backdrop-blur-sm transition-all duration-200 bg-muted/60 relative flex w-full flex-col cursor-text z-10 items-stretch focus-within:bg-muted hover:bg-muted focus-within:ring-muted hover:ring-muted">
             {mentions.length > 0 && (
-              <div className="bg-input rounded-b-sm rounded-t-3xl p-3 flex flex-col gap-4">
+              <div className="bg-input rounded-b-sm rounded-t-3xl p-3 flex flex-col gap-4 mx-2 my-2">
                 {mentions.map((mention, i) => {
                   return (
                     <div key={i} className="flex items-center gap-2">
@@ -286,7 +287,7 @@ export default function PromptInput({
                           <AvatarImage
                             src={
                               mention.icon?.value ||
-                              "https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f604.png"
+                              EMOJI_DATA[i % EMOJI_DATA.length]
                             }
                           />
                           <AvatarFallback>
@@ -332,7 +333,7 @@ export default function PromptInput({
                 })}
               </div>
             )}
-            <div className="flex flex-col gap-3.5 px-3 py-2">
+            <div className="flex flex-col gap-3.5 px-5 pt-2 pb-4">
               <div className="relative min-h-[2rem]">
                 <ChatMentionInput
                   input={input}

@@ -13,7 +13,7 @@ import { customModelProvider, isToolCallUnsupportedModel } from "lib/ai/models";
 
 import { mcpClientsManager } from "lib/ai/mcp/mcp-manager";
 
-import { chatRepository } from "lib/db/repository";
+import { agentRepository, chatRepository } from "lib/db/repository";
 import globalLogger from "logger";
 import {
   buildMcpServerCustomizationsSystemPrompt,
@@ -268,7 +268,7 @@ export async function POST(request: Request) {
                 },
               );
               dataStream.writeMessageAnnotation(annotations.at(-1)!);
-              await chatRepository.upsertMessage({
+              chatRepository.upsertMessage({
                 model: chatModel?.model ?? null,
                 threadId: thread!.id,
                 role: assistantMessage.role,
@@ -317,6 +317,11 @@ export async function POST(request: Request) {
                 attachments: assistantMessage.experimental_attachments,
                 annotations,
               });
+            }
+            if (agent) {
+              await agentRepository.updateAgent(agent.id, session.user.id, {
+                updatedAt: new Date(),
+              } as any);
             }
           },
         });

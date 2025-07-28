@@ -29,6 +29,8 @@ import DecryptedText from "ui/decrypted-text";
 import { appStore } from "@/app/store";
 import { useRouter } from "next/navigation";
 import { ChatMention } from "app-types/chat";
+import { BACKGROUND_COLORS, EMOJI_DATA } from "lib/const";
+import { cn } from "lib/utils";
 
 export function AppSidebarAgents() {
   const mounted = useMounted();
@@ -37,8 +39,8 @@ export function AppSidebarAgents() {
   const [expanded, setExpanded] = useState(false);
   const { data: agents = [], isLoading } = useAgents();
 
-  const visibleAgents = expanded ? agents : agents.slice(0, 5);
-  const hasMoreAgents = agents.length > 5;
+  const visibleAgents = expanded ? agents : agents.slice(0, 3);
+  const hasMoreAgents = agents.length > 3;
 
   const handleAgentClick = useCallback(
     (id: string) => {
@@ -144,77 +146,84 @@ export function AppSidebarAgents() {
                 </Link>
               </div>
             ) : (
-              <div className="flex flex-col gap-1">
-                {visibleAgents?.map((agent) => {
-                  return (
-                    <SidebarMenu key={agent.id} className={"group/agent mr-0"}>
-                      <SidebarMenuItem
-                        className="px-2 cursor-pointer"
-                        onClick={() => handleAgentClick(agent.id)}
+              <>
+                <div className="flex flex-col gap-1 max-h-[30vh] overflow-y-auto">
+                  {expanded && (
+                    <div className="absolute -top-8 left-0 w-full h-full pointer-events-none bg-gradient-to-t from-background to-20% to-transparent z-10" />
+                  )}
+                  {visibleAgents?.map((agent, i) => {
+                    const isLast = i === visibleAgents.length - 1 && expanded;
+                    return (
+                      <SidebarMenu
+                        key={agent.id}
+                        className={cn("group/agent mr-0", isLast && "mb-2")}
                       >
-                        <SidebarMenuButton
-                          asChild
-                          className="data-[state=open]:bg-input!"
+                        <SidebarMenuItem
+                          className="px-2 cursor-pointer"
+                          onClick={() => handleAgentClick(agent.id)}
                         >
-                          <div className="flex gap-1">
-                            <div
-                              className="p-1 rounded-full bg-background"
-                              style={{
-                                backgroundColor:
-                                  agent.icon?.style?.backgroundColor,
-                              }}
-                            >
-                              <Avatar className="size-4.5">
-                                <AvatarImage
-                                  src={
-                                    agent.icon?.value ||
-                                    "https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f604.png"
-                                  }
-                                />
-                                <AvatarFallback className="bg-transparent">
-                                  {agent.name[0]}
-                                </AvatarFallback>
-                              </Avatar>
-                            </div>
-
-                            <div className="flex items-center min-w-0 w-full">
-                              <p className="truncate">{agent.name}</p>
-                            </div>
-                            <div
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                e.preventDefault();
-                              }}
-                            >
-                              <AgentDropdown
-                                agent={agent}
-                                side="right"
-                                align="start"
+                          <SidebarMenuButton
+                            asChild
+                            className="data-[state=open]:bg-input!"
+                          >
+                            <div className="flex gap-1">
+                              <div
+                                className="p-1 rounded-full ring-2 ring-border bg-background"
+                                style={{
+                                  backgroundColor:
+                                    agent.icon?.style?.backgroundColor ||
+                                    BACKGROUND_COLORS[
+                                      i % BACKGROUND_COLORS.length
+                                    ],
+                                }}
                               >
-                                <SidebarMenuAction className="data-[state=open]:bg-input! data-[state=open]:opacity-100  opacity-0 group-hover/agent:opacity-100 mr-2">
-                                  <MoreHorizontal className="size-4" />
-                                </SidebarMenuAction>
-                              </AgentDropdown>
-                            </div>
-                          </div>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    </SidebarMenu>
-                  );
-                })}
+                                <Avatar className="size-3.5">
+                                  <AvatarImage
+                                    src={
+                                      agent.icon?.value ||
+                                      EMOJI_DATA[i % EMOJI_DATA.length]
+                                    }
+                                  />
+                                  <AvatarFallback className="bg-transparent">
+                                    {agent.name[0]}
+                                  </AvatarFallback>
+                                </Avatar>
+                              </div>
 
+                              <div className="flex items-center min-w-0 w-full">
+                                <p className="truncate">{agent.name}</p>
+                              </div>
+                              <div
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  e.preventDefault();
+                                }}
+                              >
+                                <AgentDropdown
+                                  agent={agent}
+                                  side="right"
+                                  align="start"
+                                >
+                                  <SidebarMenuAction className="data-[state=open]:bg-input! data-[state=open]:opacity-100  opacity-0 group-hover/agent:opacity-100 mr-2">
+                                    <MoreHorizontal className="size-4" />
+                                  </SidebarMenuAction>
+                                </AgentDropdown>
+                              </div>
+                            </div>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      </SidebarMenu>
+                    );
+                  })}
+                </div>
                 {hasMoreAgents && (
-                  <SidebarMenu className="group/agent mr-0">
+                  <SidebarMenu className="group/agent mr-0 mt-2">
                     <SidebarMenuItem className="px-2 cursor-pointer">
                       <SidebarMenuButton
                         asChild
                         onClick={() => setExpanded(!expanded)}
                       >
                         <div className="flex gap-1 text-muted-foreground">
-                          <div className="p-1 rounded-md hover:bg-foreground/40">
-                            <MoreHorizontalIcon className="size-4" />
-                          </div>
-
                           <p>
                             {expanded
                               ? t("Common.showLess")
@@ -231,7 +240,7 @@ export function AppSidebarAgents() {
                     </SidebarMenuItem>
                   </SidebarMenu>
                 )}
-              </div>
+              </>
             )}
           </SidebarMenuItem>
         </SidebarMenu>
