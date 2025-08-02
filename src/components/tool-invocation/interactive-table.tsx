@@ -309,210 +309,219 @@ export function InteractiveTable(props: InteractiveTableProps) {
   );
 
   return (
-    <Card className="w-full px-0">
-      <CardHeader>
-        <div className="flex flex-col">
-          <CardTitle className="w-full flex items-center gap-2 justify-between">
-            Interactive Table - {title}
-            <JsonViewPopup data={props} />
-          </CardTitle>
-          {description && (
-            <CardDescription className="mt-2 ">{description}</CardDescription>
-          )}
-        </div>
+    <div className="px-6">
+      <Card className="w-full px-0">
+        <CardHeader>
+          <div className="flex flex-col">
+            <CardTitle className="w-full flex items-center gap-2 justify-between">
+              Interactive Table - {title}
+              <JsonViewPopup data={props} />
+            </CardTitle>
+            {description && (
+              <CardDescription className="mt-2 ">{description}</CardDescription>
+            )}
+          </div>
 
-        {/* Search and Export */}
-        <div className="flex items-center gap-2 mt-4">
-          {searchable && (
-            <div className="flex-1">
-              <Input
-                placeholder="Search across all columns..."
-                value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="hover:bg-input bg-secondary/40 transition-colors border-transparent border-none! focus-visible:bg-input! ring-0!"
-              />
-            </div>
-          )}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="data-[state=open]:bg-accent">
-                <Eye className="size-3.5" />
-                Columns
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              {columns.map((column) => (
-                <DropdownMenuCheckboxItem
-                  key={column.key}
-                  checked={visibleColumns.has(column.key)}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    const newVisible = new Set(visibleColumns);
-                    const checked = !newVisible.has(column.key);
-                    if (checked) {
-                      newVisible.add(column.key);
-                    } else {
-                      newVisible.delete(column.key);
-                    }
-                    setVisibleColumns(newVisible);
+          {/* Search and Export */}
+          <div className="flex items-center gap-2 mt-4">
+            {searchable && (
+              <div className="flex-1">
+                <Input
+                  placeholder="Search across all columns..."
+                  value={searchTerm}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setCurrentPage(1);
                   }}
-                >
-                  {column.label}
-                </DropdownMenuCheckboxItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {exportable && (
+                  className="hover:bg-input bg-secondary/40 transition-colors border-transparent border-none! focus-visible:bg-input! ring-0!"
+                />
+              </div>
+            )}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="data-[state=open]:bg-accent">
-                  <Download className="size-3.5" />
-                  Export
+                  <Eye className="size-3.5" />
+                  Columns
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <DropdownMenuItem onClick={exportToCSV}>
-                  <Download className="h-4 w-4 mr-2" />
-                  CSV
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={exportToExcel}>
-                  <FileSpreadsheet className="h-4 w-4 mr-2" />
-                  Excel
-                </DropdownMenuItem>
+                {columns.map((column) => (
+                  <DropdownMenuCheckboxItem
+                    key={column.key}
+                    checked={visibleColumns.has(column.key)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      const newVisible = new Set(visibleColumns);
+                      const checked = !newVisible.has(column.key);
+                      if (checked) {
+                        newVisible.add(column.key);
+                      } else {
+                        newVisible.delete(column.key);
+                      }
+                      setVisibleColumns(newVisible);
+                    }}
+                  >
+                    {column.label}
+                  </DropdownMenuCheckboxItem>
+                ))}
               </DropdownMenuContent>
             </DropdownMenu>
-          )}
-        </div>
-      </CardHeader>
 
-      <CardContent className="px-0 relative">
-        <Table>
-          <TableHeader className="bg-secondary border-t">
-            <TableRow>
-              {visibleColumnsArray.map((column, index) => {
-                return (
-                  <TableHead
-                    key={column.key}
-                    className={`relative select-none ${index === 0 ? "pl-6" : index === visibleColumnsArray.length - 1 ? "pr-6" : ""} ${
-                      column.type === "number" ||
-                      column.type === "date" ||
-                      column.type === "boolean"
-                        ? "text-center"
-                        : ""
-                    }`}
+            {exportable && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="data-[state=open]:bg-accent"
                   >
-                    {/* Column header with sorting */}
-                    <div
-                      className={`flex items-center gap-2 cursor-pointer ${
-                        column.type === "number" || column.type === "date"
-                          ? "justify-center"
+                    <Download className="size-3.5" />
+                    Export
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onClick={exportToCSV}>
+                    <Download className="h-4 w-4 mr-2" />
+                    CSV
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={exportToExcel}>
+                    <FileSpreadsheet className="h-4 w-4 mr-2" />
+                    Excel
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </div>
+        </CardHeader>
+
+        <CardContent className="px-0 relative">
+          <Table>
+            <TableHeader className="bg-secondary border-t">
+              <TableRow>
+                {visibleColumnsArray.map((column, index) => {
+                  return (
+                    <TableHead
+                      key={column.key}
+                      className={`relative select-none ${index === 0 ? "pl-6" : index === visibleColumnsArray.length - 1 ? "pr-6" : ""} ${
+                        column.type === "number" ||
+                        column.type === "date" ||
+                        column.type === "boolean"
+                          ? "text-center"
                           : ""
                       }`}
-                      onClick={() => handleSort(column.key)}
                     >
-                      <span className="hover:text-primary">{column.label}</span>
-
-                      <ArrowDownUp
-                        className={`h-3 w-3 ${
-                          sortColumn === column.key
-                            ? ""
-                            : "text-muted-foreground/30"
-                        }`}
-                      />
-                    </div>
-                  </TableHead>
-                );
-              })}
-            </TableRow>
-          </TableHeader>
-
-          <TableBody className="min-h-[24rem]">
-            {paginatedData.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={visibleColumnsArray.length}
-                  className="text-center h-48"
-                >
-                  No data found
-                </TableCell>
-              </TableRow>
-            ) : (
-              paginatedData.map((row, index) => {
-                return (
-                  <TableRow key={index} className={`border-b!`}>
-                    {visibleColumnsArray.map((column, index) => (
-                      <TableCell
-                        key={column.key}
-                        className={`py-3 ${index === 0 ? "pl-6" : index === visibleColumnsArray.length - 1 ? "pr-6" : ""} ${
+                      {/* Column header with sorting */}
+                      <div
+                        className={`flex items-center gap-2 cursor-pointer ${
                           column.type === "number" || column.type === "date"
-                            ? "text-center"
-                            : column.type == "boolean"
-                              ? "flex items-center justify-center"
-                              : ""
+                            ? "justify-center"
+                            : ""
                         }`}
+                        onClick={() => handleSort(column.key)}
                       >
-                        {column.type == "boolean" ? (
-                          <>
-                            <Checkbox checked={row[column.key]} />
-                          </>
-                        ) : searchTerm && searchable ? (
-                          highlightText(
-                            formatCellValue(row[column.key], column.type),
-                            searchTerm,
-                          )
-                        ) : (
-                          formatCellValue(row[column.key], column.type)
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
+                        <span className="hover:text-primary">
+                          {column.label}
+                        </span>
 
-        {/* Pagination */}
-        <div className="flex items-center justify-between pt-4 px-6">
-          <div className="text-xs text-muted-foreground">
-            Total rows: {data.length}
-          </div>
-          {pageSize > 0 && totalPages > 1 && (
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                disabled={currentPage === 1}
-              >
-                <ChevronLeft className="h-4 w-4" />
-                Previous
-              </Button>
+                        <ArrowDownUp
+                          className={`h-3 w-3 ${
+                            sortColumn === column.key
+                              ? ""
+                              : "text-muted-foreground/30"
+                          }`}
+                        />
+                      </div>
+                    </TableHead>
+                  );
+                })}
+              </TableRow>
+            </TableHeader>
 
-              <span className="text-sm px-2">
-                Page {currentPage} of {totalPages}
-              </span>
+            <TableBody className="min-h-[24rem]">
+              {paginatedData.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={visibleColumnsArray.length}
+                    className="text-center h-48"
+                  >
+                    No data found
+                  </TableCell>
+                </TableRow>
+              ) : (
+                paginatedData.map((row, index) => {
+                  return (
+                    <TableRow key={index} className={`border-b!`}>
+                      {visibleColumnsArray.map((column, index) => (
+                        <TableCell
+                          key={column.key}
+                          className={`py-3 ${index === 0 ? "pl-6" : index === visibleColumnsArray.length - 1 ? "pr-6" : ""} ${
+                            column.type === "number" || column.type === "date"
+                              ? "text-center"
+                              : column.type == "boolean"
+                                ? "flex items-center justify-center"
+                                : ""
+                          }`}
+                        >
+                          {column.type == "boolean" ? (
+                            <>
+                              <Checkbox checked={row[column.key]} />
+                            </>
+                          ) : searchTerm && searchable ? (
+                            highlightText(
+                              formatCellValue(row[column.key], column.type),
+                              searchTerm,
+                            )
+                          ) : (
+                            formatCellValue(row[column.key], column.type)
+                          )}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  );
+                })
+              )}
+            </TableBody>
+          </Table>
 
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() =>
-                  setCurrentPage((prev) => Math.min(totalPages, prev + 1))
-                }
-                disabled={currentPage === totalPages}
-              >
-                Next
-                <ChevronRight className="h-4 w-4" />
-              </Button>
+          {/* Pagination */}
+          <div className="flex items-center justify-between pt-4 px-6">
+            <div className="text-xs text-muted-foreground">
+              Total rows: {data.length}
             </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+            {pageSize > 0 && totalPages > 1 && (
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(1, prev - 1))
+                  }
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Previous
+                </Button>
+
+                <span className="text-sm px-2">
+                  Page {currentPage} of {totalPages}
+                </span>
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                  }
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
