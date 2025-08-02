@@ -1,7 +1,7 @@
 "use client";
 
 import { ToolInvocationUIPart } from "app-types/chat";
-import { TavilyResponse } from "lib/ai/tools/web/web-search";
+import { ExaSearchResponse } from "lib/ai/tools/web/web-search";
 import equal from "lib/equal";
 import { notify } from "lib/notify";
 import { cn, toAny } from "lib/utils";
@@ -25,7 +25,10 @@ function PureWebSearchToolInvocation({ part }: WebSearchToolInvocationProps) {
 
   const result = useMemo(() => {
     if (part.state != "result") return null;
-    return part.result as TavilyResponse & { isError: boolean; error?: string };
+    return part.result as ExaSearchResponse & {
+      isError: boolean;
+      error?: string;
+    };
   }, [part.state]);
   const [errorSrc, setErrorSrc] = useState<string[]>([]);
 
@@ -56,10 +59,13 @@ function PureWebSearchToolInvocation({ part }: WebSearchToolInvocationProps) {
   };
 
   const images = useMemo(() => {
+    // Exa doesn't provide separate images array, but individual results may have image property
     return (
-      result?.images?.filter((image) => !errorSrc.includes(image.url)) ?? []
+      result?.results
+        ?.filter((r) => r.image && !errorSrc.includes(r.image))
+        .map((r) => ({ url: r.image!, description: r.title })) ?? []
     );
-  }, [result?.images, errorSrc]);
+  }, [result?.results, errorSrc]);
 
   if (part.state != "result")
     return (
@@ -141,7 +147,7 @@ function PureWebSearchToolInvocation({ part }: WebSearchToolInvocationProps) {
                 {result.error || "Error"}
               </p>
             ) : (
-              (result as TavilyResponse)?.results?.map((result, i) => {
+              (result as ExaSearchResponse)?.results?.map((result, i) => {
                 return (
                   <HoverCard key={i} openDelay={200} closeDelay={0}>
                     <HoverCardTrigger asChild>
@@ -186,9 +192,23 @@ function PureWebSearchToolInvocation({ part }: WebSearchToolInvocationProps) {
                         <div className="relative">
                           <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent to-card from-80% " />
                           <p className="text-xs text-muted-foreground max-h-60 overflow-y-auto">
-                            {result.content || result.raw_content}
+                            {result.text}
                           </p>
                         </div>
+                        {result.author && (
+                          <div className="text-xs text-muted-foreground mt-2">
+                            <span className="font-medium">Author:</span>{" "}
+                            {result.author}
+                          </div>
+                        )}
+                        {result.publishedDate && (
+                          <div className="text-xs text-muted-foreground">
+                            <span className="font-medium">Published:</span>{" "}
+                            {new Date(
+                              result.publishedDate,
+                            ).toLocaleDateString()}
+                          </div>
+                        )}
                       </div>
                     </HoverCardContent>
                   </HoverCard>

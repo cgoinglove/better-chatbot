@@ -23,10 +23,10 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { useMcpList } from "@/hooks/queries/use-mcp-list";
 
 import {
-  tavilySearchSchema,
-  tavilySearchTool,
-  tavilyWebContentSchema,
-  tavilyWebContentTool,
+  exaSearchSchema,
+  exaSearchTool,
+  exaContentsSchema,
+  exaContentsTool,
 } from "lib/ai/tools/web/web-search";
 import { DefaultToolName } from "lib/ai/tools";
 
@@ -66,14 +66,14 @@ export const ToolNodeDataConfig = memo(function ({
       {
         type: "app-tool",
         id: DefaultToolName.WebSearch,
-        description: tavilySearchTool.description!,
-        parameterSchema: tavilySearchSchema,
+        description: exaSearchTool.description!,
+        parameterSchema: exaSearchSchema,
       },
       {
         type: "app-tool",
         id: DefaultToolName.WebContent,
-        description: tavilyWebContentTool.description!,
-        parameterSchema: tavilyWebContentSchema,
+        description: exaContentsTool.description!,
+        parameterSchema: exaContentsSchema,
       },
     ];
     return [...mcpTools, ...defaultTools];

@@ -1,283 +1,131 @@
 import { tool as createTool } from "ai";
 import { JSONSchema7 } from "json-schema";
 import { jsonSchemaToZod } from "lib/json-schema-to-zod";
-import { isString } from "lib/utils";
 import { safe } from "ts-safe";
 
-export interface TavilyResponse {
-  // Response structure from Tavily API
+// Exa API Types
+export interface ExaSearchRequest {
   query: string;
-  follow_up_questions?: Array<string>;
-  answer?: string;
-  images?: Array<{
-    url: string;
-    description?: string;
-  }>;
-  results: Array<{
-    title: string;
-    url: string;
-    content: string;
-    score: number;
-    published_date?: string;
-    raw_content?: string;
-    favicon?: string;
-  }>;
+  type: string;
+  category?: string;
+  includeDomains?: string[];
+  excludeDomains?: string[];
+  startPublishedDate?: string;
+  endPublishedDate?: string;
+  numResults: number;
+  contents: {
+    text:
+      | {
+          maxCharacters?: number;
+        }
+      | boolean;
+    livecrawl?: "always" | "fallback" | "preferred";
+    subpages?: number;
+    subpageTarget?: string[];
+  };
 }
 
-export const tavilySearchSchema: JSONSchema7 = {
+export interface ExaSearchResult {
+  id: string;
+  title: string;
+  url: string;
+  publishedDate: string;
+  author: string;
+  text: string;
+  image?: string;
+  favicon?: string;
+  score?: number;
+}
+
+export interface ExaSearchResponse {
+  requestId: string;
+  autopromptString: string;
+  resolvedSearchType: string;
+  results: ExaSearchResult[];
+}
+
+export interface ExaContentsRequest {
+  ids: string[];
+  contents: {
+    text:
+      | {
+          maxCharacters?: number;
+        }
+      | boolean;
+    livecrawl?: "always" | "fallback" | "preferred";
+  };
+}
+
+export const exaSearchSchema: JSONSchema7 = {
   type: "object",
   properties: {
     query: {
       type: "string",
       description: "Search query",
     },
-    search_depth: {
-      type: "string",
-      enum: ["basic", "advanced"],
-      description: "The depth of the search. It can be 'basic' or 'advanced'",
-      default: "basic",
-    },
-    topic: {
-      type: "string",
-      enum: ["general", "news"],
-      description:
-        "The category of the search. This will determine which of our agents will be used for the search",
-      default: "general",
-    },
-    days: {
+    numResults: {
       type: "number",
-      description:
-        "The number of days back from the current date to include in the search results. This specifies the time frame of data to be retrieved. Please note that this feature is only available when using the 'news' search topic",
-      default: 3,
-    },
-    time_range: {
-      type: "string",
-      description:
-        "The time range back from the current date to include in the search results. This feature is available for both 'general' and 'news' search topics",
-      enum: ["day", "week", "month", "year", "d", "w", "m", "y"],
-    },
-    max_results: {
-      type: "number",
-      description: "The maximum number of search results to return",
-      default: 10,
-      minimum: 5,
+      description: "Number of search results to return",
+      default: 5,
+      minimum: 1,
       maximum: 20,
     },
-    include_images: {
-      type: "boolean",
-      description: "Include a list of query-related images in the response",
-      default: true,
-    },
-    include_image_descriptions: {
-      type: "boolean",
+    type: {
+      type: "string",
+      enum: ["auto", "keyword", "neural"],
       description:
-        "Include a list of query-related images and their descriptions in the response",
-      default: true,
+        "Search type - auto lets Exa decide, keyword for exact matches, neural for semantic search",
+      default: "auto",
     },
-    include_raw_content: {
-      type: "boolean",
-      description:
-        "Include the cleaned and parsed HTML content of each search result",
-      default: false,
-    },
-    include_domains: {
-      type: "array",
-      items: { type: "string" },
-      description:
-        "A list of domains to specifically include in the search results, if the user asks to search on specific sites set this to the domain of the site",
-      default: [],
-    },
-    exclude_domains: {
-      type: "array",
-      items: { type: "string" },
-      description:
-        "List of domains to specifically exclude, if the user asks to exclude a domain set this to the domain of the site",
-      default: [],
-    },
-    country: {
+    category: {
       type: "string",
       enum: [
-        "afghanistan",
-        "albania",
-        "algeria",
-        "andorra",
-        "angola",
-        "argentina",
-        "armenia",
-        "australia",
-        "austria",
-        "azerbaijan",
-        "bahamas",
-        "bahrain",
-        "bangladesh",
-        "barbados",
-        "belarus",
-        "belgium",
-        "belize",
-        "benin",
-        "bhutan",
-        "bolivia",
-        "bosnia and herzegovina",
-        "botswana",
-        "brazil",
-        "brunei",
-        "bulgaria",
-        "burkina faso",
-        "burundi",
-        "cambodia",
-        "cameroon",
-        "canada",
-        "cape verde",
-        "central african republic",
-        "chad",
-        "chile",
-        "china",
-        "colombia",
-        "comoros",
-        "congo",
-        "costa rica",
-        "croatia",
-        "cuba",
-        "cyprus",
-        "czech republic",
-        "denmark",
-        "djibouti",
-        "dominican republic",
-        "ecuador",
-        "egypt",
-        "el salvador",
-        "equatorial guinea",
-        "eritrea",
-        "estonia",
-        "ethiopia",
-        "fiji",
-        "finland",
-        "france",
-        "gabon",
-        "gambia",
-        "georgia",
-        "germany",
-        "ghana",
-        "greece",
-        "guatemala",
-        "guinea",
-        "haiti",
-        "honduras",
-        "hungary",
-        "iceland",
-        "india",
-        "indonesia",
-        "iran",
-        "iraq",
-        "ireland",
-        "israel",
-        "italy",
-        "jamaica",
-        "japan",
-        "jordan",
-        "kazakhstan",
-        "kenya",
-        "kuwait",
-        "kyrgyzstan",
-        "latvia",
-        "lebanon",
-        "lesotho",
-        "liberia",
-        "libya",
-        "liechtenstein",
-        "lithuania",
-        "luxembourg",
-        "madagascar",
-        "malawi",
-        "malaysia",
-        "maldives",
-        "mali",
-        "malta",
-        "mauritania",
-        "mauritius",
-        "mexico",
-        "moldova",
-        "monaco",
-        "mongolia",
-        "montenegro",
-        "morocco",
-        "mozambique",
-        "myanmar",
-        "namibia",
-        "nepal",
-        "netherlands",
-        "new zealand",
-        "nicaragua",
-        "niger",
-        "nigeria",
-        "north korea",
-        "north macedonia",
-        "norway",
-        "oman",
-        "pakistan",
-        "panama",
-        "papua new guinea",
-        "paraguay",
-        "peru",
-        "philippines",
-        "poland",
-        "portugal",
-        "qatar",
-        "romania",
-        "russia",
-        "rwanda",
-        "saudi arabia",
-        "senegal",
-        "serbia",
-        "singapore",
-        "slovakia",
-        "slovenia",
-        "somalia",
-        "south africa",
-        "south korea",
-        "south sudan",
-        "spain",
-        "sri lanka",
-        "sudan",
-        "sweden",
-        "switzerland",
-        "syria",
-        "taiwan",
-        "tajikistan",
-        "tanzania",
-        "thailand",
-        "togo",
-        "trinidad and tobago",
-        "tunisia",
-        "turkey",
-        "turkmenistan",
-        "uganda",
-        "ukraine",
-        "united arab emirates",
-        "united kingdom",
-        "united states",
-        "uruguay",
-        "uzbekistan",
-        "venezuela",
-        "vietnam",
-        "yemen",
-        "zambia",
-        "zimbabwe",
+        "company",
+        "research paper",
+        "news",
+        "linkedin profile",
+        "github",
+        "tweet",
+        "movie",
+        "song",
+        "personal site",
+        "pdf",
       ],
-      description:
-        "Boost search results from a specific country. This will prioritize content from the selected country in the search results. Available only if topic is general.",
-      default: "",
+      description: "Category to focus the search on",
     },
-    include_favicon: {
-      type: "boolean",
-      description: "Whether to include the favicon URL for each result",
-      default: true,
+    includeDomains: {
+      type: "array",
+      items: { type: "string" },
+      description: "List of domains to specifically include in search results",
+      default: [],
+    },
+    excludeDomains: {
+      type: "array",
+      items: { type: "string" },
+      description:
+        "List of domains to specifically exclude from search results",
+      default: [],
+    },
+    startPublishedDate: {
+      type: "string",
+      description: "Start date for published content (YYYY-MM-DD format)",
+    },
+    endPublishedDate: {
+      type: "string",
+      description: "End date for published content (YYYY-MM-DD format)",
+    },
+    maxCharacters: {
+      type: "number",
+      description: "Maximum characters to extract from each result",
+      default: 3000,
+      minimum: 100,
+      maximum: 10000,
     },
   },
   required: ["query"],
 };
 
-export const tavilyWebContentSchema: JSONSchema7 = {
+export const exaContentsSchema: JSONSchema7 = {
   type: "object",
   properties: {
     urls: {
@@ -285,140 +133,142 @@ export const tavilyWebContentSchema: JSONSchema7 = {
       items: { type: "string" },
       description: "List of URLs to extract content from",
     },
-    extract_depth: {
+    maxCharacters: {
+      type: "number",
+      description: "Maximum characters to extract from each URL",
+      default: 3000,
+      minimum: 100,
+      maximum: 10000,
+    },
+    livecrawl: {
       type: "string",
-      enum: ["basic", "advanced"],
+      enum: ["always", "fallback", "preferred"],
       description:
-        "Depth of extraction - 'basic' or 'advanced', if usrls are linkedin use 'advanced' or if explicitly told to use advanced",
-      default: "basic",
-    },
-    include_images: {
-      type: "boolean",
-      description:
-        "Include a list of images extracted from the urls in the response",
-      default: false,
-    },
-    format: {
-      type: "string",
-      enum: ["markdown", "text"],
-      description:
-        "The format of the extracted web page content. markdown returns content in markdown format. text returns plain text and may increase latency.",
-      default: "markdown",
-    },
-    include_favicon: {
-      type: "boolean",
-      description: "Whether to include the favicon URL for each result",
-      default: false,
+        "Live crawling preference - always forces live crawl, fallback uses cache first, preferred tries live first",
+      default: "preferred",
     },
   },
   required: ["urls"],
 };
 
-const API_KEY = process.env.TAVILY_API_KEY;
+const API_KEY = process.env.EXA_API_KEY;
+const BASE_URL = "https://api.exa.ai";
 
-const baseURLs = {
-  search: "https://api.tavily.com/search",
-  extract: "https://api.tavily.com/extract",
-} as const;
-
-const fetchTavily = async (url: string, body: any): Promise<TavilyResponse> => {
+const fetchExa = async (endpoint: string, body: any): Promise<any> => {
   if (!API_KEY) {
-    throw new Error("Tavily API key is not configured");
+    throw new Error("EXA_API_KEY is not configured");
   }
 
-  const response = await fetch(url, {
+  const response = await fetch(`${BASE_URL}${endpoint}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${API_KEY}`,
+      "x-api-key": API_KEY,
     },
-    body: JSON.stringify({
-      ...body,
-      api_key: API_KEY,
-    }),
+    body: JSON.stringify(body),
   });
 
   if (response.status === 401) {
-    throw new Error("Invalid TavilyAPI key");
+    throw new Error("Invalid EXA API key");
   }
   if (response.status === 429) {
-    throw new Error("Tavily API usage limit exceeded");
+    throw new Error("Exa API usage limit exceeded");
   }
 
   if (!response.ok) {
-    throw new Error(
-      `Tavily API error: ${response.status} ${response.statusText}`,
-    );
+    throw new Error(`Exa API error: ${response.status} ${response.statusText}`);
   }
 
-  const result: TavilyResponse = await response.json();
-  return {
-    ...result,
-    images: result.images?.map((image) => ({
-      url: isString(image) ? image : image.url,
-      description: image.description,
-    })),
-  };
+  return await response.json();
 };
 
-export const tavilySearchToolForWorkflow = createTool({
+export const exaSearchToolForWorkflow = createTool({
   description:
-    "A web search tool for quick research and information gathering. Provides basic search results with titles, summaries, and URLs from across the web. Perfect for finding relevant sources and getting an overview of topics.",
-  parameters: jsonSchemaToZod(tavilySearchSchema),
+    "Search the web using Exa AI - performs real-time web searches with semantic and neural search capabilities. Returns high-quality, relevant results with full content extraction.",
+  parameters: jsonSchemaToZod(exaSearchSchema),
   execute: async (params) => {
-    return fetchTavily(baseURLs.search, {
-      ...params,
-      topic: params.country ? "general" : params.topic,
-      include_favicon: false,
-      include_domains: Array.isArray(params.include_domains)
-        ? params.include_domains
-        : [],
-      exclude_domains: Array.isArray(params.exclude_domains)
-        ? params.exclude_domains
-        : [],
-    });
+    const searchRequest: ExaSearchRequest = {
+      query: params.query,
+      type: params.type || "auto",
+      numResults: params.numResults || 5,
+      contents: {
+        text: {
+          maxCharacters: params.maxCharacters || 3000,
+        },
+        livecrawl: "preferred",
+      },
+    };
+
+    // Add optional parameters if provided
+    if (params.category) searchRequest.category = params.category;
+    if (params.includeDomains?.length)
+      searchRequest.includeDomains = params.includeDomains;
+    if (params.excludeDomains?.length)
+      searchRequest.excludeDomains = params.excludeDomains;
+    if (params.startPublishedDate)
+      searchRequest.startPublishedDate = params.startPublishedDate;
+    if (params.endPublishedDate)
+      searchRequest.endPublishedDate = params.endPublishedDate;
+
+    return fetchExa("/search", searchRequest);
   },
 });
 
-export const tavilyWebContentToolForWorkflow = createTool({
+export const exaContentsToolForWorkflow = createTool({
   description:
-    "A detailed web content extraction tool that analyzes and summarizes specific web pages from provided URLs. Extracts full content, processes it intelligently, and provides comprehensive summaries. Perfect for in-depth analysis of specific articles, documents, or web pages.",
-  parameters: jsonSchemaToZod(tavilyWebContentSchema),
+    "Extract detailed content from specific URLs using Exa AI - retrieves full text content, metadata, and structured information from web pages with live crawling capabilities.",
+  parameters: jsonSchemaToZod(exaContentsSchema),
   execute: async (params) => {
-    return fetchTavily(baseURLs.extract, {
-      ...params,
-      include_favicon: false,
-      include_images: true,
-      include_image_descriptions: true,
-      include_raw_content: false,
-    });
+    const contentsRequest: ExaContentsRequest = {
+      ids: params.urls,
+      contents: {
+        text: {
+          maxCharacters: params.maxCharacters || 3000,
+        },
+        livecrawl: params.livecrawl || "preferred",
+      },
+    };
+
+    return fetchExa("/contents", contentsRequest);
   },
 });
 
-export const tavilySearchTool = createTool({
+export const exaSearchTool = createTool({
   description:
-    "A web search tool for quick research and information gathering. Provides basic search results with titles, summaries, and URLs from across the web. Perfect for finding relevant sources and getting an overview of topics.",
-  parameters: jsonSchemaToZod(tavilySearchSchema),
+    "Search the web using Exa AI - performs real-time web searches with semantic and neural search capabilities. Returns high-quality, relevant results with full content extraction.",
+  parameters: jsonSchemaToZod(exaSearchSchema),
   execute: (params) => {
-    return safe(() =>
-      fetchTavily(baseURLs.search, {
-        ...params,
-        topic: params.country ? "general" : params.topic,
-        include_favicon: true,
-        include_domains: Array.isArray(params.include_domains)
-          ? params.include_domains
-          : [],
-        exclude_domains: Array.isArray(params.exclude_domains)
-          ? params.exclude_domains
-          : [],
-        include_images: true,
-        include_image_descriptions: true,
-      }),
-    )
-      .map((result) => ({
+    return safe(async () => {
+      const searchRequest: ExaSearchRequest = {
+        query: params.query,
+        type: params.type || "auto",
+        numResults: params.numResults || 5,
+        contents: {
+          text: {
+            maxCharacters: params.maxCharacters || 3000,
+          },
+          livecrawl: "preferred",
+        },
+      };
+
+      // Add optional parameters if provided
+      if (params.category) searchRequest.category = params.category;
+      if (params.includeDomains?.length)
+        searchRequest.includeDomains = params.includeDomains;
+      if (params.excludeDomains?.length)
+        searchRequest.excludeDomains = params.excludeDomains;
+      if (params.startPublishedDate)
+        searchRequest.startPublishedDate = params.startPublishedDate;
+      if (params.endPublishedDate)
+        searchRequest.endPublishedDate = params.endPublishedDate;
+
+      const result = await fetchExa("/search", searchRequest);
+
+      return {
         ...result,
         guide: `Use the search results to answer the user's question. Summarize the content and ask if they have any additional questions about the topic.`,
-      }))
+      };
+    })
       .ifFail((e) => {
         return {
           isError: true,
@@ -431,17 +281,24 @@ export const tavilySearchTool = createTool({
   },
 });
 
-export const tavilyWebContentTool = createTool({
+export const exaContentsTool = createTool({
   description:
-    "A detailed web content extraction tool that analyzes and summarizes specific web pages from provided URLs. Extracts full content, processes it intelligently, and provides comprehensive summaries. Perfect for in-depth analysis of specific articles, documents, or web pages.",
-  parameters: jsonSchemaToZod(tavilyWebContentSchema),
+    "Extract detailed content from specific URLs using Exa AI - retrieves full text content, metadata, and structured information from web pages with live crawling capabilities.",
+  parameters: jsonSchemaToZod(exaContentsSchema),
   execute: async (params) => {
-    return safe(() =>
-      fetchTavily(baseURLs.extract, {
-        ...params,
-        include_favicon: true,
-      }),
-    )
+    return safe(async () => {
+      const contentsRequest: ExaContentsRequest = {
+        ids: params.urls,
+        contents: {
+          text: {
+            maxCharacters: params.maxCharacters || 3000,
+          },
+          livecrawl: params.livecrawl || "preferred",
+        },
+      };
+
+      return await fetchExa("/contents", contentsRequest);
+    })
       .ifFail((e) => {
         return {
           isError: true,
