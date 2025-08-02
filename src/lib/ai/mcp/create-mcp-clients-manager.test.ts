@@ -22,6 +22,7 @@ vi.mock("lib/utils", () => ({
     wait: vi.fn(),
     isLocked: false,
   })),
+  generateUUID: vi.fn(() => "mock-uuid-12345678"),
 }));
 
 vi.mock("ts-safe", () => ({
@@ -301,23 +302,6 @@ describe("MCPClientsManager", () => {
       expect(mockCreateMCPClient).toHaveBeenCalledWith(
         "test-server",
         updatedConfig,
-        { autoDisconnectSeconds: 1800 },
-      );
-    });
-
-    it("should refresh client without storage", async () => {
-      manager = new MCPClientsManager();
-      await manager.init();
-      await manager.addClient("test-server", "test-server", mockServerConfig);
-
-      const newClient = { ...mockClient };
-      vi.mocked(mockCreateMCPClient).mockReturnValue(newClient);
-
-      await manager.refreshClient("test-server");
-
-      expect(mockCreateMCPClient).toHaveBeenCalledWith(
-        "test-server",
-        mockServerConfig,
         { autoDisconnectSeconds: 1800 },
       );
     });

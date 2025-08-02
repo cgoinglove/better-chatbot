@@ -5,12 +5,14 @@ import type {
   VercelAIMcpTool,
 } from "app-types/mcp";
 import { createMCPClient, type MCPClient } from "./create-mcp-client";
-import { errorToString, Locker, safeJSONParse } from "lib/utils";
+import { errorToString, generateUUID, Locker, safeJSONParse } from "lib/utils";
 import { safe } from "ts-safe";
 import { McpServerSchema } from "lib/db/pg/schema.pg";
 import { createMCPToolId } from "./mcp-tool-id";
-import logger from "logger";
+import globalLogger from "logger";
 import { ToolExecutionOptions } from "ai";
+import { createMemoryMCPConfigStorage } from "./memory-mcp-config-storage";
+import { colorize } from "consola/utils";
 /**
  * Interface for storage of MCP server configurations.
  * Implementations should handle persistent storage of server configs.
@@ -38,28 +40,49 @@ export class MCPClientsManager {
     }
   >();
   private initializedLock = new Locker();
+  private initialized = false;
+  private logger = globalLogger.withDefaults({
+    message: colorize("dim", `[${generateUUID().slice(0, 8)}] MCP Manager: `),
+  });
 
   // Optional storage for persistent configurations
   constructor(
-    private storage?: MCPConfigStorage,
+    private storage: MCPConfigStorage = createMemoryMCPConfigStorage(),
     private autoDisconnectSeconds: number = 60 * 30, // 30 minutes
   ) {
     process.on("SIGINT", this.cleanup.bind(this));
     process.on("SIGTERM", this.cleanup.bind(this));
   }
 
-  async init() {
-    logger.info("Initializing MCP clients manager");
+  private async waitInitialized() {
+    if (this.initialized) {
+      return;
+    }
+    this.logger.info("Waiting for MCP clients manager to be initialized");
     if (this.initializedLock.isLocked) {
-      logger.info("MCP clients manager already initialized, waiting for lock");
+      await this.initializedLock.wait();
+      return;
+    }
+    await this.init();
+  }
+
+  async init() {
+    this.logger.info("Initializing MCP clients manager");
+    if (this.initializedLock.isLocked) {
+      this.logger.info(
+        "MCP clients manager already initialized, waiting for lock",
+      );
       return this.initializedLock.wait();
+    }
+    if (this.initialized) {
+      this.logger.info("MCP clients manager already initialized");
+      return;
     }
     return safe(() => this.initializedLock.lock())
       .ifOk(async () => {
         if (this.storage) {
           await this.storage.init(this);
           const configs = await this.storage.loadAll();
-          this.cleanup();
           await Promise.allSettled(
             configs.map(({ id, name, config }) =>
               this.addClient(id, name, config).catch(() => {
@@ -71,6 +94,7 @@ export class MCPClientsManager {
       })
       .watch(() => {
         this.initializedLock.unlock();
+        this.initialized = true;
       })
       .unwrap();
   }
@@ -79,7 +103,7 @@ export class MCPClientsManager {
    * Returns all tools from all clients as a flat object
    */
   async tools(): Promise<Record<string, VercelAIMcpTool>> {
-    await this.initializedLock.wait();
+    await this.waitInitialized();
     return Object.fromEntries(
       Array.from(this.clients.entries())
         .filter(([_, { client }]) => client.getInfo().toolInfo.length > 0)
@@ -148,7 +172,8 @@ export class MCPClientsManager {
    * Refreshes an existing client with a new configuration or its existing config
    */
   async refreshClient(id: string) {
-    logger.info(`Refreshing client ${id}`);
+    this.logger.info(`Refreshing client ${id}`);
+    await this.waitInitialized();
     const prevClient = this.clients.get(id);
     const currentConfig = prevClient?.client.getInfo().config;
     if (this.storage) {
@@ -171,14 +196,14 @@ export class MCPClientsManager {
   }
 
   async getClients() {
-    await this.initializedLock.wait();
+    await this.waitInitialized();
     return Array.from(this.clients.entries()).map(([id, { client }]) => ({
       id,
       client: client,
     }));
   }
   async getClient(id: string) {
-    await this.initializedLock.wait();
+    await this.waitInitialized();
     const client = this.clients.get(id);
     if (!client) {
       await this.refreshClient(id);
