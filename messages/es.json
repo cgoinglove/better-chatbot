@@ -117,7 +117,7 @@
       "searchOptions": "Opciones de Búsqueda",
       "searchOptionsDescription": "Puedes pasar opciones de búsqueda al chatbot, como el número máximo de resultados de búsqueda, la fecha de búsqueda, etc.",
       "defaultToolKit": {
-        "visualization": "Herramientas de gráficos",
+        "visualization": "Visualización de datos",
         "webSearch": "Buscar en la web"
       }
     },

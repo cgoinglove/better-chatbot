@@ -509,6 +509,17 @@ const LineChart = dynamic(
   },
 );
 
+const InteractiveTable = dynamic(
+  () =>
+    import("./tool-invocation/interactive-table").then(
+      (mod) => mod.InteractiveTable,
+    ),
+  {
+    ssr: false,
+    loading,
+  },
+);
+
 const WebSearchToolInvocation = dynamic(
   () =>
     import("./tool-invocation/web-search").then(
@@ -707,6 +718,13 @@ export const ToolMessagePart = memo(
           case DefaultToolName.CreateLineChart:
             return (
               <LineChart key={`${toolCallId}-${toolName}`} {...(args as any)} />
+            );
+          case DefaultToolName.CreateTable:
+            return (
+              <InteractiveTable
+                key={`${toolCallId}-${toolName}`}
+                {...(args as any)}
+              />
             );
         }
       }

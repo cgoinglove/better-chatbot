@@ -118,7 +118,7 @@
       "searchOptions": "搜索选项",
       "searchOptionsDescription": "您可以向聊天机器人传递搜索选项，例如搜索结果的最大数量、搜索日期等。",
       "defaultToolKit": {
-        "visualization": "图表工具",
+        "visualization": "数据可视化",
         "webSearch": "网页搜寻"
       }
     },

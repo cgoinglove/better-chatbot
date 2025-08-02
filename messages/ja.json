@@ -117,7 +117,7 @@
       "searchOptions": "検索オプション",
       "searchOptionsDescription": "検索結果の最大数、検索日時など、チャットボットに検索オプションを渡すことができます。",
       "defaultToolKit": {
-        "visualization": "チャートツール",
+        "visualization": "データ可視化",
         "webSearch": "ウェブを検索"
       }
     },

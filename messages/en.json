@@ -218,7 +218,7 @@
       "searchOptions": "Search Options",
       "searchOptionsDescription": "You can pass search options to the chatbot, such as the maximum number of search results, the search date, etc.",
       "defaultToolKit": {
-        "visualization": "Chart Tools",
+        "visualization": "Data Visualization",
         "webSearch": "Search the Web",
         "http": "HTTP Request"
       }

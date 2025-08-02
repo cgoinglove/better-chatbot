@@ -118,7 +118,7 @@
       "searchOptions": "검색 옵션",
       "searchOptionsDescription": "검색 결과의 최대 개수, 검색 날짜 등의 검색 옵션을 챗봇에 전달할 수 있습니다.",
       "defaultToolKit": {
-        "visualization": "차트 도구",
+        "visualization": "데이터 시각화",
         "webSearch": "웹 검색"
       }
     },

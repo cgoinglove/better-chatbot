@@ -362,6 +362,10 @@ export function ChatMentionInputSuggestion({
           label = "line-chart";
           description = "Create a line chart";
           break;
+        case DefaultToolName.CreateTable:
+          label = "table";
+          description = "Create a table";
+          break;
         case DefaultToolName.WebSearch:
           label = "web-search";
           description = "Search the web";

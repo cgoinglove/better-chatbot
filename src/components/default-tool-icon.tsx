@@ -9,6 +9,7 @@ import {
   HardDriveUploadIcon,
   CodeIcon,
   HammerIcon,
+  TableOfContents,
 } from "lucide-react";
 import { useMemo } from "react";
 
@@ -30,6 +31,11 @@ export function DefaultToolIcon({
     if (name === DefaultToolName.CreateLineChart) {
       return (
         <TrendingUpIcon className={cn("size-3.5 text-blue-500", className)} />
+      );
+    }
+    if (name === DefaultToolName.CreateTable) {
+      return (
+        <TableOfContents className={cn("size-3.5 text-blue-500", className)} />
       );
     }
     if (name === DefaultToolName.WebSearch) {
