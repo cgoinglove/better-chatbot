@@ -203,10 +203,13 @@ Required variables are documented in `.env.example`. Key categories:
 ### Built-in Tools
 - **Web Search**: Exa AI integration for semantic search and content extraction
 - **Code Execution**: Safe JavaScript and Python execution  
-- **Visualization**: UI component tools for chart generation (bar, line, pie)
+- **Data Visualization**: UI component tools for data presentation
+  - **Interactive Tables**: Feature-rich tables with sorting, filtering, search, highlighting, pagination, and CSV/Excel export
+  - **Charts**: Generation of bar, line, and pie charts
   - Tools generate parameters that render React components
   - Components located in `@src/components/tool-invocation/`
   - Dynamic imports used in `@src/components/message-parts.tsx` for rendering
+  - Lazy-loaded Excel export using CDN-based xlsx library for optimal bundle size
 - **HTTP Requests**: Configurable HTTP client
 - **Sequential Thinking**: Step-by-step reasoning
 

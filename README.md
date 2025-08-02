@@ -184,7 +184,19 @@ Built-in web search powered by [Exa AI](https://exa.ai). Search the web with sem
 
 It is a simple JS execution tool.
 
-> Additionally, many basic tools are provided, such as visualization tools for drawing charts and tables, and an HTTP tool.
+#### 📊 Data Visualization Tools
+
+**Interactive Tables**: Create feature-rich data tables with advanced functionality:
+- **Sorting & Filtering**: Sort by any column, filter data in real-time
+- **Search & Highlighting**: Global search with automatic text highlighting
+- **Export Options**: Export to CSV or Excel format with lazy-loaded libraries
+- **Column Management**: Show/hide columns with visibility controls
+- **Pagination**: Handle large datasets with built-in pagination
+- **Data Type Support**: Proper formatting for strings, numbers, dates, and booleans
+
+**Chart Generation**: Visualize data with various chart types (bar, line, pie charts)
+
+> Additionally, many other tools are provided, such as an HTTP client for API requests and more.
 
 <br/>
 
