@@ -1,7 +1,7 @@
 "use client";
-import React, { RefObject, useCallback, useMemo } from "react";
+import React, { RefObject, useCallback, useMemo, useRef } from "react";
 
-import { HammerIcon } from "lucide-react";
+import { CheckIcon, HammerIcon } from "lucide-react";
 import { MCPIcon } from "ui/mcp-icon";
 
 import { ChatMention } from "app-types/chat";
@@ -18,7 +18,7 @@ import {
 import MentionInput from "./mention-input";
 import { useTranslations } from "next-intl";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
-import { createPortal } from "react-dom";
+
 import { appStore } from "@/app/store";
 import { cn, toAny } from "lib/utils";
 import { useShallow } from "zustand/shallow";
@@ -27,6 +27,8 @@ import { Editor } from "@tiptap/react";
 import { DefaultToolName } from "lib/ai/tools";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { DefaultToolIcon } from "./default-tool-icon";
+import equal from "lib/equal";
+import { EMOJI_DATA } from "lib/const";
 
 interface ChatMentionInputProps {
   onChange: (text: string) => void;
@@ -34,7 +36,10 @@ interface ChatMentionInputProps {
   onEnter?: () => void;
   placeholder?: string;
   input: string;
+  disabledMention?: boolean;
   ref?: RefObject<Editor | null>;
+  onFocus?: () => void;
+  onBlur?: () => void;
 }
 
 export default function ChatMentionInput({
@@ -44,16 +49,25 @@ export default function ChatMentionInput({
   placeholder,
   ref,
   input,
+  disabledMention,
+  onFocus,
+  onBlur,
 }: ChatMentionInputProps) {
+  const latestMentions = useRef<string[]>([]);
+
   const handleChange = useCallback(
     ({
       text,
       mentions,
     }: { text: string; mentions: { label: string; id: string }[] }) => {
       onChange(text);
-      onChangeMention(
-        mentions.map((mention) => JSON.parse(mention.id) as ChatMention),
+      const mentionsIds = mentions.map((mention) => mention.id);
+      const parsedMentions = mentionsIds.map(
+        (id) => JSON.parse(id) as ChatMention,
       );
+      if (equal(latestMentions.current, mentionsIds)) return;
+      latestMentions.current = mentionsIds;
+      onChangeMention(parsedMentions);
     },
     [onChange, onChangeMention],
   );
@@ -64,10 +78,13 @@ export default function ChatMentionInput({
       onEnter={onEnter}
       placeholder={placeholder}
       suggestionChar="@"
+      disabledMention={disabledMention}
       onChange={handleChange}
       MentionItem={ChatMentionInputMentionItem}
       Suggestion={ChatMentionInputSuggestion}
       editorRef={ref}
+      onFocus={onFocus}
+      onBlur={onBlur}
     />
   );
 }
@@ -84,8 +101,8 @@ export function ChatMentionInputMentionItem({
     return (
       <div
         className={cn(
-          "flex items-center text-sm px-1 font-semibold transition-colors",
-          "text-blue-500",
+          "flex items-center text-sm px-2 py-0.5 rounded-sm font-semibold transition-colors",
+          "text-primary font-bold bg-primary/5",
           className,
         )}
       >
@@ -104,26 +121,52 @@ export function ChatMentionInputMentionItem({
   );
 }
 
-function ChatMentionInputSuggestion({
+export function ChatMentionInputSuggestion({
   onSelectMention,
   onClose,
   top,
   left,
+  selectedIds,
+  className,
+  open,
+  onOpenChange,
+  children,
+  style,
+  disabledType,
 }: {
   onClose: () => void;
   onSelectMention: (item: { label: string; id: string }) => void;
   top: number;
   left: number;
+  className?: string;
+  selectedIds?: string[];
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  children?: React.ReactNode;
+  style?: React.CSSProperties;
+  disabledType?: ("mcp" | "workflow" | "defaultTool" | "agent")[];
 }) {
   const t = useTranslations("Common");
-  const [mcpList, workflowList] = appStore(
-    useShallow((state) => [state.mcpList, state.workflowToolList]),
+  const [mcpList, workflowList, agentList] = appStore(
+    useShallow((state) => [
+      state.mcpList,
+      state.workflowToolList,
+      state.agentList,
+    ]),
   );
 
   const mcpMentions = useMemo(() => {
+    if (disabledType?.includes("mcp")) return null;
     return mcpList
       ?.filter((mcp) => mcp.toolInfo?.length)
       .map((mcp) => {
+        const id = JSON.stringify({
+          type: "mcpServer",
+          name: mcp.name,
+          serverId: mcp.id,
+          description: `${mcp.name} is an MCP server that includes ${mcp.toolInfo?.length ?? 0} tool(s).`,
+          toolCount: mcp.toolInfo?.length ?? 0,
+        });
         return (
           <CommandGroup heading={mcp.name} key={mcp.id}>
             <CommandItem
@@ -132,21 +175,20 @@ function ChatMentionInputSuggestion({
               onSelect={() =>
                 onSelectMention({
                   label: `mcp("${mcp.name}")`,
-                  id: JSON.stringify({
-                    type: "mcpServer",
-                    name: mcp.name,
-                    serverId: mcp.id,
-                    description: `${mcp.name} is an MCP server that includes ${mcp.toolInfo?.length ?? 0} tool(s).`,
-                    toolCount: mcp.toolInfo?.length ?? 0,
-                  }),
+                  id,
                 })
               }
             >
               <MCPIcon className="size-3.5 text-foreground" />
               <span className="truncate min-w-0">{mcp.name}</span>
-              <span className="ml-auto text-xs text-muted-foreground">
-                {mcp.toolInfo?.length} tools
-              </span>
+
+              {selectedIds?.includes(id) ? (
+                <CheckIcon className="size-3 ml-auto" />
+              ) : (
+                <span className="ml-auto text-xs text-muted-foreground">
+                  {mcp.toolInfo?.length} tools
+                </span>
+              )}
             </CommandItem>
             {mcp.toolInfo?.map((tool) => {
               return (
@@ -168,19 +210,74 @@ function ChatMentionInputSuggestion({
                 >
                   <HammerIcon className="size-3.5" />
                   <span className="truncate min-w-0">{tool.name}</span>
+                  {selectedIds?.includes(id) && (
+                    <CheckIcon className="size-3 ml-auto" />
+                  )}
                 </CommandItem>
               );
             })}
           </CommandGroup>
         );
       });
-  }, [mcpList]);
+  }, [mcpList, selectedIds, disabledType]);
+
+  const agentMentions = useMemo(() => {
+    if (disabledType?.includes("agent")) return null;
+    if (!agentList.length) return null;
+    return (
+      <CommandGroup heading="Agents" key="agent">
+        {agentList.map((agent, i) => {
+          const id = JSON.stringify({
+            type: "agent",
+            name: agent.name,
+            agentId: agent.id,
+            description: agent.description,
+            icon: agent.icon,
+          });
+          return (
+            <CommandItem
+              key={agent.id}
+              className="cursor-pointer text-foreground"
+              onSelect={() =>
+                onSelectMention({
+                  label: `agent("${agent.name}")`,
+                  id,
+                })
+              }
+            >
+              <Avatar
+                style={agent.icon?.style}
+                className="size-3.5 ring-[1px] ring-input rounded-full"
+              >
+                <AvatarImage
+                  src={agent.icon?.value || EMOJI_DATA[i % EMOJI_DATA.length]}
+                />
+                <AvatarFallback>{agent.name.slice(0, 1)}</AvatarFallback>
+              </Avatar>
+              <span className="truncate min-w-0">{agent.name}</span>
+              {selectedIds?.includes(id) && (
+                <CheckIcon className="size-3 ml-auto" />
+              )}
+            </CommandItem>
+          );
+        })}
+      </CommandGroup>
+    );
+  }, [agentList, selectedIds, disabledType]);
 
   const workflowMentions = useMemo(() => {
-    if (!workflowList.length) return;
+    if (disabledType?.includes("workflow")) return null;
+    if (!workflowList.length) return null;
     return (
       <CommandGroup heading="Workflows" key="workflows">
         {workflowList.map((workflow) => {
+          const id = JSON.stringify({
+            type: "workflow",
+            name: workflow.name,
+            workflowId: workflow.id,
+            icon: workflow.icon,
+            description: workflow.description,
+          });
           return (
             <CommandItem
               key={workflow.id}
@@ -188,13 +285,7 @@ function ChatMentionInputSuggestion({
               onSelect={() =>
                 onSelectMention({
                   label: `tool("${workflow.name}")`,
-                  id: JSON.stringify({
-                    type: "workflow",
-                    name: workflow.name,
-                    workflowId: workflow.id,
-                    icon: workflow.icon,
-                    description: workflow.description,
-                  }),
+                  id,
                 })
               }
             >
@@ -206,14 +297,18 @@ function ChatMentionInputSuggestion({
                 <AvatarFallback>{workflow.name.slice(0, 1)}</AvatarFallback>
               </Avatar>
               <span className="truncate min-w-0">{workflow.name}</span>
+              {selectedIds?.includes(id) && (
+                <CheckIcon className="size-3 ml-auto" />
+              )}
             </CommandItem>
           );
         })}
       </CommandGroup>
     );
-  }, [workflowList]);
+  }, [workflowList, selectedIds, disabledType]);
 
   const defaultToolMentions = useMemo(() => {
+    if (disabledType?.includes("defaultTool")) return null;
     const items = Object.values(DefaultToolName).map((toolName) => {
       let label = toolName as string;
       const icon = <DefaultToolIcon name={toolName} />;
@@ -247,6 +342,10 @@ function ChatMentionInputSuggestion({
           label = "js-execution";
           description = "Execute simple javascript code";
           break;
+        case DefaultToolName.PythonExecution:
+          label = "python-execution";
+          description = "Execute simple python code";
+          break;
       }
       return {
         id: toolName,
@@ -260,44 +359,64 @@ function ChatMentionInputSuggestion({
       <>
         <CommandGroup heading="App Tools" key="default-tool">
           {items.map((item) => {
+            const id = JSON.stringify({
+              type: "defaultTool",
+              name: item.id,
+              label: item.label,
+              description: item.description,
+            });
             return (
               <CommandItem
                 key={item.id}
                 onSelect={() =>
                   onSelectMention({
                     label: `tool('${item.label}')`,
-                    id: JSON.stringify({
-                      type: "defaultTool",
-                      name: item.id,
-                      label: item.label,
-                      description: item.description,
-                    }),
+                    id,
                   })
                 }
               >
                 {item.icon}
                 <span className="truncate min-w-0">{item.label}</span>
+                {selectedIds?.includes(id) && (
+                  <CheckIcon className="size-3 ml-auto" />
+                )}
               </CommandItem>
             );
           })}
         </CommandGroup>
       </>
     );
-  }, []);
+  }, [selectedIds, disabledType]);
 
-  return createPortal(
-    <Popover open onOpenChange={(f) => !f && onClose()}>
-      <PopoverTrigger asChild>
-        <span
-          className="fixed z-50"
-          style={{
-            top,
-            left,
-          }}
-        ></span>
-      </PopoverTrigger>
-      <PopoverContent className="p-0 w-xs" align="start" side="top">
-        <Command>
+  const trigger = useMemo(() => {
+    if (children) return children;
+    return (
+      <span
+        className="fixed z-50"
+        style={{
+          top,
+          left,
+        }}
+      ></span>
+    );
+  }, [children, top, left]);
+
+  return (
+    <Popover
+      open={open ?? true}
+      onOpenChange={(f) => {
+        !f && onClose();
+        onOpenChange?.(f);
+      }}
+    >
+      <PopoverTrigger asChild>{trigger}</PopoverTrigger>
+      <PopoverContent
+        className={cn("p-0 w-xs", className)}
+        align="start"
+        side="top"
+        style={style}
+      >
+        <Command className="w-full">
           <CommandInput
             onKeyDown={(e) => {
               if (e.key == "Backspace" && !e.currentTarget.value) {
@@ -308,13 +427,13 @@ function ChatMentionInputSuggestion({
           />
           <CommandList className="p-2">
             <CommandEmpty>{t("noResults")}</CommandEmpty>
+            {agentMentions}
             {workflowMentions}
             {defaultToolMentions}
             {mcpMentions}
           </CommandList>
         </Command>
       </PopoverContent>
-    </Popover>,
-    document.body,
+    </Popover>
   );
 }

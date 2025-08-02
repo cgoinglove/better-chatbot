@@ -28,6 +28,21 @@ const providers: OpenAICompatibleProvider[] = [
   //     },
   //   ],
   // },
+
+  // Example configuration for Azure OpenAI
+  // {
+  //   provider: "Azure OpenAI",
+  //   apiKey: "YOUR_AZURE_OPENAI_API_KEY",
+  //   baseUrl: "https://your-azure-resource.openai.azure.com/openai/deployments/",
+  //   models: [
+  //     {
+  //       apiName: "your-deployment-name",
+  //       uiName: "GPT-4o (Azure Example)",
+  //       supportsTools: true,
+  //       apiVersion: "2025-01-01-preview",
+  //     },
+  //   ],
+  // },
 ];
 
 export default providers;

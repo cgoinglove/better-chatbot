@@ -31,7 +31,7 @@ import {
 
 import { useShallow } from "zustand/shallow";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
-import { Badge } from "ui/badge";
+
 import { capitalizeFirstLetter, cn, createDebounce } from "lib/utils";
 
 const debounce = createDebounce();
@@ -78,7 +78,7 @@ export const ToolModeDropdown = ({ disabled }: { disabled?: boolean }) => {
             <TooltipTrigger asChild>
               <span className="absolute inset-0 -z-10" />
             </TooltipTrigger>
-            <TooltipContent className="flex items-center gap-2" side="bottom">
+            <TooltipContent className="flex items-center gap-2">
               {capitalizeFirstLetter(toolChoice)}
               <CheckIcon className="size-2.5" />
             </TooltipContent>
@@ -92,25 +92,23 @@ export const ToolModeDropdown = ({ disabled }: { disabled?: boolean }) => {
                 className={cn(
                   "rounded-full p-2! data-[state=open]:bg-input! hover:bg-input!",
                   toolChoice == "none" && "text-muted-foreground",
+                  open && "bg-input!",
                 )}
                 onClick={() => setOpen(true)}
               >
                 <Settings2 />
               </Button>
             </TooltipTrigger>
-            <TooltipContent className="flex items-center gap-2" side="bottom">
+            <TooltipContent className="flex items-center gap-2" side="top">
               {t("selectToolMode")}
-              <Badge className="text-xs" variant={"secondary"}>
-                {capitalizeFirstLetter(toolChoice)}
-                <span className="text-muted-foreground ml-2">
-                  {getShortcutKeyList(Shortcuts.toolMode).join("")}
-                </span>
-              </Badge>
+              <span className="text-muted-foreground ml-2">
+                {getShortcutKeyList(Shortcuts.toolMode).join("")}
+              </span>
             </TooltipContent>
           </Tooltip>
         </div>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start">
+      <DropdownMenuContent align="start" side="top">
         <DropdownMenuLabel className="text-muted-foreground flex items-center gap-2">
           {t("selectToolMode")}
           <DropdownMenuShortcut>

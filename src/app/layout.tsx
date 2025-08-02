@@ -39,9 +39,9 @@ export default async function RootLayout({
       >
         <ThemeProvider
           attribute="class"
-          defaultTheme="light"
+          defaultTheme="dark"
           themes={["light", "dark"]}
-          storageKey="app-theme"
+          storageKey="app-theme-v2"
           disableTransitionOnChange
         >
           <ThemeStyleProvider>

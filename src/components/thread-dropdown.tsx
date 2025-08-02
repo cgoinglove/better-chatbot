@@ -2,7 +2,7 @@
 import { deleteThreadAction, updateThreadAction } from "@/app/api/chat/actions";
 import { appStore } from "@/app/store";
 import { useToRef } from "@/hooks/use-latest";
-import { Loader, PencilLine, Trash, WandSparkles } from "lucide-react";
+import { Archive, ChevronRight, Loader, PencilLine, Trash } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { type PropsWithChildren, useState } from "react";
 import { toast } from "sonner";
@@ -20,7 +20,6 @@ import {
   DialogTrigger,
 } from "ui/dialog";
 import { Input } from "ui/input";
-import { CreateProjectWithThreadPopup } from "./create-project-with-thread-popup";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 import {
   Command,
@@ -29,7 +28,15 @@ import {
   CommandList,
   CommandSeparator,
 } from "ui/command";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "ui/dropdown-menu";
 import { useTranslations } from "next-intl";
+import { addItemToArchiveAction } from "@/app/api/archive/actions";
+import { useShallow } from "zustand/shallow";
 
 type Props = PropsWithChildren<{
   threadId: string;
@@ -48,10 +55,12 @@ export function ThreadDropdown({
   align,
 }: Props) {
   const router = useRouter();
-  const t = useTranslations("Chat.Thread");
+  const t = useTranslations();
   const push = useToRef(router.push);
 
-  const currentThreadId = appStore((state) => state.currentThreadId);
+  const [currentThreadId, archiveList] = appStore(
+    useShallow((state) => [state.currentThreadId, state.archiveList]),
+  );
 
   const [open, setOpen] = useState(false);
 
@@ -61,16 +70,16 @@ export function ThreadDropdown({
     safe()
       .ifOk(() => {
         if (!title) {
-          throw new Error(t("titleRequired"));
+          throw new Error(t("Chat.Thread.titleRequired"));
         }
       })
       .ifOk(() => updateThreadAction(threadId, { title }))
-      .ifOk(() => mutate("threads"))
+      .ifOk(() => mutate("/api/thread"))
       .watch(({ isOk, error }) => {
         if (isOk) {
-          toast.success(t("threadUpdated"));
+          toast.success(t("Chat.Thread.threadUpdated"));
         } else {
-          toast.error(error.message || t("failedToUpdateThread"));
+          toast.error(error.message || t("Chat.Thread.failedToUpdateThread"));
         }
       });
   };
@@ -83,9 +92,9 @@ export function ThreadDropdown({
       .watch(() => setOpen(false))
       .watch(({ isOk, error }) => {
         if (isOk) {
-          toast.success(t("threadDeleted"));
+          toast.success(t("Chat.Thread.threadDeleted"));
         } else {
-          toast.error(error.message || t("failedToDeleteThread"));
+          toast.error(error.message || t("Chat.Thread.failedToDeleteThread"));
         }
       })
       .ifOk(() => onDeleted?.())
@@ -93,7 +102,23 @@ export function ThreadDropdown({
         if (currentThreadId === threadId) {
           push.current("/");
         }
-        mutate("threads");
+        mutate("/api/thread");
+      })
+      .unwrap();
+  };
+
+  const handleAddToArchive = async (archiveId: string) => {
+    safe()
+      .ifOk(() => addItemToArchiveAction(archiveId, threadId))
+      .watch(({ isOk, error }) => {
+        if (isOk) {
+          toast.success(t("Archive.itemAddedToArchive"));
+          if (location.pathname.startsWith(`/archive/${archiveId}`)) {
+            router.refresh();
+          }
+        } else {
+          toast.error(error.message || t("Archive.failedToCreateArchive"));
+        }
       })
       .unwrap();
   };
@@ -104,22 +129,11 @@ export function ThreadDropdown({
       <PopoverContent className=" p-0 w-[220px]" side={side} align={align}>
         <Command>
           <div className="flex items-center gap-2 px-2 py-1 text-xs pt-2 text-muted-foreground ml-1">
-            {t("chat")}
+            {t("Chat.Thread.chat")}
           </div>
 
           <CommandList>
             <CommandGroup>
-              <CommandItem className="cursor-pointer">
-                <CreateProjectWithThreadPopup
-                  threadId={threadId}
-                  onClose={() => setOpen(false)}
-                >
-                  <div className="flex items-center gap-2 w-full">
-                    <WandSparkles className="text-foreground" />
-                    <span className="mr-4">{t("summarizeAsProject")}</span>
-                  </div>
-                </CreateProjectWithThreadPopup>
-              </CommandItem>
               <CommandItem className="cursor-pointer p-0">
                 <UpdateThreadNameDialog
                   initialTitle={beforeTitle ?? ""}
@@ -127,9 +141,50 @@ export function ThreadDropdown({
                 >
                   <div className="flex items-center gap-2 w-full px-2 py-1 rounded">
                     <PencilLine className="text-foreground" />
-                    <span className="mr-4">{t("renameChat")}</span>
+                    <span className="mr-4">{t("Chat.Thread.renameChat")}</span>
                   </div>
                 </UpdateThreadNameDialog>
+              </CommandItem>
+              <CommandItem className="cursor-pointer p-0">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <div className="flex items-center gap-2 w-full px-2 py-1 rounded hover:bg-accent">
+                      <Archive className="text-foreground" />
+                      <span className="mr-4">{t("Archive.addToArchive")}</span>
+                      <ChevronRight className="ml-auto h-4 w-4" />
+                    </div>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    side="right"
+                    align="start"
+                    className="w-56"
+                  >
+                    {archiveList.length === 0 ? (
+                      <DropdownMenuItem
+                        disabled
+                        className="text-muted-foreground"
+                      >
+                        {t("Archive.noArchives")}
+                      </DropdownMenuItem>
+                    ) : (
+                      archiveList.map((archive) => (
+                        <DropdownMenuItem
+                          key={archive.id}
+                          onClick={() => handleAddToArchive(archive.id)}
+                          className="cursor-pointer"
+                        >
+                          <Archive className="mr-2 h-4 w-4" />
+                          <span className="truncate">{archive.name}</span>
+                          {archive.itemCount > 0 && (
+                            <span className="ml-auto text-xs text-muted-foreground">
+                              {archive.itemCount}
+                            </span>
+                          )}
+                        </DropdownMenuItem>
+                      ))
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </CommandItem>
             </CommandGroup>
             <CommandSeparator />
@@ -140,7 +195,9 @@ export function ThreadDropdown({
                   onClick={handleDelete}
                 >
                   <Trash className="text-destructive" />
-                  <span className="text-destructive">{t("deleteChat")}</span>
+                  <span className="text-destructive">
+                    {t("Chat.Thread.deleteChat")}
+                  </span>
                   {isDeleting && (
                     <Loader className="ml-auto h-4 w-4 animate-spin" />
                   )}

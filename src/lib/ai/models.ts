@@ -21,14 +21,14 @@ const staticModels = {
     "gpt-4.1": openai("gpt-4.1"),
     "gpt-4.1-mini": openai("gpt-4.1-mini"),
     "4o": openai("gpt-4o"),
-    "4o-mini": openai("gpt-4o-mini", {}),
+    "4o-mini": openai("gpt-4o-mini"),
     "o4-mini": openai("o4-mini", {
       reasoningEffort: "medium",
     }),
   },
   google: {
     "gemini-2.0-flash-lite": google("gemini-2.0-flash-lite"),
-    "gemini-2.5-flash": google("gemini-2.5-flash"),
+    "gemini-2.5-flash": google("gemini-2.5-flash", {}),
     "gemini-2.5-pro": google("gemini-2.5-pro"),
   },
   anthropic: {

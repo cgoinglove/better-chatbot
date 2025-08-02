@@ -129,4 +129,61 @@ describe("createOpenAICompatibleModels", () => {
     );
     expect(result.unsupportedModels.size).toBe(2);
   });
+
+  it("should handle Azure OpenAI models with apiVersion parameter", () => {
+    const mockConfig: OpenAICompatibleProvider[] = [
+      {
+        provider: "Azure OpenAI",
+        apiKey: "azure-key",
+        baseUrl: "https://test.openai.azure.com/openai/deployments/",
+        models: [
+          {
+            apiName: "gpt-4o",
+            uiName: "GPT-4o (Azure)",
+            supportsTools: true,
+            apiVersion: "2025-01-01-preview",
+          },
+          {
+            apiName: "gpt-35-turbo",
+            uiName: "GPT-3.5 Turbo (Azure)",
+            supportsTools: true, // Changed to true to avoid unsupported models
+            apiVersion: "2024-02-01",
+          },
+        ],
+      },
+    ];
+
+    const result = createOpenAICompatibleModels(mockConfig);
+
+    expect(result.providers).toHaveProperty("Azure OpenAI");
+    expect(result.providers["Azure OpenAI"]).toHaveProperty("GPT-4o (Azure)");
+    expect(result.providers["Azure OpenAI"]).toHaveProperty(
+      "GPT-3.5 Turbo (Azure)",
+    );
+    expect(result.unsupportedModels.size).toBe(0);
+  });
+
+  it("should validate apiVersion is optional for non-Azure providers", () => {
+    const mockConfig: OpenAICompatibleProvider[] = [
+      {
+        provider: "OpenAI",
+        apiKey: "openai-key",
+        baseUrl: "https://api.openai.com/v1",
+        models: [
+          {
+            apiName: "gpt-4",
+            uiName: "GPT-4",
+            supportsTools: true,
+            // No apiVersion - should still work
+          },
+        ],
+      },
+    ];
+
+    const result = createOpenAICompatibleModels(mockConfig);
+
+    expect(result.providers).toHaveProperty("OpenAI");
+    expect(result.providers["OpenAI"]).toHaveProperty("GPT-4");
+    expect(result.unsupportedModels.size).toBe(0);
+  });
 });

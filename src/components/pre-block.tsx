@@ -54,9 +54,9 @@ const PurePre = ({
   const { copied, copy } = useCopy();
 
   return (
-    <pre className={cn("relative ", className)}>
-      <div className="p-1.5">
-        <div className="w-full flex z-20 py-2 px-4 items-center mb-2">
+    <pre className={cn("relative", className)}>
+      <div className="p-1.5 border-b mb-4 z-20 bg-secondary">
+        <div className="w-full flex z-20 py-0.5 px-4 items-center">
           <span className="text-sm text-muted-foreground">{lang}</span>
           <Button
             size="icon"
@@ -70,6 +70,7 @@ const PurePre = ({
           </Button>
         </div>
       </div>
+
       <div className="relative overflow-x-auto px-6 pb-6">{children}</div>
     </pre>
   );
@@ -144,7 +145,7 @@ export function PreBlock({ children }: { children: any }) {
     <div
       className={cn(
         loading && "animate-pulse",
-        "text-sm flex bg-secondary flex-col rounded-2xl relative my-4 overflow-hidden",
+        "text-sm flex bg-secondary/40 shadow border flex-col rounded relative my-4 overflow-hidden",
       )}
     >
       {component}

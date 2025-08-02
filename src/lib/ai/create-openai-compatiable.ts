@@ -1,3 +1,4 @@
+import { createAzureOpenAICompatible } from "./azure-openai-compatible";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import { LanguageModel } from "ai";
 import { isString } from "lib/utils";
@@ -29,14 +30,40 @@ export function createOpenAICompatibleModels(
 
       providers[providerKey] = {};
 
-      models.forEach(({ apiName, uiName, supportsTools }) => {
-        const model = customProvider(apiName);
-        providers[providerKey][uiName] = model;
+      if (provider === "Azure OpenAI") {
+        // Handle Azure OpenAI with specific requirements (new addition)
+        const azureProvider = createAzureOpenAICompatible({
+          name: provider,
+          apiKey: apiKey,
+          baseURL: baseUrl!,
+        });
 
-        if (!supportsTools) {
-          unsupportedModels.add(model);
-        }
-      });
+        models.forEach(
+          ({ apiName, uiName, supportsTools, apiVersion: modelApiVersion }) => {
+            if (!modelApiVersion) {
+              throw new Error(
+                `API version is required for Azure OpenAI model: ${uiName}`,
+              );
+            }
+            const model = azureProvider(apiName, modelApiVersion);
+            providers[providerKey][uiName] = model;
+
+            if (!supportsTools) {
+              unsupportedModels.add(model);
+            }
+          },
+        );
+      } else {
+        // Standard OpenAI-compatible providers (original implementation)
+        models.forEach(({ apiName, uiName, supportsTools }) => {
+          const model = customProvider(apiName);
+          providers[providerKey][uiName] = model;
+
+          if (!supportsTools) {
+            unsupportedModels.add(model);
+          }
+        });
+      }
     });
   } catch (error) {
     console.error("Failed to load or parse dynamic models:", error);
@@ -55,16 +82,18 @@ const OpenAICompatibleModelSchema = z.object({
     .describe(
       "Indicates if the model supports external tools/function calling for multi-cloud platform (MCP) servers.",
     ),
+  apiVersion: z
+    .string()
+    .optional()
+    .describe(
+      "For Azure OpenAI, the API version for this specific model. Required for Azure OpenAI models.",
+    ),
 });
 
 // Define the schema for a provider that is compatible with OpenAI's API structure,
 // which includes a list of its OpenAI-compatible models.
 export const OpenAICompatibleProviderSchema = z.object({
-  provider: z
-    .string()
-    .describe(
-      "Your api key",
-    ),
+  provider: z.string().describe("Your api key"),
   models: z
     .array(OpenAICompatibleModelSchema)
     .describe("A list of AI models offered by this provider."),

@@ -5,10 +5,12 @@ import type {
   VercelAIMcpTool,
 } from "app-types/mcp";
 import { createMCPClient, type MCPClient } from "./create-mcp-client";
-import { Locker } from "lib/utils";
+import { errorToString, Locker, safeJSONParse } from "lib/utils";
 import { safe } from "ts-safe";
 import { McpServerSchema } from "lib/db/pg/schema.pg";
 import { createMCPToolId } from "./mcp-tool-id";
+import logger from "logger";
+import { ToolExecutionOptions } from "ai";
 /**
  * Interface for storage of MCP server configurations.
  * Implementations should handle persistent storage of server configs.
@@ -47,27 +49,37 @@ export class MCPClientsManager {
   }
 
   async init() {
+    logger.info("Initializing MCP clients manager");
+    if (this.initializedLock.isLocked) {
+      logger.info("MCP clients manager already initialized, waiting for lock");
+      return this.initializedLock.wait();
+    }
     return safe(() => this.initializedLock.lock())
-      .ifOk(() => this.cleanup())
       .ifOk(async () => {
         if (this.storage) {
           await this.storage.init(this);
           const configs = await this.storage.loadAll();
-          await Promise.all(
+          this.cleanup();
+          await Promise.allSettled(
             configs.map(({ id, name, config }) =>
-              this.addClient(id, name, config),
+              this.addClient(id, name, config).catch(() => {
+                `ignore error`;
+              }),
             ),
           );
         }
       })
-      .watch(() => this.initializedLock.unlock())
+      .watch(() => {
+        this.initializedLock.unlock();
+      })
       .unwrap();
   }
 
   /**
    * Returns all tools from all clients as a flat object
    */
-  tools(): Record<string, VercelAIMcpTool> {
+  async tools(): Promise<Record<string, VercelAIMcpTool>> {
+    await this.initializedLock.wait();
     return Object.fromEntries(
       Array.from(this.clients.entries())
         .filter(([_, { client }]) => client.getInfo().toolInfo.length > 0)
@@ -80,6 +92,10 @@ export class MCPClientsManager {
               __$ref__: "mcp",
               _mcpServerName: client.getInfo().name,
               _mcpServerId: id,
+              execute: (params, options: ToolExecutionOptions) => {
+                options?.abortSignal?.throwIfAborted();
+                return this.toolCall(id, name, params);
+              },
             },
           ]),
         ),
@@ -132,17 +148,18 @@ export class MCPClientsManager {
    * Refreshes an existing client with a new configuration or its existing config
    */
   async refreshClient(id: string) {
+    logger.info(`Refreshing client ${id}`);
     const prevClient = this.clients.get(id);
-    if (!prevClient) {
-      throw new Error(`Client ${id} not found`);
-    }
-    const currentConfig = prevClient.client.getInfo().config;
+    const currentConfig = prevClient?.client.getInfo().config;
     if (this.storage) {
       const server = await this.storage.get(id);
       if (!server) {
         throw new Error(`Client ${id} not found`);
       }
       return this.addClient(id, server.name, server.config);
+    }
+    if (!currentConfig) {
+      throw new Error(`Client ${id} not found`);
     }
     return this.addClient(id, prevClient.name, currentConfig);
   }
@@ -162,7 +179,68 @@ export class MCPClientsManager {
   }
   async getClient(id: string) {
     await this.initializedLock.wait();
+    const client = this.clients.get(id);
+    if (!client) {
+      await this.refreshClient(id);
+    }
     return this.clients.get(id);
+  }
+  async toolCallByServerName(
+    serverName: string,
+    toolName: string,
+    input: unknown,
+  ) {
+    const clients = await this.getClients();
+    const client = clients.find((c) => c.client.getInfo().name === serverName);
+    if (!client) {
+      if (this.storage) {
+        const servers = await this.storage.loadAll();
+        const server = servers.find((s) => s.name === serverName);
+        if (server) {
+          return this.toolCall(server.id, toolName, input);
+        }
+      }
+      throw new Error(`Client ${serverName} not found`);
+    }
+    return this.toolCall(client.id, toolName, input);
+  }
+  async toolCall(id: string, toolName: string, input: unknown) {
+    return safe(() => this.getClient(id))
+      .map((client) => {
+        if (!client) throw new Error(`Client ${id} not found`);
+        return client.client;
+      })
+      .map((client) => client.callTool(toolName, input))
+      .map((res) => {
+        if (res?.content && Array.isArray(res.content)) {
+          const parsedResult = {
+            ...res,
+            content: res.content.map((c) => {
+              if (c?.type === "text" && c?.text) {
+                const parsed = safeJSONParse(c.text);
+                return {
+                  type: "text",
+                  text: parsed.success ? parsed.value : c.text,
+                };
+              }
+              return c;
+            }),
+          };
+          return parsedResult;
+        }
+        return res;
+      })
+      .ifFail((err) => {
+        return {
+          isError: true,
+          error: {
+            message: errorToString(err),
+            name: err?.name || "ERROR",
+          },
+          content: [],
+        };
+      })
+      .unwrap();
   }
 }
 

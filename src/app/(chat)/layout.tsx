@@ -8,7 +8,7 @@ import { COOKIE_KEY_SIDEBAR_STATE } from "lib/const";
 import { AppPopupProvider } from "@/components/layouts/app-popup-provider";
 import { SWRConfigProvider } from "./swr-config";
 
-export const dynamic = "force-dynamic";
+export const experimental_ppr = true;
 
 export default async function ChatLayout({
   children,

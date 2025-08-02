@@ -1,17 +1,17 @@
-import Link from "next/link";
 import React, { memo, PropsWithChildren } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { PreBlock } from "./pre-block";
 import { isJson, isString, toAny } from "lib/utils";
 import JsonView from "ui/json-view";
+import { LinkIcon } from "lucide-react";
 
 const FadeIn = memo(({ children }: PropsWithChildren) => {
   return <span className="fade-in animate-in duration-1000">{children} </span>;
 });
 FadeIn.displayName = "FadeIn";
 
-const WordByWordFadeIn = memo(({ children }: PropsWithChildren) => {
+export const WordByWordFadeIn = memo(({ children }: PropsWithChildren) => {
   const childrens = [children]
     .flat()
     .flatMap((child) => (isString(child) ? child.split(" ") : child));
@@ -23,7 +23,7 @@ WordByWordFadeIn.displayName = "WordByWordFadeIn";
 const components: Partial<Components> = {
   code: ({ children }) => {
     return (
-      <code className="text-sm rounded-md bg-accent py-1 px-2 mx-0.5">
+      <code className="text-sm rounded-md bg-accent text-primary py-1 px-2 mx-0.5">
         {children}
       </code>
     );
@@ -81,16 +81,15 @@ const components: Partial<Components> = {
   },
   a: ({ node, children, ...props }) => {
     return (
-      <Link
-        className="hover:underline text-blue-400"
+      <a
+        className="text-primary hover:underline flex gap-1.5 items-center"
         target="_blank"
         rel="noreferrer"
         {...toAny(props)}
       >
-        <b>
-          <WordByWordFadeIn>{children}</WordByWordFadeIn>
-        </b>
-      </Link>
+        <LinkIcon className="size-3.5" />
+        <WordByWordFadeIn>{children}</WordByWordFadeIn>
+      </a>
     );
   },
   h1: ({ node, children, ...props }) => {

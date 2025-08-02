@@ -157,7 +157,7 @@ export default function MCPEditor({
 
       .ifOk(() => {
         toast.success(t("MCP.configurationSavedSuccessfully"));
-        mutate("mcp-list");
+        mutate("/api/mcp/list");
         router.push("/mcp");
       })
       .ifFail(handleErrorWithToast)

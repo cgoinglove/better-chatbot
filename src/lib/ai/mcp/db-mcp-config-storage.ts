@@ -7,9 +7,13 @@ import defaultLogger from "logger";
 import { createDebounce } from "lib/utils";
 import equal from "lib/equal";
 import { colorize } from "consola/utils";
+import { IS_EDGE_RUNTIME } from "lib/const";
 
 const logger = defaultLogger.withDefaults({
-  message: colorize("gray", `MCP Config Storage: `),
+  message: colorize(
+    "gray",
+    `${IS_EDGE_RUNTIME ? "[EdgeRuntime] " : " "}MCP Config Storage: `,
+  ),
 });
 
 export function createDbBasedMCPConfigsStorage(): MCPConfigStorage {
@@ -24,7 +28,7 @@ export function createDbBasedMCPConfigsStorage(): MCPConfigStorage {
 
   async function checkAndRefreshClients() {
     try {
-      logger.debug("Checking MCP clients Diff");
+      logger.info("Checking MCP clients Diff");
       const servers = await mcpRepository.selectAll();
       const dbConfigs = servers
         .map((server) => ({
@@ -91,7 +95,10 @@ export function createDbBasedMCPConfigsStorage(): MCPConfigStorage {
     }
   }
 
-  setInterval(() => debounce(checkAndRefreshClients, 5000), 60000).unref();
+  setInterval(
+    () => debounce(checkAndRefreshClients, 5000),
+    1000 * 60 * 5,
+  ).unref();
 
   return {
     init,

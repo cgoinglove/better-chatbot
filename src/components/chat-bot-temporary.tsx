@@ -83,6 +83,7 @@ export function ChatBotTemporary() {
       if (isShortcutEvent(e, Shortcuts.toggleTemporaryChat)) {
         e.preventDefault();
         e.stopPropagation();
+        e.stopImmediatePropagation();
         appStoreMutate((prev) => ({
           temporaryChat: {
             ...prev.temporaryChat,
@@ -100,6 +101,7 @@ export function ChatBotTemporary() {
       ) {
         e.preventDefault();
         e.stopPropagation();
+        e.stopImmediatePropagation();
         setMessages([]);
       } else if (
         temporaryChat.isOpen &&
@@ -112,6 +114,7 @@ export function ChatBotTemporary() {
       ) {
         e.preventDefault();
         e.stopPropagation();
+        e.stopImmediatePropagation();
         setIsInstructionsOpen((prev) => !prev);
       }
     };
@@ -328,6 +331,7 @@ function DrawerTemporaryContent({
         <PromptInput
           input={input}
           append={append}
+          disabledMention={true}
           model={temporaryChat.chatModel}
           setModel={(model) => {
             appStoreMutate({

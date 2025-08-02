@@ -4,11 +4,12 @@ import {
   AudioWaveformIcon,
   ChevronDown,
   CornerRightUp,
-  Paperclip,
+  LightbulbIcon,
+  PlusIcon,
   Square,
   XIcon,
 } from "lucide-react";
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { Button } from "ui/button";
 import { notImplementedToast } from "ui/shared-toast";
 import { UseChatHelpers } from "@ai-sdk/react";
@@ -29,6 +30,14 @@ import equal from "lib/equal";
 import { MCPIcon } from "ui/mcp-icon";
 import { DefaultToolName } from "lib/ai/tools";
 import { DefaultToolIcon } from "./default-tool-icon";
+import { OpenAIIcon } from "ui/openai-icon";
+import { GrokIcon } from "ui/grok-icon";
+import { ClaudeIcon } from "ui/claude-icon";
+import { GeminiIcon } from "ui/gemini-icon";
+import { cn } from "lib/utils";
+import { getShortcutKeyList, isShortcutEvent } from "lib/keyboard-shortcuts";
+import { Agent } from "app-types/agent";
+import { EMOJI_DATA } from "lib/const";
 
 interface PromptInputProps {
   placeholder?: string;
@@ -39,9 +48,13 @@ interface PromptInputProps {
   toolDisabled?: boolean;
   isLoading?: boolean;
   model?: ChatModel;
+  onThinkingChange?: (thinking: boolean) => void;
+  thinking?: boolean;
   setModel?: (model: ChatModel) => void;
   voiceDisabled?: boolean;
   threadId?: string;
+  disabledMention?: boolean;
+  onFocus?: () => void;
 }
 
 const ChatMentionInput = dynamic(() => import("./chat-mention-input"), {
@@ -51,31 +64,34 @@ const ChatMentionInput = dynamic(() => import("./chat-mention-input"), {
   },
 });
 
+const THINKING_SHORTCUT = {
+  shortcut: {
+    command: true,
+    key: "E",
+  },
+};
+
 export default function PromptInput({
   placeholder,
   append,
   model,
   setModel,
   input,
+  onFocus,
   setInput,
   onStop,
   isLoading,
   toolDisabled,
   voiceDisabled,
   threadId,
+  onThinkingChange,
+  thinking,
+  disabledMention,
 }: PromptInputProps) {
   const t = useTranslations("Chat");
 
-  const [
-    currentThreadId,
-    currentProjectId,
-    globalModel,
-    threadMentions,
-    appStoreMutate,
-  ] = appStore(
+  const [globalModel, threadMentions, appStoreMutate] = appStore(
     useShallow((state) => [
-      state.currentThreadId,
-      state.currentProjectId,
       state.chatModel,
       state.threadMentions,
       state.mutate,
@@ -125,7 +141,12 @@ export default function PromptInput({
       if (!threadId) return;
       appStoreMutate((prev) => {
         if (mentions.some((m) => equal(m, mention))) return prev;
-        const newMentions = [...mentions, mention];
+
+        const newMentions =
+          mention.type == "agent"
+            ? [...mentions.filter((m) => m.type !== "agent"), mention]
+            : [...mentions, mention];
+
         return {
           threadMentions: {
             ...prev.threadMentions,
@@ -150,9 +171,43 @@ export default function PromptInput({
     [addMention],
   );
 
+  const onSelectAgent = useCallback(
+    (agent: Omit<Agent, "createdAt" | "updatedAt" | "instructions">) => {
+      appStoreMutate((prev) => {
+        return {
+          threadMentions: {
+            ...prev.threadMentions,
+            [threadId!]: [
+              {
+                type: "agent",
+                name: agent.name,
+                icon: agent.icon,
+                description: agent.description,
+                agentId: agent.id,
+              },
+            ],
+          },
+        };
+      });
+    },
+    [mentions, threadId],
+  );
+
   const onChangeMention = useCallback(
     (mentions: ChatMention[]) => {
-      mentions.forEach(addMention);
+      let hasAgent = false;
+      [...mentions]
+        .reverse()
+        .filter((m) => {
+          if (m.type == "agent") {
+            if (hasAgent) return false;
+            hasAgent = true;
+          }
+
+          return true;
+        })
+        .reverse()
+        .forEach(addMention);
     },
     [addMention],
   );
@@ -174,22 +229,67 @@ export default function PromptInput({
     });
   };
 
+  useEffect(() => {
+    if (!onThinkingChange) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (isShortcutEvent(e, THINKING_SHORTCUT)) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        onThinkingChange(!thinking);
+        editorRef.current?.commands.focus();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [!!onThinkingChange, thinking]);
+
+  // Handle ESC key to clear mentions
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && mentions.length > 0 && threadId) {
+        e.preventDefault();
+        e.stopPropagation();
+        appStoreMutate((prev) => ({
+          threadMentions: {
+            ...prev.threadMentions,
+            [threadId]: [],
+          },
+          agentId: undefined,
+        }));
+        editorRef.current?.commands.focus();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [mentions.length, threadId, appStoreMutate]);
+
+  useEffect(() => {
+    if (!editorRef.current) return;
+  }, [editorRef.current]);
+
   return (
     <div className="max-w-3xl mx-auto fade-in animate-in">
       <div className="z-10 mx-auto w-full max-w-3xl relative">
         <fieldset className="flex w-full min-w-0 max-w-full flex-col px-4">
-          <div className="ring-8 ring-muted/60 overflow-hidden rounded-4xl backdrop-blur-sm transition-all duration-200 bg-muted/60 relative flex w-full flex-col cursor-text z-10 items-stretch focus-within:bg-muted hover:bg-muted focus-within:ring-muted hover:ring-muted">
+          <div className="shadow-lg overflow-hidden rounded-4xl backdrop-blur-sm transition-all duration-200 bg-muted/60 relative flex w-full flex-col cursor-text z-10 items-stretch focus-within:bg-muted hover:bg-muted focus-within:ring-muted hover:ring-muted">
             {mentions.length > 0 && (
-              <div className="bg-input rounded-b-sm rounded-t-3xl p-3 flex flex-col gap-4">
+              <div className="bg-input rounded-b-sm rounded-t-3xl p-3 flex flex-col gap-4 mx-2 my-2">
                 {mentions.map((mention, i) => {
                   return (
                     <div key={i} className="flex items-center gap-2">
-                      {mention.type === "workflow" ? (
+                      {mention.type === "workflow" ||
+                      mention.type === "agent" ? (
                         <Avatar
                           className="size-6 p-1 ring ring-border rounded-full flex-shrink-0"
                           style={mention.icon?.style}
                         >
-                          <AvatarImage src={mention.icon?.value} />
+                          <AvatarImage
+                            src={
+                              mention.icon?.value ||
+                              EMOJI_DATA[i % EMOJI_DATA.length]
+                            }
+                          />
                           <AvatarFallback>
                             {mention.name.slice(0, 1)}
                           </AvatarFallback>
@@ -233,7 +333,7 @@ export default function PromptInput({
                 })}
               </div>
             )}
-            <div className="flex flex-col gap-3.5 px-3 py-2">
+            <div className="flex flex-col gap-3.5 px-5 pt-2 pb-4">
               <div className="relative min-h-[2rem]">
                 <ChatMentionInput
                   input={input}
@@ -242,40 +342,90 @@ export default function PromptInput({
                   onEnter={submit}
                   placeholder={placeholder ?? t("placeholder")}
                   ref={editorRef}
+                  disabledMention={disabledMention}
+                  onFocus={onFocus}
                 />
               </div>
-              <div className="flex w-full items-center gap-[2px] z-30">
+              <div className="flex w-full items-center z-30">
                 <Button
                   variant={"ghost"}
                   size={"sm"}
                   className="rounded-full hover:bg-input! p-2!"
                   onClick={notImplementedToast}
                 >
-                  <Paperclip />
+                  <PlusIcon />
                 </Button>
+                {onThinkingChange && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size={"sm"}
+                        className={cn(
+                          "rounded-full hover:bg-input! p-2!",
+                          thinking && "bg-input!",
+                        )}
+                        onClick={() => {
+                          onThinkingChange(!thinking);
+                          editorRef.current?.commands.focus();
+                        }}
+                      >
+                        <LightbulbIcon />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent
+                      className="flex items-center gap-2"
+                      side="top"
+                    >
+                      Sequential Thinking
+                      <span className="text-muted-foreground ml-2">
+                        {getShortcutKeyList(THINKING_SHORTCUT).join("")}
+                      </span>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
 
                 {!toolDisabled && (
                   <>
                     <ToolModeDropdown />
                     <ToolSelectDropdown
+                      className="mx-1"
                       align="start"
                       side="top"
                       onSelectWorkflow={onSelectWorkflow}
+                      onSelectAgent={onSelectAgent}
                       mentions={mentions}
                     />
                   </>
                 )}
+
                 <div className="flex-1" />
 
                 <SelectModel onSelect={setChatModel} defaultModel={chatModel}>
                   <Button
                     variant={"ghost"}
                     size={"sm"}
-                    className="rounded-full data-[state=open]:bg-input! hover:bg-input! mr-1"
+                    className="rounded-full group data-[state=open]:bg-input! hover:bg-input! mr-1"
                   >
-                    {chatModel?.model ?? (
+                    {chatModel?.model ? (
+                      <>
+                        {chatModel.provider === "openai" ? (
+                          <OpenAIIcon className="size-3 opacity-0 group-data-[state=open]:opacity-100 group-hover:opacity-100" />
+                        ) : chatModel.provider === "xai" ? (
+                          <GrokIcon className="size-3 opacity-0 group-data-[state=open]:opacity-100 group-hover:opacity-100" />
+                        ) : chatModel.provider === "anthropic" ? (
+                          <ClaudeIcon className="size-3 opacity-0 group-data-[state=open]:opacity-100 group-hover:opacity-100" />
+                        ) : chatModel.provider === "google" ? (
+                          <GeminiIcon className="size-3 opacity-0 group-data-[state=open]:opacity-100 group-hover:opacity-100" />
+                        ) : null}
+                        <span className="text-foreground group-data-[state=open]:text-foreground  ">
+                          {chatModel.model}
+                        </span>
+                      </>
+                    ) : (
                       <span className="text-muted-foreground">model</span>
                     )}
+
                     <ChevronDown className="size-3" />
                   </Button>
                 </SelectModel>
@@ -289,8 +439,7 @@ export default function PromptInput({
                             voiceChat: {
                               ...state.voiceChat,
                               isOpen: true,
-                              threadId: currentThreadId ?? undefined,
-                              projectId: currentProjectId ?? undefined,
+                              agentId: undefined,
                             },
                           }));
                         }}

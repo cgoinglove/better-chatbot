@@ -15,3 +15,5 @@ export enum DefaultToolName {
   JavascriptExecution = "mini-javascript-execution",
   PythonExecution = "python-execution",
 }
+
+export const SequentialThinkingToolName = "sequential-thinking";

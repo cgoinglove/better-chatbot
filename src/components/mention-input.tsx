@@ -19,6 +19,7 @@ import {
   useState,
   RefObject,
 } from "react";
+import { createPortal } from "react-dom";
 import { createRoot } from "react-dom/client";
 
 interface MentionInputProps {
@@ -34,7 +35,10 @@ interface MentionInputProps {
   placeholder?: string;
   suggestionChar?: string;
   className?: string;
+  disabledMention?: boolean;
   editorRef?: RefObject<Editor | null>;
+  onFocus?: () => void;
+  onBlur?: () => void;
   MentionItem: FC<{
     label: string;
     id: string;
@@ -56,9 +60,12 @@ export default function MentionInput({
   placeholder = "",
   suggestionChar = "@",
   MentionItem,
+  disabledMention,
   Suggestion,
   className,
   editorRef,
+  onFocus,
+  onBlur,
 }: MentionInputProps) {
   const [open, setOpen] = useState(false);
   const position = useRef<{
@@ -141,6 +148,12 @@ export default function MentionInput({
           mentions,
         });
       },
+      onFocus: () => {
+        onFocus?.();
+      },
+      onBlur: () => {
+        onBlur?.();
+      },
       editorProps: {
         attributes: {
           class:
@@ -171,6 +184,7 @@ export default function MentionInput({
         e.key === "Enter" &&
         editor?.getText().trim().length &&
         !e.shiftKey &&
+        !e.metaKey &&
         !e.nativeEvent.isComposing;
       if (isSubmit) onEnter?.();
     },
@@ -179,8 +193,8 @@ export default function MentionInput({
 
   // Memoize the DOM structure
   const suggestion = useMemo(() => {
-    if (!open) return null;
-    return (
+    if (!open || disabledMention) return null;
+    return createPortal(
       <Suggestion
         top={position.current?.top ?? 0}
         left={position.current?.left ?? 0}
@@ -200,9 +214,10 @@ export default function MentionInput({
             .run();
           setOpen(false);
         }}
-      />
+      />,
+      document.body,
     );
-  }, [open]);
+  }, [open, disabledMention]);
 
   const placeholderElement = useMemo(() => {
     if (!editor?.isEmpty) return null;

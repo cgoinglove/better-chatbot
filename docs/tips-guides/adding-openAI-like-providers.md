@@ -14,7 +14,7 @@ It is an api that is like the openAI one. They are used as llm providers.
 
 ## Adding providers - vercel or anywhere else - ui based method
 
-1. Go to [this website](https://better-chatbot-openai-like.vercel.app/) and set up your models and providers
+1. Go to [this website](https://mcp-client-chatbot-openai-like.vercel.app/) and set up your models and providers
 2. Press generate JSON and copy it
 3. Put in this into your env as the `OPENAI_COMPATIBLE_DATA` variable
 

@@ -4,6 +4,7 @@ export type UserPreferences = {
   displayName?: string;
   profession?: string; // User's job or profession
   responseStyleExample?: string; // Example of preferred response style
+  botName?: string; // Name of the bot
 };
 
 export type User = {
@@ -35,4 +36,5 @@ export const UserPreferencesZodSchema = z.object({
   displayName: z.string().optional(),
   profession: z.string().optional(),
   responseStyleExample: z.string().optional(),
+  botName: z.string().optional(),
 });

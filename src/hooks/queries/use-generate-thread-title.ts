@@ -9,7 +9,6 @@ import { safe } from "ts-safe";
 
 export function useGenerateThreadTitle(option: {
   threadId: string;
-  projectId?: string;
   chatModel?: ChatModel;
 }) {
   const { complete, completion } = useCompletion({
@@ -27,7 +26,6 @@ export function useGenerateThreadTitle(option: {
                 title,
                 userId: "",
                 createdAt: new Date(),
-                projectId: option.projectId ?? null,
               },
               ...prev.threadList,
             ],
@@ -41,17 +39,12 @@ export function useGenerateThreadTitle(option: {
         };
       });
     },
-    [
-      option.projectId,
-      option.threadId,
-      option.chatModel?.model,
-      option.chatModel?.provider,
-    ],
+    [option.threadId, option.chatModel?.model, option.chatModel?.provider],
   );
 
   const generateTitle = useCallback(
     (message: string) => {
-      const { threadId, chatModel, projectId } = option;
+      const { threadId, chatModel } = option;
       if (appStore.getState().generatingTitleThreadIds.includes(threadId))
         return;
       appStore.setState((prev) => ({
@@ -64,11 +57,10 @@ export function useGenerateThreadTitle(option: {
             message,
             threadId,
             chatModel: chatModel ?? appStore.getState().chatModel,
-            projectId,
           },
         });
       })
-        .ifOk(() => mutate("threads"))
+        .ifOk(() => mutate("/api/thread"))
         .watch(() => {
           appStore.setState((prev) => ({
             generatingTitleThreadIds: prev.generatingTitleThreadIds.filter(

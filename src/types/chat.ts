@@ -13,18 +13,6 @@ export type ChatThread = {
   title: string;
   userId: string;
   createdAt: Date;
-  projectId: string | null;
-};
-
-export type Project = {
-  id: string;
-  name: string;
-  userId: string;
-  instructions: {
-    systemPrompt: string;
-  };
-  createdAt: Date;
-  updatedAt: Date;
 };
 
 export type ChatMessage = {
@@ -62,7 +50,7 @@ export const ChatMentionSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("workflow"),
     name: z.string(),
-    description: z.string().optional(),
+    description: z.string().nullish(),
     workflowId: z.string(),
     icon: z
       .object({
@@ -70,7 +58,20 @@ export const ChatMentionSchema = z.discriminatedUnion("type", [
         value: z.string(),
         style: z.record(z.string(), z.string()).optional(),
       })
-      .optional(),
+      .nullish(),
+  }),
+  z.object({
+    type: z.literal("agent"),
+    name: z.string(),
+    description: z.string().nullish(),
+    agentId: z.string(),
+    icon: z
+      .object({
+        type: z.literal("emoji"),
+        value: z.string(),
+        style: z.record(z.string(), z.string()).optional(),
+      })
+      .nullish(),
   }),
 ]);
 
@@ -84,8 +85,8 @@ export type ChatMessageAnnotation = {
 
 export const chatApiSchemaRequestBodySchema = z.object({
   id: z.string(),
-  projectId: z.string().optional(),
   message: z.any() as z.ZodType<UIMessage>,
+  thinking: z.boolean().optional(),
   chatModel: z
     .object({
       provider: z.string(),
@@ -96,7 +97,6 @@ export const chatApiSchemaRequestBodySchema = z.object({
   mentions: z.array(ChatMentionSchema).optional(),
   allowedMcpServers: z.record(z.string(), AllowedMCPServerZodSchema).optional(),
   allowedAppDefaultToolkit: z.array(z.string()).optional(),
-  autoTitle: z.boolean().optional(),
 });
 
 export type ChatApiSchemaRequestBody = z.infer<
@@ -117,29 +117,11 @@ export type ChatRepository = {
 
   selectThreadDetails(id: string): Promise<
     | (ChatThread & {
-        instructions: Project["instructions"] | null;
         messages: ChatMessage[];
         userPreferences?: UserPreferences;
       })
     | null
   >;
-
-  selectThreadInstructions(
-    userId: string,
-    threadId?: string,
-  ): Promise<{
-    instructions: Project["instructions"] | null;
-    userPreferences?: UserPreferences;
-    threadId?: string;
-    projectId?: string;
-  }>;
-  selectThreadInstructionsByProjectId(
-    userId: string,
-    projectId?: string,
-  ): Promise<{
-    instructions: Project["instructions"] | null;
-    userPreferences?: UserPreferences;
-  }>;
 
   selectMessagesByThreadId(threadId: string): Promise<ChatMessage[]>;
 
@@ -157,7 +139,7 @@ export type ChatRepository = {
   deleteThread(id: string): Promise<void>;
 
   upsertThread(
-    thread: PartialBy<Omit<ChatThread, "createdAt">, "projectId" | "userId">,
+    thread: PartialBy<Omit<ChatThread, "createdAt">, "userId">,
   ): Promise<ChatThread>;
 
   insertMessage(message: Omit<ChatMessage, "createdAt">): Promise<ChatMessage>;
@@ -165,30 +147,9 @@ export type ChatRepository = {
 
   deleteMessagesByChatIdAfterTimestamp(messageId: string): Promise<void>;
 
-  deleteNonProjectThreads(userId: string): Promise<void>;
   deleteAllThreads(userId: string): Promise<void>;
 
-  insertProject(
-    project: Omit<Project, "id" | "createdAt" | "updatedAt">,
-  ): Promise<Project>;
-
-  selectProjectById(id: string): Promise<
-    | (Project & {
-        threads: ChatThread[];
-      })
-    | null
-  >;
-
-  selectProjectsByUserId(
-    userId: string,
-  ): Promise<Omit<Project, "instructions">[]>;
-
-  updateProject(
-    id: string,
-    project: Partial<Pick<Project, "name" | "instructions">>,
-  ): Promise<Project>;
-
-  deleteProject(id: string): Promise<void>;
+  deleteUnarchivedThreads(userId: string): Promise<void>;
 
   insertMessages(
     messages: PartialBy<ChatMessage, "createdAt">[],

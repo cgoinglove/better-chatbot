@@ -8,9 +8,11 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export const fetcher = async (url: string) => {
+export const fetcher = async (url: string, options?: RequestInit) => {
   const res = await fetch(url, {
     redirect: "follow",
+    cache: "no-store",
+    ...options,
   });
 
   if (!res.ok) {
@@ -85,6 +87,17 @@ export const createDebounce = () => {
     clearTimeout(timeout!);
   };
   return debounce;
+};
+
+export const createThrottle = () => {
+  let lastCall = 0;
+  return (func: (...args: any[]) => any, waitFor = 200) => {
+    const now = Date.now();
+    if (now - lastCall >= waitFor) {
+      lastCall = now;
+      func();
+    }
+  };
 };
 
 export const groupBy = <T>(arr: T[], getter: keyof T | ((item: T) => string)) =>
@@ -365,5 +378,22 @@ export function deduplicateByKey<T>(arr: T[], key: keyof T): T[] {
       seen.add(keyValue);
       return true;
     }
+  });
+}
+
+export function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error("Timeout"));
+    }, ms);
+    promise
+      .then((res) => {
+        clearTimeout(timer);
+        resolve(res);
+      })
+      .catch((err) => {
+        clearTimeout(timer);
+        reject(err);
+      });
   });
 }

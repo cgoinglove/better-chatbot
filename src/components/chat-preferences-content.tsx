@@ -1,6 +1,4 @@
 "use client";
-import { selectMcpClientsAction } from "@/app/api/mcp/actions";
-import { appStore } from "@/app/store";
 import { useObjectState } from "@/hooks/use-object-state";
 import { UserPreferences } from "app-types/user";
 import { authClient } from "auth/client";
@@ -20,6 +18,7 @@ import { Skeleton } from "ui/skeleton";
 import { Textarea } from "ui/textarea";
 import { McpServerCustomizationContent } from "./mcp-customization-popup";
 import { MCPServerInfo } from "app-types/mcp";
+import { useMcpList } from "@/hooks/queries/use-mcp-list";
 
 export function UserInstructionsContent() {
   const t = useTranslations();
@@ -51,6 +50,7 @@ export function UserInstructionsContent() {
     displayName: "",
     responseStyleExample: "",
     profession: "",
+    botName: "",
   });
 
   const {
@@ -95,6 +95,7 @@ export function UserInstructionsContent() {
       (preferences.responseStyleExample || "")
     )
       return true;
+    if ((data?.botName || "") !== (preferences.botName || "")) return true;
     return false;
   }, [preferences, data]);
 
@@ -119,6 +120,23 @@ export function UserInstructionsContent() {
               onChange={(e) => {
                 setPreferences({
                   displayName: e.target.value,
+                });
+              }}
+            />
+          )}
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <Label>{t("Chat.ChatPreferences.botName")}</Label>
+          {isLoading ? (
+            <Skeleton className="h-9" />
+          ) : (
+            <Input
+              placeholder="better-chatbot"
+              value={preferences.botName}
+              onChange={(e) => {
+                setPreferences({
+                  botName: e.target.value,
                 });
               }}
             />
@@ -199,18 +217,10 @@ export function MCPInstructionsContent() {
   const [mcpServer, setMcpServer] = useState<
     (MCPServerInfo & { id: string }) | null
   >(null);
-  const appStoreMutate = appStore((state) => state.mutate);
-  const { isLoading, data: mcpList } = useSWR(
-    "mcp-list",
-    selectMcpClientsAction,
-    {
-      dedupingInterval: 0,
-      fallbackData: [],
-      onSuccess: (data) => {
-        appStoreMutate({ mcpList: data });
-      },
-    },
-  );
+
+  const { isLoading, data: mcpList } = useMcpList({
+    dedupingInterval: 0,
+  });
 
   if (mcpServer) {
     return (

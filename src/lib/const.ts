@@ -65,3 +65,23 @@ export const SUPPORTED_LOCALES = [
     name: "Chinese 🇨🇳",
   },
 ];
+
+export const BACKGROUND_COLORS = [
+  "oklch(87% 0 0)",
+  "oklch(20.5% 0 0)",
+  "oklch(80.8% 0.114 19.571)",
+  "oklch(83.7% 0.128 66.29)",
+  "oklch(84.5% 0.143 164.978)",
+  "oklch(82.8% 0.111 230.318)",
+  "oklch(78.5% 0.115 274.713)",
+  "oklch(81% 0.117 11.638)",
+  "oklch(81% 0.117 11.638)",
+];
+
+export const EMOJI_DATA = [
+  "https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f604.png",
+  "https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f603.png",
+  "https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f602.png",
+  "https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f601.png",
+  "https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f600.png",
+];

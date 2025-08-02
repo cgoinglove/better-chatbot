@@ -60,7 +60,7 @@ export const MCPCard = memo(function MCPCard({
     async (fn: () => Promise<any>) =>
       safe(() => setIsProcessing(true))
         .ifOk(fn)
-        .ifOk(() => mutate("mcp-list"))
+        .ifOk(() => mutate("/api/mcp/list"))
         .ifFail(handleErrorWithToast)
         .watch(() => setIsProcessing(false)),
     [],

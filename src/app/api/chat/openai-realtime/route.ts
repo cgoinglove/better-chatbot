@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { getSession } from "auth/server";
 import { AllowedMCPServer, VercelAIMcpTool } from "app-types/mcp";
-import { chatRepository } from "lib/db/repository";
+import { userRepository } from "lib/db/repository";
 import {
   filterMcpServerCustomizations,
   filterMCPToolsByAllowedMCPServers,
@@ -9,13 +9,21 @@ import {
 } from "../shared.chat";
 import {
   buildMcpServerCustomizationsSystemPrompt,
-  buildProjectInstructionsSystemPrompt,
   buildSpeechSystemPrompt,
 } from "lib/ai/prompts";
 import { mcpClientsManager } from "lib/ai/mcp/mcp-manager";
-import { errorIf, safe } from "ts-safe";
+import { safe } from "ts-safe";
 import { DEFAULT_VOICE_TOOLS } from "lib/ai/speech";
-import { rememberMcpServerCustomizationsAction } from "../actions";
+import {
+  rememberAgentAction,
+  rememberMcpServerCustomizationsAction,
+} from "../actions";
+import globalLogger from "lib/logger";
+import { colorize } from "consola/utils";
+
+const logger = globalLogger.withDefaults({
+  message: colorize("blackBright", `OpenAI Realtime API: `),
+});
 
 export async function POST(request: NextRequest) {
   try {
@@ -34,34 +42,34 @@ export async function POST(request: NextRequest) {
       return new Response("Unauthorized", { status: 401 });
     }
 
-    const { voice, allowedMcpServers, toolChoice, threadId, projectId } =
-      (await request.json()) as {
-        model: string;
-        voice: string;
-        allowedMcpServers: Record<string, AllowedMCPServer>;
-        toolChoice: "auto" | "none" | "manual";
-        projectId?: string;
-        threadId?: string;
-      };
+    const { voice, allowedMcpServers, agentId } = (await request.json()) as {
+      model: string;
+      voice: string;
+      agentId?: string;
+      allowedMcpServers: Record<string, AllowedMCPServer>;
+    };
 
-    const mcpTools = mcpClientsManager.tools();
+    const mcpTools = await mcpClientsManager.tools();
+
+    const agent = await rememberAgentAction(agentId, session.user.id);
+
+    agent && logger.info(`Agent: ${agent.name}`);
 
     const tools = safe(mcpTools)
-      .map(errorIf(() => toolChoice === "none" && "Not allowed"))
       .map((tools) => {
         return filterMCPToolsByAllowedMCPServers(tools, allowedMcpServers);
       })
       .orElse(undefined);
 
-    const { instructions, userPreferences } = projectId
-      ? await chatRepository.selectThreadInstructionsByProjectId(
-          session.user.id,
-          projectId,
-        )
-      : await chatRepository.selectThreadInstructions(
-          session.user.id,
-          threadId,
-        );
+    if (tools) {
+      logger.info(`Tools: ${Object.keys(tools).join(", ")}`);
+    } else {
+      logger.info(`No tools found`);
+    }
+
+    const userPreferences = await userRepository.getPreferences(
+      session.user.id,
+    );
 
     const mcpServerCustomizations = await safe()
       .map(() => {
@@ -77,8 +85,11 @@ export async function POST(request: NextRequest) {
     });
 
     const systemPrompt = mergeSystemPrompt(
-      buildSpeechSystemPrompt(session.user, userPreferences),
-      buildProjectInstructionsSystemPrompt(instructions),
+      buildSpeechSystemPrompt(
+        session.user,
+        userPreferences ?? undefined,
+        agent,
+      ),
       buildMcpServerCustomizationsSystemPrompt(mcpServerCustomizations),
     );
 

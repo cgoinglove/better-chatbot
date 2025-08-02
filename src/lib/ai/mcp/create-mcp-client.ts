@@ -20,14 +20,21 @@ import {
   isNull,
   Locker,
   toAny,
+  withTimeout,
 } from "lib/utils";
 
 import { safe } from "ts-safe";
-import { IS_MCP_SERVER_REMOTE_ONLY } from "lib/const";
+import {
+  IS_EDGE_RUNTIME,
+  IS_MCP_SERVER_REMOTE_ONLY,
+  IS_VERCEL_ENV,
+} from "lib/const";
 
 type ClientOptions = {
   autoDisconnectSeconds?: number;
 };
+
+const CONNET_TIMEOUT = IS_VERCEL_ENV ? 15000 : 120000;
 
 /**
  * Client class for Model Context Protocol (MCP) server connections
@@ -50,7 +57,10 @@ export class MCPClient {
     private disconnectDebounce = createDebounce(),
   ) {
     this.log = logger.withDefaults({
-      message: colorize("cyan", `MCP Client ${this.name}: `),
+      message: colorize(
+        "cyan",
+        `${IS_EDGE_RUNTIME ? "[EdgeRuntime] " : " "}MCP Client ${this.name}: `,
+      ),
     });
   }
 
@@ -82,6 +92,10 @@ export class MCPClient {
    * @returns this
    */
   async connect() {
+    if (IS_EDGE_RUNTIME) {
+      this.log.warn(`Edge runtime is not supported for this operation.`);
+      return;
+    }
     if (this.locker.isLocked) {
       await this.locker.wait();
       return this.client;
@@ -102,7 +116,7 @@ export class MCPClient {
       if (isMaybeStdioConfig(this.serverConfig)) {
         // Skip stdio transport
         if (IS_MCP_SERVER_REMOTE_ONLY) {
-          throw new Error("Stdio transport is not supported");
+          throw new Error("VERCEL: Stdio transport is not supported");
         }
 
         const config = MCPStdioConfigZodSchema.parse(this.serverConfig);
@@ -122,7 +136,7 @@ export class MCPClient {
           cwd: process.cwd(),
         });
 
-        await client.connect(transport);
+        await withTimeout(client.connect(transport), CONNET_TIMEOUT);
       } else if (isMaybeRemoteConfig(this.serverConfig)) {
         const config = MCPRemoteConfigZodSchema.parse(this.serverConfig);
         const abortController = new AbortController();
@@ -134,7 +148,7 @@ export class MCPClient {
               signal: abortController.signal,
             },
           });
-          await client.connect(transport);
+          await withTimeout(client.connect(transport), CONNET_TIMEOUT);
         } catch (streamableHttpError) {
           this.log.error(streamableHttpError);
           this.log.warn(
@@ -146,12 +160,11 @@ export class MCPClient {
               signal: abortController.signal,
             },
           });
-          await client.connect(transport);
+          await withTimeout(client.connect(transport), CONNET_TIMEOUT);
         }
       } else {
         throw new Error("Invalid server config");
       }
-
       this.log.info(
         `Connected to MCP server in ${((Date.now() - startedAt) / 1000).toFixed(2)}s`,
       );
@@ -203,17 +216,26 @@ export class MCPClient {
     this.isConnected = false;
     const client = this.client;
     this.client = undefined;
-    await client?.close().catch((e) => this.log.error(e));
+    void client?.close().catch((e) => this.log.error(e));
   }
   async callTool(toolName: string, input?: unknown) {
+    const execute = async () => {
+      const client = await this.connect();
+      return client?.callTool({
+        name: toolName,
+        arguments: input as Record<string, unknown>,
+      });
+    };
     return safe(() => this.log.info("tool call", toolName))
       .ifOk(() => this.scheduleAutoDisconnect()) // disconnect if autoDisconnectSeconds is set
-      .map(async () => {
-        const client = await this.connect();
-        return client?.callTool({
-          name: toolName,
-          arguments: input as Record<string, unknown>,
-        });
+      .map(() => execute())
+      .ifFail(async (err) => {
+        if (err?.message?.includes("Transport is closed")) {
+          this.log.info("Transport is closed, reconnecting...");
+          await this.disconnect();
+          return execute();
+        }
+        throw err;
       })
       .ifOk((v) => {
         if (isNull(v)) {
@@ -226,7 +248,11 @@ export class MCPClient {
         if (!status.isOk) {
           this.log.error("Tool call failed", toolName, status.error);
         } else if (status.value?.isError) {
-          this.log.error("Tool call failed", toolName, status.value.content);
+          this.log.error(
+            "Tool call failed content",
+            toolName,
+            status.value.content,
+          );
         }
       })
       .ifFail((err) => {

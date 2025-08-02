@@ -6,6 +6,8 @@ import { type Dispatch, type SetStateAction, useState } from "react";
 import { Textarea } from "./ui/textarea";
 import { deleteMessagesByChatIdAfterTimestampAction } from "@/app/api/chat/actions";
 import type { UseChatHelpers } from "@ai-sdk/react";
+import { useTranslations } from "next-intl";
+import { Loader } from "lucide-react";
 
 type TextUIPart = {
   type: "text";
@@ -25,6 +27,7 @@ export function MessageEditor({
   setMessages,
   reload,
 }: MessageEditorProps) {
+  const t = useTranslations();
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [draftParts, setDraftParts] = useState<TextUIPart[]>(() => {
     if (message.parts && message.parts.length > 0) {
@@ -67,7 +70,7 @@ export function MessageEditor({
             setMode("view");
           }}
         >
-          Cancel
+          {t("Common.cancel")}
         </Button>
         <Button
           data-testid="message-editor-send-button"
@@ -99,7 +102,8 @@ export function MessageEditor({
             reload({});
           }}
         >
-          {isSubmitting ? "Saving..." : "Save"}
+          {isSubmitting ? t("Common.saving") : t("Common.save")}
+          {isSubmitting && <Loader className="size-4 animate-spin" />}
         </Button>
       </div>
     </div>

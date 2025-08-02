@@ -1,8 +1,7 @@
 "use server";
 import { mcpClientsManager } from "lib/ai/mcp/mcp-manager";
 import { z } from "zod";
-import { Safe, safe } from "ts-safe";
-import { errorToString, safeJSONParse } from "lib/utils";
+
 import { McpServerSchema } from "lib/db/pg/schema.pg";
 
 export async function selectMcpClientsAction() {
@@ -65,71 +64,18 @@ export async function refreshMcpClientAction(id: string) {
   await mcpClientsManager.refreshClient(id);
 }
 
-function safeCallToolResult(chain: Safe<any>) {
-  return chain
-    .map((res) => {
-      if (res?.content && Array.isArray(res.content)) {
-        const parsedResult = {
-          ...res,
-          content: res.content.map((c) => {
-            if (c?.type === "text" && c?.text) {
-              const parsed = safeJSONParse(c.text);
-              return {
-                type: "text",
-                text: parsed.success ? parsed.value : c.text,
-              };
-            }
-            return c;
-          }),
-        };
-        return parsedResult;
-      }
-
-      return res;
-    })
-    .ifFail((err) => {
-      return {
-        isError: true,
-        error: {
-          message: errorToString(err),
-          name: err?.name || "ERROR",
-        },
-        content: [],
-      };
-    })
-    .unwrap();
-}
-
 export async function callMcpToolAction(
   id: string,
   toolName: string,
-  input?: unknown,
+  input: unknown,
 ) {
-  const chain = safe(async () => {
-    const client = await mcpClientsManager.getClient(id);
-    if (!client) {
-      throw new Error("Client not found");
-    }
-    return client.client.callTool(toolName, input);
-  });
-  return safeCallToolResult(chain);
+  return mcpClientsManager.toolCall(id, toolName, input);
 }
 
 export async function callMcpToolByServerNameAction(
   serverName: string,
   toolName: string,
-  input?: unknown,
+  input: unknown,
 ) {
-  const chain = safe(async () => {
-    const client = await mcpClientsManager.getClients().then((clients) => {
-      return clients.find(
-        (client) => client.client.getInfo().name === serverName,
-      );
-    });
-    if (!client) {
-      throw new Error("Client not found");
-    }
-    return client.client.callTool(toolName, input);
-  });
-  return safeCallToolResult(chain);
+  return mcpClientsManager.toolCallByServerName(serverName, toolName, input);
 }

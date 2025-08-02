@@ -22,11 +22,5 @@ export default async function Page({
 
   const initialMessages = thread.messages.map(convertToUIMessage);
 
-  return (
-    <ChatBot
-      threadId={threadId}
-      key={threadId}
-      initialMessages={initialMessages}
-    />
-  );
+  return <ChatBot threadId={threadId} initialMessages={initialMessages} />;
 }

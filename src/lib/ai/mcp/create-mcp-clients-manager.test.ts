@@ -26,20 +26,20 @@ vi.mock("lib/utils", () => ({
 
 vi.mock("ts-safe", () => ({
   safe: vi.fn((fn) => ({
-    ifOk: vi.fn((nextFn) => ({
-      ifOk: vi.fn((anotherFn) => ({
-        watch: vi.fn((watchFn) => ({
-          unwrap: vi.fn(() => {
-            fn();
-            nextFn();
-            if (typeof anotherFn === "function") {
-              return anotherFn();
-            }
-            watchFn();
-          }),
-        })),
+    // ifOk: vi.fn((nextFn) => ({
+    ifOk: vi.fn((anotherFn) => ({
+      watch: vi.fn((watchFn) => ({
+        unwrap: vi.fn(() => {
+          fn();
+          // nextFn();
+          if (typeof anotherFn === "function") {
+            return anotherFn();
+          }
+          watchFn();
+        }),
       })),
     })),
+    // })),
   })),
 }));
 
@@ -366,36 +366,14 @@ describe("MCPClientsManager", () => {
     });
   });
 
-  describe("getClient", () => {
-    beforeEach(async () => {
-      manager = new MCPClientsManager(mockStorage);
-      await manager.init();
-      await manager.addClient("test-server", "test-server", mockServerConfig);
-    });
-
-    it("should return client when it exists", async () => {
-      const client = await manager.getClient("test-server");
-
-      expect(client).toEqual({
-        client: mockClient,
-        name: "test-server",
-      });
-    });
-
-    it("should return undefined when client does not exist", async () => {
-      const client = await manager.getClient("non-existent");
-      expect(client).toBeUndefined();
-    });
-  });
-
   describe("tools", () => {
     beforeEach(async () => {
       manager = new MCPClientsManager(mockStorage);
       await manager.init();
     });
 
-    it("should return empty object when no clients", () => {
-      const tools = manager.tools();
+    it("should return empty object when no clients", async () => {
+      const tools = await manager.tools();
       expect(tools).toEqual({});
     });
 
@@ -414,7 +392,7 @@ describe("MCPClientsManager", () => {
       vi.mocked(mockCreateMCPClient).mockReturnValue(clientWithoutTools);
       await manager.addClient("empty-server", "empty-server", mockServerConfig);
 
-      const tools = manager.tools();
+      const tools = await manager.tools();
       expect(tools).toEqual({});
     });
   });

@@ -17,7 +17,7 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { Button } from "ui/button";
 import { Markdown } from "./markdown";
-import { cn, safeJSONParse } from "lib/utils";
+import { cn, createThrottle, safeJSONParse } from "lib/utils";
 import JsonView from "ui/json-view";
 import { useMemo, useState, memo, useEffect, useRef, useCallback } from "react";
 import { MessageEditor } from "./message-editor";
@@ -39,8 +39,6 @@ import {
   ToolInvocationUIPart,
 } from "app-types/chat";
 
-import { Skeleton } from "ui/skeleton";
-
 import { useTranslations } from "next-intl";
 import { extractMCPToolId } from "lib/ai/mcp/mcp-tool-id";
 import { Separator } from "ui/separator";
@@ -49,7 +47,12 @@ import { TextShimmer } from "ui/text-shimmer";
 import equal from "lib/equal";
 import { isVercelAIWorkflowTool } from "app-types/workflow";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
-import { DefaultToolName } from "lib/ai/tools";
+import { DefaultToolName, SequentialThinkingToolName } from "lib/ai/tools";
+import {
+  Shortcut,
+  getShortcutKeyList,
+  isShortcutEvent,
+} from "lib/keyboard-shortcuts";
 
 import { WorkflowInvocation } from "./tool-invocation/workflow-invocation";
 import dynamic from "next/dynamic";
@@ -70,6 +73,8 @@ interface UserMessagePartProps {
 
 interface AssistMessagePartProps {
   part: AssistMessagePart;
+  isLast: boolean;
+  isLoading: boolean;
   message: UIMessage;
   showActions: boolean;
   threadId?: string;
@@ -229,18 +234,25 @@ export const UserMessagePart = memo(
 );
 UserMessagePart.displayName = "UserMessagePart";
 
+const throttle = createThrottle();
+
 export const AssistMessagePart = memo(function AssistMessagePart({
   part,
   showActions,
   reload,
   message,
   setMessages,
+  isLast,
+  isLoading: isChatLoading,
   isError,
   threadId,
 }: AssistMessagePartProps) {
   const { copied, copy } = useCopy();
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const [isAtBottom, setIsAtBottom] = useState(true);
+  const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
 
   const deleteMessage = useCallback(() => {
     safe(() => setIsDeleting(true))
@@ -288,10 +300,43 @@ export const AssistMessagePart = memo(function AssistMessagePart({
       .unwrap();
   };
 
+  useEffect(() => {
+    // Only auto-scroll for the last message when AI is actively writing
+    if (isLast && isChatLoading && shouldAutoScroll && isAtBottom) {
+      throttle(() => {
+        ref.current?.scrollIntoView({ behavior: "smooth" });
+      }, 400);
+    }
+  }, [isLast, isChatLoading, shouldAutoScroll, isAtBottom, part.text]);
+
+  useEffect(() => {
+    // Only set up observer for the last message during loading
+    if (!ref.current || !isLast || !isChatLoading) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsAtBottom(entry.isIntersecting);
+
+        // If user scrolled back to bottom, re-enable auto scroll
+        if (entry.isIntersecting && !shouldAutoScroll) {
+          setShouldAutoScroll(true);
+        }
+      },
+      {
+        root: null,
+        threshold: 0.3,
+      },
+    );
+
+    observer.observe(ref.current);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [isLast, isChatLoading, shouldAutoScroll]);
+
   return (
-    <div
-      className={cn(isLoading && "animate-pulse", "flex flex-col gap-2 group")}
-    >
+    <div className={cn(isLoading && "animate-pulse", "flex flex-col gap-2")}>
       <div
         data-testid="message-content"
         className={cn("flex flex-col gap-4 px-2", {
@@ -301,16 +346,14 @@ export const AssistMessagePart = memo(function AssistMessagePart({
         <Markdown>{part.text}</Markdown>
       </div>
       {showActions && (
-        <div className="flex w-full ">
+        <div className="flex w-full">
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 data-testid="message-edit-button"
                 variant="ghost"
                 size="icon"
-                className={cn(
-                  "size-3! p-4! opacity-0 group-hover/message:opacity-100",
-                )}
+                className="size-3! p-4!"
                 onClick={() => copy(part.text)}
               >
                 {copied ? <Check /> : <Copy />}
@@ -323,12 +366,10 @@ export const AssistMessagePart = memo(function AssistMessagePart({
               <div>
                 <SelectModel onSelect={handleModelChange}>
                   <Button
-                    data-testid="message-edit-button"
+                    data-testid="message-edit-button data-[state=open]:bg-secondary!"
                     variant="ghost"
                     size="icon"
-                    className={cn(
-                      "size-3! p-4! opacity-0 group-hover/message:opacity-100",
-                    )}
+                    className="size-3! p-4!"
                   >
                     {<RefreshCw />}
                   </Button>
@@ -344,7 +385,7 @@ export const AssistMessagePart = memo(function AssistMessagePart({
                 size="icon"
                 disabled={isDeleting}
                 onClick={deleteMessage}
-                className="size-3! p-4! opacity-0 group-hover/message:opacity-100 hover:text-destructive"
+                className="size-3! p-4! hover:text-destructive"
               >
                 {isDeleting ? <Loader className="animate-spin" /> : <Trash2 />}
               </Button>
@@ -355,11 +396,25 @@ export const AssistMessagePart = memo(function AssistMessagePart({
           </Tooltip>
         </div>
       )}
+      <div ref={ref} className="min-w-0" />
     </div>
   );
 });
 AssistMessagePart.displayName = "AssistMessagePart";
-
+const variants = {
+  collapsed: {
+    height: 0,
+    opacity: 0,
+    marginTop: 0,
+    marginBottom: 0,
+  },
+  expanded: {
+    height: "auto",
+    opacity: 1,
+    marginTop: "1rem",
+    marginBottom: "0.5rem",
+  },
+};
 export const ReasoningPart = memo(function ReasoningPart({
   reasoning,
   isThinking,
@@ -368,21 +423,6 @@ export const ReasoningPart = memo(function ReasoningPart({
   isThinking?: boolean;
 }) {
   const [isExpanded, setIsExpanded] = useState(isThinking);
-
-  const variants = {
-    collapsed: {
-      height: 0,
-      opacity: 0,
-      marginTop: 0,
-      marginBottom: 0,
-    },
-    expanded: {
-      height: "auto",
-      opacity: 1,
-      marginTop: "1rem",
-      marginBottom: "0.5rem",
-    },
-  };
 
   useEffect(() => {
     if (!isThinking && isExpanded) {
@@ -437,11 +477,19 @@ export const ReasoningPart = memo(function ReasoningPart({
 });
 ReasoningPart.displayName = "ReasoningPart";
 
+const loading = memo(function Loading() {
+  return (
+    <div className="px-6 py-4">
+      <div className="h-44 w-full rounded-md opacity-0" />
+    </div>
+  );
+});
+
 const PieChart = dynamic(
   () => import("./tool-invocation/pie-chart").then((mod) => mod.PieChart),
   {
     ssr: false,
-    loading: () => <Skeleton className="h-64 w-full rounded-md" />,
+    loading,
   },
 );
 
@@ -449,7 +497,7 @@ const BarChart = dynamic(
   () => import("./tool-invocation/bar-chart").then((mod) => mod.BarChart),
   {
     ssr: false,
-    loading: () => <Skeleton className="h-64 w-full rounded-md" />,
+    loading,
   },
 );
 
@@ -457,7 +505,7 @@ const LineChart = dynamic(
   () => import("./tool-invocation/line-chart").then((mod) => mod.LineChart),
   {
     ssr: false,
-    loading: () => <Skeleton className="h-64 w-full rounded-md" />,
+    loading,
   },
 );
 
@@ -468,7 +516,7 @@ const WebSearchToolInvocation = dynamic(
     ),
   {
     ssr: false,
-    loading: () => <Skeleton className="h-64 w-full rounded-md" />,
+    loading,
   },
 );
 
@@ -477,9 +525,37 @@ const CodeExecutor = dynamic(
     import("./tool-invocation/code-executor").then((mod) => mod.CodeExecutor),
   {
     ssr: false,
-    loading: () => <Skeleton className="h-64 w-full rounded-md" />,
+    loading,
   },
 );
+
+const SequentialThinkingToolInvocation = dynamic(
+  () =>
+    import("./tool-invocation/sequential-thinking").then(
+      (mod) => mod.SequentialThinkingToolInvocation,
+    ),
+  {
+    ssr: false,
+    loading,
+  },
+);
+
+// Local shortcuts for tool invocation approval/rejection
+const approveToolInvocationShortcut: Shortcut = {
+  description: "approveToolInvocation",
+  shortcut: {
+    key: "Enter",
+    command: true,
+  },
+};
+
+const rejectToolInvocationShortcut: Shortcut = {
+  description: "rejectToolInvocation",
+  shortcut: {
+    key: "Escape",
+    command: true,
+  },
+};
 
 export const ToolMessagePart = memo(
   ({
@@ -499,6 +575,34 @@ export const ToolMessagePart = memo(
     const { copied: copiedInput, copy: copyInput } = useCopy();
     const { copied: copiedOutput, copy: copyOutput } = useCopy();
     const [isDeleting, setIsDeleting] = useState(false);
+
+    // Handle keyboard shortcuts for approve/reject actions
+    useEffect(() => {
+      // Only enable shortcuts when manual tool invocation buttons are shown
+      if (!onPoxyToolCall || !isManualToolInvocation || !isLast) return;
+
+      const handleKeyDown = (e: KeyboardEvent) => {
+        const isApprove = isShortcutEvent(e, approveToolInvocationShortcut);
+        const isReject = isShortcutEvent(e, rejectToolInvocationShortcut);
+
+        if (!isApprove && !isReject) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+
+        if (isApprove) {
+          onPoxyToolCall({ action: "manual", result: true });
+        }
+
+        if (isReject) {
+          onPoxyToolCall({ action: "manual", result: false });
+        }
+      };
+
+      window.addEventListener("keydown", handleKeyDown);
+      return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [onPoxyToolCall, isManualToolInvocation, isLast]);
 
     const deleteMessage = useCallback(() => {
       safe(() => setIsDeleting(true))
@@ -563,6 +667,7 @@ export const ToolMessagePart = memo(
         return (
           <CodeExecutor
             part={toolInvocation}
+            key={toolInvocation.toolCallId}
             onResult={onToolCallDirect}
             type="javascript"
           />
@@ -573,8 +678,18 @@ export const ToolMessagePart = memo(
         return (
           <CodeExecutor
             part={toolInvocation}
+            key={toolInvocation.toolCallId}
             onResult={onToolCallDirect}
             type="python"
+          />
+        );
+      }
+
+      if (toolName === SequentialThinkingToolName) {
+        return (
+          <SequentialThinkingToolInvocation
+            key={toolInvocation.toolCallId}
+            part={toolInvocation}
           />
         );
       }
@@ -748,29 +863,41 @@ export const ToolMessagePart = memo(
                   </div>
                 )}
 
-                {onPoxyToolCall && isManualToolInvocation && (
+                {onPoxyToolCall && isManualToolInvocation && isLast && (
                   <div className="flex flex-row gap-2 items-center mt-2">
                     <Button
                       variant="secondary"
                       size="sm"
-                      className="rounded-full text-xs hover:ring"
+                      className="rounded-full text-xs hover:ring py-2"
                       onClick={() =>
                         onPoxyToolCall({ action: "manual", result: true })
                       }
                     >
                       <Check />
                       {t("Common.approve")}
+                      <Separator orientation="vertical" className="h-4" />
+                      <span className="text-muted-foreground">
+                        {getShortcutKeyList(approveToolInvocationShortcut).join(
+                          " ",
+                        )}
+                      </span>
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
-                      className="rounded-full text-xs"
+                      className="rounded-full text-xs py-2"
                       onClick={() =>
                         onPoxyToolCall({ action: "manual", result: false })
                       }
                     >
                       <X />
                       {t("Common.reject")}
+                      <Separator orientation="vertical" />
+                      <span className="text-muted-foreground">
+                        {getShortcutKeyList(rejectToolInvocationShortcut).join(
+                          " ",
+                        )}
+                      </span>
                     </Button>
                   </div>
                 )}

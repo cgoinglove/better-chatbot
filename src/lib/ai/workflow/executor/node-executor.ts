@@ -18,7 +18,6 @@ import {
   convertTiptapJsonToText,
 } from "../shared.workflow";
 import { jsonSchemaToZod } from "lib/json-schema-to-zod";
-import { callMcpToolAction } from "@/app/api/mcp/actions";
 import { toAny } from "lib/utils";
 import { AppError } from "lib/errors";
 import { DefaultToolName } from "lib/ai/tools";
@@ -26,6 +25,7 @@ import {
   tavilySearchToolForWorkflow,
   tavilyWebContentToolForWorkflow,
 } from "lib/ai/tools/web/web-search";
+import { mcpClientsManager } from "lib/ai/mcp/mcp-manager";
 
 /**
  * Interface for node executor functions.
@@ -230,11 +230,11 @@ export const toolNodeExecutor: NodeExecutor<ToolNodeData> = async ({
 
   // Execute the tool based on its type
   if (node.tool.type == "mcp-tool") {
-    const toolResult = await callMcpToolAction(
+    const toolResult = (await mcpClientsManager.toolCall(
       node.tool.serverId,
       node.tool.id,
       result.input.parameter,
-    );
+    )) as any;
     if (toolResult.isError) {
       throw new Error(
         toolResult.error?.message ||

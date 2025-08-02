@@ -51,6 +51,7 @@ const PurePreviewMessage = ({
     return null; // system message is not shown
   }
 
+  if (!message.parts.length) return null;
   return (
     <div className="w-full mx-auto max-w-3xl px-6 group/message">
       <div
@@ -109,6 +110,8 @@ const PurePreviewMessage = ({
               return (
                 <AssistMessagePart
                   threadId={threadId}
+                  isLast={isLastMessage && isLastPart}
+                  isLoading={isLoading}
                   key={key}
                   part={part}
                   showActions={

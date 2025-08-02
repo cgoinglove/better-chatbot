@@ -33,21 +33,12 @@ import { DBWorkflow, WorkflowIcon } from "app-types/workflow";
 import { handleErrorWithToast } from "ui/shared-toast";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { cn } from "lib/utils";
+import { cn, createDebounce } from "lib/utils";
 import { mutate } from "swr";
 import { useTranslations } from "next-intl";
+import { BACKGROUND_COLORS } from "lib/const";
 
-const BACKGROUND_COLORS = [
-  "oklch(87% 0 0)",
-  "oklch(20.5% 0 0)",
-  "oklch(80.8% 0.114 19.571)",
-  "oklch(83.7% 0.128 66.29)",
-  "oklch(84.5% 0.143 164.978)",
-  "oklch(82.8% 0.111 230.318)",
-  "oklch(78.5% 0.115 274.713)",
-  "oklch(81% 0.117 11.638)",
-  "oklch(81% 0.117 11.638)",
-];
+const colorUpdateDebounce = createDebounce();
 
 const defaultConfig = {
   id: undefined as string | undefined,
@@ -217,6 +208,31 @@ export function EditWorkflowPopup({
                         style={{ backgroundColor: color }}
                       ></div>
                     ))}
+                    <div className="relative">
+                      <input
+                        type="color"
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        onChange={(e) => {
+                          colorUpdateDebounce(() => {
+                            setConfig({
+                              icon: {
+                                ...config.icon!,
+                                style: { backgroundColor: e.target.value },
+                              },
+                            });
+                          }, 100);
+                        }}
+                      />
+                      <div className="w-6 h-6 rounded cursor-pointer  border-muted-foreground/50 flex items-center justify-center hover:border-muted-foreground transition-colors">
+                        <div
+                          className="w-3 h-3 rounded-full"
+                          style={{
+                            backgroundColor:
+                              config.icon?.style?.backgroundColor,
+                          }}
+                        ></div>
+                      </div>
+                    </div>
                   </div>
                   <EmojiPicker
                     lazyLoadEmojis

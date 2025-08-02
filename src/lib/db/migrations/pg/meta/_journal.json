@@ -57,6 +57,13 @@
       "when": 1750508915812,
       "tag": "0007_eager_clint_barton",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1753711175572,
+      "tag": "0008_deep_miracleman",
+      "breakpoints": true
     }
   ]
 }
