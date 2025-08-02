@@ -48,6 +48,7 @@ const staticModels = {
   openRouter: {
     "qwen3-8b:free": openrouter("qwen/qwen3-8b:free"),
     "qwen3-14b:free": openrouter("qwen/qwen3-14b:free"),
+    "qwen3-coder": openrouter("qwen/qwen3-coder"),
   },
 };
 
