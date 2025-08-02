@@ -39,6 +39,7 @@ interface MentionInputProps {
   editorRef?: RefObject<Editor | null>;
   onFocus?: () => void;
   onBlur?: () => void;
+  fullWidthSuggestion?: boolean; // 새로 추가된 옵션
   MentionItem: FC<{
     label: string;
     id: string;
@@ -48,6 +49,7 @@ interface MentionInputProps {
     left: number;
     onClose: () => void;
     onSelectMention: (item: { label: string; id: string }) => void;
+    style?: React.CSSProperties;
   }>;
 }
 
@@ -66,6 +68,7 @@ export default function MentionInput({
   editorRef,
   onFocus,
   onBlur,
+  fullWidthSuggestion = false,
 }: MentionInputProps) {
   const [open, setOpen] = useState(false);
   const position = useRef<{
@@ -73,6 +76,10 @@ export default function MentionInput({
     left: number;
     range: Range;
   } | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = useState<number | undefined>(
+    undefined,
+  );
   const latestContent = useRef<{
     json: TipTapMentionJsonContent;
     text: string;
@@ -110,14 +117,29 @@ export default function MentionInput({
             render: () => {
               return {
                 onStart: (props) => {
-                  const rect = props.clientRect?.();
-                  if (rect) {
-                    position.current = {
-                      top: rect.top,
-                      left: rect.left,
-                      range: props.range,
-                    };
-                    setOpen(true);
+                  if (fullWidthSuggestion) {
+                    const containerRect =
+                      containerRef.current?.getBoundingClientRect();
+                    if (containerRect) {
+                      position.current = {
+                        top: containerRect.top,
+                        left: containerRect.left,
+                        range: props.range,
+                      };
+                      setContainerWidth(containerRect.width);
+                      setOpen(true);
+                    }
+                  } else {
+                    const rect = props.clientRect?.();
+                    if (rect) {
+                      position.current = {
+                        top: rect.top,
+                        left: rect.left,
+                        range: props.range,
+                      };
+                      setContainerWidth(undefined);
+                      setOpen(true);
+                    }
                   }
                 },
                 onExit: () => setOpen(false),
@@ -214,10 +236,16 @@ export default function MentionInput({
             .run();
           setOpen(false);
         }}
+        style={{
+          width:
+            fullWidthSuggestion && containerWidth
+              ? `${containerWidth}px`
+              : undefined,
+        }}
       />,
       document.body,
     );
-  }, [open, disabledMention]);
+  }, [open, disabledMention, containerWidth, fullWidthSuggestion]);
 
   const placeholderElement = useMemo(() => {
     if (!editor?.isEmpty) return null;
@@ -260,7 +288,11 @@ export default function MentionInput({
   }, [editor]);
 
   return (
-    <div onClick={focus} className={cn("relative w-full", className)}>
+    <div
+      ref={containerRef}
+      onClick={focus}
+      className={cn("relative w-full", className)}
+    >
       <EditorContent editor={editor} onKeyDown={handleKeyDown} />
       {suggestion}
       {placeholderElement}
