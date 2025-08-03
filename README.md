@@ -8,7 +8,6 @@
 
 Our goal is to create the best possible chatbot UX — focusing on the joy and intuitiveness users feel when calling and interacting with AI tools.
 
-
 See the experience in action in the [preview](#preview) below!
 
 > Built with [Vercel AI SDK](https://sdk.vercel.ai) and [Next.js](https://nextjs.org/), this app adopts modern patterns for building AI chat interfaces. It leverages the power of the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) to seamlessly integrate external tools into your chat experience. You can also create custom workflows that become callable tools in chat, allowing you to chain multiple MCP tools, LLM interactions, and logic into powerful automated sequences.
@@ -69,19 +68,18 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to get start
   - [Quick Start (Local Version) 🚀](#quick-start-local-version-)
   - [Environment Variables](#environment-variables)
 - [📘 Guides](#-guides)
-    - [🔌 MCP Server Setup \& Tool Testing](#-mcp-server-setup--tool-testing)
-    - [🐳 Docker Hosting Guide](#-docker-hosting-guide)
-    - [▲ Vercel Hosting Guide](#-vercel-hosting-guide)
-    - [🎯 System Prompts \& Chat Customization](#-system-prompts--chat-customization)
-    - [🔐 OAuth Sign-In Setup](#-oauth-sign-in-setup)
-    - [🕵🏿 Adding openAI like providers](#-adding-openai-like-providers)
+  - [🔌 MCP Server Setup \& Tool Testing](#-mcp-server-setup--tool-testing)
+  - [🐳 Docker Hosting Guide](#-docker-hosting-guide)
+  - [▲ Vercel Hosting Guide](#-vercel-hosting-guide)
+  - [🎯 System Prompts \& Chat Customization](#-system-prompts--chat-customization)
+  - [🔐 OAuth Sign-In Setup](#-oauth-sign-in-setup)
+  - [🕵🏿 Adding openAI like providers](#-adding-openai-like-providers)
 - [💡 Tips](#-tips)
-    - [🧠 Agentic Chatbot with Project Instructions](#-agentic-chatbot-with-project-instructions)
-    - [💬 Temporary Chat Windows](#-temporary-chat-windows)
+  - [🧠 Agentic Chatbot with Project Instructions](#-agentic-chatbot-with-project-instructions)
+  - [💬 Temporary Chat Windows](#-temporary-chat-windows)
 - [🗺️ Roadmap](#️-roadmap)
 - [🙌 Contributing](#-contributing)
 - [💬 Join Our Discord](#-join-our-discord)
-
 
 > This project is evolving at lightning speed! ⚡️ We're constantly shipping new features and smashing bugs. **Star this repo** to join the ride and stay in the loop with the latest updates!
 
@@ -100,12 +98,12 @@ Get a feel for the UX — here's a quick look at what's possible.
 Sample prompt:
 
 ```prompt
-1. Use the @tool('web-search') to look up information about “modelcontetprotocol.”  
+1. Use the @tool('web-search') to look up information about “modelcontetprotocol.”
 
 2. Then, using : @mcp("playwright")
-   - navigate Google (https://www.google.com)  
-   - Click the “Login” button  
-   - Enter my email address (neo.cgoing@gmail.com)  
+   - navigate Google (https://www.google.com)
+   - Click the “Login” button
+   - Enter my email address (neo.cgoing@gmail.com)
    - Clock the "Next"  button
    - Close the browser
 ```
@@ -139,21 +137,18 @@ Talk to the assistant naturally, and watch it execute tools in real time.
 
 <img width="1225" alt="image" src="https://github.com/user-attachments/assets/4d56dd25-a94c-4c19-9efa-fd7b5d3d2187" loading="lazy"/>
 
-
 Quickly call tool during chat by typing `@toolname`.
 No need to memorize — just type `@` and pick from the list!
 
 **Tool Selection vs. Mentions (`@`) — When to Use What:**
 
-* **Tool Selection**: Make frequently used tools always available to the LLM across all chats. Great for convenience and maintaining consistent context over time.
-* **Mentions (`@`)**: Temporarily bind only the mentioned tools for that specific response. Since only the mentioned tools are sent to the LLM, this saves tokens and can improve speed and accuracy.
+- **Tool Selection**: Make frequently used tools always available to the LLM across all chats. Great for convenience and maintaining consistent context over time.
+- **Mentions (`@`)**: Temporarily bind only the mentioned tools for that specific response. Since only the mentioned tools are sent to the LLM, this saves tokens and can improve speed and accuracy.
 
 Each method has its own strengths — use them together to balance efficiency and performance.
 
 You can also create **tool presets** by selecting only the MCP servers or tools you need.
 Switch between presets instantly with a click — perfect for organizing tools by task or workflow.
-
-
 
 ### 🧭 Tool Choice Mode
 
@@ -180,6 +175,7 @@ Built-in web search powered by [Exa AI](https://exa.ai). Search the web with sem
 - **Easy Setup:** Get your API key instantly at [dashboard.exa.ai](https://dashboard.exa.ai)
 
 #### ⚡️ JS Executor
+
 <img width="1225" alt="js-executor-preview" src="https://github.com/user-attachments/assets/24d51665-c500-4c92-89de-7b46216e869f" loading="lazy"/>
 
 It is a simple JS execution tool.
@@ -291,11 +287,26 @@ FILE_BASED_MCP_CONFIG=false
 
 # (Optional)
 # === OAuth Settings ===
-# Fill in these values only if you want to enable Google/GitHub login
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
+# Fill in these values only if you want to enable Google/GitHub/Microsoft login
+
+#GitHub
 GITHUB_CLIENT_ID=
 GITHUB_CLIENT_SECRET=
+
+#Google
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+# Set to 1 to force account selection
+GOOGLE_FORCE_ACCOUNT_SELECTION=
+
+
+# Microsoft
+MICROSOFT_CLIENT_ID=
+MICROSOFT_CLIENT_SECRET=
+# Optional Tenant Id
+MICROSOFT_TENANT_ID=
+# Set to 1 to force account selection
+MICROSOFT_FORCE_ACCOUNT_SELECTION=
 
 # Set this to 1 to disable user sign-ups.
 DISABLE_SIGN_UP=
@@ -328,7 +339,7 @@ Step-by-step setup guides for running and configuring better-chatbot.
 
 #### [🔐 OAuth Sign-In Setup](./docs/tips-guides/oauth.md)
 
-- Configure Google and GitHub OAuth for secure user login support.
+- Configure Google, GitHub, and Microsoft OAuth for secure user login support.
 
 #### [🕵🏿 Adding openAI like providers](docs/tips-guides/adding-openAI-like-providers.md)
 

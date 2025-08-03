@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from "vitest";
-import { groupBy, errorToString, objectFlow } from "./utils";
+import { groupBy, errorToString, objectFlow, parseEnvBoolean } from "./utils";
 
 describe("groupBy", () => {
   test("group by function key", () => {
@@ -135,5 +135,80 @@ describe("objectFlow", () => {
   test("find function: no result", () => {
     const result = objectFlow(testObj).find((value) => value > 10);
     expect(result).toBeUndefined();
+  });
+});
+
+describe("parseEnvBoolean", () => {
+  test("should return true for boolean true", () => {
+    expect(parseEnvBoolean(true)).toBe(true);
+  });
+
+  test("should return false for boolean false", () => {
+    expect(parseEnvBoolean(false)).toBe(false);
+  });
+
+  test("should return true for string 'true'", () => {
+    expect(parseEnvBoolean("true")).toBe(true);
+  });
+
+  test("should return true for string 'True' (case insensitive)", () => {
+    expect(parseEnvBoolean("True")).toBe(true);
+  });
+
+  test("should return true for string 'TRUE' (case insensitive)", () => {
+    expect(parseEnvBoolean("TRUE")).toBe(true);
+  });
+
+  test("should return true for string '1'", () => {
+    expect(parseEnvBoolean("1")).toBe(true);
+  });
+
+  test("should return true for string 'y'", () => {
+    expect(parseEnvBoolean("y")).toBe(true);
+  });
+
+  test("should return true for string 'Y' (case insensitive)", () => {
+    expect(parseEnvBoolean("Y")).toBe(true);
+  });
+
+  test("should return false for string 'false'", () => {
+    expect(parseEnvBoolean("false")).toBe(false);
+  });
+
+  test("should return false for string 'False' (case insensitive)", () => {
+    expect(parseEnvBoolean("False")).toBe(false);
+  });
+
+  test("should return false for string '0'", () => {
+    expect(parseEnvBoolean("0")).toBe(false);
+  });
+
+  test("should return false for string 'n'", () => {
+    expect(parseEnvBoolean("n")).toBe(false);
+  });
+
+  test("should return false for string 'no'", () => {
+    expect(parseEnvBoolean("no")).toBe(false);
+  });
+
+  test("should return false for empty string", () => {
+    expect(parseEnvBoolean("")).toBe(false);
+  });
+
+  test("should return false for random string", () => {
+    expect(parseEnvBoolean("random")).toBe(false);
+  });
+
+  test("should return false for undefined", () => {
+    expect(parseEnvBoolean(undefined)).toBe(false);
+  });
+
+  test("should return false for whitespace only string", () => {
+    expect(parseEnvBoolean("   ")).toBe(false);
+  });
+
+  test("should handle mixed case variations", () => {
+    expect(parseEnvBoolean("tRuE")).toBe(true);
+    expect(parseEnvBoolean("fAlSe")).toBe(false);
   });
 });
