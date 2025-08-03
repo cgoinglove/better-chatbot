@@ -1,3 +1,7 @@
+import {
+  OAuthClientInformationFull,
+  OAuthTokens,
+} from "@modelcontextprotocol/sdk/shared/auth.js";
 import { Tool } from "ai";
 import { z } from "zod";
 
@@ -38,7 +42,7 @@ export type MCPServerInfo = {
   name: string;
   config: MCPServerConfig;
   error?: unknown;
-  status: "connected" | "disconnected" | "loading";
+  status: "connected" | "disconnected" | "loading" | "authorizing";
   toolInfo: MCPToolInfo[];
 };
 
@@ -210,3 +214,29 @@ export const CallToolResultSchema = z.object({
 });
 
 export type CallToolResult = z.infer<typeof CallToolResultSchema>;
+
+export type McpOAuthSession = {
+  id: string;
+  mcpServerId: string;
+  serverUrl: string;
+  clientInfo?: OAuthClientInformationFull;
+  tokens?: OAuthTokens;
+  codeVerifier?: string;
+  state?: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type McpOAuthRepository = {
+  // Get OAuth data for a server
+  getOAuthSession(mcpServerId: string): Promise<McpOAuthSession | undefined>;
+  // Get OAuth data by state parameter (for callback handling)
+  getOAuthSessionByState(state: string): Promise<McpOAuthSession | undefined>;
+  // Save OAuth data with mcpServerId-based upsert
+  saveOAuthSession(
+    mcpServerId: string,
+    data: Partial<McpOAuthSession>,
+  ): Promise<McpOAuthSession>;
+  // Delete OAuth data for a server
+  deleteOAuthData(mcpServerId: string): Promise<void>;
+};

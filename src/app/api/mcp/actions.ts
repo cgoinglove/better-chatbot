@@ -44,7 +44,7 @@ export async function saveMcpClientAction(
     );
   }
 
-  await mcpClientsManager.persistClient(server);
+  return mcpClientsManager.persistClient(server);
 }
 
 export async function existMcpClientByServerNameAction(serverName: string) {
@@ -62,6 +62,15 @@ export async function removeMcpClientAction(id: string) {
 
 export async function refreshMcpClientAction(id: string) {
   await mcpClientsManager.refreshClient(id);
+}
+
+export async function authorizeMcpClientAction(id: string) {
+  await refreshMcpClientAction(id);
+  const client = await mcpClientsManager.getClient(id);
+  if (client?.client.status != "authorizing") {
+    throw new Error("Not Authorizing");
+  }
+  return client.client.getAuthorizationUrl()?.toString();
 }
 
 export async function callMcpToolAction(

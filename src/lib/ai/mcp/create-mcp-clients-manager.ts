@@ -5,14 +5,21 @@ import type {
   VercelAIMcpTool,
 } from "app-types/mcp";
 import { createMCPClient, type MCPClient } from "./create-mcp-client";
-import { errorToString, generateUUID, Locker, safeJSONParse } from "lib/utils";
+import {
+  errorToString,
+  generateUUID,
+  Locker,
+  safeJSONParse,
+  toAny,
+} from "lib/utils";
 import { safe } from "ts-safe";
 import { McpServerSchema } from "lib/db/pg/schema.pg";
 import { createMCPToolId } from "./mcp-tool-id";
 import globalLogger from "logger";
-import { ToolExecutionOptions } from "ai";
+import { jsonSchema, ToolExecutionOptions } from "ai";
 import { createMemoryMCPConfigStorage } from "./memory-mcp-config-storage";
 import { colorize } from "consola/utils";
+
 /**
  * Interface for storage of MCP server configurations.
  * Implementations should handle persistent storage of server configs.
@@ -108,10 +115,17 @@ export class MCPClientsManager {
       Array.from(this.clients.entries())
         .filter(([_, { client }]) => client.getInfo().toolInfo.length > 0)
         .flatMap(([id, { client }]) =>
-          Object.entries(client.tools).map(([name, tool]) => [
+          Object.entries(client.toolInfo).map(([name, tool]) => [
             createMCPToolId(client.getInfo().name, name),
             {
-              ...tool,
+              description: tool.description,
+              parameters: jsonSchema(
+                toAny({
+                  ...tool.inputSchema,
+                  properties: tool.inputSchema?.properties ?? {},
+                  additionalProperties: false,
+                }),
+              ),
               _originToolName: name,
               __$ref__: "mcp",
               _mcpServerName: client.getInfo().name,
@@ -133,7 +147,7 @@ export class MCPClientsManager {
       const prevClient = this.clients.get(id)!;
       void prevClient.client.disconnect();
     }
-    const client = createMCPClient(name, serverConfig, {
+    const client = createMCPClient(id, name, serverConfig, {
       autoDisconnectSeconds: this.autoDisconnectSeconds,
     });
     this.clients.set(id, { client, name });
@@ -149,7 +163,8 @@ export class MCPClientsManager {
       const entity = await this.storage.save(server);
       id = entity.id;
     }
-    return this.addClient(id, server.name, server.config);
+    await this.addClient(id, server.name, server.config);
+    return this.clients.get(id)!;
   }
 
   /**
@@ -174,19 +189,11 @@ export class MCPClientsManager {
   async refreshClient(id: string) {
     this.logger.info(`Refreshing client ${id}`);
     await this.waitInitialized();
-    const prevClient = this.clients.get(id);
-    const currentConfig = prevClient?.client.getInfo().config;
-    if (this.storage) {
-      const server = await this.storage.get(id);
-      if (!server) {
-        throw new Error(`Client ${id} not found`);
-      }
-      return this.addClient(id, server.name, server.config);
-    }
-    if (!currentConfig) {
+    const server = await this.storage.get(id);
+    if (!server) {
       throw new Error(`Client ${id} not found`);
     }
-    return this.addClient(id, prevClient.name, currentConfig);
+    return this.addClient(id, server.name, server.config);
   }
 
   async cleanup() {

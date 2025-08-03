@@ -2,6 +2,7 @@
 import {
   ChevronRight,
   FlaskConical,
+  KeyRoundIcon,
   Loader,
   Pencil,
   RotateCw,
@@ -20,17 +21,20 @@ import Link from "next/link";
 import { mutate } from "swr";
 import { safe } from "ts-safe";
 
-import { handleErrorWithToast } from "ui/shared-toast";
+import { handleErrorWithToast, mcpOAuthRequiredToast } from "ui/shared-toast";
 import {
+  authorizeMcpClientAction,
   refreshMcpClientAction,
   removeMcpClientAction,
 } from "@/app/api/mcp/actions";
+
 import type { MCPServerInfo, MCPToolInfo } from "app-types/mcp";
 
 import { ToolDetailPopup } from "./tool-detail-popup";
 import { useTranslations } from "next-intl";
 import { Separator } from "ui/separator";
 import { appStore } from "@/app/store";
+import { isString } from "lib/utils";
 
 // Main MCPCard component
 export const MCPCard = memo(function MCPCard({
@@ -49,9 +53,12 @@ export const MCPCard = memo(function MCPCard({
     return isProcessing || status === "loading";
   }, [isProcessing, status]);
 
+  const needsAuthorization = status === "authorizing";
+  const isDisabled = isLoading || needsAuthorization;
+
   const errorMessage = useMemo(() => {
     if (error) {
-      return JSON.stringify(error);
+      return isString(error) ? error : JSON.stringify(error);
     }
     return null;
   }, [error]);
@@ -75,6 +82,17 @@ export const MCPCard = memo(function MCPCard({
     await pipeProcessing(() => removeMcpClientAction(id));
   }, [id]);
 
+  const handleAuthorize = useCallback(
+    () =>
+      pipeProcessing(() =>
+        authorizeMcpClientAction(id).then((res) => {
+          if (!res) throw new Error("Not Authorizing");
+          return mcpOAuthRequiredToast(res);
+        }),
+      ),
+    [id],
+  );
+
   return (
     <Card className="relative hover:border-foreground/20 transition-colors bg-secondary/40">
       {isLoading && (
@@ -87,11 +105,34 @@ export const MCPCard = memo(function MCPCard({
           {name}
         </h4>
         <div className="flex-1" />
+        {needsAuthorization && (
+          <>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleAuthorize}
+                  disabled={isProcessing}
+                >
+                  <KeyRoundIcon className="size-3.5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Authorize</p>
+              </TooltipContent>
+            </Tooltip>
+            <div className="h-4">
+              <Separator orientation="vertical" />
+            </div>
+          </>
+        )}
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
               variant="ghost"
               size="icon"
+              disabled={isDisabled}
               onClick={() =>
                 appStoreMutate({
                   mcpCustomizationPopup: {
@@ -112,16 +153,25 @@ export const MCPCard = memo(function MCPCard({
             <p>{t("mcpServerCustomization")}</p>
           </TooltipContent>
         </Tooltip>
+
         <Tooltip>
           <TooltipTrigger asChild>
-            <Link
-              href={`/mcp/test/${encodeURIComponent(id)}`}
-              className="cursor-pointer hidden sm:block"
-            >
-              <Button variant="ghost" size="icon">
-                <FlaskConical className="size-3.5" />
-              </Button>
-            </Link>
+            {isDisabled ? (
+              <div className="cursor-pointer hidden sm:block">
+                <Button variant="ghost" size="icon" disabled>
+                  <FlaskConical className="size-3.5" />
+                </Button>
+              </div>
+            ) : (
+              <Link
+                href={`/mcp/test/${encodeURIComponent(id)}`}
+                className="cursor-pointer hidden sm:block"
+              >
+                <Button variant="ghost" size="icon">
+                  <FlaskConical className="size-3.5" />
+                </Button>
+              </Link>
+            )}
           </TooltipTrigger>
           <TooltipContent>
             <p>{t("toolsTest")}</p>
@@ -132,7 +182,12 @@ export const MCPCard = memo(function MCPCard({
         </div>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon" onClick={handleRefresh}>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleRefresh}
+              disabled={isLoading}
+            >
               <RotateCw className="size-3.5" />
             </Button>
           </TooltipTrigger>
@@ -142,7 +197,12 @@ export const MCPCard = memo(function MCPCard({
         </Tooltip>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon" onClick={handleDelete}>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleDelete}
+              disabled={isLoading}
+            >
               <Trash className="size-3.5" />
             </Button>
           </TooltipTrigger>
@@ -168,6 +228,29 @@ export const MCPCard = memo(function MCPCard({
       </CardHeader>
 
       {errorMessage && <ErrorAlert error={errorMessage} />}
+
+      {needsAuthorization && (
+        <div className="px-6 pb-2">
+          <Alert
+            className="cursor-pointer hover:bg-accent/10 transition-colors"
+            onClick={handleAuthorize}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                handleAuthorize();
+              }
+            }}
+          >
+            <KeyRoundIcon className="h-4 w-4" />
+            <AlertTitle>Authorization Required</AlertTitle>
+            <AlertDescription>
+              Click here to authorize this MCP server and access its tools.
+            </AlertDescription>
+          </Alert>
+        </div>
+      )}
 
       <div className="relative hidden sm:flex w-full">
         <CardContent className="flex min-w-0 w-full h-full flex-row gap-4 text-sm max-h-[240px] overflow-y-auto">
@@ -239,7 +322,9 @@ const ErrorAlert = memo(({ error }: { error: string }) => (
   <div className="px-6 pb-2">
     <Alert variant="destructive" className="border-destructive">
       <AlertTitle>Error</AlertTitle>
-      <AlertDescription>{error}</AlertDescription>
+      <AlertDescription className="whitespace-pre-wrap break-words">
+        {error}
+      </AlertDescription>
     </Alert>
   </div>
 ));

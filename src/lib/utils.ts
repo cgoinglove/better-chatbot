@@ -141,7 +141,7 @@ export class Locker {
   private resolve?: () => void;
 
   get isLocked() {
-    return this.resolve != null;
+    return !!this.resolve;
   }
 
   lock() {

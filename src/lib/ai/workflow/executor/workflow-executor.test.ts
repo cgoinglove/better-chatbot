@@ -1,11 +1,27 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { createWorkflowExecutor } from "./workflow-executor";
 import { DBEdge, DBNode } from "app-types/workflow";
 import { NodeKind } from "../workflow.interface";
 import {
   StringConditionOperator,
   BooleanConditionOperator,
 } from "../condition";
+
+// Mock MCP modules to avoid server-only imports
+vi.mock("lib/ai/mcp/mcp-manager", () => ({
+  mcpClientsManager: {
+    toolCall: vi
+      .fn()
+      .mockResolvedValue({
+        content: [{ type: "text", text: "mocked result" }],
+      }),
+    tools: vi.fn().mockReturnValue({}),
+  },
+}));
+
+// Mock server-only modules
+vi.mock("server-only", () => ({}));
+
+import { createWorkflowExecutor } from "./workflow-executor";
 
 // Mock node executors with proper implementations
 vi.mock("./node-executor", async (importOriginal) => {

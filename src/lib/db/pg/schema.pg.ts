@@ -247,6 +247,32 @@ export const ArchiveItemSchema = pgTable(
   (t) => [index("archive_item_item_id_idx").on(t.itemId)],
 );
 
+export const McpOAuthSessionSchema = pgTable(
+  "mcp_oauth_session",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    mcpServerId: uuid("mcp_server_id")
+      .notNull()
+      .references(() => McpServerSchema.id, { onDelete: "cascade" })
+      .unique(), // One record per MCP server
+    serverUrl: text("server_url").notNull(),
+    clientInfo: json("client_info"),
+    tokens: json("tokens"),
+    codeVerifier: text("code_verifier"),
+    state: text("state"), // OAuth state parameter for current flow
+    createdAt: timestamp("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: timestamp("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (t) => [
+    index("mcp_oauth_data_server_id_idx").on(t.mcpServerId),
+    index("mcp_oauth_data_state_idx").on(t.state),
+  ],
+);
+
 export type McpServerEntity = typeof McpServerSchema.$inferSelect;
 export type ChatThreadEntity = typeof ChatThreadSchema.$inferSelect;
 export type ChatMessageEntity = typeof ChatMessageSchema.$inferSelect;

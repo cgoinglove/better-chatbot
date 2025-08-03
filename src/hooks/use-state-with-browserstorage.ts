@@ -1,3 +1,5 @@
+"use client";
+
 import { getStorageManager } from "lib/browser-stroage";
 import { isFunction } from "lib/utils";
 import {

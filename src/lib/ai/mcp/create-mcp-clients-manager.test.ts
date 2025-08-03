@@ -149,6 +149,7 @@ describe("MCPClientsManager", () => {
       expect(mockStorage.loadAll).toHaveBeenCalled();
       expect(mockCreateMCPClient).toHaveBeenCalledWith(
         "test-server",
+        "test-server",
         mockServerConfig,
         { autoDisconnectSeconds: 1800 },
       );
@@ -172,6 +173,7 @@ describe("MCPClientsManager", () => {
       await manager.addClient("new-server", "new-server", mockServerConfig);
 
       expect(mockCreateMCPClient).toHaveBeenCalledWith(
+        "new-server",
         "new-server",
         mockServerConfig,
         { autoDisconnectSeconds: 1800 },
@@ -216,6 +218,7 @@ describe("MCPClientsManager", () => {
 
       expect(mockStorage.save).toHaveBeenCalledWith(serverToSave);
       expect(mockCreateMCPClient).toHaveBeenCalledWith(
+        "new-server-id",
         "new-server",
         mockServerConfig,
         { autoDisconnectSeconds: 1800 },
@@ -234,6 +237,7 @@ describe("MCPClientsManager", () => {
       await manager.persistClient(serverToSave);
 
       expect(mockCreateMCPClient).toHaveBeenCalledWith(
+        "memory-1",
         "new-server",
         mockServerConfig,
         { autoDisconnectSeconds: 1800 },
@@ -300,6 +304,7 @@ describe("MCPClientsManager", () => {
 
       expect(mockStorage.get).toHaveBeenCalledWith("test-server");
       expect(mockCreateMCPClient).toHaveBeenCalledWith(
+        "test-server",
         "test-server",
         updatedConfig,
         { autoDisconnectSeconds: 1800 },
