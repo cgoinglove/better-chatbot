@@ -1,7 +1,8 @@
 import { NextRequest } from "next/server";
 import { mcpOAuthRepository } from "@/lib/db/repository";
 import { mcpClientsManager } from "lib/ai/mcp/mcp-manager";
-import logger from "logger";
+import globalLogger from "logger";
+import { colorize } from "consola/utils";
 
 interface OAuthResponseOptions {
   type: "success" | "error";
@@ -23,6 +24,11 @@ function createOAuthResponsePage(options: OAuthResponseOptions): Response {
     postMessageData,
     statusCode,
   } = options;
+  if (type === "success") {
+    logger.info("OAuth callback successful", message);
+  } else {
+    logger.error("OAuth callback failed", message);
+  }
   const colorClass = type === "success" ? "success" : "error";
   const color = type === "success" ? "#22c55e" : "#ef4444";
 
@@ -64,11 +70,16 @@ function createOAuthResponsePage(options: OAuthResponseOptions): Response {
   });
 }
 
+const logger = globalLogger.withDefaults({
+  message: colorize("bgGreen", `MCP OAuth Callback: `),
+});
+
 /**
  * OAuth callback endpoint for MCP servers
  * Handles the authorization code exchange and token storage
  */
 export async function GET(request: NextRequest) {
+  logger.info("OAuth callback received Authorization Code");
   const { searchParams } = new URL(request.url);
 
   const callbackData = {
