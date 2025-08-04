@@ -64,20 +64,10 @@ export class PgOAuthClientProvider implements OAuthClientProvider {
   }
 
   get redirectUrl(): string {
-    console.log(
-      "get redirectUrl",
-      this.config._clientMetadata.redirect_uris[0],
-    );
-    this.logger.debug(
-      `OAuth redirect URL: ${this.config._clientMetadata.redirect_uris[0]}`,
-    );
     return this.config._clientMetadata.redirect_uris[0];
   }
 
   get clientMetadata(): OAuthClientMetadata {
-    this.logger.debug(
-      `OAuth client metadata: ${JSON.stringify(this.config._clientMetadata)}`,
-    );
     return this.config._clientMetadata;
   }
 
@@ -86,13 +76,8 @@ export class PgOAuthClientProvider implements OAuthClientProvider {
   }
 
   async clientInformation(): Promise<OAuthClientInformation | undefined> {
-    this.logger.debug(
-      `Retrieving OAuth client information for server ${this.config.mcpServerId}`,
-    );
-
     const authData = await this.getAuthData();
     if (authData?.clientInfo) {
-      this.logger.debug(`Found OAuth client information`);
       if (
         !authData.tokens &&
         authData.clientInfo.redirect_uris[0] != this.redirectUrl
@@ -104,17 +89,12 @@ export class PgOAuthClientProvider implements OAuthClientProvider {
       return authData.clientInfo;
     }
 
-    this.logger.debug(`No OAuth client information found for server`);
     return undefined;
   }
 
   async saveClientInformation(
     clientCredentials: OAuthClientInformationFull,
   ): Promise<void> {
-    this.logger.info(
-      `Storing OAuth client credentials for server ${this.config.mcpServerId}, client_id=${clientCredentials.client_id}`,
-    );
-
     await this.saveAuthData({
       clientInfo: clientCredentials,
     });
@@ -123,25 +103,15 @@ export class PgOAuthClientProvider implements OAuthClientProvider {
   }
 
   async tokens(): Promise<OAuthTokens | undefined> {
-    this.logger.debug(
-      `Retrieving OAuth tokens for server ${this.config.mcpServerId}`,
-    );
-
     const authData = await this.getAuthData();
     if (authData?.tokens) {
-      this.logger.debug(`Found OAuth tokens`);
       return authData.tokens;
     }
 
-    this.logger.debug(`No OAuth tokens found for server`);
     return undefined;
   }
 
   async saveTokens(accessTokens: OAuthTokens): Promise<void> {
-    this.logger.info(
-      `Storing OAuth tokens for server ${this.config.mcpServerId}, has_refresh_token=${!!accessTokens.refresh_token}`,
-    );
-
     await this.saveAuthData({
       tokens: accessTokens,
     });
@@ -155,22 +125,12 @@ export class PgOAuthClientProvider implements OAuthClientProvider {
   }
 
   async saveCodeVerifier(pkceVerifier: string): Promise<void> {
-    this.logger.info(
-      `Storing PKCE code verifier for server ${this.config.mcpServerId}`,
-    );
-
     await this.saveAuthData({
       codeVerifier: pkceVerifier,
     });
-
-    this.logger.debug(`PKCE code verifier stored`);
   }
 
   async codeVerifier(): Promise<string> {
-    this.logger.debug(
-      `Retrieving PKCE code verifier for server ${this.config.mcpServerId}`,
-    );
-
     const authData = await pgMcpOAuthRepository.getOAuthSessionByState(
       this.currentOAuthState,
     );
@@ -178,7 +138,6 @@ export class PgOAuthClientProvider implements OAuthClientProvider {
       throw new UnauthorizedError("OAuth code verifier not found");
     }
 
-    this.logger.debug(`Found PKCE code verifier`);
     return authData.codeVerifier;
   }
 
