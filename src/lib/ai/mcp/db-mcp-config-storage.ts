@@ -7,23 +7,61 @@ import defaultLogger from "logger";
 import { createDebounce } from "lib/utils";
 import equal from "lib/equal";
 import { colorize } from "consola/utils";
-import { IS_EDGE_RUNTIME } from "lib/const";
+import { IS_VERCEL_ENV } from "lib/const";
+import {
+  createEventBus,
+  type EventBus,
+  type BroadcastEvent,
+} from "lib/event-bus";
 
 const logger = defaultLogger.withDefaults({
-  message: colorize(
-    "gray",
-    `${IS_EDGE_RUNTIME ? "[EdgeRuntime] " : " "}MCP Config Storage: `,
-  ),
+  message: colorize("gray", `MCP Config Storage: `),
 });
+
+type MCPSyncEvent = BroadcastEvent<{
+  action: "mcp:sync";
+  timestamp: number;
+}>;
 
 export function createDbBasedMCPConfigsStorage(): MCPConfigStorage {
   let manager: MCPClientsManager;
+  let eventBus: EventBus<MCPSyncEvent["payload"]> | null = null;
 
   const debounce = createDebounce();
+
+  // Helper function to broadcast sync events
+  async function broadcastSync() {
+    if (!eventBus) return;
+
+    const event: MCPSyncEvent = {
+      type: "mcp:db:sync",
+      instanceId: (eventBus as any).getInstanceId?.() || "unknown",
+      timestamp: Date.now(),
+      payload: {
+        action: "mcp:sync",
+        timestamp: Date.now(),
+      },
+    };
+
+    await eventBus.publish(event);
+  }
 
   // Initializes the manager with configs from the database
   async function init(_manager: MCPClientsManager): Promise<void> {
     manager = _manager;
+
+    // Initialize event bus for distributed environments
+    // NOTE: This is a temporary workaround for Vercel's serverless architecture
+    // where multiple instances can't share in-memory state.
+    if (IS_VERCEL_ENV) {
+      eventBus = createEventBus<MCPSyncEvent["payload"]>();
+      await eventBus.init();
+      // Subscribe to sync events from other instances
+      eventBus.subscribe(async () => {
+        // Trigger DB check when we receive a sync event
+        debounce(checkAndRefreshClients, 100);
+      });
+    }
   }
 
   async function checkAndRefreshClients() {
@@ -113,7 +151,9 @@ export function createDbBasedMCPConfigsStorage(): MCPConfigStorage {
     },
     async save(server) {
       try {
-        return mcpRepository.save(server);
+        const result = await mcpRepository.save(server);
+        void broadcastSync();
+        return result;
       } catch (error) {
         logger.error(
           `Failed to save MCP config "${server.name}" to database:`,
@@ -125,6 +165,7 @@ export function createDbBasedMCPConfigsStorage(): MCPConfigStorage {
     async delete(id) {
       try {
         await mcpRepository.deleteById(id);
+        void broadcastSync();
       } catch (error) {
         logger.error(
           `Failed to delete MCP config "${id}" from database:",`,
