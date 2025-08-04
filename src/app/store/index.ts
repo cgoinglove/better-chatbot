@@ -61,7 +61,10 @@ const initialState: AppState = {
   currentThreadId: null,
   toolChoice: "auto",
   allowedMcpServers: undefined,
-  allowedAppDefaultToolkit: [],
+  allowedAppDefaultToolkit: [
+    AppDefaultToolkit.Code,
+    AppDefaultToolkit.Visualization,
+  ],
   toolPresets: [],
   openShortcutsPopup: false,
   openChatPreferences: false,
@@ -88,15 +91,16 @@ export const appStore = create<AppState & AppDispatch>()(
       mutate: set,
     }),
     {
-      name: "mc-app-store-v2.0.0",
+      name: "mc-app-store-v2.0.1",
       partialize: (state) => ({
         chatModel: state.chatModel || initialState.chatModel,
         toolChoice: state.toolChoice || initialState.toolChoice,
         allowedMcpServers:
           state.allowedMcpServers || initialState.allowedMcpServers,
-        allowedAppDefaultToolkit:
-          state.allowedAppDefaultToolkit ||
-          initialState.allowedAppDefaultToolkit,
+        allowedAppDefaultToolkit: (
+          state.allowedAppDefaultToolkit ??
+          initialState.allowedAppDefaultToolkit
+        )?.filter((v) => AppDefaultToolkit[v]),
         temporaryChat: {
           ...initialState.temporaryChat,
           ...state.temporaryChat,
