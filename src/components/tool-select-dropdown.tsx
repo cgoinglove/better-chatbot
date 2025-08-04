@@ -15,6 +15,7 @@ import {
   MousePointer2,
   Package,
   Plus,
+  ShieldAlertIcon,
   Waypoints,
   Wrench,
   WrenchIcon,
@@ -66,6 +67,11 @@ import { CountAnimation } from "ui/count-animation";
 import { Separator } from "ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { Agent } from "app-types/agent";
+import { authorizeMcpClientAction } from "@/app/api/mcp/actions";
+import { Alert, AlertDescription, AlertTitle } from "ui/alert";
+import { safe } from "ts-safe";
+import { mutate } from "swr";
+import { handleErrorWithToast } from "ui/shared-toast";
 
 interface ToolSelectDropdownProps {
   align?: "start" | "end" | "center";
@@ -567,13 +573,20 @@ function McpServerSelector() {
               className="flex items-center gap-2 font-semibold cursor-pointer"
               icon={
                 <div className="flex items-center gap-2 ml-auto">
-                  {server.tools.filter((t) => t.checked).length > 0 ? (
-                    <span className="w-5 h-5 items-center justify-center flex text-[8px] text-muted-foreground font-semibold ">
-                      {server.tools.filter((t) => t.checked).length}
-                    </span>
-                  ) : null}
-
-                  <ChevronRight className="size-4 text-muted-foreground" />
+                  {server.status === "authorizing" ? (
+                    <div className="flex items-center gap-1">
+                      <ShieldAlertIcon className="size-3 text-muted-foreground" />
+                    </div>
+                  ) : (
+                    <>
+                      {server.tools.filter((t) => t.checked).length > 0 ? (
+                        <span className="w-5 h-5 items-center justify-center flex text-[8px] text-muted-foreground font-semibold ">
+                          {server.tools.filter((t) => t.checked).length}
+                        </span>
+                      ) : null}
+                      <ChevronRight className="size-4 text-muted-foreground" />
+                    </>
+                  )}
                 </div>
               }
               onClick={(e) => {
@@ -603,7 +616,9 @@ function McpServerSelector() {
               <DropdownMenuSubContent className="w-80 relative">
                 <McpServerToolSelector
                   tools={server.tools}
+                  isAuthorizing={server.status === "authorizing"}
                   checked={server.checked}
+                  serverId={server.id}
                   onClickAllChecked={(checked) => {
                     setMcpServerTool(
                       server.id,
@@ -638,13 +653,17 @@ interface McpServerToolSelectorProps {
     checked: boolean;
     description: string;
   }[];
+  isAuthorizing: boolean;
+  serverId: string;
   onClickAllChecked: (checked: boolean) => void;
   checked: boolean;
   onToolClick: (toolName: string, checked: boolean) => void;
 }
 function McpServerToolSelector({
   tools,
+  serverId,
   onClickAllChecked,
+  isAuthorizing,
   checked,
   onToolClick,
 }: McpServerToolSelectorProps) {
@@ -655,6 +674,107 @@ function McpServerToolSelector({
       tool.name.toLowerCase().includes(search.toLowerCase()),
     );
   }, [tools, search]);
+
+  const handleAuthorize = useCallback(
+    () =>
+      safe(() =>
+        authorizeMcpClientAction(serverId).then((authUrl) => {
+          if (!authUrl) throw new Error("Not Authorizing");
+          return new Promise((resolve, reject) => {
+            const authWindow = window.open(
+              authUrl,
+              "oauth",
+              "width=600,height=800,scrollbars=yes,resizable=yes",
+            );
+            if (!authWindow) {
+              return reject(
+                new Error("Please allow popups for OAuth authentication"),
+              );
+            }
+
+            let messageHandlerRegistered = false;
+            let intervalId: NodeJS.Timeout | null = null;
+
+            // Clean up function
+            const cleanup = () => {
+              if (messageHandlerRegistered) {
+                window.removeEventListener("message", messageHandler);
+                messageHandlerRegistered = false;
+              }
+              if (intervalId) {
+                clearInterval(intervalId);
+                intervalId = null;
+              }
+            };
+
+            // Message handler for postMessage communication
+            const messageHandler = (event: MessageEvent) => {
+              // Security: only accept messages from same origin
+              if (event.origin !== window.location.origin) {
+                return;
+              }
+
+              if (event.data.type === "MCP_OAUTH_SUCCESS") {
+                cleanup();
+                if (authWindow && !authWindow.closed) {
+                  authWindow.close();
+                }
+                resolve(true);
+              } else if (event.data.type === "MCP_OAUTH_ERROR") {
+                cleanup();
+                if (authWindow && !authWindow.closed) {
+                  authWindow.close();
+                }
+                const errorMessage =
+                  event.data.error_description ||
+                  event.data.error ||
+                  "Authentication failed";
+                reject(new Error(errorMessage));
+              }
+            };
+
+            // Register message event listener
+            window.addEventListener("message", messageHandler);
+            messageHandlerRegistered = true;
+
+            // Backup: Poll for manual window close (in case postMessage fails)
+            intervalId = setInterval(() => {
+              if (authWindow.closed) {
+                cleanup();
+                resolve(true);
+              }
+            }, 1000);
+          });
+        }),
+      )
+        .ifOk(() => mutate("/api/mcp/list"))
+        .ifFail(handleErrorWithToast),
+
+    [serverId],
+  );
+
+  if (isAuthorizing) {
+    return (
+      <Alert
+        className="cursor-pointer hover:bg-accent/10 transition-colors border-none"
+        onClick={handleAuthorize}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            handleAuthorize();
+          }
+        }}
+      >
+        <ShieldAlertIcon />
+        <AlertTitle>Authorization Required</AlertTitle>
+        <AlertDescription>
+          Click here to authorize this MCP server and access its tools.
+        </AlertDescription>
+      </Alert>
+    );
+  }
   return (
     <div>
       <DropdownMenuLabel

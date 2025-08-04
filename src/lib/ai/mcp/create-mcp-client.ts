@@ -32,7 +32,7 @@ type ClientOptions = {
   autoDisconnectSeconds?: number;
 };
 
-const CONNET_TIMEOUT = IS_VERCEL_ENV ? 30000 : 120000;
+const CONNET_TIMEOUT = IS_VERCEL_ENV ? 12000 : 120000;
 
 /**
  * Client class for Model Context Protocol (MCP) server connections

@@ -2,7 +2,7 @@
 import {
   ChevronRight,
   FlaskConical,
-  KeyRoundIcon,
+  ShieldAlertIcon,
   Loader,
   Pencil,
   RotateCw,
@@ -185,7 +185,7 @@ export const MCPCard = memo(function MCPCard({
                   onClick={handleAuthorize}
                   disabled={isProcessing}
                 >
-                  <KeyRoundIcon className="size-3.5" />
+                  <ShieldAlertIcon className="size-3.5" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
@@ -313,7 +313,7 @@ export const MCPCard = memo(function MCPCard({
               }
             }}
           >
-            <KeyRoundIcon className="h-4 w-4" />
+            <ShieldAlertIcon />
             <AlertTitle>Authorization Required</AlertTitle>
             <AlertDescription>
               Click here to authorize this MCP server and access its tools.
