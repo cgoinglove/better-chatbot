@@ -7,7 +7,7 @@ import defaultLogger from "logger";
 import { createDebounce } from "lib/utils";
 import equal from "lib/equal";
 import { colorize } from "consola/utils";
-import { IS_EDGE_RUNTIME } from "lib/const";
+import { IS_EDGE_RUNTIME, IS_VERCEL_ENV } from "lib/const";
 
 const logger = defaultLogger.withDefaults({
   message: colorize(
@@ -96,8 +96,8 @@ export function createDbBasedMCPConfigsStorage(): MCPConfigStorage {
   }
 
   setInterval(
-    () => debounce(checkAndRefreshClients, 5000),
-    1000 * 60 * 5,
+    () => debounce(checkAndRefreshClients, 3000),
+    IS_VERCEL_ENV ? 1000 * 60 : 1000 * 60 * 5,
   ).unref();
 
   return {

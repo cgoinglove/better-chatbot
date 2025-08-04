@@ -46,6 +46,7 @@ import { Think } from "ui/think";
 import { useGenerateThreadTitle } from "@/hooks/queries/use-generate-thread-title";
 import dynamic from "next/dynamic";
 import { useMounted } from "@/hooks/use-mounted";
+import { getStorageManager } from "lib/browser-stroage";
 
 type Props = {
   threadId: string;
@@ -67,9 +68,9 @@ const Particles = dynamic(() => import("ui/particles"), {
 
 const debounce = createDebounce();
 
-const version = "0.0.0";
-const isFirstTime = !localStorage.getItem(`V_${version}`);
-localStorage.setItem(`V_${version}`, "true");
+const firstTimeStorage = getStorageManager("IS_FIRST");
+const isFirstTime = firstTimeStorage.get() ?? true;
+firstTimeStorage.set(false);
 
 export default function ChatBot({ threadId, initialMessages, slots }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
