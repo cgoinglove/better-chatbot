@@ -193,7 +193,8 @@ export class MCPClientsManager {
     if (!server) {
       throw new Error(`Client ${id} not found`);
     }
-    return this.addClient(id, server.name, server.config);
+    await this.addClient(id, server.name, server.config);
+    return this.clients.get(id)!;
   }
 
   async cleanup() {
