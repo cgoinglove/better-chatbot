@@ -111,32 +111,41 @@ export class MCPClientsManager {
    */
   async tools(): Promise<Record<string, VercelAIMcpTool>> {
     await this.waitInitialized();
-    return Object.fromEntries(
-      Array.from(this.clients.entries())
-        .filter(([_, { client }]) => client.getInfo().toolInfo.length > 0)
-        .flatMap(([id, { client }]) =>
-          Object.entries(client.toolInfo).map(([name, tool]) => [
-            createMCPToolId(client.getInfo().name, name),
-            {
-              description: tool.description,
-              parameters: jsonSchema(
-                toAny({
-                  ...tool.inputSchema,
-                  properties: tool.inputSchema?.properties ?? {},
-                  additionalProperties: false,
-                }),
-              ),
-              _originToolName: name,
-              __$ref__: "mcp",
-              _mcpServerName: client.getInfo().name,
-              _mcpServerId: id,
-              execute: (params, options: ToolExecutionOptions) => {
-                options?.abortSignal?.throwIfAborted();
-                return this.toolCall(id, name, params);
-              },
+    return Array.from(this.clients.entries()).reduce(
+      (acc, [id, client]) => {
+        if (!client.client?.toolInfo?.length) return acc;
+        const clientName = client.name;
+        return {
+          ...acc,
+          ...client.client.toolInfo.reduce(
+            (bcc, tool) => {
+              return {
+                ...bcc,
+                [createMCPToolId(clientName, tool.name)]: {
+                  description: tool.description,
+                  parameters: jsonSchema(
+                    toAny({
+                      ...tool.inputSchema,
+                      properties: tool.inputSchema?.properties ?? {},
+                      additionalProperties: false,
+                    }),
+                  ),
+                  _originToolName: tool.name,
+                  __$ref__: "mcp",
+                  _mcpServerName: clientName,
+                  _mcpServerId: id,
+                  execute: (params, options: ToolExecutionOptions) => {
+                    options?.abortSignal?.throwIfAborted();
+                    return this.toolCall(id, tool.name, params);
+                  },
+                },
+              };
             },
-          ]),
-        ),
+            {} as Record<string, VercelAIMcpTool>,
+          ),
+        };
+      },
+      {} as Record<string, VercelAIMcpTool>,
     );
   }
   /**

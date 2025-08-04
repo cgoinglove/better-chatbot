@@ -223,7 +223,7 @@ export async function POST(request: Request) {
         );
 
         logger.info(
-          `allowedMcpTools: ${allowedMcpTools.length}, allowedAppDefaultToolkit: ${allowedAppDefaultToolkit?.length}`,
+          `allowedMcpTools: ${allowedMcpTools.length ?? 0}, allowedAppDefaultToolkit: ${allowedAppDefaultToolkit?.length ?? 0}`,
         );
         logger.info(
           `binding tool count APP_DEFAULT: ${Object.keys(APP_DEFAULT_TOOLS ?? {}).length}, MCP: ${Object.keys(MCP_TOOLS ?? {}).length}, Workflow: ${Object.keys(WORKFLOW_TOOLS ?? {}).length}`,
