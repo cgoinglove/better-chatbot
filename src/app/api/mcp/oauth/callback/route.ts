@@ -1,13 +1,85 @@
 import { NextRequest } from "next/server";
 import { mcpOAuthRepository } from "@/lib/db/repository";
 import { mcpClientsManager } from "lib/ai/mcp/mcp-manager";
-import logger from "logger";
+import globalLogger from "logger";
+import { colorize } from "consola/utils";
+
+interface OAuthResponseOptions {
+  type: "success" | "error";
+  title: string;
+  heading: string;
+  message: string;
+  postMessageType: string;
+  postMessageData: Record<string, any>;
+  statusCode: number;
+}
+
+function createOAuthResponsePage(options: OAuthResponseOptions): Response {
+  const {
+    type,
+    title,
+    heading,
+    message,
+    postMessageType,
+    postMessageData,
+    statusCode,
+  } = options;
+  if (type === "success") {
+    logger.info("OAuth callback successful", message);
+  } else {
+    logger.error("OAuth callback failed", message);
+  }
+  const colorClass = type === "success" ? "success" : "error";
+  const color = type === "success" ? "#22c55e" : "#ef4444";
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <title>${title}</title>
+  <style>
+    body { font-family: system-ui, sans-serif; text-align: center; padding: 2rem; }
+    .${colorClass} { color: ${color}; }
+  </style>
+</head>
+<body>
+  <script>
+    try {
+      window.opener?.postMessage({
+        type: '${postMessageType}',
+        ${Object.entries(postMessageData)
+          .map(([key, value]) => `${key}: '${value}'`)
+          .join(", ")}
+      }, window.location.origin);
+    } catch (e) {
+      console.error('Failed to post message:', e);
+    }
+    setTimeout(() => window.close(), 1000);
+  </script>
+  <div class="${colorClass}">
+    <h2>${heading}</h2>
+    <p>${message}</p>
+    <p>This window will close automatically.</p>
+  </div>
+</body>
+</html>`;
+
+  return new Response(html, {
+    status: statusCode,
+    headers: { "Content-Type": "text/html" },
+  });
+}
+
+const logger = globalLogger.withDefaults({
+  message: colorize("bgGreen", `MCP OAuth Callback: `),
+});
 
 /**
  * OAuth callback endpoint for MCP servers
  * Handles the authorization code exchange and token storage
  */
 export async function GET(request: NextRequest) {
+  logger.info("OAuth callback received Authorization Code");
   const { searchParams } = new URL(request.url);
 
   const callbackData = {
@@ -19,78 +91,33 @@ export async function GET(request: NextRequest) {
 
   // Handle OAuth error responses
   if (callbackData.error) {
-    const errorHtml = `
-<!DOCTYPE html>
-<html>
-<head>
-  <title>OAuth Error</title>
-  <style>
-    body { font-family: system-ui, sans-serif; text-align: center; padding: 2rem; }
-    .error { color: #ef4444; }
-  </style>
-</head>
-<body>
-  <script>
-    try {
-      window.opener?.postMessage({
-        type: 'MCP_OAUTH_ERROR',
-        error: '${callbackData.error}',
-        error_description: '${callbackData.error_description || "Unknown error"}'
-      }, window.location.origin);
-    } catch (e) {
-      console.error('Failed to post message:', e);
-    }
-    setTimeout(() => window.close(), 1000);
-  </script>
-  <div class="error">
-    <h2>Authentication Failed</h2>
-    <p>Error: ${callbackData.error}</p>
-    <p>${callbackData.error_description || "Unknown error occurred"}</p>
-    <p>This window will close automatically.</p>
-  </div>
-</body>
-</html>`;
-    return new Response(errorHtml, {
-      status: 400,
-      headers: { "Content-Type": "text/html" },
+    return createOAuthResponsePage({
+      type: "error",
+      title: "OAuth Error",
+      heading: "Authentication Failed",
+      message: `Error: ${callbackData.error}<br/>${callbackData.error_description || "Unknown error occurred"}`,
+      postMessageType: "MCP_OAUTH_ERROR",
+      postMessageData: {
+        error: callbackData.error,
+        error_description: callbackData.error_description || "Unknown error",
+      },
+      statusCode: 400,
     });
   }
 
   // Validate required parameters
   if (!callbackData.code || !callbackData.state) {
-    const errorHtml = `
-<!DOCTYPE html>
-<html>
-<head>
-  <title>OAuth Error</title>
-  <style>
-    body { font-family: system-ui, sans-serif; text-align: center; padding: 2rem; }
-    .error { color: #ef4444; }
-  </style>
-</head>
-<body>
-  <script>
-    try {
-      window.opener?.postMessage({
-        type: 'MCP_OAUTH_ERROR',
-        error: 'invalid_request',
-        error_description: 'Missing authorization code or state parameter'
-      }, window.location.origin);
-    } catch (e) {
-      console.error('Failed to post message:', e);
-    }
-    setTimeout(() => window.close(), 1000);
-  </script>
-  <div class="error">
-    <h2>Authentication Failed</h2>
-    <p>Missing required parameters</p>
-    <p>This window will close automatically.</p>
-  </div>
-</body>
-</html>`;
-    return new Response(errorHtml, {
-      status: 400,
-      headers: { "Content-Type": "text/html" },
+    return createOAuthResponsePage({
+      type: "error",
+      title: "OAuth Error",
+      heading: "Authentication Failed",
+      message: "Missing required parameters",
+      postMessageType: "MCP_OAUTH_ERROR",
+      postMessageData: {
+        error: "invalid_request",
+        error_description: "Missing authorization code or state parameter",
+      },
+      statusCode: 400,
     });
   }
 
@@ -99,77 +126,33 @@ export async function GET(request: NextRequest) {
     callbackData.state,
   );
   if (!session) {
-    const errorHtml = `
-<!DOCTYPE html>
-<html>
-<head>
-  <title>OAuth Error</title>
-  <style>
-    body { font-family: system-ui, sans-serif; text-align: center; padding: 2rem; }
-    .error { color: #ef4444; }
-  </style>
-</head>
-<body>
-  <script>
-    try {
-      window.opener?.postMessage({
-        type: 'MCP_OAUTH_ERROR',
-        error: 'invalid_state',
-        error_description: 'Invalid or expired state parameter'
-      }, window.location.origin);
-    } catch (e) {
-      console.error('Failed to post message:', e);
-    }
-    setTimeout(() => window.close(), 1000);
-  </script>
-  <div class="error">
-    <h2>Authentication Failed</h2>
-    <p>Invalid or expired session</p>
-    <p>This window will close automatically.</p>
-  </div>
-</body>
-</html>`;
-    return new Response(errorHtml, {
-      status: 400,
-      headers: { "Content-Type": "text/html" },
+    return createOAuthResponsePage({
+      type: "error",
+      title: "OAuth Error",
+      heading: "Authentication Failed",
+      message: "Invalid or expired session",
+      postMessageType: "MCP_OAUTH_ERROR",
+      postMessageData: {
+        error: "invalid_state",
+        error_description: "Invalid or expired state parameter",
+      },
+      statusCode: 400,
     });
   }
 
   const client = await mcpClientsManager.getClient(session.mcpServerId);
   if (client?.client.status != "authorizing") {
-    const errorHtml = `
-<!DOCTYPE html>
-<html>
-<head>
-  <title>OAuth Error</title>
-  <style>
-    body { font-family: system-ui, sans-serif; text-align: center; padding: 2rem; }
-    .error { color: #ef4444; }
-  </style>
-</head>
-<body>
-  <script>
-    try {
-      window.opener?.postMessage({
-        type: 'MCP_OAUTH_ERROR',
-        error: 'invalid_state',
-        error_description: 'Client is not in authorizing state'
-      }, window.location.origin);
-    } catch (e) {
-      console.error('Failed to post message:', e);
-    }
-    setTimeout(() => window.close(), 1000);
-  </script>
-  <div class="error">
-    <h2>Authentication Failed</h2>
-    <p>Client is not ready for authorization</p>
-    <p>This window will close automatically.</p>
-  </div>
-</body>
-</html>`;
-    return new Response(errorHtml, {
-      status: 400,
-      headers: { "Content-Type": "text/html" },
+    return createOAuthResponsePage({
+      type: "error",
+      title: "OAuth Error",
+      heading: "Authentication Failed",
+      message: "Client is not ready for authorization",
+      postMessageType: "MCP_OAUTH_ERROR",
+      postMessageData: {
+        error: "invalid_state",
+        error_description: "Client is not in authorizing state",
+      },
+      statusCode: 400,
     });
   }
 
@@ -177,74 +160,30 @@ export async function GET(request: NextRequest) {
     await client?.client.finishAuth(callbackData.code);
     await mcpClientsManager.refreshClient(session.mcpServerId);
 
-    const successHtml = `
-<!DOCTYPE html>
-<html>
-<head>
-  <title>OAuth Success</title>
-  <style>
-    body { font-family: system-ui, sans-serif; text-align: center; padding: 2rem; }
-    .success { color: #22c55e; }
-  </style>
-</head>
-<body>
-  <script>
-    try {
-      window.opener?.postMessage({
-        type: 'MCP_OAUTH_SUCCESS',
-        success: true
-      }, window.location.origin);
-    } catch (e) {
-      console.error('Failed to post message:', e);
-    }
-    setTimeout(() => window.close(), 1000);
-  </script>
-  <div class="success">
-    <h2>Authentication Successful!</h2>
-    <p>You can now close this window.</p>
-    <p>This window will close automatically.</p>
-  </div>
-</body>
-</html>`;
-    return new Response(successHtml, {
-      status: 200,
-      headers: { "Content-Type": "text/html" },
+    return createOAuthResponsePage({
+      type: "success",
+      title: "OAuth Success",
+      heading: "Authentication Successful!",
+      message: "You can now close this window.",
+      postMessageType: "MCP_OAUTH_SUCCESS",
+      postMessageData: {
+        success: true,
+      },
+      statusCode: 200,
     });
   } catch (error) {
-    const errorHtml = `
-<!DOCTYPE html>
-<html>
-<head>
-  <title>OAuth Error</title>
-  <style>
-    body { font-family: system-ui, sans-serif; text-align: center; padding: 2rem; }
-    .error { color: #ef4444; }
-  </style>
-</head>
-<body>
-  <script>
-    try {
-      window.opener?.postMessage({
-        type: 'MCP_OAUTH_ERROR',
-        error: 'auth_failed',
-        error_description: 'Failed to complete authentication'
-      }, window.location.origin);
-    } catch (e) {
-      console.error('Failed to post message:', e);
-    }
-    setTimeout(() => window.close(), 1000);
-  </script>
-  <div class="error">
-    <h2>Authentication Failed</h2>
-    <p>Failed to complete the authentication process</p>
-    <p>This window will close automatically.</p>
-  </div>
-</body>
-</html>`;
     logger.error("OAuth callback failed", error);
-    return new Response(errorHtml, {
-      status: 500,
-      headers: { "Content-Type": "text/html" },
+    return createOAuthResponsePage({
+      type: "error",
+      title: "OAuth Error",
+      heading: "Authentication Failed",
+      message: "Failed to complete the authentication process",
+      postMessageType: "MCP_OAUTH_ERROR",
+      postMessageData: {
+        error: "auth_failed",
+        error_description: "Failed to complete authentication",
+      },
+      statusCode: 500,
     });
   }
 }

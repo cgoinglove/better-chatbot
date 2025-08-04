@@ -196,12 +196,12 @@ export class MCPClientsManager {
    * Refreshes an existing client with a new configuration or its existing config
    */
   async refreshClient(id: string) {
-    this.logger.info(`Refreshing client ${id}`);
     await this.waitInitialized();
     const server = await this.storage.get(id);
     if (!server) {
       throw new Error(`Client ${id} not found`);
     }
+    this.logger.info(`Refreshing client ${server.name}`);
     await this.addClient(id, server.name, server.config);
     return this.clients.get(id)!;
   }
