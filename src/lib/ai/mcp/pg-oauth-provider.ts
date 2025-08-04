@@ -64,6 +64,10 @@ export class PgOAuthClientProvider implements OAuthClientProvider {
   }
 
   get redirectUrl(): string {
+    console.log(
+      "get redirectUrl",
+      this.config._clientMetadata.redirect_uris[0],
+    );
     this.logger.debug(
       `OAuth redirect URL: ${this.config._clientMetadata.redirect_uris[0]}`,
     );
@@ -89,6 +93,14 @@ export class PgOAuthClientProvider implements OAuthClientProvider {
     const authData = await this.getAuthData();
     if (authData?.clientInfo) {
       this.logger.debug(`Found OAuth client information`);
+      if (
+        !authData.tokens &&
+        authData.clientInfo.redirect_uris[0] != this.redirectUrl
+      ) {
+        await pgMcpOAuthRepository.deleteOAuthData(this.config.mcpServerId);
+        this.cachedAuthData = undefined;
+        return undefined;
+      }
       return authData.clientInfo;
     }
 
