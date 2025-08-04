@@ -93,10 +93,6 @@ export const MCPCard = memo(function MCPCard({
     [id],
   );
 
-  if (name == "linear") {
-    console.log({ id, config, error, status, name, toolInfo });
-  }
-
   return (
     <Card
       key={`mcp-card-${id}-${status}`}
