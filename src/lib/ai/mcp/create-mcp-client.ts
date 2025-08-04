@@ -264,10 +264,10 @@ export class MCPClient {
       this.error = errorToString(error);
       this.transport = undefined;
       throw error;
-    } finally {
-      this.locker.unlock();
-      await this.updateToolInfo();
     }
+    this.locker.unlock();
+    await this.updateToolInfo();
+
     return this.client;
   }
 
@@ -282,6 +282,7 @@ export class MCPClient {
   }
   async updateToolInfo() {
     if (this.status === "connected" && this.client) {
+      this.logger.info("Updating tool info");
       const toolResponse = await this.client.listTools();
       this.toolInfo = toolResponse.tools.map(
         (tool) =>
