@@ -29,6 +29,7 @@ export class PgOAuthClientProvider implements OAuthClientProvider {
 
   constructor(
     private config: {
+      name: string;
       mcpServerId: string;
       serverUrl: string;
       _clientMetadata: OAuthClientMetadata;
@@ -36,10 +37,7 @@ export class PgOAuthClientProvider implements OAuthClientProvider {
     },
   ) {
     this.logger = globalLogger.withDefaults({
-      message: colorize(
-        "dim",
-        `[MCP OAuth Provider ${this.currentOAuthState.slice(0, 8)}] `,
-      ),
+      message: colorize("dim", `[MCP OAuth Provider ${this.config.name}] `),
     });
   }
 

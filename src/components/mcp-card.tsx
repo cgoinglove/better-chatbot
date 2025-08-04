@@ -253,18 +253,20 @@ export const MCPCard = memo(function MCPCard({
       )}
 
       <div className="relative hidden sm:flex w-full">
-        <CardContent className="flex min-w-0 w-full h-full flex-row gap-4 text-sm max-h-[240px] overflow-y-auto">
-          <div className="w-1/2 min-w-0 flex flex-col h-full pr-2 border-r">
+        <CardContent className="flex min-w-0 w-full flex-row text-sm max-h-[320px] overflow-hidden border-r-0">
+          <div className="w-1/2 min-w-0 flex flex-col pr-2 border-r border-border">
             <div className="flex items-center gap-2 mb-2 pt-2 pb-1 z-10">
               <Settings size={14} className="text-muted-foreground" />
               <h5 className="text-muted-foreground text-sm font-medium">
                 {t("configuration")}
               </h5>
             </div>
-            <JsonView data={config} />
+            <div className="flex-1 overflow-y-auto">
+              <JsonView data={config} />
+            </div>
           </div>
 
-          <div className="w-1/2 min-w-0  flex flex-col h-full">
+          <div className="w-1/2 min-w-0 flex flex-col pl-4">
             <div className="flex items-center gap-2 mb-4 pt-2 pb-1 z-10">
               <Wrench size={14} className="text-muted-foreground" />
               <h5 className="text-muted-foreground text-sm font-medium">
@@ -272,15 +274,17 @@ export const MCPCard = memo(function MCPCard({
               </h5>
             </div>
 
-            {toolInfo.length > 0 ? (
-              <ToolsList tools={toolInfo} serverId={id} />
-            ) : (
-              <div className="bg-secondary/30 rounded-md p-3 text-center">
-                <p className="text-sm text-muted-foreground">
-                  {t("noToolsAvailable")}
-                </p>
-              </div>
-            )}
+            <div className="flex-1 overflow-y-auto">
+              {toolInfo.length > 0 ? (
+                <ToolsList tools={toolInfo} serverId={id} />
+              ) : (
+                <div className="bg-secondary/30 rounded-md p-3 text-center">
+                  <p className="text-sm text-muted-foreground">
+                    {t("noToolsAvailable")}
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         </CardContent>
       </div>

@@ -100,6 +100,7 @@ export class MCPClient {
   private createOAuthProvider() {
     if (isMaybeRemoteConfig(this.serverConfig)) {
       return new PgOAuthClientProvider({
+        name: this.name,
         mcpServerId: this.id,
         serverUrl: this.serverConfig.url,
         _clientMetadata: {

@@ -13,6 +13,7 @@ import { MCPIcon } from "ui/mcp-icon";
 import { useMcpList } from "@/hooks/queries/use-mcp-list";
 import dynamic from "next/dynamic";
 import { useMemo } from "react";
+import { MCPServerInfo } from "app-types/mcp";
 
 const LightRays = dynamic(() => import("@/components/ui/light-rays"), {
   ssr: false,
@@ -21,8 +22,17 @@ const LightRays = dynamic(() => import("@/components/ui/light-rays"), {
 export default function Page() {
   const t = useTranslations("MCP");
   const { data: mcpList, isLoading } = useMcpList({
-    refreshInterval: 10000,
+    refreshInterval: 5000,
   });
+
+  const sortedMcpList = useMemo(() => {
+    return (mcpList as (MCPServerInfo & { id: string })[])?.sort((a, b) => {
+      if (a.status === b.status) return 0;
+      if (a.status === "authorizing") return -1;
+      if (b.status === "authorizing") return 1;
+      return 0;
+    });
+  }, [mcpList]);
 
   const particle = useMemo(() => {
     if (isLoading || mcpList?.length !== 0) return;
@@ -43,7 +53,7 @@ export default function Page() {
         </div>
       </>
     );
-  }, [isLoading, mcpList]);
+  }, [isLoading, mcpList.length]);
 
   return (
     <>
@@ -78,9 +88,9 @@ export default function Page() {
               <Skeleton className="h-60 w-full" />
               <Skeleton className="h-60 w-full" />
             </div>
-          ) : mcpList?.length ? (
+          ) : sortedMcpList?.length ? (
             <div className="flex flex-col gap-6 my-4">
-              {mcpList.map((mcp) => (
+              {sortedMcpList.map((mcp) => (
                 <MCPCard key={mcp.id} {...mcp} />
               ))}
             </div>
