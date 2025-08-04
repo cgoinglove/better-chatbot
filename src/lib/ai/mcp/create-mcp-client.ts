@@ -48,6 +48,7 @@ export class MCPClient {
   // Information about available tools from the server
   toolInfo: MCPToolInfo[] = [];
   private disconnectDebounce = createDebounce();
+  private needOauthProvider = false;
 
   constructor(
     private id: string,
@@ -98,7 +99,8 @@ export class MCPClient {
   }
 
   private createOAuthProvider() {
-    if (isMaybeRemoteConfig(this.serverConfig)) {
+    if (isMaybeRemoteConfig(this.serverConfig) && this.needOauthProvider) {
+      this.logger.info("Creating OAuth provider for MCP server authentication");
       return new PgOAuthClientProvider({
         name: this.name,
         mcpServerId: this.id,
@@ -199,6 +201,17 @@ export class MCPClient {
           });
           await withTimeout(client.connect(this.transport), CONNET_TIMEOUT);
         } catch (streamableHttpError) {
+          // Check if it's OAuth error and we haven't tried OAuth yet
+          if (this.isOAuth(streamableHttpError) && !this.needOauthProvider) {
+            this.logger.info(
+              "OAuth authentication required, retrying with OAuth provider",
+            );
+            this.needOauthProvider = true;
+            this.locker.unlock();
+            await this.disconnect();
+            return this.connect(); // Recursive call with OAuth
+          }
+
           const requiresOAuthAuth =
             this.isOAuthAuthorizationRequired(streamableHttpError);
           if (!requiresOAuthAuth) {
@@ -217,7 +230,18 @@ export class MCPClient {
             await withTimeout(
               client.connect(this.transport),
               CONNET_TIMEOUT,
-            ).catch((sseError) => {
+            ).catch(async (sseError) => {
+              // Check if it's OAuth error and we haven't tried OAuth yet
+              if (this.isOAuth(sseError) && !this.needOauthProvider) {
+                this.logger.info(
+                  "OAuth authentication required for SSE, retrying with OAuth provider",
+                );
+                this.needOauthProvider = true;
+                this.locker.unlock();
+                await this.disconnect();
+                return this.connect(); // Recursive call with OAuth
+              }
+
               if (this.isOAuthAuthorizationRequired(sseError)) return;
               throw sseError;
             });
@@ -253,6 +277,7 @@ export class MCPClient {
     this.isConnected = false;
     const client = this.client;
     this.client = undefined;
+    this.transport = undefined;
     void client?.close?.().catch((e) => this.logger.error(e));
   }
   async updateToolInfo() {
@@ -322,18 +347,22 @@ export class MCPClient {
       .unwrap();
   }
 
-  private isOAuthAuthorizationRequired(error: any): boolean {
-    if (error instanceof OAuthAuthorizationRequiredError) {
-      return true;
-    }
-    if (
+  private isOAuth(error: any): boolean {
+    return (
       error instanceof UnauthorizedError ||
       error?.status === 401 ||
       error?.message?.includes("401") ||
       error?.message?.includes("Unauthorized") ||
       error?.message?.includes("invalid_token") ||
       error?.message?.includes("HTTP 401")
-    ) {
+    );
+  }
+
+  private isOAuthAuthorizationRequired(error: any): boolean {
+    if (error instanceof OAuthAuthorizationRequiredError) {
+      return true;
+    }
+    if (this.isOAuth(error)) {
       this.logger.error("OAuth authentication failed:", error.message);
       throw error;
     }

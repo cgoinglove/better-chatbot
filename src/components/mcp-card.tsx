@@ -93,12 +93,22 @@ export const MCPCard = memo(function MCPCard({
     [id],
   );
 
+  if (name == "linear") {
+    console.log({ id, config, error, status, name, toolInfo });
+  }
+
   return (
-    <Card className="relative hover:border-foreground/20 transition-colors bg-secondary/40">
+    <Card
+      key={`mcp-card-${id}-${status}`}
+      className="relative hover:border-foreground/20 transition-colors bg-secondary/40"
+    >
       {isLoading && (
         <div className="animate-pulse z-10 absolute inset-0 bg-background/50 flex items-center justify-center w-full h-full" />
       )}
-      <CardHeader className="flex items-center gap-1 mb-2">
+      <CardHeader
+        key={`header-${status}-${needsAuthorization}`}
+        className="flex items-center gap-1 mb-2"
+      >
         {isLoading && <Loader className="size-4 z-20 animate-spin mr-1" />}
 
         <h4 className="font-bold text-xs sm:text-lg flex items-center gap-1">
