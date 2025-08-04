@@ -118,7 +118,6 @@ export class MCPClient {
         onRedirectToAuthorization: async (authorizationUrl: URL) => {
           this.logger.warn(
             "OAuth authorization required - user interaction needed",
-            authorizationUrl.toString(),
           );
           this.authorizationUrl = authorizationUrl;
           throw new OAuthAuthorizationRequiredError(authorizationUrl);
