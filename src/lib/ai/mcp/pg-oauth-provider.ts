@@ -131,13 +131,10 @@ export class PgOAuthClientProvider implements OAuthClientProvider {
   }
 
   async codeVerifier(): Promise<string> {
-    const authData = await pgMcpOAuthRepository.getOAuthSessionByState(
-      this.currentOAuthState,
-    );
+    const authData = await this.getAuthData();
     if (!authData?.codeVerifier) {
       throw new UnauthorizedError("OAuth code verifier not found");
     }
-
     return authData.codeVerifier;
   }
 
