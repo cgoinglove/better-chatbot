@@ -163,7 +163,9 @@ export async function GET(request: NextRequest) {
     await mcpClientsManager.refreshClient(session.mcpServerId);
 
     // Emit refresh event to notify other instances
-    await emitMCPRefreshEvent(session.mcpServerId);
+    await emitMCPRefreshEvent(session.mcpServerId).catch(
+      (_e) => "ignore error",
+    );
 
     return createOAuthResponsePage({
       type: "success",

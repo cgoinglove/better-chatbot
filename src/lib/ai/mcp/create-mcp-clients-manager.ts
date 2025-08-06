@@ -228,7 +228,7 @@ export class MCPClientsManager {
       throw err;
     });
 
-    void emitMCPAddEvent(id);
+    await emitMCPAddEvent(id).catch((_e) => "ignore error");
     return {
       ...this.clients.get(id)!,
       id,

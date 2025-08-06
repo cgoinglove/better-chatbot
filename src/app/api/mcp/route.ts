@@ -16,7 +16,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true });
   } catch (error: any) {
     return NextResponse.json(
-      { error: error.message || "Failed to save MCP client" },
+      { message: error.message || "Failed to save MCP client" },
       { status: 500 },
     );
   }

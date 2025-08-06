@@ -16,12 +16,10 @@ export const fetcher = async (url: string, options?: RequestInit) => {
   });
 
   if (!res.ok) {
-    const error = new Error("An error occurred while fetching the data.");
-
-    Object.assign(error, {
-      info: await res.json(),
-      status: res.status,
-    });
+    const error = await res.json().catch(() => ({
+      error: "unknown error",
+      mesasge: "An error occurred while fetching the data.",
+    }));
 
     throw error;
   }
