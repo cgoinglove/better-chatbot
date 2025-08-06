@@ -32,7 +32,7 @@ import { isShortcutEvent, Shortcuts } from "lib/keyboard-shortcuts";
 import { Button } from "ui/button";
 import { deleteThreadAction } from "@/app/api/chat/actions";
 import { useRouter } from "next/navigation";
-import { Loader } from "lucide-react";
+import { ArrowDown, Loader } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -47,6 +47,7 @@ import { useGenerateThreadTitle } from "@/hooks/queries/use-generate-thread-titl
 import dynamic from "next/dynamic";
 import { useMounted } from "@/hooks/use-mounted";
 import { getStorageManager } from "lib/browser-stroage";
+import { AnimatePresence, motion } from "framer-motion";
 
 type Props = {
   threadId: string;
@@ -74,6 +75,7 @@ firstTimeStorage.set(false);
 
 export default function ChatBot({ threadId, initialMessages, slots }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [isAtBottom, setIsAtBottom] = useState(true);
 
   const [thinking, setThinking] = useState(false);
 
@@ -297,6 +299,24 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
     debounce(() => setShowParticles(true), 30000);
   }, []);
 
+  const handleScroll = useCallback(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const { scrollTop, scrollHeight, clientHeight } = container;
+    const isScrollAtBottom = scrollHeight - scrollTop - clientHeight < 50;
+
+    setIsAtBottom(isScrollAtBottom);
+    handleFocus();
+  }, [handleFocus]);
+
+  const scrollToBottom = useCallback(() => {
+    containerRef.current?.scrollTo({
+      top: containerRef.current.scrollHeight,
+      behavior: "smooth",
+    });
+  }, []);
+
   useEffect(() => {
     appStoreMutate({ currentThreadId: threadId });
     return () => {
@@ -364,7 +384,7 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
             <div
               className={"flex flex-col gap-2 overflow-y-auto py-6 z-10"}
               ref={containerRef}
-              onScroll={handleFocus}
+              onScroll={handleScroll}
             >
               {messages.map((message, index) => {
                 const isLastMessage = messages.length - 1 === index;
@@ -409,12 +429,21 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
             </div>
           </>
         )}
+
         <div
           className={clsx(
             messages.length && "absolute bottom-14",
             "w-full z-10",
           )}
         >
+          <div className="max-w-3xl mx-auto relative flex justify-center items-center -top-2">
+            <ScrollToBottomButton
+              show={!isAtBottom && messages.length > 0}
+              onClick={scrollToBottom}
+              className=""
+            />
+          </div>
+
           <PromptInput
             input={input}
             threadId={threadId}
@@ -485,5 +514,40 @@ function DeleteThreadPopup({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+interface ScrollToBottomButtonProps {
+  show: boolean;
+  onClick: () => void;
+  className?: string;
+}
+
+function ScrollToBottomButton({
+  show,
+  onClick,
+  className,
+}: ScrollToBottomButtonProps) {
+  return (
+    <AnimatePresence>
+      {show && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.8 }}
+          transition={{ duration: 0.2, ease: "easeInOut" }}
+          className={className}
+        >
+          <Button
+            onClick={onClick}
+            className="shadow-lg backdrop-blur-sm border transition-colors"
+            size="icon"
+            variant="ghost"
+          >
+            <ArrowDown />
+          </Button>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

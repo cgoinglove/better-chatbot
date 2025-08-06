@@ -1,4 +1,3 @@
-import logger from "logger";
 import { Cache } from "./cache.interface";
 
 type Entry<V> = { value: V; expiresAt: number };
@@ -11,7 +10,6 @@ export class MemoryCache implements Cache {
   private store = new Map<string, Entry<JsonValue>>();
   private defaultTtlMs: number;
   constructor(opts: MemoryCacheOptions = {}) {
-    logger.info("MemoryCache constructor");
     this.defaultTtlMs = opts.defaultTtlMs ?? Infinity;
     const interval = opts.cleanupIntervalMs ?? 60_000;
     if (isFinite(interval) && interval > 0) {
