@@ -148,19 +148,27 @@ export class PgOAuthClientProvider implements OAuthClientProvider {
     try {
       switch (invalidationScope) {
         case "all":
-        case "tokens":
-        case "verifier":
           await pgMcpOAuthRepository.deleteOAuthData(this.config.mcpServerId);
           this.cachedAuthData = undefined;
           this.logger.info(`OAuth credentials invalidated`);
           break;
-
+        case "tokens":
+          await this.saveAuthData({
+            tokens: undefined,
+          });
+          this.logger.info(`OAuth tokens invalidated`);
+          break;
+        case "verifier":
+          await this.saveAuthData({
+            codeVerifier: undefined,
+          });
+          this.logger.info(`OAuth code verifier invalidated`);
+          break;
         case "client":
-          this.logger.debug(
-            `Client credential invalidation - clearing all data`,
-          );
-          await pgMcpOAuthRepository.deleteOAuthData(this.config.mcpServerId);
-          this.cachedAuthData = undefined;
+          await this.saveAuthData({
+            clientInfo: undefined,
+          });
+          this.logger.info(`OAuth client information invalidated`);
           break;
       }
     } catch (error) {

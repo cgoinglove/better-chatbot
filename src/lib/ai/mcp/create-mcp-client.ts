@@ -58,7 +58,10 @@ export class MCPClient {
     private options: ClientOptions = {},
   ) {
     this.logger = logger.withDefaults({
-      message: colorize("cyan", `MCP Client ${this.name}: `),
+      message: colorize(
+        "cyan",
+        `[${this.id.slice(0, 4)}] MCP Client ${this.name}: `,
+      ),
     });
   }
 
@@ -116,7 +119,7 @@ export class MCPClient {
           software_version: "1.0.0",
         },
         onRedirectToAuthorization: async (authorizationUrl: URL) => {
-          this.logger.warn(
+          this.logger.info(
             "OAuth authorization required - user interaction needed",
           );
           this.authorizationUrl = authorizationUrl;

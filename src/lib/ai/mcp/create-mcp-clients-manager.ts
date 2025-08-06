@@ -49,7 +49,7 @@ export class MCPClientsManager {
   private initializedLock = new Locker();
   private initialized = false;
   private logger = globalLogger.withDefaults({
-    message: colorize("dim", `[${generateUUID().slice(0, 8)}] MCP Manager: `),
+    message: colorize("dim", `[${generateUUID().slice(0, 4)}] MCP Manager: `),
   });
 
   // Optional storage for persistent configurations
