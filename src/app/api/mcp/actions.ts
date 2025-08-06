@@ -3,6 +3,7 @@ import { mcpClientsManager } from "lib/ai/mcp/mcp-manager";
 import { z } from "zod";
 
 import { McpServerSchema } from "lib/db/pg/schema.pg";
+import { mcpOAuthRepository } from "lib/db/repository";
 
 export async function selectMcpClientsAction() {
   const list = await mcpClientsManager.getClients();
@@ -71,6 +72,19 @@ export async function authorizeMcpClientAction(id: string) {
     throw new Error("Not Authorizing");
   }
   return client.client.getAuthorizationUrl()?.toString();
+}
+
+export async function checkTokenMcpClientAction(id: string) {
+  const session = await mcpOAuthRepository.getOAuthSession(id);
+
+  // for wait connect to mcp server
+  await mcpClientsManager.getClient(id).catch(() => null);
+
+  if (!session) {
+    return false;
+  }
+
+  return !!session.tokens;
 }
 
 export async function callMcpToolAction(

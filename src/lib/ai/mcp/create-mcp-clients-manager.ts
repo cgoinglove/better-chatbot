@@ -221,10 +221,18 @@ export class MCPClientsManager {
       const entity = await this.storage.save(server);
       id = entity.id;
     }
-    await this.addClient(id, server.name, server.config);
+    await this.addClient(id, server.name, server.config).catch((err) => {
+      if (!server.id) {
+        void this.removeClient(id);
+      }
+      throw err;
+    });
 
     void emitMCPAddEvent(id);
-    return this.clients.get(id)!;
+    return {
+      ...this.clients.get(id)!,
+      id,
+    };
   }
 
   /**

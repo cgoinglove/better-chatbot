@@ -13,7 +13,7 @@ import JsonView from "./ui/json-view";
 import { toast } from "sonner";
 import { safe } from "ts-safe";
 import { useRouter } from "next/navigation";
-import { createDebounce, isNull, safeJSONParse } from "lib/utils";
+import { createDebounce, fetcher, isNull, safeJSONParse } from "lib/utils";
 import { handleErrorWithToast } from "ui/shared-toast";
 import { mutate } from "swr";
 import { Loader } from "lucide-react";
@@ -140,91 +140,15 @@ export default function MCPEditor({
         }
       })
       .map(() =>
-        fetch("/api/mcp", {
+        fetcher("/api/mcp", {
           method: "POST",
           body: JSON.stringify({
             name,
             config,
             id,
           }),
-        }).then(async (res) => {
-          if (!res.ok) {
-            const error = await res.json();
-            // Check if OAuth is required
-            if (error.code === "OAUTH_REQUIRED" && error.authUrl) {
-              const authUrl = error.authUrl;
-              return new Promise((resolve, reject) => {
-                const authWindow = window.open(
-                  authUrl,
-                  "oauth",
-                  "width=600,height=800,scrollbars=yes,resizable=yes",
-                );
-                if (!authWindow) {
-                  return reject(
-                    new Error("Please allow popups for OAuth authentication"),
-                  );
-                }
-
-                let messageHandlerRegistered = false;
-                let intervalId: NodeJS.Timeout | null = null;
-
-                // Clean up function
-                const cleanup = () => {
-                  if (messageHandlerRegistered) {
-                    window.removeEventListener("message", messageHandler);
-                    messageHandlerRegistered = false;
-                  }
-                  if (intervalId) {
-                    clearInterval(intervalId);
-                    intervalId = null;
-                  }
-                };
-
-                // Message handler for postMessage communication
-                const messageHandler = (event: MessageEvent) => {
-                  // Security: only accept messages from same origin
-                  if (event.origin !== window.location.origin) {
-                    return;
-                  }
-
-                  if (event.data.type === "MCP_OAUTH_SUCCESS") {
-                    cleanup();
-                    if (authWindow && !authWindow.closed) {
-                      authWindow.close();
-                    }
-                    resolve(true);
-                  } else if (event.data.type === "MCP_OAUTH_ERROR") {
-                    cleanup();
-                    if (authWindow && !authWindow.closed) {
-                      authWindow.close();
-                    }
-                    const errorMessage =
-                      event.data.error_description ||
-                      event.data.error ||
-                      "Authentication failed";
-                    reject(new Error(errorMessage));
-                  }
-                };
-
-                // Register message event listener
-                window.addEventListener("message", messageHandler);
-                messageHandlerRegistered = true;
-
-                // Backup: Poll for manual window close (in case postMessage fails)
-                intervalId = setInterval(() => {
-                  if (authWindow.closed) {
-                    cleanup();
-                    resolve(true);
-                  }
-                }, 1000);
-              });
-            }
-
-            throw error;
-          }
         }),
       )
-
       .ifOk(() => {
         toast.success(t("MCP.configurationSavedSuccessfully"));
         mutate("/api/mcp/list");
