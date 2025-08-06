@@ -33,7 +33,7 @@ describe("SafeRedisCache", () => {
 
   it("should use Redis when available", async () => {
     vi.mocked(RedisCache).mockImplementation(() => mockRedisCache);
-    cache = new SafeRedisCache({ memoryCache: mockMemoryCache });
+    cache = new SafeRedisCache({ serverCache: mockMemoryCache });
 
     mockRedisCache.get.mockResolvedValue("value");
     const result = await cache.get("key");
@@ -44,7 +44,7 @@ describe("SafeRedisCache", () => {
 
   it("should fallback to memory cache when Redis fails", async () => {
     vi.mocked(RedisCache).mockImplementation(() => mockRedisCache);
-    cache = new SafeRedisCache({ memoryCache: mockMemoryCache });
+    cache = new SafeRedisCache({ serverCache: mockMemoryCache });
 
     mockRedisCache.get.mockRejectedValue(new Error("Redis connection failed"));
     await mockMemoryCache.set("key", "memoryValue");
@@ -55,7 +55,7 @@ describe("SafeRedisCache", () => {
 
   it("should handle rate limit errors gracefully", async () => {
     vi.mocked(RedisCache).mockImplementation(() => mockRedisCache);
-    cache = new SafeRedisCache({ memoryCache: mockMemoryCache });
+    cache = new SafeRedisCache({ serverCache: mockMemoryCache });
 
     mockRedisCache.set.mockRejectedValue(new Error("rate limit exceeded"));
     await cache.set("key", "value");
@@ -67,7 +67,7 @@ describe("SafeRedisCache", () => {
   it("should retry Redis connection after failure", async () => {
     vi.mocked(RedisCache).mockImplementation(() => mockRedisCache);
     cache = new SafeRedisCache({
-      memoryCache: mockMemoryCache,
+      serverCache: mockMemoryCache,
       retryDelay: 100, // Short delay for testing
     });
 
@@ -89,7 +89,7 @@ describe("SafeRedisCache", () => {
 
   it("should set values in both caches when using Redis", async () => {
     vi.mocked(RedisCache).mockImplementation(() => mockRedisCache);
-    cache = new SafeRedisCache({ memoryCache: mockMemoryCache });
+    cache = new SafeRedisCache({ serverCache: mockMemoryCache });
 
     mockRedisCache.set.mockResolvedValue(undefined);
     await cache.set("key", "value", 1000);
@@ -100,7 +100,7 @@ describe("SafeRedisCache", () => {
 
   it("should delete from both caches", async () => {
     vi.mocked(RedisCache).mockImplementation(() => mockRedisCache);
-    cache = new SafeRedisCache({ memoryCache: mockMemoryCache });
+    cache = new SafeRedisCache({ serverCache: mockMemoryCache });
 
     await mockMemoryCache.set("key", "value");
     mockRedisCache.delete.mockResolvedValue(undefined);
@@ -113,7 +113,7 @@ describe("SafeRedisCache", () => {
 
   it("should clear both caches", async () => {
     vi.mocked(RedisCache).mockImplementation(() => mockRedisCache);
-    cache = new SafeRedisCache({ memoryCache: mockMemoryCache });
+    cache = new SafeRedisCache({ serverCache: mockMemoryCache });
 
     await mockMemoryCache.set("key1", "value1");
     await mockMemoryCache.set("key2", "value2");
@@ -127,7 +127,7 @@ describe("SafeRedisCache", () => {
 
   it("should report cache status correctly", async () => {
     vi.mocked(RedisCache).mockImplementation(() => mockRedisCache);
-    cache = new SafeRedisCache({ memoryCache: mockMemoryCache });
+    cache = new SafeRedisCache({ serverCache: mockMemoryCache });
 
     expect(cache.isUsingRedis()).toBe(true);
     expect(cache.getCacheStatus()).toEqual({
@@ -145,7 +145,7 @@ describe("SafeRedisCache", () => {
 
   it("should handle OOM errors", async () => {
     vi.mocked(RedisCache).mockImplementation(() => mockRedisCache);
-    cache = new SafeRedisCache({ memoryCache: mockMemoryCache });
+    cache = new SafeRedisCache({ serverCache: mockMemoryCache });
 
     mockRedisCache.set.mockRejectedValue(new Error("OOM command not allowed"));
     await cache.set("key", "value");
@@ -158,7 +158,7 @@ describe("SafeRedisCache", () => {
   it("should respect max retries limit", async () => {
     vi.mocked(RedisCache).mockImplementation(() => mockRedisCache);
     cache = new SafeRedisCache({
-      memoryCache: mockMemoryCache,
+      serverCache: mockMemoryCache,
       maxRetries: 2,
       retryDelay: 50,
     });

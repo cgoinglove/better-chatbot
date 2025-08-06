@@ -5,14 +5,14 @@ import logger from "logger";
 
 export interface SafeRedisCacheOptions extends RedisCacheOptions {
   fallbackToMemory?: boolean;
-  memoryCache?: Cache;
+  serverCache?: Cache;
   maxRetries?: number;
   retryDelay?: number;
 }
 
 export class SafeRedisCache implements Cache {
   private redisCache: RedisCache | null = null;
-  private memoryCache: Cache;
+  private serverCache: Cache;
   private isRedisFailed = false;
   private retryCount = 0;
   private maxRetries: number;
@@ -22,13 +22,13 @@ export class SafeRedisCache implements Cache {
   constructor(options: SafeRedisCacheOptions = {}) {
     const {
       fallbackToMemory = true,
-      memoryCache,
+      serverCache,
       maxRetries = 3,
       retryDelay = 60000,
       ...redisOptions
     } = options;
 
-    this.memoryCache = memoryCache || new MemoryCache();
+    this.serverCache = serverCache || new MemoryCache();
     this.maxRetries = maxRetries;
     this.retryDelay = retryDelay;
 
@@ -116,7 +116,7 @@ export class SafeRedisCache implements Cache {
   async get<T>(key: string): Promise<T | undefined> {
     return this.executeWithFallback(
       () => this.redisCache!.get<T>(key),
-      () => this.memoryCache.get<T>(key),
+      () => this.serverCache.get<T>(key),
       `get(${key})`,
     );
   }
@@ -126,9 +126,9 @@ export class SafeRedisCache implements Cache {
       async () => {
         await this.redisCache!.set(key, value, ttlMs);
         // Also set in memory cache as backup
-        await this.memoryCache.set(key, value, ttlMs);
+        await this.serverCache.set(key, value, ttlMs);
       },
-      () => this.memoryCache.set(key, value, ttlMs),
+      () => this.serverCache.set(key, value, ttlMs),
       `set(${key})`,
     );
   }
@@ -136,7 +136,7 @@ export class SafeRedisCache implements Cache {
   async has(key: string): Promise<boolean> {
     return this.executeWithFallback(
       () => this.redisCache!.has(key),
-      () => this.memoryCache.has(key),
+      () => this.serverCache.has(key),
       `has(${key})`,
     );
   }
@@ -146,9 +146,9 @@ export class SafeRedisCache implements Cache {
       async () => {
         await this.redisCache!.delete(key);
         // Also delete from memory cache
-        await this.memoryCache.delete(key);
+        await this.serverCache.delete(key);
       },
-      () => this.memoryCache.delete(key),
+      () => this.serverCache.delete(key),
       `delete(${key})`,
     );
   }
@@ -158,9 +158,9 @@ export class SafeRedisCache implements Cache {
       async () => {
         await this.redisCache!.clear();
         // Also clear memory cache
-        await this.memoryCache.clear();
+        await this.serverCache.clear();
       },
-      () => this.memoryCache.clear(),
+      () => this.serverCache.clear(),
       "clear()",
     );
   }
@@ -168,7 +168,7 @@ export class SafeRedisCache implements Cache {
   async getAll(): Promise<Map<string, unknown>> {
     return this.executeWithFallback(
       () => this.redisCache!.getAll(),
-      () => this.memoryCache.getAll(),
+      () => this.serverCache.getAll(),
       "getAll()",
     );
   }
