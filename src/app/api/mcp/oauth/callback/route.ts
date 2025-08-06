@@ -1,8 +1,10 @@
 import { NextRequest } from "next/server";
 import { mcpOAuthRepository } from "@/lib/db/repository";
 import { mcpClientsManager } from "lib/ai/mcp/mcp-manager";
+
 import globalLogger from "logger";
 import { colorize } from "consola/utils";
+import { emitMCPRefreshEvent } from "@/events/mcp-events";
 
 interface OAuthResponseOptions {
   type: "success" | "error";
@@ -159,6 +161,9 @@ export async function GET(request: NextRequest) {
   try {
     await client?.client.finishAuth(callbackData.code);
     await mcpClientsManager.refreshClient(session.mcpServerId);
+
+    // Emit refresh event to notify other instances
+    await emitMCPRefreshEvent(session.mcpServerId);
 
     return createOAuthResponsePage({
       type: "success",

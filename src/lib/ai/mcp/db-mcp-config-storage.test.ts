@@ -17,6 +17,7 @@ vi.mock("logger", () => ({
   default: {
     withDefaults: vi.fn(() => ({
       debug: vi.fn(),
+      info: vi.fn(),
       error: vi.fn(),
     })),
   },

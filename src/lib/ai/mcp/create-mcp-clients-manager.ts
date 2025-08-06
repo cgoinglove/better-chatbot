@@ -19,6 +19,12 @@ import globalLogger from "logger";
 import { jsonSchema, ToolExecutionOptions } from "ai";
 import { createMemoryMCPConfigStorage } from "./memory-mcp-config-storage";
 import { colorize } from "consola/utils";
+import {
+  getMCPEventManager,
+  emitMCPAddEvent,
+  emitMCPRemoveEvent,
+  type MCPEventHandler,
+} from "@/events/mcp-events";
 
 /**
  * Interface for storage of MCP server configurations.
@@ -59,13 +65,56 @@ export class MCPClientsManager {
   ) {
     process.on("SIGINT", this.cleanup.bind(this));
     process.on("SIGTERM", this.cleanup.bind(this));
+
+    // Initialize MCP event system
+    this.initializeMCPEvents();
   }
+
+  /**
+   * Initialize MCP event system for real-time synchronization
+   */
+  private initializeMCPEvents(): void {
+    try {
+      const mcpEvents = getMCPEventManager();
+      // Handle events from other instances
+      mcpEvents.on("add", this.handleMCPEvent.bind(this));
+      mcpEvents.on("remove", this.handleMCPEvent.bind(this));
+      mcpEvents.on("refresh", this.handleMCPEvent.bind(this));
+    } catch (error) {
+      this.logger.error("Failed to initialize MCP event system:", error);
+    }
+  }
+
+  /**
+   * Handle MCP events from other instances
+   */
+  private handleMCPEvent: MCPEventHandler = async (data) => {
+    await this.waitInitialized();
+    try {
+      // Skip if this event came from the same process
+      if (data.processId === process.pid) return;
+      if (data.type === "remove") {
+        const client = this.clients.get(data.serverId);
+        this.clients.delete(data.serverId);
+        if (client) {
+          void client.client.disconnect();
+        }
+      } else {
+        // For add, refresh - refresh the client
+        await this.refreshClient(data.serverId);
+      }
+    } catch (error) {
+      this.logger.error(
+        `Failed to handle ${data.type} event for ${data.serverId}:`,
+        error,
+      );
+    }
+  };
 
   private async waitInitialized() {
     if (this.initialized) {
       return;
     }
-    this.logger.info("Waiting for MCP clients manager to be initialized");
     if (this.initializedLock.isLocked) {
       await this.initializedLock.wait();
       return;
@@ -173,6 +222,8 @@ export class MCPClientsManager {
       id = entity.id;
     }
     await this.addClient(id, server.name, server.config);
+
+    void emitMCPAddEvent(id);
     return this.clients.get(id)!;
   }
 
@@ -180,16 +231,18 @@ export class MCPClientsManager {
    * Removes a client by name, disposing resources and removing from storage
    */
   async removeClient(id: string) {
+    const client = this.clients.get(id);
+
     if (this.storage) {
       if (await this.storage.has(id)) {
         await this.storage.delete(id);
       }
     }
-    const client = this.clients.get(id);
     this.clients.delete(id);
     if (client) {
       void client.client.disconnect();
     }
+    void emitMCPRemoveEvent(id);
   }
 
   /**
@@ -257,7 +310,7 @@ export class MCPClientsManager {
         if (res?.content && Array.isArray(res.content)) {
           const parsedResult = {
             ...res,
-            content: res.content.map((c) => {
+            content: res.content.map((c: any) => {
               if (c?.type === "text" && c?.text) {
                 const parsed = safeJSONParse(c.text);
                 return {
