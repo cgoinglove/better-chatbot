@@ -97,7 +97,7 @@ export function createDbBasedMCPConfigsStorage(): MCPConfigStorage {
 
   setInterval(
     () => debounce(checkAndRefreshClients, 3000),
-    1000 * 60 * 5,
+    1000 * 60 * 30,
   ).unref();
 
   return {

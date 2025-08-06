@@ -22,7 +22,7 @@ const LightRays = dynamic(() => import("@/components/ui/light-rays"), {
 export default function Page() {
   const t = useTranslations("MCP");
   const { data: mcpList, isLoading } = useMcpList({
-    refreshInterval: 5000,
+    refreshInterval: 10000,
   });
 
   const sortedMcpList = useMemo(() => {

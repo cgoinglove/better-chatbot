@@ -1,7 +1,7 @@
 import { agentRepository } from "lib/db/repository";
 import { getSession } from "auth/server";
 import { z } from "zod";
-import { serverCache } from "lib/cache";
+import { memoryCache } from "lib/cache";
 import { CacheKeys } from "lib/cache/cache-keys";
 import { AgentUpsertSchema } from "app-types/agent";
 
@@ -35,7 +35,7 @@ export async function POST(request: Request) {
       ...data,
       userId: session.user.id,
     });
-    serverCache.delete(CacheKeys.agentInstructions(agent.id));
+    memoryCache.delete(CacheKeys.agentInstructions(agent.id));
 
     return Response.json(agent);
   } catch (error) {

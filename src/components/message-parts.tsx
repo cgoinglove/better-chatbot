@@ -7,6 +7,7 @@ import {
   Loader,
   Pencil,
   ChevronDownIcon,
+  ChevronUp,
   RefreshCw,
   X,
   Trash2,
@@ -17,7 +18,7 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { Button } from "ui/button";
 import { Markdown } from "./markdown";
-import { cn, createThrottle, safeJSONParse } from "lib/utils";
+import { cn, createThrottle, safeJSONParse, truncateString } from "lib/utils";
 import JsonView from "ui/json-view";
 import { useMemo, useState, memo, useEffect, useRef, useCallback } from "react";
 import { MessageEditor } from "./message-editor";
@@ -94,6 +95,7 @@ interface ToolMessagePartProps {
   setMessages?: UseChatHelpers["setMessages"];
 }
 
+const MAX_TEXT_LENGTH = 600;
 export const UserMessagePart = memo(
   function UserMessagePart({
     part,
@@ -105,10 +107,18 @@ export const UserMessagePart = memo(
     isError,
   }: UserMessagePartProps) {
     const { copied, copy } = useCopy();
+    const t = useTranslations();
     const [mode, setMode] = useState<"view" | "edit">("view");
     const [isDeleting, setIsDeleting] = useState(false);
+    const [expanded, setExpanded] = useState(false);
     const ref = useRef<HTMLDivElement>(null);
     const scrolledRef = useRef(false);
+
+    const isLongText = part.text.length > MAX_TEXT_LENGTH;
+    const displayText =
+      expanded || !isLongText
+        ? part.text
+        : truncateString(part.text, MAX_TEXT_LENGTH);
 
     const deleteMessage = useCallback(() => {
       safe(() => setIsDeleting(true))
@@ -153,7 +163,7 @@ export const UserMessagePart = memo(
         <div
           data-testid="message-content"
           className={cn(
-            "flex flex-col gap-4 max-w-full ring ring-input",
+            "flex flex-col gap-4 max-w-full ring ring-input relative overflow-hidden",
             {
               "bg-accent text-accent-foreground px-4 py-3 rounded-2xl": isLast,
               "opacity-50": isError,
@@ -161,9 +171,29 @@ export const UserMessagePart = memo(
             isError && "border-destructive border",
           )}
         >
+          {isLongText && !expanded && (
+            <div className="absolute pointer-events-none bg-gradient-to-t from-accent to-transparent w-full h-40 bottom-0 left-0" />
+          )}
           <p className={cn("whitespace-pre-wrap text-sm break-words")}>
-            {part.text}
+            {displayText}
           </p>
+          {isLongText && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setExpanded(!expanded)}
+              className="h-auto p-1 text-xs z-10 text-muted-foreground hover:text-foreground self-start"
+            >
+              <span className="flex items-center gap-1">
+                {t(expanded ? "Common.showLess" : "Common.showMore")}
+                {expanded ? (
+                  <ChevronUp className="size-3" />
+                ) : (
+                  <ChevronDownIcon className="size-3" />
+                )}
+              </span>
+            </Button>
+          )}
         </div>
         {isLast && (
           <div className="flex w-full justify-end opacity-0 group-hover/message:opacity-100 transition-opacity duration-300">
@@ -317,14 +347,15 @@ export const AssistMessagePart = memo(function AssistMessagePart({
       ([entry]) => {
         setIsAtBottom(entry.isIntersecting);
 
-        // If user scrolled back to bottom, re-enable auto scroll
-        if (entry.isIntersecting && !shouldAutoScroll) {
-          setShouldAutoScroll(true);
+        // If user scrolled away from bottom, immediately disable auto scroll
+        // Once disabled, it stays disabled for this message
+        if (!entry.isIntersecting) {
+          setShouldAutoScroll(false);
         }
       },
       {
         root: null,
-        threshold: 0.3,
+        threshold: 0.01,
       },
     );
 

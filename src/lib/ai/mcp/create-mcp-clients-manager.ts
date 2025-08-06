@@ -19,12 +19,6 @@ import globalLogger from "logger";
 import { jsonSchema, ToolExecutionOptions } from "ai";
 import { createMemoryMCPConfigStorage } from "./memory-mcp-config-storage";
 import { colorize } from "consola/utils";
-import {
-  getMCPEventManager,
-  emitMCPAddEvent,
-  emitMCPRemoveEvent,
-  type MCPEventHandler,
-} from "@/events/mcp-events";
 
 /**
  * Interface for storage of MCP server configurations.
@@ -65,51 +59,7 @@ export class MCPClientsManager {
   ) {
     process.on("SIGINT", this.cleanup.bind(this));
     process.on("SIGTERM", this.cleanup.bind(this));
-
-    // Initialize MCP event system
-    this.initializeMCPEvents();
   }
-
-  /**
-   * Initialize MCP event system for real-time synchronization
-   */
-  private initializeMCPEvents(): void {
-    try {
-      const mcpEvents = getMCPEventManager();
-      // Handle events from other instances
-      mcpEvents.on("add", this.handleMCPEvent.bind(this));
-      mcpEvents.on("remove", this.handleMCPEvent.bind(this));
-      mcpEvents.on("refresh", this.handleMCPEvent.bind(this));
-    } catch (error) {
-      this.logger.error("Failed to initialize MCP event system:", error);
-    }
-  }
-
-  /**
-   * Handle MCP events from other instances
-   */
-  private handleMCPEvent: MCPEventHandler = async (data) => {
-    await this.waitInitialized();
-    try {
-      // Skip if this event came from the same process
-      if (data.processId === process.pid) return;
-      if (data.type === "remove") {
-        const client = this.clients.get(data.serverId);
-        this.clients.delete(data.serverId);
-        if (client) {
-          void client.client.disconnect();
-        }
-      } else {
-        // For add, refresh - refresh the client
-        await this.refreshClient(data.serverId);
-      }
-    } catch (error) {
-      this.logger.error(
-        `Failed to handle ${data.type} event for ${data.serverId}:`,
-        error,
-      );
-    }
-  };
 
   private async waitInitialized() {
     if (this.initialized) {
@@ -228,11 +178,7 @@ export class MCPClientsManager {
       throw err;
     });
 
-    await emitMCPAddEvent(id).catch((_e) => "ignore error");
-    return {
-      ...this.clients.get(id)!,
-      id,
-    };
+    return this.clients.get(id)!;
   }
 
   /**
@@ -250,7 +196,6 @@ export class MCPClientsManager {
     if (client) {
       void client.client.disconnect();
     }
-    void emitMCPRemoveEvent(id);
   }
 
   /**

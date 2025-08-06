@@ -24,7 +24,7 @@ import {
 import { customModelProvider } from "lib/ai/models";
 import { toAny } from "lib/utils";
 import { McpServerCustomizationsPrompt, MCPToolInfo } from "app-types/mcp";
-import { serverCache } from "lib/cache";
+import { memoryCache } from "lib/cache";
 import { CacheKeys } from "lib/cache/cache-keys";
 import { getSession } from "auth/server";
 import logger from "logger";
@@ -137,7 +137,7 @@ export async function rememberMcpServerCustomizationsAction(userId: string) {
   const key = CacheKeys.mcpServerCustomizations(userId);
 
   const cachedMcpServerCustomizations =
-    await serverCache.get<Record<string, McpServerCustomizationsPrompt>>(key);
+    await memoryCache.get<Record<string, McpServerCustomizationsPrompt>>(key);
   if (cachedMcpServerCustomizations) {
     return cachedMcpServerCustomizations;
   }
@@ -180,7 +180,7 @@ export async function rememberMcpServerCustomizationsAction(userId: string) {
     {} as Record<string, McpServerCustomizationsPrompt>,
   );
 
-  serverCache.set(key, prompts, 1000 * 60 * 30); // 30 minutes
+  memoryCache.set(key, prompts, 1000 * 60 * 30); // 30 minutes
   return prompts;
 }
 
@@ -211,10 +211,10 @@ export async function rememberAgentAction(
 ) {
   if (!agent) return undefined;
   const key = CacheKeys.agentInstructions(agent);
-  let cachedAgent = await serverCache.get<Agent | null>(key);
+  let cachedAgent = await memoryCache.get<Agent | null>(key);
   if (!cachedAgent) {
     cachedAgent = await agentRepository.selectAgentById(agent, userId);
-    await serverCache.set(key, cachedAgent);
+    await memoryCache.set(key, cachedAgent);
   }
   return cachedAgent as Agent | undefined;
 }

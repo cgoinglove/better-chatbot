@@ -4,7 +4,6 @@ import { mcpClientsManager } from "lib/ai/mcp/mcp-manager";
 
 import globalLogger from "logger";
 import { colorize } from "consola/utils";
-import { emitMCPRefreshEvent } from "@/events/mcp-events";
 
 interface OAuthResponseOptions {
   type: "success" | "error";
@@ -162,11 +161,6 @@ export async function GET(request: NextRequest) {
     await client?.client.finishAuth(callbackData.code);
     await mcpClientsManager.refreshClient(session.mcpServerId);
 
-    // Emit refresh event to notify other instances
-    await emitMCPRefreshEvent(session.mcpServerId).catch(
-      (_e) => "ignore error",
-    );
-
     return createOAuthResponsePage({
       type: "success",
       title: "OAuth Success",
@@ -178,13 +172,13 @@ export async function GET(request: NextRequest) {
       },
       statusCode: 200,
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error("OAuth callback failed", error);
     return createOAuthResponsePage({
       type: "error",
       title: "OAuth Error",
       heading: "Authentication Failed",
-      message: "Failed to complete the authentication process",
+      message: error.message || "Failed to complete the authentication process",
       postMessageType: "MCP_OAUTH_ERROR",
       postMessageData: {
         error: "auth_failed",

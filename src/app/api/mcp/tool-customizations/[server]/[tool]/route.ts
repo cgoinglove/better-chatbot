@@ -1,6 +1,6 @@
 import { McpToolCustomizationZodSchema } from "app-types/mcp";
 import { getSession } from "auth/server";
-import { serverCache } from "lib/cache";
+import { memoryCache } from "lib/cache";
 import { CacheKeys } from "lib/cache/cache-keys";
 import { mcpMcpToolCustomizationRepository } from "lib/db/repository";
 
@@ -50,7 +50,7 @@ export async function POST(
       prompt,
     });
   const key = CacheKeys.mcpServerCustomizations(session.user.id);
-  void serverCache.delete(key);
+  void memoryCache.delete(key);
 
   return Response.json(result);
 }
@@ -71,7 +71,7 @@ export async function DELETE(
     toolName: tool,
   });
   const key = CacheKeys.mcpServerCustomizations(session.user.id);
-  void serverCache.delete(key);
+  void memoryCache.delete(key);
 
   return Response.json({ success: true });
 }

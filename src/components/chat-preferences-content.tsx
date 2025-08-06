@@ -218,9 +218,7 @@ export function MCPInstructionsContent() {
     (MCPServerInfo & { id: string }) | null
   >(null);
 
-  const { isLoading, data: mcpList } = useMcpList({
-    dedupingInterval: 0,
-  });
+  const { isLoading, data: mcpList } = useMcpList();
 
   if (mcpServer) {
     return (
