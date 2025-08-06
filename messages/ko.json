@@ -321,6 +321,10 @@
     "mcpServerCustomizationPlaceholder": "예) 이 MCP 서버의 툴중에 입력값이 email인 경우 항상 example@example.com 형식으로 입력해주세요."
   },
   "Error": {},
+  "Info": {
+    "mcpAddingDisabled": "관리자에 의해 MCP 서버 추가가 비활성화되었습니다.",
+    "vercelSyncDelay": "Vercel에서 실행 중\n\nMCP 변경사항은 동기화에 10-15초 정도 소요될 수 있습니다. 서버 추가, 편집 또는 삭제 후 변경사항이 즉시 보이지 않으면 잠시 기다려주세요."
+  },
   "Workflow": {
     "title": "워크플로우",
     "createWorkflow": "워크플로우 생성",

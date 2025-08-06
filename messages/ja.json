@@ -320,6 +320,10 @@
     "mcpServerCustomizationPlaceholder": "例：入力値がメールの場合、常にexample@example.comの形式でメールを入力してください。"
   },
   "Error": {},
+  "Info": {
+    "mcpAddingDisabled": "管理者によりMCPサーバーの追加が無効化されています。",
+    "vercelSyncDelay": "Vercel上で動作中\n\nMCP変更の同期には10-15秒かかる場合があります。サーバーの追加、編集、または削除後に変更が即座に表示されない場合は、しばらくお待ちください。"
+  },
   "Workflow": {
     "title": "ワークフロー",
     "createWorkflow": "ワークフローを作成",

@@ -322,6 +322,10 @@
     "mcpServerCustomizationPlaceholder": "例如：如果输入值是电子邮件，始终以 example@example.com 格式输入电子邮件。"
   },
   "Error": {},
+  "Info": {
+    "mcpAddingDisabled": "管理员已禁用MCP服务器添加功能。",
+    "vercelSyncDelay": "在Vercel上运行\n\nMCP更改同步可能需要10-15秒。如果添加、编辑或删除服务器后更改未立即显示，请稍等片刻。"
+  },
   "Workflow": {
     "title": "工作流",
     "createWorkflow": "创建工作流",

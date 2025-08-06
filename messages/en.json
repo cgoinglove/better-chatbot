@@ -44,6 +44,10 @@
     "youAreAnExpertIn": "You are an expert in {role}"
   },
   "Error": {},
+  "Info": {
+    "mcpAddingDisabled": "MCP server addition has been disabled by the administrator.",
+    "vercelSyncDelay": "Running on Vercel\n\nMCP changes may take 10-15 seconds to sync. Please wait a moment after adding, editing, or deleting servers if changes don't appear immediately."
+  },
   "Workflow": {
     "title": "Workflow",
     "createWorkflow": "Create Workflow",

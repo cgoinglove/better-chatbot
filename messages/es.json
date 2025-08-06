@@ -321,6 +321,10 @@
     "mcpServerCustomizationPlaceholder": "ej. Si el valor de entrada es email, siempre ingresa el email en el formato ejemplo@ejemplo.com."
   },
   "Error": {},
+  "Info": {
+    "mcpAddingDisabled": "La adición de servidores MCP ha sido deshabilitada por el administrador.",
+    "vercelSyncDelay": "Ejecutándose en Vercel\n\nLos cambios de MCP pueden tardar 10-15 segundos en sincronizarse. Por favor espera un momento si los cambios no aparecen inmediatamente después de agregar, editar o eliminar servidores."
+  },
   "Workflow": {
     "title": "Flujo de Trabajo",
     "createWorkflow": "Crear Flujo de Trabajo",
