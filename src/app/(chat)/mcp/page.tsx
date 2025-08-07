@@ -8,7 +8,7 @@ export default async function Page() {
   const t = await getTranslations("Info");
   let message: string | undefined;
 
-  if (!isAddingDisabled) {
+  if (isAddingDisabled) {
     message = t("mcpAddingDisabled");
   } else if (IS_VERCEL_ENV) {
     message = t("vercelSyncDelay");
