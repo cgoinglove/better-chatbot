@@ -12,11 +12,10 @@ import { useTranslations } from "next-intl";
 import { MCPIcon } from "ui/mcp-icon";
 import { useMcpList } from "@/hooks/queries/use-mcp-list";
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { MCPServerInfo } from "app-types/mcp";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
-import { cn } from "lib/utils";
 
 const LightRays = dynamic(() => import("@/components/ui/light-rays"), {
   ssr: false,

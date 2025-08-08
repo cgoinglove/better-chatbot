@@ -239,18 +239,6 @@ export class PgOAuthClientProvider implements OAuthClientProvider {
           });
           this.logger.info(`OAuth tokens invalidated`);
           break;
-        case "verifier":
-          await this.updateAuthData({
-            codeVerifier: undefined,
-          });
-          this.logger.info(`OAuth code verifier invalidated`);
-          break;
-        case "client":
-          await this.updateAuthData({
-            clientInfo: undefined,
-          });
-          this.logger.info(`OAuth client information invalidated`);
-          break;
       }
     } catch (error) {
       this.logger.error(`Failed to invalidate OAuth credentials: ${error}`);
