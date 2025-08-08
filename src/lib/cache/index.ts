@@ -38,7 +38,7 @@ const createCache = () => {
     // });
   }
 
-  logger.warn("No Redis URL found, using MemoryCache");
+  // logger.warn("No Redis URL found, using MemoryCache");
   return new MemoryCache();
 };
 
