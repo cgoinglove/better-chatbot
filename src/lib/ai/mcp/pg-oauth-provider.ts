@@ -181,6 +181,26 @@ export class PgOAuthClientProvider implements OAuthClientProvider {
     return authData.codeVerifier;
   }
 
+  /**
+   * Adopt the given OAuth state by loading its session from DB.
+   * Useful when the callback is handled by a different instance.
+   */
+  async adoptState(state: string): Promise<void> {
+    if (!state) return;
+    const session = await pgMcpOAuthRepository.getSessionByState(state);
+    if (!session) return;
+    if (session.mcpServerId !== this.config.mcpServerId) {
+      this.logger.warn(
+        `Attempted to adopt state for different server (${session.mcpServerId}), ignoring`,
+      );
+      return;
+    }
+    this.currentOAuthState = state;
+    this.cachedAuthData = session;
+    this.initialized = true;
+    this.logger.info(`Adopted OAuth state for callback reconciliation`);
+  }
+
   async invalidateCredentials(
     invalidationScope: "all" | "client" | "tokens" | "verifier",
   ): Promise<void> {

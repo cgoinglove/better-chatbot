@@ -145,6 +145,8 @@ export async function GET(request: NextRequest) {
 
   if (client?.client) {
     await client.client.connect();
+    // Adopt callback state to ensure PKCE verifier matches across instances
+    await client.client.ensureOAuthState(callbackData.state);
   }
 
   if (client?.client.status != "authorizing") {

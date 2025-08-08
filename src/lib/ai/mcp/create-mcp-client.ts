@@ -45,6 +45,7 @@ export class MCPClient {
   private logger: ConsolaInstance;
   private locker = new Locker();
   private transport?: Transport;
+  private oauthProvider?: PgOAuthClientProvider;
   // Information about available tools from the server
   toolInfo: MCPToolInfo[] = [];
   private disconnectDebounce = createDebounce();
@@ -104,7 +105,8 @@ export class MCPClient {
   private createOAuthProvider() {
     if (isMaybeRemoteConfig(this.serverConfig) && this.needOauthProvider) {
       this.logger.info("Creating OAuth provider for MCP server authentication");
-      return new PgOAuthClientProvider({
+      if (this.oauthProvider) return this.oauthProvider;
+      this.oauthProvider = new PgOAuthClientProvider({
         name: this.name,
         mcpServerId: this.id,
         serverUrl: this.serverConfig.url,
@@ -126,6 +128,7 @@ export class MCPClient {
           throw new OAuthAuthorizationRequiredError(authorizationUrl);
         },
       });
+      return this.oauthProvider;
     }
     return undefined;
   }
@@ -263,6 +266,15 @@ export class MCPClient {
     await this.updateToolInfo();
 
     return this.client;
+  }
+
+  /**
+   * Ensure the underlying OAuth provider adopts the callback state
+   * so that PKCE code_verifier matches in multi-instance environments.
+   */
+  async ensureOAuthState(state: string): Promise<void> {
+    if (!state) return;
+    await this.oauthProvider?.adoptState(state);
   }
 
   async disconnect() {
