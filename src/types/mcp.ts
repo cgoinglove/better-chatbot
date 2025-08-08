@@ -252,16 +252,12 @@ export type McpOAuthRepository = {
     data: Partial<McpOAuthSession>,
   ): Promise<McpOAuthSession>;
 
-  // Delete stale in-progress sessions older than a threshold (default 30 minutes)
-  cleanupStaleSessions?: (
+  // Save tokens and cleanup incomplete sessions
+  saveTokensAndCleanup(
+    state: string,
     mcpServerId: string,
-    olderThanMs?: number,
-  ) => Promise<void>;
-
-  // 3. Delete methods
-
-  // Delete all sessions for a server
-  deleteAllSessions(mcpServerId: string): Promise<void>;
+    data: Partial<McpOAuthSession>,
+  ): Promise<McpOAuthSession>;
 
   // Delete a session by its OAuth state
   deleteByState(state: string): Promise<void>;

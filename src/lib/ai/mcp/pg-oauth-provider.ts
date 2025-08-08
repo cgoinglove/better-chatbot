@@ -167,19 +167,12 @@ export class PgOAuthClientProvider implements OAuthClientProvider {
   async saveTokens(accessTokens: OAuthTokens): Promise<void> {
     this.logger.info("saveTokens");
     // Store tokens for current state
-    this.cachedAuthData = await pgMcpOAuthRepository.updateSessionByState(
+    this.cachedAuthData = await pgMcpOAuthRepository.saveTokensAndCleanup(
       this.currentOAuthState,
+      this.config.mcpServerId,
       { tokens: accessTokens },
     );
-    // Cleanup stale in-progress sessions ( > 30 minutes )
-    try {
-      await (pgMcpOAuthRepository as any)?.cleanupStaleSessions?.(
-        this.config.mcpServerId,
-        30 * 60 * 1000,
-      );
-    } catch {
-      // ignore optional cleanup errors
-    }
+
     this.logger.info(`OAuth tokens stored successfully`);
   }
 
@@ -234,7 +227,7 @@ export class PgOAuthClientProvider implements OAuthClientProvider {
     try {
       switch (invalidationScope) {
         case "all":
-          await pgMcpOAuthRepository.deleteAllSessions(this.config.mcpServerId);
+          await pgMcpOAuthRepository.deleteByState(this.currentOAuthState);
           this.cachedAuthData = undefined;
           this.initialized = false;
           this.currentOAuthState = "";

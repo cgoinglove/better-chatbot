@@ -81,11 +81,10 @@ export class MCPClient {
     if (!isMaybeRemoteConfig(this.serverConfig))
       throw new Error("OAuth flow requires a remote MCP server");
 
-    if (this.oauthProvider?.state() != state) {
+    if (this.status != "authorizing" || this.oauthProvider?.state() != state) {
       await this.disconnect();
       await this.connect(state);
     }
-
     const finish = (this.transport as StreamableHTTPClientTransport)
       ?.finishAuth;
 
@@ -221,7 +220,7 @@ export class MCPClient {
             this.needOauthProvider = true;
             this.locker.unlock();
             await this.disconnect();
-            return this.connect(); // Recursive call with OAuth
+            return this.connect(oauthState); // Recursive call with OAuth
           }
 
           if (!isOAuthAuthorizationRequired(streamableHttpError)) {
@@ -247,7 +246,7 @@ export class MCPClient {
                 this.needOauthProvider = true;
                 this.locker.unlock();
                 await this.disconnect();
-                return this.connect(); // Recursive call with OAuth
+                return this.connect(oauthState); // Recursive call with OAuth
               }
 
               if (!isOAuthAuthorizationRequired(sseError)) throw sseError;

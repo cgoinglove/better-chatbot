@@ -1,7 +1,7 @@
 import { McpOAuthSession, McpOAuthRepository } from "app-types/mcp";
 import { pgDb as db } from "../db.pg";
 import { McpOAuthSessionSchema } from "../schema.pg";
-import { eq, and, isNull, isNotNull, desc, lt } from "drizzle-orm";
+import { eq, and, isNotNull, desc, isNull, ne } from "drizzle-orm";
 
 // OAuth repository implementation for multi-instance support
 export const pgMcpOAuthRepository: McpOAuthRepository = {
@@ -75,27 +75,27 @@ export const pgMcpOAuthRepository: McpOAuthRepository = {
     return session as McpOAuthSession;
   },
 
-  // Delete stale in-progress sessions older than a threshold (default 30 minutes)
-  cleanupStaleSessions: async (mcpServerId, olderThanMs = 30 * 60 * 1000) => {
-    const cutoff = new Date(Date.now() - olderThanMs);
+  saveTokensAndCleanup: async (state, mcpServerId, data) => {
+    const [session] = await db
+      .update(McpOAuthSessionSchema)
+      .set({
+        ...data,
+        updatedAt: new Date(),
+      })
+      .where(eq(McpOAuthSessionSchema.state, state))
+      .returning();
+
     await db
       .delete(McpOAuthSessionSchema)
       .where(
         and(
           eq(McpOAuthSessionSchema.mcpServerId, mcpServerId),
           isNull(McpOAuthSessionSchema.tokens),
-          lt(McpOAuthSessionSchema.updatedAt, cutoff),
+          ne(McpOAuthSessionSchema.state, state),
         ),
       );
-  },
 
-  // 3. Delete methods
-
-  // Delete all sessions for a server
-  deleteAllSessions: async (mcpServerId) => {
-    await db
-      .delete(McpOAuthSessionSchema)
-      .where(eq(McpOAuthSessionSchema.mcpServerId, mcpServerId));
+    return session as McpOAuthSession;
   },
 
   // Delete a session by its OAuth state

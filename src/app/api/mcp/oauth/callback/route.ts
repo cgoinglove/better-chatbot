@@ -143,21 +143,6 @@ export async function GET(request: NextRequest) {
 
   const client = await mcpClientsManager.getClient(session.mcpServerId);
 
-  if (client?.client.status != "authorizing") {
-    return createOAuthResponsePage({
-      type: "error",
-      title: "OAuth Error",
-      heading: "Authentication Failed",
-      message: `Client is not ready for authorization, current status: ${client?.client.status}`,
-      postMessageType: "MCP_OAUTH_ERROR",
-      postMessageData: {
-        error: "invalid_state",
-        error_description: "Client is not in authorizing state",
-      },
-      statusCode: 400,
-    });
-  }
-
   try {
     await client?.client.finishAuth(callbackData.code, callbackData.state);
     await mcpClientsManager.refreshClient(session.mcpServerId);
