@@ -667,6 +667,7 @@ function McpServerToolSelector({
   onToolClick,
 }: McpServerToolSelectorProps) {
   const t = useTranslations("Common");
+  const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const filteredTools = useMemo(() => {
     return tools.filter((tool) =>
@@ -676,9 +677,11 @@ function McpServerToolSelector({
 
   const handleAuthorize = useCallback(
     () =>
-      safe(() => redriectMcpOauth(serverId))
+      safe(() => setLoading(true))
+        .map(() => redriectMcpOauth(serverId))
         .ifOk(() => mutate("/api/mcp/list"))
-        .ifFail(handleErrorWithToast),
+        .ifFail(handleErrorWithToast)
+        .watch(() => setLoading(false)),
 
     [serverId],
   );
@@ -697,7 +700,8 @@ function McpServerToolSelector({
           }
         }}
       >
-        <ShieldAlertIcon />
+        {loading ? <Loader className="animate-spin" /> : <ShieldAlertIcon />}
+
         <AlertTitle>Authorization Required</AlertTitle>
         <AlertDescription>
           Click here to authorize this MCP server and access its tools.
