@@ -43,7 +43,4 @@ Notes:
 - Multi‑instance safe: unique state per attempt; when tokens are saved, incomplete sessions for the same server are cleaned up.
 - Security guard: redirect URI mismatch clears all sessions and restarts the flow.
 
-For the full report and improvement plan, see the repo root:
 
-- `mcp-oauth-report.md`
-- `mcp-oauth-improvement-plan.md`

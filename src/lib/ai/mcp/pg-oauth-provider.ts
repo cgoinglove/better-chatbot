@@ -38,13 +38,17 @@ export class PgOAuthClientProvider implements OAuthClientProvider {
     },
   ) {
     this.logger = globalLogger.withDefaults({
-      message: colorize("dim", `[MCP OAuth Provider ${this.config.name}] `),
+      message: colorize(
+        "dim",
+        `[MCP OAuth Provider ${this.config.name}-${generateUUID().slice(0, 4)}] `,
+      ),
     });
   }
 
   private async initializeOAuth() {
     if (this.initialized) return;
 
+    this.logger.info("initializeOAuth");
     // 1. Check for authenticated session first
     const authenticated = await pgMcpOAuthRepository.getAuthenticatedSession(
       this.config.mcpServerId,
@@ -100,18 +104,22 @@ export class PgOAuthClientProvider implements OAuthClientProvider {
   }
 
   get redirectUrl(): string {
+    this.logger.info("redirectUrl");
     return this.config._clientMetadata.redirect_uris[0];
   }
 
   get clientMetadata(): OAuthClientMetadata {
+    this.logger.info("clientMetadata");
     return this.config._clientMetadata;
   }
 
   state(): string {
+    this.logger.info("state");
     return this.currentOAuthState;
   }
 
   async clientInformation(): Promise<OAuthClientInformation | undefined> {
+    this.logger.info("clientInformation");
     const authData = await this.getAuthData();
     if (authData?.clientInfo) {
       // Check if redirect URI matches (security check)
@@ -133,6 +141,7 @@ export class PgOAuthClientProvider implements OAuthClientProvider {
   async saveClientInformation(
     clientCredentials: OAuthClientInformationFull,
   ): Promise<void> {
+    this.logger.info("saveClientInformation");
     await this.updateAuthData({
       clientInfo: clientCredentials,
     });
@@ -141,6 +150,7 @@ export class PgOAuthClientProvider implements OAuthClientProvider {
   }
 
   async tokens(): Promise<OAuthTokens | undefined> {
+    this.logger.info("tokens");
     const authData = await this.getAuthData();
     if (authData?.tokens) {
       return authData.tokens;
@@ -150,6 +160,7 @@ export class PgOAuthClientProvider implements OAuthClientProvider {
   }
 
   async saveTokens(accessTokens: OAuthTokens): Promise<void> {
+    this.logger.info("saveTokens");
     // Use saveTokensAndCleanup to store tokens and clean up incomplete sessions
     this.cachedAuthData = await pgMcpOAuthRepository.saveTokensAndCleanup(
       this.config.mcpServerId,
@@ -163,17 +174,20 @@ export class PgOAuthClientProvider implements OAuthClientProvider {
   }
 
   async redirectToAuthorization(authorizationUrl: URL): Promise<void> {
+    this.logger.info("redirectToAuthorization");
     authorizationUrl.searchParams.set("state", this.state());
     await this.config.onRedirectToAuthorization(authorizationUrl);
   }
 
   async saveCodeVerifier(pkceVerifier: string): Promise<void> {
+    this.logger.info("saveCodeVerifier");
     await this.updateAuthData({
       codeVerifier: pkceVerifier,
     });
   }
 
   async codeVerifier(): Promise<string> {
+    this.logger.info("codeVerifier");
     const authData = await this.getAuthData();
     if (!authData?.codeVerifier) {
       throw new UnauthorizedError("OAuth code verifier not found");
@@ -186,6 +200,7 @@ export class PgOAuthClientProvider implements OAuthClientProvider {
    * Useful when the callback is handled by a different instance.
    */
   async adoptState(state: string): Promise<void> {
+    this.logger.info("adoptState");
     if (!state) return;
     const session = await pgMcpOAuthRepository.getSessionByState(state);
     if (!session) return;
@@ -204,9 +219,7 @@ export class PgOAuthClientProvider implements OAuthClientProvider {
   async invalidateCredentials(
     invalidationScope: "all" | "client" | "tokens" | "verifier",
   ): Promise<void> {
-    this.logger.info(
-      `Invalidating OAuth credentials for server ${this.config.mcpServerId}, scope: ${invalidationScope}`,
-    );
+    this.logger.info("invalidateCredentials");
 
     try {
       switch (invalidationScope) {
