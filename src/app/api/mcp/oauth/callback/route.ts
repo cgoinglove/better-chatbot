@@ -143,12 +143,6 @@ export async function GET(request: NextRequest) {
 
   const client = await mcpClientsManager.getClient(session.mcpServerId);
 
-  if (client?.client) {
-    await client.client.connect();
-    // Adopt callback state to ensure PKCE verifier matches across instances
-    await client.client.ensureOAuthState(callbackData.state);
-  }
-
   if (client?.client.status != "authorizing") {
     return createOAuthResponsePage({
       type: "error",
