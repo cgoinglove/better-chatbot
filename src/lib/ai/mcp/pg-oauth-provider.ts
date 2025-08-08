@@ -48,8 +48,6 @@ export class PgOAuthClientProvider implements OAuthClientProvider {
 
   private async initializeOAuth() {
     if (this.initialized) return;
-
-    this.logger.info("initializeOAuth");
     // 0. If a constructor state was provided (callback/hand-off), adopt it first
     if (this.config.state) {
       const session = await pgMcpOAuthRepository.getSessionByState(
@@ -146,7 +144,6 @@ export class PgOAuthClientProvider implements OAuthClientProvider {
   async saveClientInformation(
     clientCredentials: OAuthClientInformationFull,
   ): Promise<void> {
-    this.logger.info("saveClientInformation");
     await this.updateAuthData({
       clientInfo: clientCredentials,
     });
@@ -165,7 +162,6 @@ export class PgOAuthClientProvider implements OAuthClientProvider {
   }
 
   async saveTokens(accessTokens: OAuthTokens): Promise<void> {
-    this.logger.info("saveTokens");
     // Store tokens for current state
     this.cachedAuthData = await pgMcpOAuthRepository.saveTokensAndCleanup(
       this.currentOAuthState,
@@ -183,7 +179,6 @@ export class PgOAuthClientProvider implements OAuthClientProvider {
   }
 
   async saveCodeVerifier(pkceVerifier: string): Promise<void> {
-    this.logger.info("saveCodeVerifier");
     await this.updateAuthData({
       codeVerifier: pkceVerifier,
     });
@@ -203,7 +198,6 @@ export class PgOAuthClientProvider implements OAuthClientProvider {
    * Useful when the callback is handled by a different instance.
    */
   async adoptState(state: string): Promise<void> {
-    this.logger.info("adoptState");
     if (!state) return;
     const session = await pgMcpOAuthRepository.getSessionByState(state);
     if (!session) return;
@@ -222,8 +216,6 @@ export class PgOAuthClientProvider implements OAuthClientProvider {
   async invalidateCredentials(
     invalidationScope: "all" | "client" | "tokens" | "verifier",
   ): Promise<void> {
-    this.logger.info("invalidateCredentials");
-
     try {
       switch (invalidationScope) {
         case "all":
