@@ -12,9 +12,11 @@ import { useTranslations } from "next-intl";
 import { MCPIcon } from "ui/mcp-icon";
 import { useMcpList } from "@/hooks/queries/use-mcp-list";
 import dynamic from "next/dynamic";
-import { useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { MCPServerInfo } from "app-types/mcp";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
+import { cn } from "lib/utils";
 
 const LightRays = dynamic(() => import("@/components/ui/light-rays"), {
   ssr: false,
@@ -22,7 +24,11 @@ const LightRays = dynamic(() => import("@/components/ui/light-rays"), {
 
 export default function MCPDashboard({ message }: { message?: string }) {
   const t = useTranslations("MCP");
-  const { data: mcpList, isLoading } = useMcpList({
+  const {
+    data: mcpList,
+    isLoading,
+    isValidating,
+  } = useMcpList({
     refreshInterval: 10000,
   });
 
@@ -34,6 +40,17 @@ export default function MCPDashboard({ message }: { message?: string }) {
       return 0;
     });
   }, [mcpList]);
+
+  // Delay showing validating spinner until validating persists for 500ms
+  const [showValidating, setShowValidating] = useState(false);
+  useEffect(() => {
+    if (isValidating) {
+      setShowValidating(false);
+      const timerId = setTimeout(() => setShowValidating(true), 500);
+      return () => clearTimeout(timerId);
+    }
+    setShowValidating(false);
+  }, [isValidating]);
 
   const particle = useMemo(() => {
     if (isLoading || mcpList?.length !== 0) return;
@@ -68,9 +85,14 @@ export default function MCPDashboard({ message }: { message?: string }) {
     <>
       {particle}
       <ScrollArea className="h-full w-full z-40">
-        <div className="flex-1 relative flex flex-col gap-4 px-8 py-8 max-w-3xl h-full mx-auto">
-          <div className="flex items-center mb-4">
-            <h1 className="text-2xl font-bold">MCP Servers</h1>
+        <div className="flex-1 relative flex flex-col gap-4 px-8 max-w-3xl h-full mx-auto pb-8">
+          <div className="flex items-center sticky top-0 bg-background z-50 pb-8">
+            <h1 className="text-2xl font-bold flex items-center gap-2">
+              MCP Servers
+              {showValidating && isValidating && (
+                <Loader2 className="size-4 animate-spin" />
+              )}
+            </h1>
             <div className="flex-1" />
 
             <div className="flex gap-2">
@@ -98,7 +120,7 @@ export default function MCPDashboard({ message }: { message?: string }) {
               <Skeleton className="h-60 w-full" />
             </div>
           ) : sortedMcpList?.length ? (
-            <div className="flex flex-col gap-6 my-4">
+            <div className="flex flex-col gap-6 mb-4">
               {sortedMcpList.map((mcp) => (
                 <MCPCard key={mcp.id} {...mcp} />
               ))}
