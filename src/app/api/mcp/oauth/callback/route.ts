@@ -159,7 +159,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    await client?.client.finishAuth(callbackData.code);
+    await client?.client.finishAuth(callbackData.code, callbackData.state);
     await mcpClientsManager.refreshClient(session.mcpServerId);
 
     return createOAuthResponsePage({

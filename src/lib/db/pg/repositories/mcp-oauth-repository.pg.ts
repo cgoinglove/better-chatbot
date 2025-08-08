@@ -1,7 +1,7 @@
 import { McpOAuthSession, McpOAuthRepository } from "app-types/mcp";
 import { pgDb as db } from "../db.pg";
 import { McpOAuthSessionSchema } from "../schema.pg";
-import { eq, and, isNull, isNotNull, desc, ne } from "drizzle-orm";
+import { eq, and, isNull, isNotNull, desc, lt } from "drizzle-orm";
 
 // OAuth repository implementation for multi-instance support
 export const pgMcpOAuthRepository: McpOAuthRepository = {
@@ -16,24 +16,6 @@ export const pgMcpOAuthRepository: McpOAuthRepository = {
         and(
           eq(McpOAuthSessionSchema.mcpServerId, mcpServerId),
           isNotNull(McpOAuthSessionSchema.tokens),
-        ),
-      )
-      .orderBy(desc(McpOAuthSessionSchema.updatedAt))
-      .limit(1);
-
-    return session as McpOAuthSession | undefined;
-  },
-
-  // Get in-progress OAuth session (has state but no tokens)
-  getInProgressSession: async (mcpServerId) => {
-    const [session] = await db
-      .select()
-      .from(McpOAuthSessionSchema)
-      .where(
-        and(
-          eq(McpOAuthSessionSchema.mcpServerId, mcpServerId),
-          isNotNull(McpOAuthSessionSchema.state),
-          isNull(McpOAuthSessionSchema.tokens),
         ),
       )
       .orderBy(desc(McpOAuthSessionSchema.updatedAt))
@@ -93,36 +75,18 @@ export const pgMcpOAuthRepository: McpOAuthRepository = {
     return session as McpOAuthSession;
   },
 
-  // Save tokens and cleanup incomplete sessions
-  saveTokensAndCleanup: async (mcpServerId, state, tokens) => {
-    return await db.transaction(async (tx) => {
-      // 1. Update current session with tokens
-      const [updatedSession] = await tx
-        .update(McpOAuthSessionSchema)
-        .set({
-          tokens,
-          updatedAt: new Date(),
-        })
-        .where(eq(McpOAuthSessionSchema.state, state))
-        .returning();
-
-      if (!updatedSession) {
-        throw new Error(`Session with state ${state} not found`);
-      }
-
-      // 2. Delete incomplete sessions for the same server (except current one)
-      await tx
-        .delete(McpOAuthSessionSchema)
-        .where(
-          and(
-            eq(McpOAuthSessionSchema.mcpServerId, mcpServerId),
-            isNull(McpOAuthSessionSchema.tokens),
-            ne(McpOAuthSessionSchema.state, state),
-          ),
-        );
-
-      return updatedSession as McpOAuthSession;
-    });
+  // Delete stale in-progress sessions older than a threshold (default 30 minutes)
+  cleanupStaleSessions: async (mcpServerId, olderThanMs = 30 * 60 * 1000) => {
+    const cutoff = new Date(Date.now() - olderThanMs);
+    await db
+      .delete(McpOAuthSessionSchema)
+      .where(
+        and(
+          eq(McpOAuthSessionSchema.mcpServerId, mcpServerId),
+          isNull(McpOAuthSessionSchema.tokens),
+          lt(McpOAuthSessionSchema.updatedAt, cutoff),
+        ),
+      );
   },
 
   // 3. Delete methods
@@ -132,5 +96,12 @@ export const pgMcpOAuthRepository: McpOAuthRepository = {
     await db
       .delete(McpOAuthSessionSchema)
       .where(eq(McpOAuthSessionSchema.mcpServerId, mcpServerId));
+  },
+
+  // Delete a session by its OAuth state
+  deleteByState: async (state) => {
+    await db
+      .delete(McpOAuthSessionSchema)
+      .where(eq(McpOAuthSessionSchema.state, state));
   },
 };

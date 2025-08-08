@@ -77,9 +77,15 @@ export class MCPClient {
     return this.authorizationUrl;
   }
 
-  async finishAuth(code: string) {
+  async finishAuth(code: string, state: string) {
     if (!isMaybeRemoteConfig(this.serverConfig))
       throw new Error("OAuth flow requires a remote MCP server");
+
+    if (this.oauthProvider?.state() != state) {
+      await this.disconnect();
+      await this.connect(state);
+    }
+
     const finish = (this.transport as StreamableHTTPClientTransport)
       ?.finishAuth;
 
@@ -102,14 +108,20 @@ export class MCPClient {
     };
   }
 
-  private createOAuthProvider() {
+  private createOAuthProvider(oauthState?: string) {
     if (isMaybeRemoteConfig(this.serverConfig) && this.needOauthProvider) {
       this.logger.info("Creating OAuth provider for MCP server authentication");
-      if (this.oauthProvider) return this.oauthProvider;
+      if (this.oauthProvider) {
+        if (oauthState && oauthState != this.oauthProvider.state()) {
+          this.oauthProvider.adoptState(oauthState);
+        }
+        return this.oauthProvider;
+      }
       this.oauthProvider = new PgOAuthClientProvider({
         name: this.name,
         mcpServerId: this.id,
         serverUrl: this.serverConfig.url,
+        state: oauthState,
         _clientMetadata: {
           client_name: `better-chatbot-${this.name}`,
           grant_types: ["authorization_code", "refresh_token"],
@@ -141,7 +153,7 @@ export class MCPClient {
     }
   }
 
-  async connect(): Promise<Client | undefined> {
+  async connect(oauthState?: string): Promise<Client | undefined> {
     if (this.status === "loading") {
       await this.locker.wait();
       return this.client;
@@ -197,7 +209,7 @@ export class MCPClient {
               headers: config.headers,
               signal: abortController.signal,
             },
-            authProvider: this.createOAuthProvider(),
+            authProvider: this.createOAuthProvider(oauthState),
           });
           await withTimeout(client.connect(this.transport), CONNET_TIMEOUT);
         } catch (streamableHttpError: any) {
@@ -222,7 +234,7 @@ export class MCPClient {
                 headers: config.headers,
                 signal: abortController.signal,
               },
-              authProvider: this.createOAuthProvider(),
+              authProvider: this.createOAuthProvider(oauthState),
             });
 
             try {
