@@ -142,6 +142,11 @@ export async function GET(request: NextRequest) {
   }
 
   const client = await mcpClientsManager.getClient(session.mcpServerId);
+
+  if (client?.client) {
+    await client.client.connect();
+  }
+
   if (client?.client.status != "authorizing") {
     return createOAuthResponsePage({
       type: "error",

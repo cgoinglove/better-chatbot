@@ -138,12 +138,7 @@ export class MCPClient {
     }
   }
 
-  /**
-   * Connect to the MCP server
-   * Do not throw Error
-   * @returns this
-   */
-  async connect() {
+  async connect(): Promise<Client | undefined> {
     if (this.status === "loading") {
       await this.locker.wait();
       return this.client;

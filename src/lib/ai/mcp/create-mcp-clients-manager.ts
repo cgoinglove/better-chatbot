@@ -231,6 +231,7 @@ export class MCPClientsManager {
     if (!client) {
       await this.refreshClient(id);
     }
+
     return this.clients.get(id);
   }
   async toolCallByServerName(
