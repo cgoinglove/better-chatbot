@@ -147,7 +147,7 @@ export async function GET(request: NextRequest) {
       type: "error",
       title: "OAuth Error",
       heading: "Authentication Failed",
-      message: "Client is not ready for authorization",
+      message: `Client is not ready for authorization, current status: ${client?.client.status}`,
       postMessageType: "MCP_OAUTH_ERROR",
       postMessageData: {
         error: "invalid_state",

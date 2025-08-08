@@ -24,6 +24,9 @@ export function createDbBasedMCPConfigsStorage(): MCPConfigStorage {
   }
 
   async function checkAndRefreshClients() {
+    if (!manager) {
+      return;
+    }
     try {
       logger.info("Checking MCP clients Diff");
       const servers = await mcpRepository.selectAll();
