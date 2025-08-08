@@ -14,6 +14,7 @@ import {
   varchar,
   index,
 } from "drizzle-orm/pg-core";
+import { isNotNull } from "drizzle-orm";
 import { DBWorkflow, DBEdge, DBNode } from "app-types/workflow";
 
 export const ChatThreadSchema = pgTable("chat_thread", {
@@ -253,13 +254,12 @@ export const McpOAuthSessionSchema = pgTable(
     id: uuid("id").primaryKey().notNull().defaultRandom(),
     mcpServerId: uuid("mcp_server_id")
       .notNull()
-      .references(() => McpServerSchema.id, { onDelete: "cascade" })
-      .unique(), // One record per MCP server
+      .references(() => McpServerSchema.id, { onDelete: "cascade" }),
     serverUrl: text("server_url").notNull(),
     clientInfo: json("client_info"),
     tokens: json("tokens"),
     codeVerifier: text("code_verifier"),
-    state: text("state"), // OAuth state parameter for current flow
+    state: text("state").unique(), // OAuth state parameter for current flow (unique for security)
     createdAt: timestamp("created_at")
       .notNull()
       .default(sql`CURRENT_TIMESTAMP`),
@@ -268,8 +268,12 @@ export const McpOAuthSessionSchema = pgTable(
       .default(sql`CURRENT_TIMESTAMP`),
   },
   (t) => [
-    index("mcp_oauth_data_server_id_idx").on(t.mcpServerId),
-    index("mcp_oauth_data_state_idx").on(t.state),
+    index("mcp_oauth_session_server_id_idx").on(t.mcpServerId),
+    index("mcp_oauth_session_state_idx").on(t.state),
+    // Partial index for sessions with tokens for better performance
+    index("mcp_oauth_session_tokens_idx")
+      .on(t.mcpServerId)
+      .where(isNotNull(t.tokens)),
   ],
 );
 

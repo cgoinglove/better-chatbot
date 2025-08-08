@@ -123,7 +123,7 @@ export async function GET(request: NextRequest) {
   }
 
   // Find the OAuth session by state
-  const session = await mcpOAuthRepository.getOAuthSessionByState(
+  const session = await mcpOAuthRepository.getSessionByState(
     callbackData.state,
   );
   if (!session) {

@@ -20,12 +20,13 @@ import { ConsolaInstance } from "consola";
 
 /**
  * PostgreSQL-based OAuth client provider for MCP servers
- * Manages OAuth authentication state and tokens with session expiration
+ * Manages OAuth authentication state and tokens with multi-instance support
  */
 export class PgOAuthClientProvider implements OAuthClientProvider {
-  private currentOAuthState: string = generateUUID(); // Random UUID for OAuth security
+  private currentOAuthState: string = "";
   private cachedAuthData: McpOAuthSession | undefined;
   private logger: ConsolaInstance;
+  private initialized = false;
 
   constructor(
     private config: {
@@ -41,24 +42,59 @@ export class PgOAuthClientProvider implements OAuthClientProvider {
     });
   }
 
-  private async getAuthData() {
-    if (this.cachedAuthData) {
-      return this.cachedAuthData;
-    }
-    this.cachedAuthData = await pgMcpOAuthRepository.getOAuthSession(
+  private async initializeOAuth() {
+    if (this.initialized) return;
+
+    // 1. Check for authenticated session first
+    const authenticated = await pgMcpOAuthRepository.getAuthenticatedSession(
       this.config.mcpServerId,
     );
+    if (authenticated) {
+      this.currentOAuthState = authenticated.state || "";
+      this.cachedAuthData = authenticated;
+      this.initialized = true;
+      this.logger.info("Using existing authenticated session");
+      return;
+    }
+
+    // 2. Check for in-progress session
+    const inProgress = await pgMcpOAuthRepository.getInProgressSession(
+      this.config.mcpServerId,
+    );
+    if (inProgress) {
+      this.currentOAuthState = inProgress.state || "";
+      this.cachedAuthData = inProgress;
+      this.initialized = true;
+      this.logger.info("Resuming in-progress OAuth session");
+      return;
+    }
+
+    // 3. Create new session
+    this.currentOAuthState = generateUUID();
+    this.cachedAuthData = await pgMcpOAuthRepository.createSession(
+      this.config.mcpServerId,
+      {
+        state: this.currentOAuthState,
+        serverUrl: this.config.serverUrl,
+      },
+    );
+    this.initialized = true;
+    this.logger.info("Created new OAuth session");
+  }
+
+  private async getAuthData() {
+    await this.initializeOAuth();
     return this.cachedAuthData;
   }
 
-  private async saveAuthData(data: Partial<McpOAuthSession>) {
-    this.cachedAuthData = await pgMcpOAuthRepository.saveOAuthSession(
-      this.config.mcpServerId,
-      {
-        ...data,
-        serverUrl: this.config.serverUrl,
-        state: this.currentOAuthState, // Update current state
-      },
+  private async updateAuthData(data: Partial<McpOAuthSession>) {
+    if (!this.currentOAuthState) {
+      throw new Error("OAuth not initialized");
+    }
+
+    this.cachedAuthData = await pgMcpOAuthRepository.updateSessionByState(
+      this.currentOAuthState,
+      data,
     );
     return this.cachedAuthData;
   }
@@ -78,12 +114,14 @@ export class PgOAuthClientProvider implements OAuthClientProvider {
   async clientInformation(): Promise<OAuthClientInformation | undefined> {
     const authData = await this.getAuthData();
     if (authData?.clientInfo) {
+      // Check if redirect URI matches (security check)
       if (
         !authData.tokens &&
         authData.clientInfo.redirect_uris[0] != this.redirectUrl
       ) {
-        await pgMcpOAuthRepository.deleteOAuthData(this.config.mcpServerId);
+        await pgMcpOAuthRepository.deleteAllSessions(this.config.mcpServerId);
         this.cachedAuthData = undefined;
+        this.initialized = false;
         return undefined;
       }
       return authData.clientInfo;
@@ -95,7 +133,7 @@ export class PgOAuthClientProvider implements OAuthClientProvider {
   async saveClientInformation(
     clientCredentials: OAuthClientInformationFull,
   ): Promise<void> {
-    await this.saveAuthData({
+    await this.updateAuthData({
       clientInfo: clientCredentials,
     });
 
@@ -112,11 +150,16 @@ export class PgOAuthClientProvider implements OAuthClientProvider {
   }
 
   async saveTokens(accessTokens: OAuthTokens): Promise<void> {
-    await this.saveAuthData({
-      tokens: accessTokens,
-    });
+    // Use saveTokensAndCleanup to store tokens and clean up incomplete sessions
+    this.cachedAuthData = await pgMcpOAuthRepository.saveTokensAndCleanup(
+      this.config.mcpServerId,
+      this.currentOAuthState,
+      accessTokens,
+    );
 
-    this.logger.info(`OAuth tokens stored successfully`);
+    this.logger.info(
+      `OAuth tokens stored successfully and incomplete sessions cleaned up`,
+    );
   }
 
   async redirectToAuthorization(authorizationUrl: URL): Promise<void> {
@@ -125,7 +168,7 @@ export class PgOAuthClientProvider implements OAuthClientProvider {
   }
 
   async saveCodeVerifier(pkceVerifier: string): Promise<void> {
-    await this.saveAuthData({
+    await this.updateAuthData({
       codeVerifier: pkceVerifier,
     });
   }
@@ -148,24 +191,26 @@ export class PgOAuthClientProvider implements OAuthClientProvider {
     try {
       switch (invalidationScope) {
         case "all":
-          await pgMcpOAuthRepository.deleteOAuthData(this.config.mcpServerId);
+          await pgMcpOAuthRepository.deleteAllSessions(this.config.mcpServerId);
           this.cachedAuthData = undefined;
+          this.initialized = false;
+          this.currentOAuthState = "";
           this.logger.info(`OAuth credentials invalidated`);
           break;
         case "tokens":
-          await this.saveAuthData({
+          await this.updateAuthData({
             tokens: undefined,
           });
           this.logger.info(`OAuth tokens invalidated`);
           break;
         case "verifier":
-          await this.saveAuthData({
+          await this.updateAuthData({
             codeVerifier: undefined,
           });
           this.logger.info(`OAuth code verifier invalidated`);
           break;
         case "client":
-          await this.saveAuthData({
+          await this.updateAuthData({
             clientInfo: undefined,
           });
           this.logger.info(`OAuth client information invalidated`);

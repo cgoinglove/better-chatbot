@@ -228,15 +228,44 @@ export type McpOAuthSession = {
 };
 
 export type McpOAuthRepository = {
-  // Get OAuth data for a server
-  getOAuthSession(mcpServerId: string): Promise<McpOAuthSession | undefined>;
-  // Get OAuth data by state parameter (for callback handling)
-  getOAuthSessionByState(state: string): Promise<McpOAuthSession | undefined>;
-  // Save OAuth data with mcpServerId-based upsert
-  saveOAuthSession(
+  // 1. Query methods
+
+  // Get session with valid tokens (authenticated)
+  getAuthenticatedSession(
+    mcpServerId: string,
+  ): Promise<McpOAuthSession | undefined>;
+
+  // Get in-progress OAuth session (has state but no tokens)
+  getInProgressSession(
+    mcpServerId: string,
+  ): Promise<McpOAuthSession | undefined>;
+
+  // Get session by OAuth state (for callback handling)
+  getSessionByState(state: string): Promise<McpOAuthSession | undefined>;
+
+  // 2. Create/Update methods
+
+  // Create new OAuth session
+  createSession(
     mcpServerId: string,
     data: Partial<McpOAuthSession>,
   ): Promise<McpOAuthSession>;
-  // Delete OAuth data for a server
-  deleteOAuthData(mcpServerId: string): Promise<void>;
+
+  // Update existing session by state
+  updateSessionByState(
+    state: string,
+    data: Partial<McpOAuthSession>,
+  ): Promise<McpOAuthSession>;
+
+  // Save tokens and cleanup incomplete sessions
+  saveTokensAndCleanup(
+    mcpServerId: string,
+    state: string,
+    tokens: OAuthTokens,
+  ): Promise<McpOAuthSession>;
+
+  // 3. Delete methods
+
+  // Delete all sessions for a server
+  deleteAllSessions(mcpServerId: string): Promise<void>;
 };

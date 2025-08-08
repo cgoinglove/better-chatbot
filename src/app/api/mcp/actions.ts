@@ -70,16 +70,12 @@ export async function authorizeMcpClientAction(id: string) {
 }
 
 export async function checkTokenMcpClientAction(id: string) {
-  const session = await mcpOAuthRepository.getOAuthSession(id);
+  const session = await mcpOAuthRepository.getAuthenticatedSession(id);
 
   // for wait connect to mcp server
   await mcpClientsManager.getClient(id).catch(() => null);
 
-  if (!session) {
-    return false;
-  }
-
-  return !!session.tokens;
+  return !!session?.tokens;
 }
 
 export async function callMcpToolAction(

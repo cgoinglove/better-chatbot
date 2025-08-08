@@ -202,7 +202,7 @@ export class MCPClient {
             authProvider: this.createOAuthProvider(),
           });
           await withTimeout(client.connect(this.transport), CONNET_TIMEOUT);
-        } catch (streamableHttpError) {
+        } catch (streamableHttpError: any) {
           // Check if it's OAuth error and we haven't tried OAuth yet
           if (isUnauthorized(streamableHttpError) && !this.needOauthProvider) {
             this.logger.info(
@@ -215,9 +215,8 @@ export class MCPClient {
           }
 
           if (!isOAuthAuthorizationRequired(streamableHttpError)) {
-            this.logger.error(streamableHttpError);
             this.logger.warn(
-              "Streamable HTTP connection failed, falling back to SSE transport",
+              `Streamable HTTP connection failed, Because ${streamableHttpError.message}, falling back to SSE transport`,
             );
 
             this.transport = new SSEClientTransport(url, {
