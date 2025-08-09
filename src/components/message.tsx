@@ -13,13 +13,7 @@ import {
   ToolMessagePart,
   ReasoningPart,
 } from "./message-parts";
-import {
-  Terminal,
-  ChevronDown,
-  ChevronUp,
-  RefreshCw,
-  TriangleAlertIcon,
-} from "lucide-react";
+import { ChevronDown, ChevronUp, TriangleAlertIcon } from "lucide-react";
 import { Button } from "ui/button";
 import { useTranslations } from "next-intl";
 import { ChatMessageAnnotation, ClientToolInvocation } from "app-types/chat";
