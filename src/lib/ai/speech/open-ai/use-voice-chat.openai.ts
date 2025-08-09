@@ -441,9 +441,12 @@ export function useOpenAIVoiceChat(
         setIsActive(false);
         setIsListening(false);
       });
+      const realtimeURL =
+        session.realtime_base_url || "https://api.openai.com/v1/realtime";
+
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
-      const sdpResponse = await fetch(`https://api.openai.com/v1/realtime`, {
+      const sdpResponse = await fetch(realtimeURL, {
         method: "POST",
         body: offer.sdp,
         headers: {

@@ -1,4 +1,4 @@
-import { customModelProvider } from "lib/ai/models";
+import { modelRegistry } from "lib/ai/core/models";
 import {
   ConditionNodeData,
   OutputNodeData,
@@ -86,7 +86,7 @@ export const llmNodeExecutor: NodeExecutor<LLMNodeData> = async ({
   node,
   state,
 }) => {
-  const model = customModelProvider.getModel(node.model);
+  const model = modelRegistry.getModel(node.model).model;
 
   // Convert TipTap JSON messages to AI SDK format, resolving mentions to actual data
   const messages: Omit<Message, "id">[] = node.messages.map((message) =>
@@ -210,7 +210,7 @@ export const toolNodeExecutor: NodeExecutor<ToolNodeData> = async ({
       : undefined;
 
     const response = await generateText({
-      model: customModelProvider.getModel(node.model),
+      model: modelRegistry.getModel(node.model).model,
       maxSteps: 1,
       toolChoice: "required", // Force the model to call the tool
       prompt,

@@ -1,6 +1,6 @@
 import { createDataStreamResponse, smoothStream, streamText } from "ai";
 
-import { customModelProvider } from "lib/ai/models";
+import { modelRegistry } from "lib/ai/core/models";
 import { CREATE_THREAD_TITLE_PROMPT } from "lib/ai/prompts";
 import globalLogger from "logger";
 import { ChatModel } from "app-types/chat";
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
     return createDataStreamResponse({
       execute(dataStream) {
         const result = streamText({
-          model: customModelProvider.getModel(chatModel),
+          model: modelRegistry.getModel(chatModel).model,
           system: CREATE_THREAD_TITLE_PROMPT,
           experimental_transform: smoothStream({ chunking: "word" }),
           prompt: message,

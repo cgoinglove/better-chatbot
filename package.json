@@ -7,7 +7,7 @@
   "type": "module",
   "scripts": {
     "dev": "next dev --turbopack",
-    "dev:https": "next dev --turbopack --experimental-https",
+    "dev:https": "NODE_TLS_REJECT_UNAUTHORIZED=0 next dev --turbopack --experimental-https",
     "build": "next build",
     "start": "next start",
     "build:local": "cross-env NO_HTTPS='1' next build",
@@ -18,8 +18,7 @@
     "format": "biome format --write",
     "check-types": "tsc --noEmit",
     "initial:env": "tsx scripts/initial-env.ts",
-    "openai-compatiable:init": "tsx scripts/init-openai-compatiable.ts",
-    "openai-compatiable:parse": "tsx scripts/parse-openai-compatiable.ts",
+    "generate:schema": "tsx scripts/generate-json-schema.ts",
     "postinstall": "tsx scripts/postinstall.ts",
     "clean": "tsx scripts/clean.ts",
     "db:generate": "drizzle-kit generate",
@@ -42,6 +41,7 @@
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^1.2.12",
+    "@ai-sdk/azure": "^1.3.23",
     "@ai-sdk/google": "^1.2.22",
     "@ai-sdk/openai": "^1.3.23",
     "@ai-sdk/openai-compatible": "^0.2.16",
@@ -135,7 +135,8 @@
     "tsx": "^4.20.3",
     "typescript": "^5.9.2",
     "vite-tsconfig-paths": "^5.1.4",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "zod-to-json-schema": "^3.24.6"
   },
   "lint-staged": {
     "*.{js,json,mjs,ts,yaml,tsx,css}": [

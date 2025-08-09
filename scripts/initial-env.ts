@@ -16,6 +16,43 @@ const DOCKER_POSTGRES_SETTINGS = [
 ].join("\n");
 
 /**
+ * Copy config/models.example.json to config/models.json if models.json doesn't exist
+ */
+function copyModelsConfigFile() {
+  const modelsConfigPath = path.join(ROOT, "config/models.json");
+  const modelsExamplePath = path.join(ROOT, "config/models.example.json");
+
+  if (!fs.existsSync(modelsConfigPath)) {
+    try {
+      console.warn(
+        "config/models.json file not found. Copying from config/models.example.json...",
+      );
+
+      // Ensure config directory exists
+      const configDir = path.join(ROOT, "config");
+      if (!fs.existsSync(configDir)) {
+        fs.mkdirSync(configDir, { recursive: true });
+        console.log("Created config directory.");
+      }
+
+      fs.copyFileSync(modelsExamplePath, modelsConfigPath);
+      console.log("config/models.json file has been created.");
+      console.warn(
+        "Important: You may need to edit the config/models.json file to configure your AI providers.",
+      );
+    } catch (error) {
+      console.error("Error occurred while creating config/models.json file.");
+      console.error(error);
+      return false;
+    }
+  } else {
+    console.info("config/models.json file already exists. Skipping...");
+  }
+
+  return true;
+}
+
+/**
  * Copy .env.example to .env if .env doesn't exist
  */
 function copyEnvFile() {
@@ -66,6 +103,9 @@ function copyEnvFile() {
   return true;
 }
 
-// Execute copy operation
-const result = copyEnvFile();
-process.exit(result ? 0 : 1);
+// Execute copy operations
+const envResult = copyEnvFile();
+const modelsResult = copyModelsConfigFile();
+
+const success = envResult && modelsResult;
+process.exit(success ? 0 : 1);

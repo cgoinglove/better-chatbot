@@ -1,6 +1,6 @@
-## Social Login Setup (Google & GitHub, English)
+# Social Login Setup (Google & GitHub, English)
 
-### Get your Google credentials
+## Get your Google credentials
 
 To use Google as a social provider, you need to get your Google credentials. You can get them by creating a new project in the [Google Cloud Console](https://console.cloud.google.com/apis/dashboard).
 
@@ -12,7 +12,8 @@ To use Google as a social provider, you need to get your Google credentials. You
   - For production: your deployed application's URL, e.g. `https://example.com/api/auth/callback/google`
 - If you change the base path of your authentication routes, update the redirect URL accordingly.
 - After creation, copy your **Client ID** and **Client Secret** and add them to your `.env` file:
-  ```
+
+  ```text
   GOOGLE_CLIENT_ID=your_client_id
   GOOGLE_CLIENT_SECRET=your_client_secret
   ```
@@ -28,7 +29,8 @@ To use GitHub sign in, you need a client ID and client secret. You can get them 
 - If you change the base path of your authentication routes, make sure to update the redirect URL accordingly.
 - **Important:** You MUST include the `user:email` scope in your GitHub app to ensure the application can access the user's email address.
 - Add your credentials to your `.env` file:
-  ```
+
+  ```text
   GITHUB_CLIENT_ID=your_client_id
   GITHUB_CLIENT_SECRET=your_client_secret
   ```

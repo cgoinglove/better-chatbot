@@ -21,7 +21,7 @@ import {
   mcpMcpToolCustomizationRepository,
   mcpServerCustomizationRepository,
 } from "lib/db/repository";
-import { customModelProvider } from "lib/ai/models";
+import { modelRegistry } from "lib/ai/core/models";
 import { toAny } from "lib/utils";
 import { McpServerCustomizationsPrompt, MCPToolInfo } from "app-types/mcp";
 import { serverCache } from "lib/cache";
@@ -112,7 +112,7 @@ export async function generateExampleToolSchemaAction(options: {
   toolInfo: MCPToolInfo;
   prompt?: string;
 }) {
-  const model = customModelProvider.getModel(options.model);
+  const model = modelRegistry.getModel(options.model).model;
 
   const schema = jsonSchema(
     toAny({
@@ -197,7 +197,7 @@ export async function generateObjectAction({
   schema: JSONSchema7 | ObjectJsonSchema7;
 }) {
   const result = await generateObject({
-    model: customModelProvider.getModel(model),
+    model: modelRegistry.getModel(model).model,
     system: prompt.system,
     prompt: prompt.user,
     schema: jsonSchemaToZod(schema),
