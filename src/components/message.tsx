@@ -13,7 +13,7 @@ import {
   ToolMessagePart,
   ReasoningPart,
 } from "./message-parts";
-import { Terminal, ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, TriangleAlertIcon } from "lucide-react";
 import { Button } from "ui/button";
 import { useTranslations } from "next-intl";
 import { ChatMessageAnnotation, ClientToolInvocation } from "app-types/chat";
@@ -183,42 +183,48 @@ export const ErrorMessage = ({
   const t = useTranslations();
   return (
     <div className="w-full mx-auto max-w-3xl px-6 animate-in fade-in mt-4">
-      <Alert variant="destructive" className="border-destructive">
-        <Terminal className="h-4 w-4" />
-        <AlertTitle className="mb-2">{t("Chat.Error")}</AlertTitle>
-        <AlertDescription className="text-sm">
-          <div className="whitespace-pre-wrap">
-            {isExpanded
-              ? error.message
-              : truncateString(error.message, maxLength)}
+      <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-4 px-2 opacity-70">
+          <div className="flex items-start gap-3">
+            <div className="p-1.5 bg-muted rounded-sm">
+              <TriangleAlertIcon className="h-3.5 w-3.5 text-destructive" />
+            </div>
+            <div className="flex-1">
+              <p className="font-medium text-sm mb-2">{t("Chat.Error")}</p>
+              <div className="text-sm text-muted-foreground">
+                <div className="whitespace-pre-wrap">
+                  {isExpanded
+                    ? error.message
+                    : truncateString(error.message, maxLength)}
+                </div>
+                {error.message.length > maxLength && (
+                  <Button
+                    onClick={() => setIsExpanded(!isExpanded)}
+                    variant={"ghost"}
+                    className="h-auto p-1 text-xs mt-2"
+                    size={"sm"}
+                  >
+                    {isExpanded ? (
+                      <>
+                        <ChevronUp className="h-3 w-3 mr-1" />
+                        {t("Common.showLess")}
+                      </>
+                    ) : (
+                      <>
+                        <ChevronDown className="h-3 w-3 mr-1" />
+                        {t("Common.showMore")}
+                      </>
+                    )}
+                  </Button>
+                )}
+                <p className="text-xs text-muted-foreground mt-3 italic">
+                  {t("Chat.thisMessageWasNotSavedPleaseTryTheChatAgain")}
+                </p>
+              </div>
+            </div>
           </div>
-          {error.message.length > maxLength && (
-            <Button
-              onClick={() => setIsExpanded(!isExpanded)}
-              variant={"ghost"}
-              className="ml-auto"
-              size={"sm"}
-            >
-              {isExpanded ? (
-                <>
-                  <ChevronUp className="h-3 w-3" />
-                  {t("Common.showLess")}
-                </>
-              ) : (
-                <>
-                  <ChevronDown className="h-3 w-3" />
-                  {t("Common.showMore")}
-                </>
-              )}
-            </Button>
-          )}
-        </AlertDescription>
-        <AlertDescription>
-          <p className="text-sm text-muted-foreground my-2">
-            {t("Chat.thisMessageWasNotSavedPleaseTryTheChatAgain")}
-          </p>
-        </AlertDescription>
-      </Alert>
+        </div>
+      </div>
     </div>
   );
 };

@@ -140,7 +140,6 @@ export const UserMessagePart = memo(
     useEffect(() => {
       if (status === "submitted" && isLast && !scrolledRef.current) {
         scrolledRef.current = true;
-
         ref.current?.scrollIntoView({ behavior: "smooth" });
       }
     }, [status]);
@@ -335,7 +334,7 @@ export const AssistMessagePart = memo(function AssistMessagePart({
     if (isLast && isChatLoading && shouldAutoScroll && isAtBottom) {
       throttle(() => {
         ref.current?.scrollIntoView({ behavior: "smooth" });
-      }, 400);
+      }, 1000);
     }
   }, [isLast, isChatLoading, shouldAutoScroll, isAtBottom, part.text]);
 
@@ -351,6 +350,7 @@ export const AssistMessagePart = memo(function AssistMessagePart({
         // Once disabled, it stays disabled for this message
         if (!entry.isIntersecting) {
           setShouldAutoScroll(false);
+          throttle.clear();
         }
       },
       {
