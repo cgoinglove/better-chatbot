@@ -41,7 +41,8 @@
     "createWithExample": "예제로 생성",
     "generateWithAI": "AI로 생성",
     "resultsFound": "{count}개의 결과 찾음",
-    "youAreAnExpertIn": "당신은 {role} 전문가입니다"
+    "youAreAnExpertIn": "당신은 {role} 전문가입니다",
+    "sharedBy": "{userName}님이 공유함"
   },
   "Auth": {
     "SignIn": {
@@ -269,7 +270,32 @@
     "generateAgentGreeting": "안녕하세요! 당신만의 에이전트를 만드는 걸 도와드릴게요. 무엇을 만들고 싶으신가요?",
     "generateAgentDetailedGreeting": "안녕하세요! 당신만의 에이전트를 만드는 걸 도와드릴게요. 무엇을 만들고 싶으신가요? 간단하게 작성하셔도 좋고, 자세하게 작성하셔도 좋아요.",
     "inputPromptHere": "여기에 프롬프트를 입력하세요...",
-    "agentNamePlaceholder": "better-agent"
+    "agentNamePlaceholder": "better-agent",
+    "myAgents": "내 에이전트",
+    "sharedAgents": "공유된 에이전트",
+    "noAgents": "에이전트가 없습니다",
+    "createFirst": "첫 번째 에이전트를 생성해 시작하세요",
+    "noSharedAgents": "공유된 에이전트가 없습니다",
+    "noSharedAgentsDescription": "북마크할 수 있는 공개 에이전트가 없습니다",
+    "noDescription": "설명이 제공되지 않았습니다",
+    "bookmarkAdded": "에이전트가 북마크되었습니다",
+    "bookmarkRemoved": "북마크가 제거되었습니다",
+    "bookmarkedAgent": "북마크된 에이전트",
+    "addBookmark": "에이전트 북마크",
+    "removeBookmark": "북마크 제거",
+    "visibilityUpdated": "가시성이 업데이트되었습니다",
+    "deleted": "에이전트가 삭제되었습니다",
+    "deleteConfirm": "이 에이전트를 삭제하시겠습니까?",
+    "makePrivate": "비공개로 설정",
+    "makeReadonly": "읽기 전용으로 설정",
+    "makePublic": "공개로 설정",
+    "visibility": "가시성",
+    "private": "비공개",
+    "readOnly": "읽기 전용",
+    "public": "공개",
+    "privateDescription": "나만 이 에이전트를 보고, 편집하고, 사용할 수 있습니다.",
+    "readOnlyDescription": "다른 사람들이 도구로 보고 사용할 수 있지만, 편집은 나만 할 수 있습니다.",
+    "publicDescription": "누구나 이 에이전트를 보고, 편집하고, 도구로 사용할 수 있습니다."
   },
   "KeyboardShortcuts": {
     "title": "키보드 단축키",
@@ -419,6 +445,7 @@
       "soonMessage": "곧 제공될 예정입니다."
     },
     "arrangeNodes": "자동 레이아웃",
-    "nodesArranged": "레이아웃이 성공적으로 적용되었습니다"
+    "nodesArranged": "레이아웃이 성공적으로 적용되었습니다",
+    "visibilityUpdated": "가시성이 성공적으로 업데이트되었습니다"
   }
 }

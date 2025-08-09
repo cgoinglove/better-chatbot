@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 
-const BUILD_OUTPUT = process.env.NEXT_STANDALONE_OUTPUT ? 'standalone' : undefined;
+const BUILD_OUTPUT = process.env.NEXT_STANDALONE_OUTPUT
+  ? "standalone"
+  : undefined;
 
 export default () => {
   const nextConfig: NextConfig = {

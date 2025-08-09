@@ -70,6 +70,7 @@ export const pgWorkflowRepository: WorkflowRepository = {
         icon: WorkflowSchema.icon,
         visibility: WorkflowSchema.visibility,
         isPublished: WorkflowSchema.isPublished,
+        userId: WorkflowSchema.userId,
         userName: UserSchema.name,
         userAvatar: UserSchema.image,
         updatedAt: WorkflowSchema.updatedAt,
@@ -96,6 +97,7 @@ export const pgWorkflowRepository: WorkflowRepository = {
         icon: WorkflowSchema.icon,
         visibility: WorkflowSchema.visibility,
         isPublished: WorkflowSchema.isPublished,
+        userId: WorkflowSchema.userId,
         userName: UserSchema.name,
         userAvatar: UserSchema.image,
         updatedAt: WorkflowSchema.updatedAt,
@@ -108,7 +110,7 @@ export const pgWorkflowRepository: WorkflowRepository = {
           eq(WorkflowSchema.userId, userId),
         ),
       )
-      .orderBy(desc(WorkflowSchema.updatedAt));
+      .orderBy(desc(WorkflowSchema.createdAt));
     return rows as WorkflowSummary[];
   },
   async selectById(id) {

@@ -9,11 +9,9 @@ import {
 // Mock MCP modules to avoid server-only imports
 vi.mock("lib/ai/mcp/mcp-manager", () => ({
   mcpClientsManager: {
-    toolCall: vi
-      .fn()
-      .mockResolvedValue({
-        content: [{ type: "text", text: "mocked result" }],
-      }),
+    toolCall: vi.fn().mockResolvedValue({
+      content: [{ type: "text", text: "mocked result" }],
+    }),
     tools: vi.fn().mockReturnValue({}),
   },
 }));

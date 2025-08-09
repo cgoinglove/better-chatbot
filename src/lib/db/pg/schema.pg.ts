@@ -48,9 +48,36 @@ export const AgentSchema = pgTable("agent", {
     .notNull()
     .references(() => UserSchema.id),
   instructions: json("instructions").$type<Agent["instructions"]>(),
+  visibility: varchar("visibility", {
+    enum: ["public", "private", "readonly"],
+  })
+    .notNull()
+    .default("private"),
   createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
+
+export const BookmarkSchema = pgTable(
+  "bookmark",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => UserSchema.id, { onDelete: "cascade" }),
+    itemId: uuid("item_id").notNull(),
+    itemType: varchar("item_type", {
+      enum: ["agent", "workflow"],
+    }).notNull(),
+    createdAt: timestamp("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    unique().on(table.userId, table.itemId, table.itemType),
+    index("bookmark_user_id_idx").on(table.userId),
+    index("bookmark_item_idx").on(table.itemId, table.itemType),
+  ],
+);
 
 export const McpServerSchema = pgTable("mcp_server", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
@@ -117,7 +144,7 @@ export const VerificationSchema = pgTable("verification", {
   ),
 });
 
-// Tool customization table for per-user additional AI instructions
+// Tool customization table for per-user additional instructions
 export const McpToolCustomizationSchema = pgTable(
   "mcp_server_tool_custom_instructions",
   {
@@ -290,3 +317,4 @@ export type McpServerCustomizationEntity =
 
 export type ArchiveEntity = typeof ArchiveSchema.$inferSelect;
 export type ArchiveItemEntity = typeof ArchiveItemSchema.$inferSelect;
+export type BookmarkEntity = typeof BookmarkSchema.$inferSelect;

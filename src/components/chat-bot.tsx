@@ -87,6 +87,7 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
     allowedMcpServers,
     threadList,
     threadMentions,
+    pendingThreadMention,
   ] = appStore(
     useShallow((state) => [
       state.mutate,
@@ -96,6 +97,7 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
       state.allowedMcpServers,
       state.threadList,
       state.threadMentions,
+      state.pendingThreadMention,
     ]),
   );
 
@@ -324,6 +326,18 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
       appStoreMutate({ currentThreadId: null });
     };
   }, [threadId]);
+
+  useEffect(() => {
+    if (pendingThreadMention && threadId) {
+      appStoreMutate((prev) => ({
+        threadMentions: {
+          ...prev.threadMentions,
+          [threadId]: [pendingThreadMention],
+        },
+        pendingThreadMention: undefined,
+      }));
+    }
+  }, [pendingThreadMention, threadId, appStoreMutate]);
 
   useEffect(() => {
     if (isInitialThreadEntry)

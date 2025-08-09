@@ -41,7 +41,8 @@
     "createWithExample": "用示例创建",
     "generateWithAI": "用 AI 生成",
     "resultsFound": "找到 {count} 个结果",
-    "youAreAnExpertIn": "您是{role}专家"
+    "youAreAnExpertIn": "您是{role}专家",
+    "sharedBy": "{userName} 分享"
   },
   "Auth": {
     "SignIn": {
@@ -270,7 +271,32 @@
     "generateAgentGreeting": "您好！我将帮助您创建您自己的智能体。您想创建什么？",
     "generateAgentDetailedGreeting": "您好！我将帮助您创建您自己的智能体。您想创建什么？您可以简要描述或详细描述。",
     "inputPromptHere": "在此输入提示词...",
-    "agentNamePlaceholder": "better-agent"
+    "agentNamePlaceholder": "better-agent",
+    "myAgents": "我的智能体",
+    "sharedAgents": "共享智能体",
+    "noAgents": "还没有智能体",
+    "createFirst": "创建您的第一个智能体开始使用",
+    "noSharedAgents": "没有共享智能体",
+    "noSharedAgentsDescription": "没有可书签的公共智能体",
+    "noDescription": "未提供描述",
+    "bookmarkAdded": "智能体已加入书签",
+    "bookmarkRemoved": "书签已移除",
+    "bookmarkedAgent": "已收藏的智能体",
+    "addBookmark": "收藏智能体",
+    "removeBookmark": "移除书签",
+    "visibilityUpdated": "可见性已更新",
+    "deleted": "智能体已删除",
+    "deleteConfirm": "您确定要删除此智能体吗？",
+    "makePrivate": "设为私有",
+    "makeReadonly": "设为只读",
+    "makePublic": "设为公开",
+    "visibility": "可见性",
+    "private": "私有",
+    "readOnly": "只读",
+    "public": "公开",
+    "privateDescription": "只有您可以查看、编辑和使用此智能体。",
+    "readOnlyDescription": "其他人可以查看并作为工具使用，但只有您可以编辑。",
+    "publicDescription": "任何人都可以查看、编辑并将此智能体用作工具。"
   },
   "KeyboardShortcuts": {
     "title": "键盘快捷键",
@@ -420,6 +446,7 @@
       "soonMessage": "即将推出。"
     },
     "arrangeNodes": "自动布局",
-    "nodesArranged": "布局已成功应用"
+    "nodesArranged": "布局已成功应用",
+    "visibilityUpdated": "可见性已成功更新"
   }
 }

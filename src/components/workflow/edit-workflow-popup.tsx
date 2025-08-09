@@ -182,7 +182,7 @@ export function EditWorkflowPopup({
                     }}
                     className="transition-colors hover:bg-secondary! group items-center justify-center flex w-14 h-14 rounded-lg cursor-pointer ring ring-background hover:ring-ring"
                   >
-                    <Avatar>
+                    <Avatar className="size-10">
                       <AvatarImage
                         src={config.icon.value}
                         className="group-hover:scale-110  transition-transform"

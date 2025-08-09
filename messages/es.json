@@ -40,7 +40,8 @@
     "failedToGenerateInput": "Error al generar entrada",
     "createWithExample": "Crear con Ejemplo",
     "resultsFound": "{count} resultados encontrados",
-    "youAreAnExpertIn": "Eres un experto en {role}"
+    "youAreAnExpertIn": "Eres un experto en {role}",
+    "sharedBy": "Compartido por {userName}"
   },
   "Auth": {
     "SignIn": {
@@ -269,7 +270,32 @@
     "generateAgentGreeting": "¡Hola! Te ayudaré a crear tu propio agente. ¿Qué te gustaría crear?",
     "generateAgentDetailedGreeting": "¡Hola! Te ayudaré a crear tu propio agente. ¿Qué te gustaría crear? Puedes escribir de forma breve o detallada.",
     "inputPromptHere": "escribe el prompt aquí...",
-    "agentNamePlaceholder": "better-agent"
+    "agentNamePlaceholder": "better-agent",
+    "myAgents": "Mis Agentes",
+    "sharedAgents": "Agentes Compartidos",
+    "noAgents": "Aún no hay agentes",
+    "createFirst": "Crea tu primer agente para empezar",
+    "noSharedAgents": "No hay agentes compartidos",
+    "noSharedAgentsDescription": "No hay agentes públicos disponibles para marcar",
+    "noDescription": "No se proporcionó descripción",
+    "bookmarkAdded": "Agente marcado",
+    "bookmarkRemoved": "Marcador eliminado",
+    "bookmarkedAgent": "Agente marcado",
+    "addBookmark": "Marcar agente",
+    "removeBookmark": "Eliminar marcador",
+    "visibilityUpdated": "Visibilidad actualizada",
+    "deleted": "Agente eliminado",
+    "deleteConfirm": "¿Estás seguro de que quieres eliminar este agente?",
+    "makePrivate": "Hacer Privado",
+    "makeReadonly": "Hacer Solo Lectura",
+    "makePublic": "Hacer Público",
+    "visibility": "Visibilidad",
+    "private": "Privado",
+    "readOnly": "Solo Lectura",
+    "public": "Público",
+    "privateDescription": "Solo tú puedes ver, editar y usar este agente.",
+    "readOnlyDescription": "Otros pueden ver y usar como herramienta, pero solo tú puedes editar.",
+    "publicDescription": "Cualquiera puede ver, editar y usar este agente como herramienta."
   },
   "KeyboardShortcuts": {
     "title": "Atajos de Teclado",
@@ -419,6 +445,7 @@
       "soonMessage": "Próximamente."
     },
     "arrangeNodes": "Auto Layout",
-    "nodesArranged": "Layout aplicado exitosamente"
+    "nodesArranged": "Layout aplicado exitosamente",
+    "visibilityUpdated": "Visibilidad actualizada exitosamente"
   }
 }
