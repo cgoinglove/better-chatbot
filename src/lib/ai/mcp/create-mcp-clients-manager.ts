@@ -185,13 +185,16 @@ export class MCPClientsManager {
    * Removes a client by name, disposing resources and removing from storage
    */
   async removeClient(id: string) {
-    const client = this.clients.get(id);
-
     if (this.storage) {
       if (await this.storage.has(id)) {
         await this.storage.delete(id);
       }
     }
+    this.disconnectClient(id);
+  }
+
+  async disconnectClient(id: string) {
+    const client = this.clients.get(id);
     this.clients.delete(id);
     if (client) {
       void client.client.disconnect();
