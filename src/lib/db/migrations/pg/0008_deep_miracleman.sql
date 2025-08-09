@@ -30,7 +30,10 @@ CREATE TABLE IF NOT EXISTS "archive_item" (
 -- Migrate data from project to agent and archive if project table exists
 DO $$ 
 BEGIN
-	IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'project') THEN
+	IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'project') 
+		AND EXISTS (SELECT FROM information_schema.columns 
+                WHERE table_name = 'chat_thread' AND column_name = 'project_id') 
+	THEN
 		-- 1. Migrate project system prompts to agent table
 		INSERT INTO "agent" (id, name, user_id, instructions, created_at, updated_at)
 		SELECT 
