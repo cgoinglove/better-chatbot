@@ -94,13 +94,37 @@ export const createDebounce = () => {
 
 export const createThrottle = () => {
   let lastCall = 0;
-  return (func: (...args: any[]) => any, waitFor = 200) => {
+  let timeout: ReturnType<typeof setTimeout> | null = null;
+
+  const throttle = (func: (...args: any[]) => any, waitFor = 200) => {
     const now = Date.now();
-    if (now - lastCall >= waitFor) {
+    const timeSinceLastCall = now - lastCall;
+
+    if (timeSinceLastCall >= waitFor) {
       lastCall = now;
       func();
+    } else {
+      // Schedule the next call if not already scheduled
+      if (!timeout) {
+        const remainingTime = waitFor - timeSinceLastCall;
+        timeout = setTimeout(() => {
+          lastCall = Date.now();
+          func();
+          timeout = null;
+        }, remainingTime);
+      }
     }
   };
+
+  throttle.clear = () => {
+    if (timeout) {
+      clearTimeout(timeout);
+      timeout = null;
+    }
+    lastCall = 0;
+  };
+
+  return throttle;
 };
 
 export const groupBy = <T>(arr: T[], getter: keyof T | ((item: T) => string)) =>

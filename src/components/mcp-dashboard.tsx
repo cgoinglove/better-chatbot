@@ -12,10 +12,11 @@ import { useTranslations } from "next-intl";
 import { MCPIcon } from "ui/mcp-icon";
 import { useMcpList } from "@/hooks/queries/use-mcp-list";
 import dynamic from "next/dynamic";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MCPServerInfo } from "app-types/mcp";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { cn } from "lib/utils";
 
 const LightRays = dynamic(() => import("@/components/ui/light-rays"), {
   ssr: false,
@@ -23,6 +24,8 @@ const LightRays = dynamic(() => import("@/components/ui/light-rays"), {
 
 export default function MCPDashboard({ message }: { message?: string }) {
   const t = useTranslations("MCP");
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [isScrolled, setIsScrolled] = useState(false);
   const {
     data: mcpList,
     isLoading,
@@ -72,6 +75,21 @@ export default function MCPDashboard({ message }: { message?: string }) {
     );
   }, [isLoading, mcpList.length]);
 
+  const handleScroll = useCallback((e: Event) => {
+    const target = e.target as HTMLElement;
+    setIsScrolled(target.scrollTop > 0);
+  }, []);
+
+  useEffect(() => {
+    const scrollElement = scrollRef.current?.querySelector(
+      "[data-radix-scroll-area-viewport]",
+    );
+    if (scrollElement) {
+      scrollElement.addEventListener("scroll", handleScroll);
+      return () => scrollElement.removeEventListener("scroll", handleScroll);
+    }
+  }, [handleScroll]);
+
   useEffect(() => {
     if (message) {
       toast(<p className="whitespace-pre-wrap break-all">{message}</p>, {
@@ -83,12 +101,17 @@ export default function MCPDashboard({ message }: { message?: string }) {
   return (
     <>
       {particle}
-      <ScrollArea className="h-full w-full z-40">
+      <ScrollArea ref={scrollRef} className="h-full w-full z-40">
         <div className="flex-1 relative flex flex-col gap-4 px-8 max-w-3xl h-full mx-auto pb-8">
-          <div className="flex items-center sticky top-0 bg-background z-50 pb-8">
+          <div
+            className={cn(
+              "flex items-center sticky top-0 bg-background z-50 pb-8",
+              isScrolled && "border-b",
+            )}
+          >
             <h1 className="text-2xl font-bold flex items-center gap-2">
               MCP Servers
-              {showValidating && isValidating && (
+              {showValidating && isValidating && !isLoading && (
                 <Loader2 className="size-4 animate-spin" />
               )}
             </h1>

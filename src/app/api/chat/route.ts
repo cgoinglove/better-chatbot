@@ -340,6 +340,6 @@ export async function POST(request: Request) {
     });
   } catch (error: any) {
     logger.error(error);
-    return new Response(error.message, { status: 500 });
+    return Response.json({ message: error.message }, { status: 500 });
   }
 }
