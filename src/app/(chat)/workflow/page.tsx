@@ -10,7 +10,7 @@ import useSWR, { mutate } from "swr";
 import { fetcher } from "lib/utils";
 import { Skeleton } from "ui/skeleton";
 import { BackgroundPaths } from "ui/background-paths";
-import { ItemCard } from "@/components/ui/item-card";
+import { ShareableCard } from "@/components/shareable-card";
 import {
   DBEdge,
   DBNode,
@@ -29,6 +29,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "ui/dialog";
 import { WorkflowGreeting } from "@/components/workflow/workflow-greeting";
+import { notify } from "lib/notify";
 
 const createWithExample = async (exampleWorkflow: {
   workflow: Partial<DBWorkflow>;
@@ -112,7 +113,10 @@ export default function WorkflowPage() {
   };
 
   const deleteWorkflow = async (workflowId: string) => {
-    if (!confirm(t("Workflow.deleteConfirm"))) return;
+    const ok = await notify.confirm({
+      description: t("Workflow.deleteConfirm"),
+    });
+    if (!ok) return;
 
     try {
       const response = await fetch(`/api/workflow/${workflowId}`, {
@@ -204,7 +208,7 @@ export default function WorkflowPage() {
                   <Skeleton key={index} className="w-full h-[196px]" />
                 ))
             : myWorkflows?.map((workflow) => (
-                <ItemCard
+                <ShareableCard
                   key={workflow.id}
                   type="workflow"
                   item={workflow}
@@ -227,7 +231,7 @@ export default function WorkflowPage() {
 
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {sharedWorkflows?.map((workflow) => (
-              <ItemCard
+              <ShareableCard
                 key={workflow.id}
                 type="workflow"
                 item={workflow}

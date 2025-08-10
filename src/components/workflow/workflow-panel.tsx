@@ -13,7 +13,7 @@ import equal from "lib/equal";
 
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
-import { ItemActions } from "@/components/ui/item-actions";
+import { ShareableActions } from "@/components/shareable-actions";
 
 import { DBWorkflow } from "app-types/workflow";
 
@@ -229,7 +229,7 @@ export const WorkflowPanel = memo(
               </p>
             </TooltipContent>
           </Tooltip>
-          <ItemActions
+          <ShareableActions
             type="workflow"
             visibility={workflow.visibility}
             isOwner={hasEditAccess || false}

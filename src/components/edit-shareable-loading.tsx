@@ -1,14 +1,14 @@
 import { Skeleton } from "ui/skeleton";
 
-interface EditItemLoadingProps {
+interface EditShareableLoadingProps {
   title?: string;
   showGenerateButton?: boolean;
 }
 
-export function EditItemLoading({
+export function EditShareableLoading({
   title,
   showGenerateButton = false,
-}: EditItemLoadingProps) {
+}: EditShareableLoadingProps) {
   return (
     <div className="h-full w-full relative">
       <div className="z-10 relative flex flex-col gap-4 px-8 pt-8 pb-14 max-w-3xl h-full mx-auto">

@@ -6,7 +6,6 @@ import {
   Globe,
   Bookmark,
   BookmarkCheck,
-  Edit,
   Trash2,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -19,6 +18,7 @@ import {
   DropdownMenuTrigger,
 } from "ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
+import { WriteIcon } from "ui/write-icon";
 
 export type Visibility = "private" | "public" | "readonly";
 
@@ -56,7 +56,7 @@ const VISIBILITY_CONFIG = {
   },
 } as const;
 
-interface ItemActionsProps {
+interface ShareableActionsProps {
   type: "agent" | "workflow";
   visibility?: Visibility;
   isOwner: boolean;
@@ -68,7 +68,7 @@ interface ItemActionsProps {
   renderActions?: () => React.ReactNode;
 }
 
-export function ItemActions({
+export function ShareableActions({
   type,
   visibility,
   isOwner,
@@ -78,7 +78,7 @@ export function ItemActions({
   onBookmarkToggle,
   onDelete,
   renderActions,
-}: ItemActionsProps) {
+}: ShareableActionsProps) {
   const t = useTranslations();
   const router = useRouter();
 
@@ -104,26 +104,29 @@ export function ItemActions({
             <DropdownMenu>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="size-8 text-muted-foreground hover:text-foreground"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                      }}
-                    >
-                      <VisibilityIcon className="size-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
+                  <div>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-8 data-[state=open]:bg-input text-muted-foreground hover:text-foreground"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }}
+                      >
+                        <VisibilityIcon className="size-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                  </div>
                 </TooltipTrigger>
                 <TooltipContent>Change visibility</TooltipContent>
               </Tooltip>
-              <DropdownMenuContent align="end">
+              <DropdownMenuContent className="max-w-sm">
                 {visibilityItems.map((visibilityItem) => (
                   <DropdownMenuItem
                     key={visibilityItem.value}
+                    className="cursor-pointer"
                     disabled={visibility === visibilityItem.value}
                     onClick={() => onVisibilityChange(visibilityItem.value)}
                   >
@@ -194,7 +197,7 @@ export function ItemActions({
                 router.push(editHref);
               }}
             >
-              <Edit className="size-4" />
+              <WriteIcon className="size-4" />
             </Button>
           </TooltipTrigger>
           <TooltipContent>{t("Common.edit")}</TooltipContent>

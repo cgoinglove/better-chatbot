@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { experimental_useObject } from "@ai-sdk/react";
 import { ChatModel } from "app-types/chat";
@@ -23,14 +23,14 @@ import { appStore } from "@/app/store";
 interface GenerateAgentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onGenerated: (data: any) => void;
+  onAgentChange: (data: any) => void;
   onToolsGenerated?: (tools: string[]) => void;
 }
 
 export function GenerateAgentDialog({
   open,
   onOpenChange,
-  onGenerated,
+  onAgentChange,
   onToolsGenerated,
 }: GenerateAgentDialogProps) {
   const t = useTranslations();
@@ -40,7 +40,7 @@ export function GenerateAgentDialog({
   const [generateAgentPrompt, setGenerateAgentPrompt] = useState("");
   const [submittedPrompt, setSubmittedPrompt] = useState("");
 
-  const { submit, isLoading } = experimental_useObject({
+  const { submit, isLoading, object } = experimental_useObject({
     api: "/api/agent/ai",
     schema: AgentGenerateSchema,
     onFinish(event) {
@@ -48,7 +48,7 @@ export function GenerateAgentDialog({
         handleErrorWithToast(event.error);
       }
       if (event.object) {
-        onGenerated(event.object);
+        onAgentChange(event.object);
         if (event.object.tools && onToolsGenerated) {
           onToolsGenerated(event.object.tools);
         }
@@ -70,6 +70,12 @@ export function GenerateAgentDialog({
     setGenerateAgentPrompt(""); // Clear textarea immediately after submit
     // Don't close dialog immediately - will close in onFinish
   };
+
+  useEffect(() => {
+    if (object && isLoading) {
+      onAgentChange(object);
+    }
+  }, [object, isLoading, onAgentChange]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

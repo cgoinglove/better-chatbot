@@ -8,13 +8,14 @@ import { Button } from "ui/button";
 import { Plus, ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import { BackgroundPaths } from "ui/background-paths";
-import { ItemCard } from "@/components/ui/item-card";
 import { useBookmark } from "@/hooks/use-bookmark";
 import { useInvalidateAgents } from "@/hooks/queries/use-agents";
 import { toast } from "sonner";
 import useSWR from "swr";
 import { fetcher } from "lib/utils";
-import { Visibility } from "../ui/item-actions";
+import { Visibility } from "@/components/shareable-actions";
+import { ShareableCard } from "@/components/shareable-card";
+import { notify } from "lib/notify";
 
 interface AgentsListProps {
   initialMyAgents: AgentSummary[];
@@ -75,7 +76,10 @@ export function AgentsList({
   };
 
   const deleteAgent = async (agentId: string) => {
-    if (!confirm(t("Agent.deleteConfirm"))) return;
+    const ok = await notify.confirm({
+      description: t("Agent.deleteConfirm"),
+    });
+    if (!ok) return;
 
     try {
       const response = await fetch(`/api/agent/${agentId}`, {
@@ -98,8 +102,8 @@ export function AgentsList({
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">{t("Layout.agents")}</h1>
         <Link href="/agent/new">
-          <Button>
-            <Plus className="size-4 mr-2" />
+          <Button variant="ghost">
+            <Plus />
             {t("Agent.newAgent")}
           </Button>
         </Link>
@@ -136,7 +140,7 @@ export function AgentsList({
           </Link>
 
           {myAgents.map((agent) => (
-            <ItemCard
+            <ShareableCard
               key={agent.id}
               type="agent"
               item={agent}
@@ -157,7 +161,7 @@ export function AgentsList({
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {sharedAgents.map((agent) => (
-            <ItemCard
+            <ShareableCard
               key={agent.id}
               type="agent"
               item={agent}
@@ -167,7 +171,7 @@ export function AgentsList({
             />
           ))}
           {sharedAgents.length === 0 && (
-            <Card className="col-span-full">
+            <Card className="col-span-full bg-transparent border-none">
               <CardHeader className="text-center py-12">
                 <CardTitle>{t("Agent.noSharedAgents")}</CardTitle>
                 <CardDescription>

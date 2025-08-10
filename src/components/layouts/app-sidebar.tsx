@@ -90,7 +90,7 @@ export function AppSidebar({
       </SidebarHeader>
 
       <SidebarContent className="mt-2 overflow-hidden relative">
-        <div className="flex flex-col gap-2 overflow-y-auto">
+        <div className="flex flex-col overflow-y-auto">
           <AppSidebarMenus />
           <AppSidebarAgents />
           <AppSidebarThreads />
