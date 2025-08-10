@@ -36,7 +36,7 @@ import { ClaudeIcon } from "ui/claude-icon";
 import { GeminiIcon } from "ui/gemini-icon";
 import { cn } from "lib/utils";
 import { getShortcutKeyList, isShortcutEvent } from "lib/keyboard-shortcuts";
-import { Agent } from "app-types/agent";
+import { AgentSummary } from "app-types/agent";
 import { EMOJI_DATA } from "lib/const";
 
 interface PromptInputProps {
@@ -172,7 +172,7 @@ export default function PromptInput({
   );
 
   const onSelectAgent = useCallback(
-    (agent: Omit<Agent, "createdAt" | "updatedAt" | "instructions">) => {
+    (agent: AgentSummary) => {
       appStoreMutate((prev) => {
         return {
           threadMentions: {

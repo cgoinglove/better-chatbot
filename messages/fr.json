@@ -40,7 +40,8 @@
     "failedToGenerateInput": "Échec de génération d'entrée",
     "createWithExample": "Créer avec Exemple",
     "resultsFound": "{count} résultats trouvés",
-    "youAreAnExpertIn": "Vous êtes un expert en {role}"
+    "youAreAnExpertIn": "Vous êtes un expert en {role}",
+    "sharedBy": "Partagé par {userName}"
   },
   "Auth": {
     "SignIn": {
@@ -269,7 +270,32 @@
     "generateAgentGreeting": "Bonjour ! Je vais vous aider à créer votre propre agent. Que souhaitez-vous créer ?",
     "generateAgentDetailedGreeting": "Bonjour ! Je vais vous aider à créer votre propre agent. Que souhaitez-vous créer ? Vous pouvez écrire brièvement ou en détail.",
     "inputPromptHere": "saisissez le prompt ici...",
-    "agentNamePlaceholder": "better-agent"
+    "agentNamePlaceholder": "better-agent",
+    "myAgents": "Mes Agents",
+    "sharedAgents": "Agents Partagés",
+    "noAgents": "Pas encore d'agents",
+    "createFirst": "Créez votre premier agent pour commencer",
+    "noSharedAgents": "Aucun agent partagé",
+    "noSharedAgentsDescription": "Aucun agent public n'est disponible pour les marquer",
+    "noDescription": "Aucune description fournie",
+    "bookmarkAdded": "Agent mis en favori",
+    "bookmarkRemoved": "Favori supprimé",
+    "bookmarkedAgent": "Agent en favori",
+    "addBookmark": "Mettre l'agent en favori",
+    "removeBookmark": "Supprimer le favori",
+    "visibilityUpdated": "Visibilité mise à jour",
+    "deleted": "Agent supprimé",
+    "deleteConfirm": "Êtes-vous sûr de vouloir supprimer cet agent?",
+    "makePrivate": "Rendre Privé",
+    "makeReadonly": "Rendre en Lecture Seule",
+    "makePublic": "Rendre Public",
+    "visibility": "Visibilité",
+    "private": "Privé",
+    "readOnly": "Lecture Seule",
+    "public": "Public",
+    "privateDescription": "Seul vous pouvez voir, modifier et utiliser cet agent.",
+    "readOnlyDescription": "Les autres peuvent voir et utiliser comme outil, mais seul vous pouvez modifier.",
+    "publicDescription": "Tout le monde peut voir, modifier et utiliser cet agent comme outil."
   },
   "KeyboardShortcuts": {
     "title": "Raccourcis Clavier",
@@ -419,6 +445,7 @@
       "soonMessage": "Bientôt disponible."
     },
     "arrangeNodes": "Auto Layout",
-    "nodesArranged": "Layout appliqué avec succès"
+    "nodesArranged": "Layout appliqué avec succès",
+    "visibilityUpdated": "Visibilité mise à jour avec succès"
   }
 }

@@ -41,7 +41,8 @@
     "failedToGenerateInput": "Failed to generate input",
     "createWithExample": "Create With Example",
     "resultsFound": "{count} results found",
-    "youAreAnExpertIn": "You are an expert in {role}"
+    "youAreAnExpertIn": "You are an expert in {role}",
+    "sharedBy": "Shared by {userName}"
   },
   "Error": {},
   "Info": {
@@ -50,6 +51,9 @@
   },
   "Workflow": {
     "title": "Workflow",
+    "whatIsWorkflow": "What is a Workflow?",
+    "myWorkflows": "My Workflows",
+    "sharedWorkflows": "Shared Workflows",
     "createWorkflow": "Create Workflow",
     "draft": "Draft",
     "publish": "Publish",
@@ -146,7 +150,8 @@
     "structuredOutputSwitchConfirmCancel": "Change to Text Output",
     "noTools": "No published workflows available.\nCreate workflows to build custom tools.",
     "arrangeNodes": "Auto Layout",
-    "nodesArranged": "Layout applied successfully"
+    "nodesArranged": "Layout applied successfully",
+    "visibilityUpdated": "Visibility updated successfully"
   },
   "Auth": {
     "SignIn": {
@@ -289,9 +294,10 @@
     "newChat": "New Chat",
     "mcpConfiguration": "MCP Configuration",
     "agents": "Agents",
-    "newAgent": "New Agent",
+    "newAgent": "Create Agent",
     "createAgent": "Create an agent",
     "createYourOwnAgent": "Create your own specialized AI agent with unique features and personality",
+    "createYourOwnAgentOrSelectShared": "Create your own specialized AI agent or select from shared agents in the Agents page",
     "whatIsAgent": "What is Agent?",
     "agentDescription": "Agents are specialized AI assistants that can be customized with specific roles, instructions, and tools to help you with various tasks.",
     "specializedAIAssistant": "Specialized AI Assistant",
@@ -359,6 +365,7 @@
   },
   "Agent": {
     "title": "Agent",
+    "newAgent": "Create Agent",
     "generatingAgent": "Generating Agent...",
     "agentNameAndIconLabel": "Give your agent a name and icon.",
     "agentDescriptionLabel": "Add a brief description of what this agent does.",
@@ -375,7 +382,34 @@
     "generateAgentGreeting": "Hello! I'll help you create your own agent. What would you like to create?",
     "generateAgentDetailedGreeting": "Hello! I'll help you create your own agent. What would you like to create? You can write briefly or in detail.",
     "inputPromptHere": "input prompt here...",
-    "agentNamePlaceholder": "better-agent"
+    "agentNamePlaceholder": "better-agent",
+    "myAgents": "My Agents",
+    "sharedAgents": "Shared Agents",
+    "noAgents": "No agents yet",
+    "createFirst": "Create your first agent to get started",
+    "noSharedAgents": "No shared agents",
+    "noSharedAgentsDescription": "No public agents are available to bookmark",
+    "noDescription": "No description provided",
+    "bookmarkAdded": "Agent bookmarked",
+    "bookmarkRemoved": "Bookmark removed",
+    "bookmarkedAgent": "Bookmarked agent",
+    "addBookmark": "Bookmark agent",
+    "removeBookmark": "Remove bookmark",
+    "visibilityUpdated": "Visibility updated",
+    "deleted": "Agent deleted",
+    "created": "Agent created successfully",
+    "updated": "Agent updated successfully",
+    "deleteConfirm": "Are you sure you want to delete this agent?",
+    "makePrivate": "Make Private",
+    "makeReadonly": "Make Read Only",
+    "makePublic": "Make Public",
+    "visibility": "Visibility",
+    "private": "Private",
+    "readOnly": "Read Only",
+    "public": "Public",
+    "privateDescription": "Only you can view, edit, and use this agent.",
+    "readOnlyDescription": "Others can view and use as a tool, but only you can edit.",
+    "publicDescription": "Anyone can view, edit, and use this agent as a tool."
   },
   "KeyboardShortcuts": {
     "title": "Keyboard Shortcuts",

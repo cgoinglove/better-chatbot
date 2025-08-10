@@ -66,12 +66,14 @@ import { CountAnimation } from "ui/count-animation";
 
 import { Separator } from "ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
-import { Agent } from "app-types/agent";
+import { AgentSummary } from "app-types/agent";
+import { authClient } from "auth/client";
 
 import { Alert, AlertDescription, AlertTitle } from "ui/alert";
 import { safe } from "ts-safe";
 import { mutate } from "swr";
 import { handleErrorWithToast } from "ui/shared-toast";
+import { useAgents } from "@/hooks/queries/use-agents";
 import { redriectMcpOauth } from "lib/ai/mcp/oauth-redirect";
 
 interface ToolSelectDropdownProps {
@@ -80,9 +82,7 @@ interface ToolSelectDropdownProps {
   disabled?: boolean;
   mentions?: ChatMention[];
   onSelectWorkflow?: (workflow: WorkflowSummary) => void;
-  onSelectAgent?: (
-    agent: Omit<Agent, "createdAt" | "updatedAt" | "instructions">,
-  ) => void;
+  onSelectAgent?: (agent: AgentSummary) => void;
   className?: string;
 }
 
@@ -425,6 +425,16 @@ function WorkflowToolSelector({
 }) {
   const t = useTranslations();
   const workflowToolList = appStore((state) => state.workflowToolList);
+  const { data: session } = authClient.useSession();
+  const currentUserId = session?.user?.id;
+
+  // Separate user's workflows from shared workflows
+  const myWorkflows = workflowToolList.filter(
+    (w) => w.userId === currentUserId,
+  );
+  const sharedWorkflows = workflowToolList.filter(
+    (w) => w.userId !== currentUserId,
+  );
   return (
     <DropdownMenuGroup>
       <DropdownMenuSub>
@@ -434,7 +444,7 @@ function WorkflowToolSelector({
         </DropdownMenuSubTrigger>
         <DropdownMenuPortal>
           <DropdownMenuSubContent className="w-80 relative">
-            {workflowToolList.length === 0 ? (
+            {myWorkflows.length === 0 && sharedWorkflows.length === 0 ? (
               <div className="text-sm text-muted-foreground flex flex-col py-6 px-6 gap-4 items-center">
                 <InfoIcon className="size-4" />
                 <p className="whitespace-pre-wrap">{t("Workflow.noTools")}</p>
@@ -442,7 +452,7 @@ function WorkflowToolSelector({
                 <Dialog>
                   <DialogTrigger asChild>
                     <Button variant={"ghost"} className="relative group">
-                      What is Workflow?
+                      {t("Workflow.whatIsWorkflow")}
                       <div className="absolute left-0 -top-1.5 opacity-100 group-hover:opacity-0 transition-opacity duration-300">
                         <MousePointer2 className="rotate-180 text-blue-500 fill-blue-500 size-3 wiggle" />
                       </div>
@@ -457,40 +467,84 @@ function WorkflowToolSelector({
                 </Dialog>
               </div>
             ) : (
-              workflowToolList.map((workflow) => (
-                <DropdownMenuItem
-                  key={workflow.id}
-                  className="cursor-pointer"
-                  onClick={() => onSelectWorkflow?.(workflow)}
-                >
-                  {workflow.icon && workflow.icon.type === "emoji" ? (
-                    <div
-                      style={{
-                        backgroundColor: workflow.icon?.style?.backgroundColor,
-                      }}
-                      className="p-1 rounded flex items-center justify-center ring ring-background border"
-                    >
-                      <Avatar className="size-3">
-                        <AvatarImage src={workflow.icon?.value} />
-                        <AvatarFallback>
-                          {workflow.name.slice(0, 1)}
-                        </AvatarFallback>
-                      </Avatar>
+              <>
+                {/* My Workflows */}
+                {myWorkflows.map((workflow) => (
+                  <DropdownMenuItem
+                    key={workflow.id}
+                    className="cursor-pointer"
+                    onClick={() => onSelectWorkflow?.(workflow)}
+                  >
+                    {workflow.icon && workflow.icon.type === "emoji" ? (
+                      <div
+                        style={{
+                          backgroundColor:
+                            workflow.icon?.style?.backgroundColor,
+                        }}
+                        className="p-1 rounded flex items-center justify-center ring ring-background border"
+                      >
+                        <Avatar className="size-3">
+                          <AvatarImage src={workflow.icon?.value} />
+                          <AvatarFallback>
+                            {workflow.name.slice(0, 1)}
+                          </AvatarFallback>
+                        </Avatar>
+                      </div>
+                    ) : null}
+                    <span className="truncate min-w-0">{workflow.name}</span>
+                  </DropdownMenuItem>
+                ))}
+
+                {myWorkflows.length > 0 && sharedWorkflows.length > 0 && (
+                  <DropdownMenuSeparator />
+                )}
+
+                {/* Shared Workflows */}
+                {sharedWorkflows.map((workflow) => (
+                  <DropdownMenuItem
+                    key={workflow.id}
+                    className="cursor-pointer"
+                    onClick={() => onSelectWorkflow?.(workflow)}
+                  >
+                    {workflow.icon && workflow.icon.type === "emoji" ? (
+                      <div
+                        style={{
+                          backgroundColor:
+                            workflow.icon?.style?.backgroundColor,
+                        }}
+                        className="p-1 rounded flex items-center justify-center ring ring-background border"
+                      >
+                        <Avatar className="size-3">
+                          <AvatarImage src={workflow.icon?.value} />
+                          <AvatarFallback>
+                            {workflow.name.slice(0, 1)}
+                          </AvatarFallback>
+                        </Avatar>
+                      </div>
+                    ) : null}
+                    <div className="flex items-center justify-between flex-1 min-w-0">
+                      <span className="truncate min-w-0">{workflow.name}</span>
+                      {workflow.userName && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Avatar className="size-4 ml-2 shrink-0">
+                              <AvatarImage src={workflow.userAvatar} />
+                              <AvatarFallback className="text-xs text-muted-foreground font-medium">
+                                {workflow.userName[0]?.toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {t("Common.sharedBy", {
+                              userName: workflow.userName,
+                            })}
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
                     </div>
-                  ) : null}
-                  <span className="truncate min-w-0">{workflow.name}</span>
-                  <div className="flex items-center gap-2 ml-auto text-xs">
-                    <span className="text-muted-foreground">by</span>
-                    <span className="">{workflow.userName}</span>
-                    <Avatar className="size-3 ring rounded-full">
-                      <AvatarImage src={workflow.userAvatar} />
-                      <AvatarFallback>
-                        {workflow.userName.slice(0, 1)}
-                      </AvatarFallback>
-                    </Avatar>
-                  </div>
-                </DropdownMenuItem>
-              ))
+                  </DropdownMenuItem>
+                ))}
+              </>
             )}
           </DropdownMenuSubContent>
         </DropdownMenuPortal>
@@ -852,15 +906,15 @@ function AppDefaultToolKitSelector() {
 function AgentSelector({
   onSelectAgent,
 }: {
-  onSelectAgent?: (
-    agent: Omit<Agent, "createdAt" | "updatedAt" | "instructions">,
-  ) => void;
+  onSelectAgent?: (agent: AgentSummary) => void;
 }) {
   const t = useTranslations();
-  const agentList = appStore((state) => state.agentList);
+  const { myAgents, bookmarkedAgents } = useAgents({
+    filters: ["mine", "bookmarked"],
+  });
 
   const emptyAgent = useMemo(() => {
-    if (agentList.length) return null;
+    if (myAgents.length + bookmarkedAgents.length > 0) return null;
     return (
       <Link
         href={"/agent/new"}
@@ -872,12 +926,14 @@ function AgentSelector({
             <ArrowUpRightIcon className="size-3" />
           </div>
           <p className="text-muted-foreground">
-            {t("Layout.createYourOwnAgent")}
+            {bookmarkedAgents.length > 0
+              ? t("Layout.createYourOwnAgentOrSelectShared")
+              : t("Layout.createYourOwnAgent")}
           </p>
         </div>
       </Link>
     );
-  }, [agentList.length]);
+  }, [myAgents.length, bookmarkedAgents.length, t]);
 
   return (
     <DropdownMenuGroup>
@@ -889,7 +945,9 @@ function AgentSelector({
         <DropdownMenuPortal>
           <DropdownMenuSubContent className="w-80 relative">
             {emptyAgent}
-            {agentList.map((agent) => (
+
+            {/* My Agents */}
+            {myAgents.map((agent) => (
               <DropdownMenuItem
                 key={agent.id}
                 className="cursor-pointer"
@@ -909,6 +967,50 @@ function AgentSelector({
                   </div>
                 ) : null}
                 <span className="truncate min-w-0">{agent.name}</span>
+              </DropdownMenuItem>
+            ))}
+
+            {myAgents.length > 0 && bookmarkedAgents.length > 0 && (
+              <DropdownMenuSeparator />
+            )}
+
+            {bookmarkedAgents.map((agent) => (
+              <DropdownMenuItem
+                key={agent.id}
+                className="cursor-pointer"
+                onClick={() => onSelectAgent?.(agent)}
+              >
+                {agent.icon && agent.icon.type === "emoji" ? (
+                  <div
+                    style={{
+                      backgroundColor: agent.icon?.style?.backgroundColor,
+                    }}
+                    className="p-1 rounded flex items-center justify-center ring ring-background border"
+                  >
+                    <Avatar className="size-3">
+                      <AvatarImage src={agent.icon?.value} />
+                      <AvatarFallback>{agent.name.slice(0, 1)}</AvatarFallback>
+                    </Avatar>
+                  </div>
+                ) : null}
+                <div className="flex items-center justify-between flex-1 min-w-0">
+                  <span className="truncate min-w-0">{agent.name}</span>
+                  {agent.userName && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Avatar className="size-4 ml-2 shrink-0">
+                          <AvatarImage src={agent.userAvatar} />
+                          <AvatarFallback className="text-xs text-muted-foreground font-medium">
+                            {agent.userName[0]?.toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {t("Common.sharedBy", { userName: agent.userName })}
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
+                </div>
               </DropdownMenuItem>
             ))}
           </DropdownMenuSubContent>

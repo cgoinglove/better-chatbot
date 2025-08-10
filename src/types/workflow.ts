@@ -1,5 +1,5 @@
 import { Tool } from "ai";
-import { ObjectJsonSchema7 } from "./util";
+import { ObjectJsonSchema7, Visibility } from "./util";
 import { NodeKind } from "lib/ai/workflow/workflow.interface";
 
 export type WorkflowIcon = {
@@ -15,7 +15,7 @@ export type DBWorkflow = {
   name: string;
   description?: string;
   isPublished: boolean;
-  visibility: "public" | "private" | "readonly";
+  visibility: Visibility;
   userId: string;
   createdAt: Date;
   updatedAt: Date;
@@ -56,8 +56,9 @@ export type WorkflowSummary = {
   name: string;
   description?: string;
   icon?: WorkflowIcon;
-  visibility: "public" | "private" | "readonly";
+  visibility: Visibility;
   isPublished: boolean;
+  userId: string;
   userName: string;
   userAvatar?: string;
   updatedAt: Date;
