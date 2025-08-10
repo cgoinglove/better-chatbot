@@ -17,6 +17,7 @@ import { colorize } from "consola/utils";
 import {
   createDebounce,
   errorToString,
+  generateUUID,
   isNull,
   Locker,
   withTimeout,
@@ -33,6 +34,9 @@ type ClientOptions = {
 };
 
 const CONNET_TIMEOUT = IS_VERCEL_ENV ? 30000 : 120000;
+const MCP_MAX_TOTAL_TIMEOUT = process.env.MCP_MAX_TOTAL_TIMEOUT
+  ? parseInt(process.env.MCP_MAX_TOTAL_TIMEOUT, 10)
+  : undefined;
 
 /**
  * Client class for Model Context Protocol (MCP) server connections
@@ -50,7 +54,7 @@ export class MCPClient {
   toolInfo: MCPToolInfo[] = [];
   private disconnectDebounce = createDebounce();
   private needOauthProvider = false;
-
+  private inProgressToolCallIds: string[] = [];
   constructor(
     private id: string,
     private name: string,
@@ -71,6 +75,10 @@ export class MCPClient {
     if (this.authorizationUrl) return "authorizing";
     if (this.isConnected) return "connected";
     return "disconnected";
+  }
+
+  get hasActiveToolCalls() {
+    return this.inProgressToolCallIds.length > 0;
   }
 
   getAuthorizationUrl(): URL | undefined {
@@ -147,7 +155,16 @@ export class MCPClient {
   private scheduleAutoDisconnect() {
     if (!isNull(this.options.autoDisconnectSeconds)) {
       this.disconnectDebounce(() => {
-        this.disconnect();
+        // Don't disconnect if there are tool calls in progress
+        if (this.inProgressToolCallIds.length === 0) {
+          this.disconnect();
+        } else {
+          this.logger.info(
+            `Skipping auto-disconnect: ${this.inProgressToolCallIds.length} tool calls in progress`,
+          );
+          // Reschedule the disconnect check
+          this.scheduleAutoDisconnect();
+        }
       }, this.options.autoDisconnectSeconds * 1000);
     }
   }
@@ -197,7 +214,12 @@ export class MCPClient {
           cwd: process.cwd(),
         });
 
-        await withTimeout(client.connect(this.transport), CONNET_TIMEOUT);
+        await withTimeout(
+          client.connect(this.transport, {
+            maxTotalTimeout: MCP_MAX_TOTAL_TIMEOUT,
+          }),
+          CONNET_TIMEOUT,
+        );
       } else if (isMaybeRemoteConfig(this.serverConfig)) {
         const config = MCPRemoteConfigZodSchema.parse(this.serverConfig);
         const abortController = new AbortController();
@@ -210,7 +232,12 @@ export class MCPClient {
             },
             authProvider: this.createOAuthProvider(oauthState),
           });
-          await withTimeout(client.connect(this.transport), CONNET_TIMEOUT);
+          await withTimeout(
+            client.connect(this.transport, {
+              maxTotalTimeout: MCP_MAX_TOTAL_TIMEOUT,
+            }),
+            CONNET_TIMEOUT,
+          );
         } catch (streamableHttpError: any) {
           // Check if it's OAuth error and we haven't tried OAuth yet
           if (isUnauthorized(streamableHttpError) && !this.needOauthProvider) {
@@ -237,7 +264,12 @@ export class MCPClient {
             });
 
             try {
-              await withTimeout(client.connect(this.transport), CONNET_TIMEOUT);
+              await withTimeout(
+                client.connect(this.transport, {
+                  maxTotalTimeout: MCP_MAX_TOTAL_TIMEOUT,
+                }),
+                CONNET_TIMEOUT,
+              );
             } catch (sseError) {
               if (isUnauthorized(sseError) && !this.needOauthProvider) {
                 this.logger.info(
@@ -313,6 +345,8 @@ export class MCPClient {
   }
 
   async callTool(toolName: string, input?: unknown) {
+    const id = generateUUID();
+    this.inProgressToolCallIds.push(id);
     const execute = async () => {
       const client = await this.connect();
       if (this.status === "authorizing") {
@@ -341,6 +375,11 @@ export class MCPClient {
         return v;
       })
       .ifOk(() => this.scheduleAutoDisconnect())
+      .watch(() => {
+        this.inProgressToolCallIds = this.inProgressToolCallIds.filter(
+          (toolId) => toolId !== id,
+        );
+      })
       .watch((status) => {
         if (!status.isOk) {
           this.logger.error("Tool call failed", toolName, status.error);
