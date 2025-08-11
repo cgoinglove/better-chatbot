@@ -6,21 +6,14 @@ import { Separator } from "@/components/ui/separator";
 
 import { UINode } from "lib/ai/workflow/workflow.interface";
 
-import {
-  BlocksIcon,
-  Check,
-  EyeIcon,
-  Loader,
-  LockIcon,
-  PlayIcon,
-  AlignHorizontalSpaceAround,
-} from "lucide-react";
+import { Loader, PlayIcon, AlignHorizontalSpaceAround } from "lucide-react";
 import { Button } from "ui/button";
 
 import equal from "lib/equal";
 
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
+import { ShareableActions } from "@/components/shareable-actions";
 
 import { DBWorkflow } from "app-types/workflow";
 
@@ -30,12 +23,6 @@ import { useReactFlow } from "@xyflow/react";
 import { safe } from "ts-safe";
 import { handleErrorWithToast } from "ui/shared-toast";
 import { mutate } from "swr";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "ui/dropdown-menu";
 import { allNodeValidate } from "lib/ai/workflow/node-validate";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
@@ -74,10 +61,10 @@ export const WorkflowPanel = memo(
       (visibility: DBWorkflow["visibility"]) => {
         const close = addProcess();
         safe(() =>
-          fetch("/api/workflow", {
-            method: "POST",
+          fetch(`/api/workflow/${workflow.id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              ...workflow,
               visibility,
             }),
           }).then((res) => {
@@ -120,10 +107,10 @@ export const WorkflowPanel = memo(
         const close = addProcess();
         safe(() => onSave())
           .ifOk(() =>
-            fetch("/api/workflow", {
-              method: "POST",
+            fetch(`/api/workflow/${workflow.id}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
-                ...workflow,
                 isPublished,
               }),
             }).then((res) => {
@@ -242,77 +229,12 @@ export const WorkflowPanel = memo(
               </p>
             </TooltipContent>
           </Tooltip>
-          <DropdownMenu>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="secondary"
-                    size="icon"
-                    className="data-[state=open]:bg-input!"
-                  >
-                    {workflow.visibility == "public" ? (
-                      <BlocksIcon />
-                    ) : workflow.visibility == "readonly" ? (
-                      <EyeIcon />
-                    ) : (
-                      <LockIcon />
-                    )}
-                  </Button>
-                </DropdownMenuTrigger>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">
-                {t("Workflow.visibilityDescription")}
-              </TooltipContent>
-            </Tooltip>
-
-            <DropdownMenuContent side="bottom" align="end">
-              {[
-                {
-                  icon: <LockIcon />,
-                  value: "private",
-                  label: "Workflow.private",
-                  description: "Workflow.privateDescription",
-                },
-                {
-                  icon: <EyeIcon />,
-                  value: "readonly",
-                  label: "Workflow.readonly",
-                  description: "Workflow.readonlyDescription",
-                },
-                {
-                  icon: <BlocksIcon />,
-                  value: "public",
-                  label: "Workflow.public",
-                  description: "Workflow.publicDescription",
-                },
-              ].map((item) => {
-                return (
-                  <DropdownMenuItem
-                    disabled={
-                      workflow.visibility == item.value || !hasEditAccess
-                    }
-                    key={item.value}
-                    className="cursor-pointer"
-                    onClick={() =>
-                      updateVisibility(item.value as DBWorkflow["visibility"])
-                    }
-                  >
-                    {item.icon}
-                    <div className="flex flex-col px-4 gap-1">
-                      <p>{t(item.label)}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {t(item.description)}
-                      </p>
-                    </div>
-                    {workflow.visibility == item.value && (
-                      <Check className="ml-auto" />
-                    )}
-                  </DropdownMenuItem>
-                );
-              })}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <ShareableActions
+            type="workflow"
+            visibility={workflow.visibility}
+            isOwner={hasEditAccess || false}
+            onVisibilityChange={hasEditAccess ? updateVisibility : undefined}
+          />
         </div>
         <div className="flex gap-2">
           {selectedNode && <SelectedNodeConfigTab node={selectedNode} />}

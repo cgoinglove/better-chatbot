@@ -5,13 +5,13 @@ import { AllowedMCPServer, MCPServerInfo } from "app-types/mcp";
 import { OPENAI_VOICE } from "lib/ai/speech/open-ai/use-voice-chat.openai";
 import { WorkflowSummary } from "app-types/workflow";
 import { AppDefaultToolkit } from "lib/ai/tools";
-import { Agent } from "app-types/agent";
+import { AgentSummary } from "app-types/agent";
 import { ArchiveWithItemCount } from "app-types/archive";
 
 export interface AppState {
   threadList: ChatThread[];
   mcpList: (MCPServerInfo & { id: string })[];
-  agentList: Omit<Agent, "instructions">[];
+  agentList: AgentSummary[];
   workflowToolList: WorkflowSummary[];
   currentThreadId: ChatThread["id"] | null;
   toolChoice: "auto" | "none" | "manual";
@@ -44,6 +44,7 @@ export interface AppState {
       providerOptions?: Record<string, any>;
     };
   };
+  pendingThreadMention?: ChatMention;
 }
 
 export interface AppDispatch {
@@ -66,6 +67,7 @@ const initialState: AppState = {
     AppDefaultToolkit.Visualization,
   ],
   toolPresets: [],
+  chatModel: undefined,
   openShortcutsPopup: false,
   openChatPreferences: false,
   mcpCustomizationPopup: undefined,
@@ -82,6 +84,7 @@ const initialState: AppState = {
       },
     },
   },
+  pendingThreadMention: undefined,
 };
 
 export const appStore = create<AppState & AppDispatch>()(

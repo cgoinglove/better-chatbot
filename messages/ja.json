@@ -40,7 +40,8 @@
     "failedToGenerateInput": "入力の生成に失敗しました",
     "createWithExample": "例で作成",
     "resultsFound": "{count}件の結果が見つかりました",
-    "youAreAnExpertIn": "あなたは{role}の専門家です"
+    "youAreAnExpertIn": "あなたは{role}の専門家です",
+    "sharedBy": "{userName}さんが共有"
   },
   "Auth": {
     "SignIn": {
@@ -268,7 +269,32 @@
     "generateAgentGreeting": "こんにちは！あなた専用のエージェントを作成するお手伝いをします。何を作りたいですか？",
     "generateAgentDetailedGreeting": "こんにちは！あなた専用のエージェントを作成するお手伝いをします。何を作りたいですか？簡潔に書いても詳しく書いても構いません。",
     "inputPromptHere": "ここにプロンプトを入力してください...",
-    "agentNamePlaceholder": "better-agent"
+    "agentNamePlaceholder": "better-agent",
+    "myAgents": "マイエージェント",
+    "sharedAgents": "共有エージェント",
+    "noAgents": "エージェントがありません",
+    "createFirst": "最初のエージェントを作成して開始",
+    "noSharedAgents": "共有エージェントがありません",
+    "noSharedAgentsDescription": "ブックマーク可能な公開エージェントがありません",
+    "noDescription": "説明が提供されていません",
+    "bookmarkAdded": "エージェントをブックマークしました",
+    "bookmarkRemoved": "ブックマークを削除しました",
+    "bookmarkedAgent": "ブックマークしたエージェント",
+    "addBookmark": "エージェントをブックマーク",
+    "removeBookmark": "ブックマークを削除",
+    "visibilityUpdated": "公開設定を更新しました",
+    "deleted": "エージェントを削除しました",
+    "deleteConfirm": "このエージェントを削除してもよろしいですか？",
+    "makePrivate": "非公開にする",
+    "makeReadonly": "読み取り専用にする",
+    "makePublic": "公開する",
+    "visibility": "公開設定",
+    "private": "非公開",
+    "readOnly": "読み取り専用",
+    "public": "公開",
+    "privateDescription": "あなただけがこのエージェントを表示、編集、使用できます。",
+    "readOnlyDescription": "他の人もツールとして表示・使用できますが、編集はあなただけができます。",
+    "publicDescription": "誰でもこのエージェントをツールとして表示、編集、使用できます。"
   },
   "KeyboardShortcuts": {
     "title": "キーボードショートカット",
@@ -418,6 +444,7 @@
       "soonMessage": "近日公開予定です。"
     },
     "arrangeNodes": "自動レイアウト",
-    "nodesArranged": "レイアウトが正常に適用されました"
+    "nodesArranged": "レイアウトが正常に適用されました",
+    "visibilityUpdated": "公開設定が正常に更新されました"
   }
 }
