@@ -2,14 +2,7 @@
 
 import { useChat } from "@ai-sdk/react";
 import { toast } from "sonner";
-import {
-  ReactNode,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import PromptInput from "./prompt-input";
 import clsx from "clsx";
 import { appStore } from "@/app/store";
@@ -59,10 +52,6 @@ type Props = {
   threadId: string;
   initialMessages: Array<UIMessage>;
   selectedChatModel?: string;
-  slots?: {
-    emptySlot?: ReactNode;
-    inputBottomSlot?: ReactNode;
-  };
 };
 
 const LightRays = dynamic(() => import("ui/light-rays"), {
@@ -79,7 +68,7 @@ const firstTimeStorage = getStorageManager("IS_FIRST");
 const isFirstTime = firstTimeStorage.get() ?? true;
 firstTimeStorage.set(false);
 
-export default function ChatBot({ threadId, initialMessages, slots }: Props) {
+export default function ChatBot({ threadId, initialMessages }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isAtBottom, setIsAtBottom] = useState(true);
 
@@ -150,8 +139,6 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
     id: threadId,
     transport: new DefaultChatTransport({
       api: "/api/chat",
-      credentials: "include",
-      headers: { "Custom-Header": "value" },
       prepareSendMessagesRequest: ({ messages, body, id }) => {
         if (window.location.pathname !== `/chat/${threadId}`) {
           console.log("replace-state");
@@ -178,7 +165,7 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
     }),
     messages: initialMessages,
     generateId: generateUUID,
-    // experimental_throttle: 100,
+    experimental_throttle: 100,
     onFinish,
   });
 
@@ -372,13 +359,6 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
     }
   }, [input]);
 
-  const latestMessage = messages.at(-1);
-  const latestMessageParts = latestMessage?.parts.find((v) => v.type == "text");
-
-  useEffect(() => {
-    console.log(`diff!!`);
-  }, [latestMessageParts?.text]);
-
   return (
     <>
       {particle}
@@ -389,11 +369,7 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
         )}
       >
         {emptyMessage ? (
-          slots?.emptySlot ? (
-            slots.emptySlot
-          ) : (
-            <ChatGreeting />
-          )
+          <ChatGreeting />
         ) : (
           <>
             <div
@@ -403,17 +379,11 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
             >
               {messages.map((message, index) => {
                 const isLastMessage = messages.length - 1 === index;
-                if (message.role == "assistant" && isLastMessage) {
-                  const tpart = message.parts.find((v) => v.type == "text");
-                  if (tpart) {
-                    console.log(tpart.text);
-                  }
-                }
                 return (
                   <PreviewMessage
                     threadId={threadId}
                     messageIndex={index}
-                    key={index}
+                    key={message.id}
                     message={message}
                     status={status}
                     onPoxyToolCall={
@@ -427,7 +397,7 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
                     isLastMessage={isLastMessage}
                     setMessages={setMessages}
                     className={
-                      isLastMessage && message.role != "user"
+                      isLastMessage && message.role != "user" && !space
                         ? "min-h-[calc(55dvh-40px)]"
                         : ""
                     }
@@ -461,7 +431,6 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
             <ScrollToBottomButton
               show={!isAtBottom && messages.length > 0}
               onClick={scrollToBottom}
-              className=""
             />
           </div>
 
@@ -474,7 +443,6 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
             onStop={stop}
             onFocus={isFirstTime ? undefined : handleFocus}
           />
-          {slots?.inputBottomSlot}
         </div>
         <DeleteThreadPopup
           threadId={threadId}

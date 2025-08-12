@@ -130,38 +130,42 @@ const PurePreviewMessage = ({
   );
 };
 
-export const PreviewMessage = memo(
-  PurePreviewMessage,
-  (prevProps, nextProps) => {
-    if (prevProps.message.id !== nextProps.message.id) return false;
+function equalMessage(prevProps: Props, nextProps: Props) {
+  if (prevProps.message.id !== nextProps.message.id) {
+    console.log(`reversion id`, prevProps.message.id, nextProps.message.id);
+    return false;
+  }
 
-    if (prevProps.isLoading !== nextProps.isLoading) return false;
+  if (prevProps.isLoading !== nextProps.isLoading) return false;
 
-    if (prevProps.isLastMessage !== nextProps.isLastMessage) return false;
+  if (prevProps.isLastMessage !== nextProps.isLastMessage) return false;
 
-    if (prevProps.className !== nextProps.className) return false;
+  if (prevProps.className !== nextProps.className) return false;
 
-    if (prevProps.onPoxyToolCall !== nextProps.onPoxyToolCall) return false;
+  if (prevProps.onPoxyToolCall !== nextProps.onPoxyToolCall) return false;
 
-    if (!equal(prevProps.message.metadata, nextProps.message.metadata))
-      return false;
+  if (!equal(prevProps.message.metadata, nextProps.message.metadata))
+    return false;
 
-    if (!equal([...prevProps.message.parts], [...nextProps.message.parts])) {
-      return false;
-    }
-    if (nextProps.isLastMessage) {
-      console.log(
-        `hit..?`,
+  if (!equal(prevProps.message.parts, nextProps.message.parts)) {
+    return false;
+  }
+  if (nextProps.isLastMessage) {
+    console.log(
+      `HIT..`,
 
-        {
-          prev: JSON.parse(JSON.stringify(prevProps.message.parts) ?? "[]"),
-          next: JSON.parse(JSON.stringify(nextProps.message.parts) ?? "[]"),
-        },
-      );
-    }
-    return true;
-  },
-);
+      {
+        prev: prevProps.message.parts.find((v) => v.type == "text")?.text
+          .length,
+        next: nextProps.message.parts.find((v) => v.type == "text")?.text
+          .length,
+      },
+    );
+  }
+  return true;
+}
+
+export const PreviewMessage = memo(PurePreviewMessage, equalMessage);
 
 export const ErrorMessage = ({
   error,

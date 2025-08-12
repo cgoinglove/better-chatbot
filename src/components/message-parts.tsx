@@ -496,7 +496,9 @@ export const ReasoningPart = memo(function ReasoningPart({
               style={{ overflow: "hidden" }}
               className="pl-6 text-muted-foreground border-l flex flex-col gap-4"
             >
-              <Markdown>{reasoningText}</Markdown>
+              <Markdown>
+                {reasoningText || (isThinking ? "" : "Hmm, let's see...🤔")}
+              </Markdown>
             </motion.div>
           )}
         </AnimatePresence>
