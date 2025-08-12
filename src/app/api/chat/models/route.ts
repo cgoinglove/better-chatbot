@@ -1,5 +1,5 @@
-import { customModelProvider } from "lib/ai/models";
+import { modelRegistry } from "lib/ai/core/models";
 
 export const GET = async () => {
-  return Response.json(customModelProvider.modelsInfo);
+  return Response.json(modelRegistry.modelsInfo);
 };

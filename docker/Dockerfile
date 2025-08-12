@@ -36,6 +36,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 # Copy migrations content
 COPY --from=builder /app/src/lib/db/migrations ./src/lib/db/migrations
 
+# Copy config directory (including models.example.json and any generated models.json)
+COPY --from=builder --chown=nextjs:nodejs /app/config ./config
+
 USER nextjs
 
 ENV PORT=3000

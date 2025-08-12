@@ -1,6 +1,6 @@
 import { streamObject } from "ai";
 
-import { customModelProvider } from "lib/ai/models";
+import { modelRegistry } from "lib/ai/core/models";
 import { buildAgentGenerationPrompt } from "lib/ai/prompts";
 import globalLogger from "logger";
 import { ChatModel } from "app-types/chat";
@@ -80,9 +80,13 @@ export async function POST(request: Request) {
     });
 
     const system = buildAgentGenerationPrompt(Array.from(toolNames));
-
+    const modelResult = await modelRegistry.getModel(chatModel);
+    if (!modelResult) {
+      return new Response("Model not found", { status: 404 });
+    }
+    const { model } = modelResult;
     const result = streamObject({
-      model: customModelProvider.getModel(chatModel),
+      model,
       system,
       prompt: message,
       schema: dynamicAgentSchema,

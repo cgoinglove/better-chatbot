@@ -8,7 +8,7 @@ export const useChatModels = () => {
       provider: string;
       models: {
         name: string;
-        isToolCallUnsupported: boolean;
+        supportsTools: boolean;
       }[];
     }[]
   >("/api/chat/models", fetcher, {

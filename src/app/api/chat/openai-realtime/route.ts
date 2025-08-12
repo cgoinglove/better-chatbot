@@ -20,6 +20,8 @@ import {
 } from "../actions";
 import globalLogger from "lib/logger";
 import { colorize } from "consola/utils";
+import { getProviderConfig } from "lib/ai/core/config";
+import type { OpenAIProviderConfig } from "@/types/models";
 
 const logger = globalLogger.withDefaults({
   message: colorize("blackBright", `OpenAI Realtime API: `),
@@ -42,12 +44,13 @@ export async function POST(request: NextRequest) {
       return new Response("Unauthorized", { status: 401 });
     }
 
-    const { voice, allowedMcpServers, agentId } = (await request.json()) as {
-      model: string;
-      voice: string;
-      agentId?: string;
-      allowedMcpServers: Record<string, AllowedMCPServer>;
-    };
+    const { model, voice, allowedMcpServers, agentId } =
+      (await request.json()) as {
+        model: string;
+        voice: string;
+        agentId?: string;
+        allowedMcpServers: Record<string, AllowedMCPServer>;
+      };
 
     const mcpTools = await mcpClientsManager.tools();
 
@@ -93,17 +96,38 @@ export async function POST(request: NextRequest) {
       buildMcpServerCustomizationsSystemPrompt(mcpServerCustomizations),
     );
 
-    const r = await fetch("https://api.openai.com/v1/realtime/sessions", {
+    const openaiConfig = getProviderConfig(
+      "openai",
+    ) as OpenAIProviderConfig | null;
+    if (!openaiConfig) {
+      return new Response(
+        JSON.stringify({ error: "OpenAI provider not configured" }),
+        { status: 500 },
+      );
+    }
+
+    const [_providerId, modelId] = model.split(":");
+    const modelConfig = openaiConfig.models.find((m) => m.apiName === modelId);
+
+    const voiceToUse = modelConfig?.settings?.voice || voice || "alloy";
+    const realtimeBaseURL =
+      openaiConfig.providerSettings.realtimeBaseURL ||
+      "https://api.openai.com/v1/realtime";
+    const sessionsURL = `${realtimeBaseURL}/sessions`;
+
+    const r = await fetch(sessionsURL, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+        Authorization: `Bearer ${openaiConfig.providerSettings.apiKey}`,
         "Content-Type": "application/json",
+        ...openaiConfig.providerSettings.headers,
       },
 
       body: JSON.stringify({
-        model: "gpt-4o-realtime-preview",
-        voice: voice || "alloy",
-        input_audio_transcription: {
+        model: modelId || "gpt-4o-realtime-preview",
+        voice: voiceToUse,
+        input_audio_transcription: modelConfig?.settings
+          ?.inputAudioTranscription || {
           model: "whisper-1",
         },
         instructions: systemPrompt,
@@ -111,12 +135,20 @@ export async function POST(request: NextRequest) {
       }),
     });
 
-    return new Response(r.body, {
-      status: 200,
-      headers: {
-        "Content-Type": "application/json",
+    const sessionData = await r.json();
+
+    return new Response(
+      JSON.stringify({
+        ...sessionData,
+        realtime_base_url: realtimeBaseURL,
+      }),
+      {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+        },
       },
-    });
+    );
   } catch (error: any) {
     console.error("Error:", error);
     return new Response(JSON.stringify({ error: error.message }), {

@@ -39,15 +39,17 @@ async function main() {
       console.error("File based MCP config is not supported in Docker.");
       process.exit(1);
     }
+    console.log(
+      "Running in Docker environment, performing initial environment setup.",
+    );
+    await runCommand("pnpm initial:env", "Initial environment setup");
+    await runCommand("pnpm generate:schema", "JSON Schema generation");
   } else {
     console.log(
       "Running in a normal environment, performing initial environment setup.",
     );
     await runCommand("pnpm initial:env", "Initial environment setup");
-    await runCommand(
-      "pnpm openai-compatiable:init",
-      "Initial openAI compatiable config setup",
-    );
+    await runCommand("pnpm generate:schema", "JSON Schema generation");
   }
 }
 

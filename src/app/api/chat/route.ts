@@ -9,7 +9,7 @@ import {
   Message,
 } from "ai";
 
-import { customModelProvider, isToolCallUnsupportedModel } from "lib/ai/models";
+import { modelRegistry } from "lib/ai/core/models";
 
 import { mcpClientsManager } from "lib/ai/mcp/mcp-manager";
 
@@ -74,7 +74,11 @@ export async function POST(request: Request) {
       mentions = [],
     } = chatApiSchemaRequestBodySchema.parse(json);
 
-    const model = customModelProvider.getModel(chatModel);
+    const modelResult = await modelRegistry.getModel(chatModel);
+    if (!modelResult) {
+      return new Response("Model not found", { status: 404 });
+    }
+    const { model } = modelResult;
 
     let thread = await chatRepository.selectThreadDetails(id);
 
@@ -106,7 +110,7 @@ export async function POST(request: Request) {
 
     const inProgressToolStep = extractInProgressToolPart(messages.slice(-2));
 
-    const supportToolCall = !isToolCallUnsupportedModel(model);
+    const supportToolCall = modelResult.supportsTools;
 
     const agentId = mentions.find((m) => m.type === "agent")?.agentId;
 

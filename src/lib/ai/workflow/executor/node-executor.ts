@@ -1,4 +1,4 @@
-import { customModelProvider } from "lib/ai/models";
+import { modelRegistry } from "lib/ai/core/models";
 import {
   ConditionNodeData,
   OutputNodeData,
@@ -86,7 +86,11 @@ export const llmNodeExecutor: NodeExecutor<LLMNodeData> = async ({
   node,
   state,
 }) => {
-  const model = customModelProvider.getModel(node.model);
+  const modelConfig = await modelRegistry.getModel(node.model);
+  if (!modelConfig) {
+    throw new Error("Model not found");
+  }
+  const { model } = modelConfig;
 
   // Convert TipTap JSON messages to AI SDK format, resolving mentions to actual data
   const messages: Omit<Message, "id">[] = node.messages.map((message) =>
@@ -209,8 +213,13 @@ export const toolNodeExecutor: NodeExecutor<ToolNodeData> = async ({
         ).parts[0]?.text
       : undefined;
 
+    const modelConfig = await modelRegistry.getModel(node.model);
+    if (!modelConfig) {
+      throw new Error("Model not found");
+    }
+    const { model } = modelConfig;
     const response = await generateText({
-      model: customModelProvider.getModel(node.model),
+      model,
       maxSteps: 1,
       toolChoice: "required", // Force the model to call the tool
       prompt,

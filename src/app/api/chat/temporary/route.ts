@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { getSession } from "auth/server";
 import { Message, smoothStream, streamText } from "ai";
-import { customModelProvider } from "lib/ai/models";
+import { modelRegistry } from "lib/ai/core/models";
 import logger from "logger";
 import { buildUserSystemPrompt } from "lib/ai/prompts";
 import { userRepository } from "lib/db/repository";
@@ -24,7 +24,11 @@ export async function POST(request: Request) {
       };
       instructions?: string;
     };
-    const model = customModelProvider.getModel(chatModel);
+    const modelResult = await modelRegistry.getModel(chatModel);
+    if (!modelResult) {
+      return new Response("Model not found", { status: 404 });
+    }
+    const { model } = modelResult;
     const userPreferences =
       (await userRepository.getPreferences(session.user.id)) || undefined;
 

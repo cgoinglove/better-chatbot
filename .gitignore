@@ -53,5 +53,6 @@ local-data
 .cursor
 *.ignore
 .mcp-config.json
-openai-compatible.config.ts
+config/models.json
+config/models.schema.json
 certificates

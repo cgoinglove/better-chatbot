@@ -1,0 +1,278 @@
+{
+  "_comment": "Better Chatbot AI Model Configuration (Example)",
+  "_description": "Copy this to models.json and configure your providers. API keys are loaded from environment variables.",
+  "_documentation": "See docs/tips-guides/configuring-ai-providers.md for setup instructions",
+  "_note": "After editing, run 'npm run generate:schema' to update IDE autocomplete",
+
+  "providers": [
+    {
+      "_comment": "OpenAI Provider - Set OPENAI_API_KEY environment variable to enable",
+      "id": "openai",
+      "type": "openai",
+      "name": "OpenAI",
+      "description": "Leading AI provider with advanced reasoning and tool-calling capabilities",
+      "models": [
+        {
+          "uiName": "gpt-4.1",
+          "apiName": "gpt-4.1",
+          "description": "Latest GPT-4 model with enhanced reasoning and reduced latency",
+          "supportsTools": true
+        },
+        {
+          "uiName": "gpt-4.1-mini",
+          "apiName": "gpt-4.1-mini",
+          "description": "Faster, cost-effective version of GPT-4.1 for most tasks",
+          "supportsTools": true
+        },
+        {
+          "uiName": "4o",
+          "apiName": "gpt-4o",
+          "description": "Multimodal model with vision, audio, and advanced reasoning",
+          "supportsTools": true
+        },
+        {
+          "uiName": "4o-mini",
+          "apiName": "gpt-4o-mini",
+          "description": "Efficient multimodal model, great for everyday tasks",
+          "supportsTools": true
+        },
+        {
+          "uiName": "o1-preview",
+          "apiName": "o1-preview",
+          "description": "Advanced reasoning model for complex problems and analysis",
+          "supportsTools": false,
+          "settings": {
+            "reasoningEffort": "medium",
+            "maxCompletionTokens": 4000,
+            "structuredOutputs": true
+          }
+        }
+      ]
+    },
+    {
+      "_comment": "Google Gemini - Set GOOGLE_GENERATIVE_AI_API_KEY environment variable to enable",
+      "id": "google",
+      "type": "google",
+      "name": "Google Gemini",
+      "description": "Google's advanced AI with strong reasoning and multimodal capabilities",
+      "models": [
+        {
+          "uiName": "gemini-2.0-flash-exp",
+          "apiName": "gemini-2.0-flash-exp",
+          "description": "Experimental fast model with improved reasoning and tool use",
+          "supportsTools": true
+        },
+        {
+          "uiName": "gemini-1.5-pro",
+          "apiName": "gemini-1.5-pro",
+          "description": "Pro model with 2M context window, excellent for long documents",
+          "supportsTools": true,
+          "settings": {
+            "structuredOutputs": true,
+            "safetySettings": [
+              {
+                "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+                "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+              }
+            ]
+          }
+        },
+        {
+          "uiName": "gemini-1.5-flash",
+          "apiName": "gemini-1.5-flash",
+          "description": "Fast model optimized for speed while maintaining quality",
+          "supportsTools": true
+        }
+      ]
+    },
+    {
+      "_comment": "Anthropic Claude - Set ANTHROPIC_API_KEY environment variable to enable",
+      "id": "anthropic",
+      "type": "anthropic",
+      "name": "Anthropic Claude",
+      "description": "Safety-focused AI with excellent reasoning and ethical guidelines",
+      "models": [
+        {
+          "uiName": "claude-3.5-sonnet",
+          "apiName": "claude-3-5-sonnet-20241022",
+          "description": "Most capable Claude model with advanced reasoning and coding",
+          "supportsTools": true,
+          "settings": {
+            "sendReasoning": true,
+            "providerOptions": {
+              "anthropic": {
+                "cacheControl": {
+                  "type": "ephemeral",
+                  "ttl": "1h"
+                }
+              }
+            }
+          }
+        },
+        {
+          "uiName": "claude-3.5-haiku",
+          "apiName": "claude-3-5-haiku-20241022",
+          "description": "Fast and efficient model for everyday tasks and quick responses",
+          "supportsTools": true
+        },
+        {
+          "uiName": "claude-3-opus",
+          "apiName": "claude-3-opus-20240229",
+          "description": "Most powerful Claude model for complex analysis and creativity",
+          "supportsTools": true
+        }
+      ]
+    },
+    {
+      "_comment": "xAI Grok - Set XAI_API_KEY environment variable to enable",
+      "id": "xai",
+      "type": "xai",
+      "name": "xAI Grok",
+      "description": "Elon Musk's AI with real-time knowledge and humor",
+      "models": [
+        {
+          "uiName": "grok-beta",
+          "apiName": "grok-beta",
+          "description": "Latest Grok model with real-time internet access and wit",
+          "supportsTools": true
+        },
+        {
+          "uiName": "grok-vision-beta",
+          "apiName": "grok-vision-beta",
+          "description": "Grok with vision capabilities for image understanding",
+          "supportsTools": true
+        }
+      ]
+    },
+    {
+      "_comment": "Ollama Local Models - No API key required, but Ollama must be running locally",
+      "id": "ollama",
+      "type": "ollama",
+      "name": "Ollama (Local)",
+      "description": "Local AI models running on your machine, completely private",
+      "providerSettings": {
+        "baseURL": "http://localhost:11434/api"
+      },
+      "models": [
+        {
+          "uiName": "llama3.3:70b",
+          "apiName": "llama3.3:70b",
+          "description": "Large Meta model with excellent performance across tasks",
+          "supportsTools": true,
+          "settings": {
+            "temperature": 0.7,
+            "numPredict": 2048
+          }
+        },
+        {
+          "uiName": "qwen2.5-coder:7b",
+          "apiName": "qwen2.5-coder:7b",
+          "description": "Specialized coding model for programming tasks",
+          "supportsTools": true
+        },
+        {
+          "uiName": "phi4:14b",
+          "apiName": "phi4:14b",
+          "description": "Microsoft's efficient model with strong reasoning",
+          "supportsTools": false
+        }
+      ]
+    },
+    {
+      "id": "openrouter",
+      "type": "openrouter",
+      "name": "OpenRouter",
+      "description": "Access to multiple AI models through a unified API",
+      "models": [
+        {
+          "uiName": "claude-3.5-sonnet:free",
+          "apiName": "anthropic/claude-3.5-sonnet:free",
+          "description": "Free tier access to Claude 3.5 Sonnet (rate limited)",
+          "supportsTools": true
+        },
+        {
+          "uiName": "gpt-4o-mini:free",
+          "apiName": "openai/gpt-4o-mini:free",
+          "description": "Free tier access to GPT-4o Mini (rate limited)",
+          "supportsTools": true
+        },
+        {
+          "uiName": "qwen-2.5-coder-32b",
+          "apiName": "qwen/qwen-2.5-coder-32b-instruct",
+          "description": "Qwen's specialized coding model for programming tasks",
+          "supportsTools": true
+        }
+      ]
+    },
+    {
+      "id": "groq",
+      "type": "openai-compatible",
+      "name": "Groq",
+      "description": "Ultra-fast inference for popular open-source models",
+      "providerSettings": {
+        "baseURL": "https://api.groq.com/openai/v1"
+      },
+      "models": [
+        {
+          "uiName": "llama-3.3-70b",
+          "apiName": "llama-3.3-70b-versatile",
+          "description": "Latest Llama model with excellent performance and speed",
+          "supportsTools": true,
+          "settings": {
+            "temperature": 0.7,
+            "maxTokens": 8192
+          }
+        },
+        {
+          "uiName": "mixtral-8x7b",
+          "apiName": "mixtral-8x7b-32768",
+          "description": "Mixture of experts model with 32k context window",
+          "supportsTools": true
+        }
+      ]
+    },
+    {
+      "id": "my-custom-provider",
+      "type": "openai-compatible",
+      "name": "My Custom Provider",
+      "description": "Example configuration for custom OpenAI-compatible APIs",
+      "providerSettings": {
+        "baseURL": "https://api.my-ai.com/v1"
+      },
+      "models": [
+        {
+          "uiName": "My Custom Model",
+          "apiName": "my-custom-model-v1",
+          "description": "Custom model fine-tuned for specific use cases",
+          "supportsTools": true,
+          "settings": {
+            "temperature": 0.8,
+            "user": "my-user-id"
+          }
+        }
+      ]
+    },
+    {
+      "id": "azure-openai",
+      "type": "azure-openai",
+      "name": "Azure OpenAI",
+      "description": "OpenAI models hosted on Microsoft Azure with enterprise features",
+      "providerSettings": {
+        "baseURL": "https://your-resource.openai.azure.com/openai/deployments/"
+      },
+      "models": [
+        {
+          "uiName": "GPT-4o (Azure)",
+          "apiName": "your-deployment-name",
+          "description": "GPT-4o deployed on Azure with enterprise security",
+          "supportsTools": true,
+          "apiVersion": "2024-10-21",
+          "settings": {
+            "temperature": 0.7,
+            "maxTokens": 4000
+          }
+        }
+      ]
+    }
+  ]
+}
