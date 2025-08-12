@@ -11,7 +11,7 @@ import {
   OutputSchemaSourceKey,
 } from "../workflow.interface";
 import { WorkflowRuntimeState } from "./graph-store";
-import { generateObject, generateText, Message } from "ai";
+import { generateObject, generateText, UIMessage } from "ai";
 import { checkConditionBranch } from "../condition";
 import {
   convertTiptapJsonToAiMessage,
@@ -89,7 +89,7 @@ export const llmNodeExecutor: NodeExecutor<LLMNodeData> = async ({
   const model = customModelProvider.getModel(node.model);
 
   // Convert TipTap JSON messages to AI SDK format, resolving mentions to actual data
-  const messages: Omit<Message, "id">[] = node.messages.map((message) =>
+  const messages: Omit<UIMessage, "id">[] = node.messages.map((message) =>
     convertTiptapJsonToAiMessage({
       role: message.role,
       getOutput: state.getOutput, // Provides access to previous node outputs
@@ -115,7 +115,7 @@ export const llmNodeExecutor: NodeExecutor<LLMNodeData> = async ({
     return {
       output: {
         totalTokens: response.usage.totalTokens,
-        answer: response.text,
+        answer: response.text.text,
       },
     };
   }
@@ -217,7 +217,7 @@ export const toolNodeExecutor: NodeExecutor<ToolNodeData> = async ({
       tools: {
         [node.tool.id]: {
           description: node.tool.description,
-          parameters: jsonSchemaToZod(node.tool.parameterSchema),
+          inputSchema: jsonSchemaToZod(node.tool.parameterSchema),
         },
       },
     });

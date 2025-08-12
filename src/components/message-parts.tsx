@@ -1,6 +1,6 @@
 "use client";
 
-import { UIMessage } from "ai";
+import { ToolUIPart, UIMessage } from "ai";
 import {
   Check,
   Copy,
@@ -34,11 +34,7 @@ import {
 
 import { toast } from "sonner";
 import { safe } from "ts-safe";
-import {
-  ChatModel,
-  ClientToolInvocation,
-  ToolInvocationUIPart,
-} from "app-types/chat";
+import { ChatModel, ClientToolInvocation } from "app-types/chat";
 
 import { useTranslations } from "next-intl";
 import { extractMCPToolId } from "lib/ai/mcp/mcp-tool-id";
@@ -66,9 +62,8 @@ interface UserMessagePartProps {
   part: TextMessagePart;
   isLast: boolean;
   message: UIMessage;
-  setMessages: UseChatHelpers["setMessages"];
-  reload: UseChatHelpers["reload"];
-  status: UseChatHelpers["status"];
+  setMessages: UseChatHelpers<UIMessage>["setMessages"];
+  status: UseChatHelpers<UIMessage>["status"];
   isError?: boolean;
 }
 
@@ -79,20 +74,20 @@ interface AssistMessagePartProps {
   message: UIMessage;
   showActions: boolean;
   threadId?: string;
-  setMessages: UseChatHelpers["setMessages"];
-  reload: UseChatHelpers["reload"];
+  setMessages: UseChatHelpers<UIMessage>["setMessages"];
+
   isError?: boolean;
 }
 
 interface ToolMessagePartProps {
-  part: ToolInvocationUIPart;
+  part: ToolUIPart;
   messageId: string;
   showActions: boolean;
   isLast?: boolean;
   isManualToolInvocation?: boolean;
   onPoxyToolCall?: (result: ClientToolInvocation) => void;
   isError?: boolean;
-  setMessages?: UseChatHelpers["setMessages"];
+  setMessages?: UseChatHelpers<UIMessage>["setMessages"];
 }
 
 const MAX_TEXT_LENGTH = 600;
@@ -103,7 +98,6 @@ export const UserMessagePart = memo(
     status,
     message,
     setMessages,
-    reload,
     isError,
   }: UserMessagePartProps) {
     const { copied, copy } = useCopy();
@@ -151,7 +145,9 @@ export const UserMessagePart = memo(
             message={message}
             setMode={setMode}
             setMessages={setMessages}
-            reload={reload}
+            reload={() => {
+              throw new Error("Not implemented");
+            }}
           />
         </div>
       );
@@ -268,7 +264,6 @@ const throttle = createThrottle();
 export const AssistMessagePart = memo(function AssistMessagePart({
   part,
   showActions,
-  reload,
   message,
   setMessages,
   isLast,
@@ -316,13 +311,16 @@ export const AssistMessagePart = memo(function AssistMessagePart({
           return messages;
         }),
       )
-      .ifOk(() =>
-        reload({
-          body: {
-            model,
-            id: threadId,
-          },
-        }),
+      .ifOk(
+        () => {
+          throw new Error("Not implemented");
+        },
+        // reload({
+        //   body: {
+        //     model,
+        //     id: threadId,
+        //   },
+        // }),
       )
       .ifFail((error) => toast.error(error.message))
       .watch(() => setIsLoading(false))
@@ -447,10 +445,10 @@ const variants = {
   },
 };
 export const ReasoningPart = memo(function ReasoningPart({
-  reasoning,
+  reasoningText,
   isThinking,
 }: {
-  reasoning: string;
+  reasoningText: string;
   isThinking?: boolean;
 }) {
   const [isExpanded, setIsExpanded] = useState(isThinking);
@@ -498,7 +496,7 @@ export const ReasoningPart = memo(function ReasoningPart({
               style={{ overflow: "hidden" }}
               className="pl-6 text-muted-foreground border-l flex flex-col gap-4"
             >
-              <Markdown>{reasoning}</Markdown>
+              <Markdown>{reasoningText}</Markdown>
             </motion.div>
           )}
         </AnimatePresence>
@@ -565,17 +563,6 @@ const WebSearchToolInvocation = dynamic(
 const CodeExecutor = dynamic(
   () =>
     import("./tool-invocation/code-executor").then((mod) => mod.CodeExecutor),
-  {
-    ssr: false,
-    loading,
-  },
-);
-
-const SequentialThinkingToolInvocation = dynamic(
-  () =>
-    import("./tool-invocation/sequential-thinking").then(
-      (mod) => mod.SequentialThinkingToolInvocation,
-    ),
   {
     ssr: false,
     loading,
@@ -723,15 +710,6 @@ export const ToolMessagePart = memo(
             key={toolInvocation.toolCallId}
             onResult={onToolCallDirect}
             type="python"
-          />
-        );
-      }
-
-      if (toolName === SequentialThinkingToolName) {
-        return (
-          <SequentialThinkingToolInvocation
-            key={toolInvocation.toolCallId}
-            part={toolInvocation}
           />
         );
       }
@@ -990,8 +968,7 @@ export const ToolMessagePart = memo(
     if (prev.isManualToolInvocation !== next.isManualToolInvocation)
       return false;
     if (prev.messageId !== next.messageId) return false;
-    if (!equal(prev.part.toolInvocation, next.part.toolInvocation))
-      return false;
+    if (!equal(prev.part, next.part)) return false;
     return true;
   },
 );

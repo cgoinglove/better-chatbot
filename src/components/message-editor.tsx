@@ -1,6 +1,6 @@
 "use client";
 
-import type { Message } from "ai";
+import type { UIMessage } from "ai";
 import { Button } from "./ui/button";
 import { type Dispatch, type SetStateAction, useState } from "react";
 import { Textarea } from "./ui/textarea";
@@ -15,7 +15,7 @@ type TextUIPart = {
 };
 
 export type MessageEditorProps = {
-  message: Message;
+  message: UIMessage;
   setMode: Dispatch<SetStateAction<"view" | "edit">>;
   setMessages: UseChatHelpers["setMessages"];
   reload: UseChatHelpers["reload"];
@@ -60,7 +60,6 @@ export function MessageEditor({
           />
         </div>
       ))}
-
       <div className="flex flex-row gap-2 justify-end">
         <Button
           variant="outline"
@@ -87,7 +86,7 @@ export function MessageEditor({
               const index = messages.findIndex((m) => m.id === message.id);
 
               if (index !== -1) {
-                const updatedMessage: Message = {
+                const updatedMessage: UIMessage = {
                   ...message,
                   parts: draftParts,
                 };

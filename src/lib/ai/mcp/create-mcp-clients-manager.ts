@@ -16,7 +16,7 @@ import { safe } from "ts-safe";
 import { McpServerSchema } from "lib/db/pg/schema.pg";
 import { createMCPToolId } from "./mcp-tool-id";
 import globalLogger from "logger";
-import { jsonSchema, ToolExecutionOptions } from "ai";
+import { jsonSchema, ToolCallOptions } from "ai";
 import { createMemoryMCPConfigStorage } from "./memory-mcp-config-storage";
 import { colorize } from "consola/utils";
 
@@ -122,7 +122,7 @@ export class MCPClientsManager {
                 ...bcc,
                 [createMCPToolId(clientName, tool.name)]: {
                   description: tool.description,
-                  parameters: jsonSchema(
+                  inputSchema: jsonSchema(
                     toAny({
                       ...tool.inputSchema,
                       properties: tool.inputSchema?.properties ?? {},
@@ -133,7 +133,7 @@ export class MCPClientsManager {
                   __$ref__: "mcp",
                   _mcpServerName: clientName,
                   _mcpServerId: id,
-                  execute: (params, options: ToolExecutionOptions) => {
+                  execute: (params, options: ToolCallOptions) => {
                     options?.abortSignal?.throwIfAborted();
                     return this.toolCall(id, tool.name, params);
                   },

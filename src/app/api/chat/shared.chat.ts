@@ -1,22 +1,14 @@
 import "server-only";
 import {
   LoadAPIKeyError,
-  Message,
+  UIMessage,
   Tool,
-  ToolInvocation,
   jsonSchema,
   tool as createTool,
-  DataStreamWriter,
-  formatDataStreamPart,
+  isToolUIPart,
 } from "ai";
-import {
-  ChatMention,
-  ChatMessage,
-  ChatMessageAnnotation,
-  ClientToolInvocationZodSchema,
-  ToolInvocationUIPart,
-} from "app-types/chat";
-import { errorToString, objectFlow, toAny } from "lib/utils";
+import { ChatMention, ClientToolInvocationZodSchema } from "app-types/chat";
+import { errorToString, objectFlow } from "lib/utils";
 import logger from "logger";
 import {
   AllowedMCPServer,
@@ -95,20 +87,10 @@ export function excludeToolExecution(
 ): Record<string, Tool> {
   return objectFlow(tool).map((value) => {
     return createTool({
-      parameters: value.parameters,
+      inputSchema: value.inputSchema,
       description: value.description,
     });
   });
-}
-
-export function appendAnnotations(
-  annotations: any[] = [],
-  annotationsToAppend: ChatMessageAnnotation[] | ChatMessageAnnotation,
-): ChatMessageAnnotation[] {
-  const newAnnotations = Array.isArray(annotationsToAppend)
-    ? annotationsToAppend
-    : [annotationsToAppend];
-  return [...annotations, ...newAnnotations];
 }
 
 export function mergeSystemPrompt(
@@ -121,21 +103,19 @@ export function mergeSystemPrompt(
 }
 
 export function manualToolExecuteByLastMessage(
-  part: ToolInvocationUIPart,
-  message: Message,
+  part: any, // Tool part from UIMessage
+  message: UIMessage,
   tools: Record<
     string,
     VercelAIMcpTool | VercelAIWorkflowTool | (Tool & { __$ref__?: string })
   >,
   abortSignal?: AbortSignal,
 ) {
-  const { args, toolName } = part.toolInvocation;
+  const { input: args, toolName } = part;
 
-  const manulConfirmation = (message.parts as ToolInvocationUIPart[]).find(
-    (_part) => {
-      return _part.toolInvocation?.toolCallId == part.toolInvocation.toolCallId;
-    },
-  )?.toolInvocation as Extract<ToolInvocation, { state: "result" }>;
+  const manulConfirmation = (message.parts as any[]).find((_part) => {
+    return _part.toolCallId == part.toolCallId;
+  });
 
   const tool = tools[toolName];
 
@@ -153,7 +133,7 @@ export function manualToolExecuteByLastMessage(
         if (!value) return MANUAL_REJECT_RESPONSE_PROMPT;
         if (tool.__$ref__ === "workflow") {
           return tool.execute!(args, {
-            toolCallId: part.toolInvocation.toolCallId,
+            toolCallId: part.toolCallId,
             abortSignal: abortSignal ?? new AbortController().signal,
             messages: [],
           });
@@ -166,7 +146,7 @@ export function manualToolExecuteByLastMessage(
           );
         }
         return tool.execute!(args, {
-          toolCallId: part.toolInvocation.toolCallId,
+          toolCallId: part.toolCallId,
           abortSignal: abortSignal ?? new AbortController().signal,
           messages: [],
         });
@@ -191,40 +171,25 @@ export function handleError(error: any) {
   return errorToString(error.message);
 }
 
-export function convertToMessage(message: ChatMessage): Message {
-  return {
-    ...message,
-    id: message.id,
-    content: "",
-    role: message.role,
-    parts: message.parts,
-    experimental_attachments:
-      toAny(message).attachments || toAny(message).experimental_attachments,
-  };
-}
-
-export function extractInProgressToolPart(
-  messages: Message[],
-): ToolInvocationUIPart | null {
-  let result: ToolInvocationUIPart | null = null;
+export function extractInProgressToolPart(messages: UIMessage[]): any | null {
+  let result: any | null = null;
 
   for (const message of messages) {
     for (const part of message.parts || []) {
-      if (part.type != "tool-invocation") continue;
-      if (part.toolInvocation.state == "result") continue;
-      result = part as ToolInvocationUIPart;
+      // v5에서는 tool part 타입 체크 방식 변경
+      if (!isToolUIPart(part)) continue;
+      // v5에서는 tool part가 다른 구조를 가짐
+      if ((part as any).state == "output-available") continue;
+      result = part;
       return result;
     }
   }
   return null;
 }
-export function assignToolResult(toolPart: ToolInvocationUIPart, result: any) {
+export function assignToolResult(toolPart: any, result: any) {
   return Object.assign(toolPart, {
-    toolInvocation: {
-      ...toolPart.toolInvocation,
-      state: "result",
-      result,
-    },
+    state: "output-available",
+    output: result,
   });
 }
 
@@ -281,7 +246,7 @@ export const workflowToVercelAITool = ({
   name: string;
   description?: string;
   schema: ObjectJsonSchema7;
-  dataStream: DataStreamWriter;
+  dataStream: any; // v5에서 변경된 writer 타입
 }): VercelAIWorkflowTool => {
   const toolName = name
     .replace(/[^a-zA-Z0-9\s]/g, "")
@@ -291,7 +256,7 @@ export const workflowToVercelAITool = ({
 
   const tool = createTool({
     description: `${name} ${description?.trim().slice(0, 50)}`,
-    parameters: jsonSchema(schema),
+    inputSchema: jsonSchema(schema),
     execute(query, { toolCallId, abortSignal }) {
       const history: VercelAIWorkflowToolStreaming[] = [];
       const toolResult: VercelAIWorkflowToolStreamingResult = {
@@ -360,12 +325,15 @@ export const workflowToVercelAITool = ({
                 result.endedAt = e.endedAt;
               }
             }
-            dataStream.write(
-              formatDataStreamPart("tool_result", {
+            // v5에서는 tool 결과 스트리밍 방식이 변경됨
+            // 필요시 다른 data 타입으로 전송
+            dataStream.write({
+              type: "data-workflow-update",
+              data: {
                 toolCallId,
                 result: toolResult,
-              }),
-            );
+              },
+            });
           });
           return executor.run(
             {
@@ -427,7 +395,7 @@ export const workflowToVercelAITools = (
     description?: string;
     schema: ObjectJsonSchema7;
   }[],
-  dataStream: DataStreamWriter,
+  dataStream: any, // v5에서 변경된 writer 타입
 ) => {
   return workflows
     .map((v) =>
@@ -460,7 +428,7 @@ export const loadMcpTools = (opt?: {
 
 export const loadWorkFlowTools = (opt: {
   mentions?: ChatMention[];
-  dataStream: DataStreamWriter;
+  dataStream: any; // v5에서 변경된 writer 타입
 }) =>
   safe(() =>
     opt?.mentions?.length

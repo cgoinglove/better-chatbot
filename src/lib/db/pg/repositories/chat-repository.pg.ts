@@ -178,9 +178,7 @@ export const pgChatRepository: ChatRepository = {
         target: [ChatMessageSchema.id],
         set: {
           parts: message.parts,
-          annotations: message.annotations,
-          attachments: message.attachments,
-          model: message.model,
+          metadata: message.metadata,
         },
       })
       .returning();

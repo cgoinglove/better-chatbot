@@ -39,7 +39,7 @@ export const httpFetchSchema: JSONSchema7 = {
 export const httpFetchTool = createTool({
   description:
     "Make HTTP requests to any URL. Can be used to fetch data from APIs, send data to servers, or interact with web services.",
-  parameters: jsonSchemaToZod(httpFetchSchema),
+  inputSchema: jsonSchemaToZod(httpFetchSchema),
   execute: async ({ url, method = "GET", headers, body, timeout = 10000 }) => {
     return safe(async () => {
       const controller = new AbortController();

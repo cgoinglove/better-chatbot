@@ -185,7 +185,7 @@ const fetchExa = async (endpoint: string, body: any): Promise<any> => {
 export const exaSearchToolForWorkflow = createTool({
   description:
     "Search the web using Exa AI - performs real-time web searches with semantic and neural search capabilities. Returns high-quality, relevant results with full content extraction.",
-  parameters: jsonSchemaToZod(exaSearchSchema),
+  inputSchema: jsonSchemaToZod(exaSearchSchema),
   execute: async (params) => {
     const searchRequest: ExaSearchRequest = {
       query: params.query,
@@ -217,7 +217,7 @@ export const exaSearchToolForWorkflow = createTool({
 export const exaContentsToolForWorkflow = createTool({
   description:
     "Extract detailed content from specific URLs using Exa AI - retrieves full text content, metadata, and structured information from web pages with live crawling capabilities.",
-  parameters: jsonSchemaToZod(exaContentsSchema),
+  inputSchema: jsonSchemaToZod(exaContentsSchema),
   execute: async (params) => {
     const contentsRequest: ExaContentsRequest = {
       ids: params.urls,
@@ -236,7 +236,7 @@ export const exaContentsToolForWorkflow = createTool({
 export const exaSearchTool = createTool({
   description:
     "Search the web using Exa AI - performs real-time web searches with semantic and neural search capabilities. Returns high-quality, relevant results with full content extraction.",
-  parameters: jsonSchemaToZod(exaSearchSchema),
+  inputSchema: jsonSchemaToZod(exaSearchSchema),
   execute: (params) => {
     return safe(async () => {
       const searchRequest: ExaSearchRequest = {
@@ -284,7 +284,7 @@ export const exaSearchTool = createTool({
 export const exaContentsTool = createTool({
   description:
     "Extract detailed content from specific URLs using Exa AI - retrieves full text content, metadata, and structured information from web pages with live crawling capabilities.",
-  parameters: jsonSchemaToZod(exaContentsSchema),
+  inputSchema: jsonSchemaToZod(exaContentsSchema),
   execute: async (params) => {
     return safe(async () => {
       const contentsRequest: ExaContentsRequest = {

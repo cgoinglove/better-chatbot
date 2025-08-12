@@ -1,5 +1,3 @@
-import type { UIMessage } from "ai";
-import type { ChatMessage } from "app-types/chat";
 import { type ClassValue, clsx } from "clsx";
 import { JSONSchema7 } from "json-schema";
 import { twMerge } from "tailwind-merge";
@@ -301,18 +299,6 @@ export function capitalizeFirstLetter(str: string): string {
 export function truncateString(str: string, maxLength: number): string {
   if (str.length <= maxLength) return str;
   return str.slice(0, maxLength) + "...";
-}
-
-export function convertToUIMessage(message: ChatMessage): UIMessage {
-  const um: UIMessage = {
-    id: message.id,
-    parts: message.parts as UIMessage["parts"],
-    role: message.role as UIMessage["role"],
-    content: "",
-    annotations: message.annotations as UIMessage["annotations"],
-    createdAt: new Date(message.createdAt),
-  };
-  return um;
 }
 
 export async function nextTick() {
