@@ -165,7 +165,6 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
     }),
     messages: initialMessages,
     generateId: generateUUID,
-    experimental_throttle: 100,
     onFinish,
   });
 

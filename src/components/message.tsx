@@ -132,7 +132,7 @@ const PurePreviewMessage = ({
 
 function equalMessage(prevProps: Props, nextProps: Props) {
   if (prevProps.message.id !== nextProps.message.id) {
-    console.log(`reversion id`, prevProps.message.id, nextProps.message.id);
+    console.log(`refresh id`, prevProps.message.id, nextProps.message.id);
     return false;
   }
 
@@ -149,18 +149,6 @@ function equalMessage(prevProps: Props, nextProps: Props) {
 
   if (!equal(prevProps.message.parts, nextProps.message.parts)) {
     return false;
-  }
-  if (nextProps.isLastMessage) {
-    console.log(
-      `HIT..`,
-
-      {
-        prev: prevProps.message.parts.find((v) => v.type == "text")?.text
-          .length,
-        next: nextProps.message.parts.find((v) => v.type == "text")?.text
-          .length,
-      },
-    );
   }
   return true;
 }
