@@ -29,32 +29,32 @@ export const WordByWordFadeIn = memo(({ children }: PropsWithChildren) => {
 });
 WordByWordFadeIn.displayName = "WordByWordFadeIn";
 const components: Partial<Components> = {
-  table: ({ children }) => {
+  table: ({ node, children, ...props }) => {
     return (
       <div className="my-4">
-        <Table>{children}</Table>
+        <Table {...props}>{children}</Table>
       </div>
     );
   },
-  thead: ({ children }) => {
-    return <TableHeader>{children}</TableHeader>;
+  thead: ({ node, children, ...props }) => {
+    return <TableHeader {...props}>{children}</TableHeader>;
   },
-  tbody: ({ children }) => {
-    return <TableBody>{children}</TableBody>;
+  tbody: ({ node, children, ...props }) => {
+    return <TableBody {...props}>{children}</TableBody>;
   },
-  tr: ({ children }) => {
-    return <TableRow>{children}</TableRow>;
+  tr: ({ node, children, ...props }) => {
+    return <TableRow {...props}>{children}</TableRow>;
   },
-  th: ({ children }) => {
+  th: ({ node, children, ...props }) => {
     return (
-      <TableHead>
+      <TableHead {...props}>
         <WordByWordFadeIn>{children}</WordByWordFadeIn>
       </TableHead>
     );
   },
-  td: ({ children }) => {
+  td: ({ node, children, ...props }) => {
     return (
-      <TableCell>
+      <TableCell {...props}>
         <WordByWordFadeIn>{children}</WordByWordFadeIn>
       </TableCell>
     );
