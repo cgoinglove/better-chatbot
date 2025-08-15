@@ -5,6 +5,14 @@ import { PreBlock } from "./pre-block";
 import { isJson, isString, toAny } from "lib/utils";
 import JsonView from "ui/json-view";
 import { LinkIcon } from "lucide-react";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "ui/table";
 
 const FadeIn = memo(({ children }: PropsWithChildren) => {
   return <span className="fade-in animate-in duration-1000">{children} </span>;
@@ -21,6 +29,36 @@ export const WordByWordFadeIn = memo(({ children }: PropsWithChildren) => {
 });
 WordByWordFadeIn.displayName = "WordByWordFadeIn";
 const components: Partial<Components> = {
+  table: ({ children }) => {
+    return (
+      <div className="my-4">
+        <Table>{children}</Table>
+      </div>
+    );
+  },
+  thead: ({ children }) => {
+    return <TableHeader>{children}</TableHeader>;
+  },
+  tbody: ({ children }) => {
+    return <TableBody>{children}</TableBody>;
+  },
+  tr: ({ children }) => {
+    return <TableRow>{children}</TableRow>;
+  },
+  th: ({ children }) => {
+    return (
+      <TableHead>
+        <WordByWordFadeIn>{children}</WordByWordFadeIn>
+      </TableHead>
+    );
+  },
+  td: ({ children }) => {
+    return (
+      <TableCell>
+        <WordByWordFadeIn>{children}</WordByWordFadeIn>
+      </TableCell>
+    );
+  },
   code: ({ children }) => {
     return (
       <code className="text-sm rounded-md bg-accent text-primary py-1 px-2 mx-0.5">
