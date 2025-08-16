@@ -22,6 +22,11 @@ const staticModels = {
     "gpt-4.1": openai("gpt-4.1"),
     "gpt-4.1-mini": openai("gpt-4.1-mini"),
     "4o": openai("gpt-4o"),
+    "gpt5-chat": openai("gpt-5-chat-latest"),
+    "gpt5-mini": openai("gpt-5-mini"),
+    "gpt5-reasoning": openai("gpt-5", {
+      reasoningEffort: "medium",
+    }),
     "4o-mini": openai("gpt-4o-mini"),
     "o4-mini": openai("o4-mini", {
       reasoningEffort: "medium",
