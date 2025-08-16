@@ -1,6 +1,6 @@
 "use client";
 
-import type { UIMessage } from "ai";
+import { isToolUIPart, type UIMessage } from "ai";
 import { memo, useMemo, useState } from "react";
 import equal from "lib/equal";
 
@@ -98,7 +98,7 @@ const PurePreviewMessage = ({
               );
             }
 
-            if (part.type === "tool-invocation") {
+            if (isToolUIPart(part)) {
               const isLast = isLastMessage && isLastPart;
 
               const isManualToolInvocation =
