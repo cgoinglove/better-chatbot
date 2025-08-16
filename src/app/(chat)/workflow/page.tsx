@@ -30,6 +30,7 @@ import { useRouter } from "next/navigation";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "ui/dialog";
 import { WorkflowGreeting } from "@/components/workflow/workflow-greeting";
 import { notify } from "lib/notify";
+import { useState } from "react";
 
 const createWithExample = async (exampleWorkflow: {
   workflow: Partial<DBWorkflow>;
@@ -66,6 +67,9 @@ export default function WorkflowPage() {
   const router = useRouter();
   const { data: session } = authClient.useSession();
   const currentUserId = session?.user?.id;
+  const [isVisibilityChangeLoading, setIsVisibilityChangeLoading] =
+    useState(false);
+  const [isDeleteLoading, setIsDeleteLoading] = useState(false);
 
   const { data: workflows, isLoading } = useSWR<WorkflowSummary[]>(
     "/api/workflow",
@@ -96,6 +100,7 @@ export default function WorkflowPage() {
     visibility: "private" | "public" | "readonly",
   ) => {
     try {
+      setIsVisibilityChangeLoading(true);
       const response = await fetch(`/api/workflow/${workflowId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -109,6 +114,8 @@ export default function WorkflowPage() {
       toast.success(t("Workflow.visibilityUpdated"));
     } catch {
       toast.error(t("Common.error"));
+    } finally {
+      setIsVisibilityChangeLoading(false);
     }
   };
 
@@ -119,6 +126,7 @@ export default function WorkflowPage() {
     if (!ok) return;
 
     try {
+      setIsDeleteLoading(true);
       const response = await fetch(`/api/workflow/${workflowId}`, {
         method: "DELETE",
       });
@@ -129,6 +137,8 @@ export default function WorkflowPage() {
       toast.success(t("Workflow.deleted"));
     } catch (_error) {
       toast.error(t("Common.error"));
+    } finally {
+      setIsDeleteLoading(false);
     }
   };
 
@@ -215,6 +225,8 @@ export default function WorkflowPage() {
                   href={`/workflow/${workflow.id}`}
                   onVisibilityChange={updateVisibility}
                   onDelete={deleteWorkflow}
+                  isVisibilityChangeLoading={isVisibilityChangeLoading}
+                  isDeleteLoading={isDeleteLoading}
                 />
               ))}
         </div>

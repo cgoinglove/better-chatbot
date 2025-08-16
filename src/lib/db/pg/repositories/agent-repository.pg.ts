@@ -219,8 +219,8 @@ export const pgAgentRepository: AgentRepository = {
       )
       .where(orConditions.length > 1 ? or(...orConditions) : orConditions[0])
       .orderBy(
-        // My agents first, then bookmarked shared agents, then other shared agents
-        sql`CASE WHEN ${AgentSchema.userId} = ${currentUserId} THEN 0 WHEN ${BookmarkSchema.id} IS NOT NULL THEN 1 ELSE 2 END`,
+        // My agents first, then other shared agents
+        sql`CASE WHEN ${AgentSchema.userId} = ${currentUserId} THEN 0 ELSE 1 END`,
         desc(AgentSchema.createdAt),
       )
       .limit(limit);

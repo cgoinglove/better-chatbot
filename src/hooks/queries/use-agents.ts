@@ -81,12 +81,14 @@ export function useAgents(options: UseAgentsOptions = {}) {
 }
 
 // Utility hook to invalidate all agent caches
-export function useInvalidateAgents() {
+export function useMutateAgents() {
   const { mutate } = useSWRConfig();
 
-  return () => {
-    // Invalidate all agent list endpoints (with or without query strings)
-    // but not individual agent details (/api/agent/[id])
+  return (
+    updatedAgent?: Partial<AgentSummary> & { id: string },
+    deleteAgent?: boolean,
+  ) => {
+    // Update all agent list endpoints (with or without query strings)
     mutate(
       (key) => {
         if (typeof key !== "string") return false;
@@ -95,8 +97,56 @@ export function useInvalidateAgents() {
           key.startsWith("/api/agent") && !key.match(/\/api\/agent\/[^/?]+/)
         );
       },
-      undefined,
+      (cachedData: any) => {
+        if (!cachedData || !Array.isArray(cachedData) || !updatedAgent)
+          return cachedData;
+
+        // Handle agent deletion
+        if (deleteAgent) {
+          return cachedData.filter(
+            (agent: AgentSummary) => agent.id !== updatedAgent?.id,
+          );
+        }
+
+        // Handle agent update/creation
+        const existingIndex = cachedData.findIndex(
+          (agent: AgentSummary) => agent.id === updatedAgent?.id,
+        );
+
+        if (existingIndex >= 0) {
+          // Update existing agent
+          const newData = [...cachedData];
+          newData[existingIndex] = {
+            ...newData[existingIndex],
+            ...updatedAgent,
+          };
+          return newData;
+        } else {
+          // Add new agent at the beginning
+          return [updatedAgent, ...cachedData];
+        }
+      },
       { revalidate: true },
     );
+
+    // Also update individual agent caches if we have an agent ID
+    if (updatedAgent?.id) {
+      if (deleteAgent) {
+        // For deleted agents, invalidate the individual cache
+        mutate(`/api/agent/${updatedAgent.id}`, undefined, {
+          revalidate: true,
+        });
+      } else {
+        // For updated agents, update the individual cache
+        mutate(
+          `/api/agent/${updatedAgent.id}`,
+          (cachedData: any) => {
+            if (!cachedData) return cachedData;
+            return { ...cachedData, ...updatedAgent };
+          },
+          { revalidate: true },
+        );
+      }
+    }
   };
 }

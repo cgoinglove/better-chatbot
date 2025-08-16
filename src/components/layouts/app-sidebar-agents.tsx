@@ -36,7 +36,7 @@ export function AppSidebarAgents() {
   const t = useTranslations();
   const router = useRouter();
   const [expanded, setExpanded] = useState(false);
-  const { bookmarkedAgents, myAgents, sharedAgents, isLoading } = useAgents({
+  const { bookmarkedAgents, myAgents, isLoading, sharedAgents } = useAgents({
     limit: 50,
   }); // Increase limit since we're not artificially limiting display
 
@@ -96,10 +96,12 @@ export function AppSidebarAgents() {
   return (
     <SidebarGroup>
       <SidebarGroupContent className="group-data-[collapsible=icon]:hidden group/agents">
-        <SidebarMenu className="group/agents">
+        <SidebarMenu className="group/agents" data-testid="agents-sidebar-menu">
           <SidebarMenuItem>
             <SidebarMenuButton asChild className="font-semibold">
-              <Link href="/agents">{t("Layout.agents")}</Link>
+              <Link href="/agents" data-testid="agents-link">
+                {t("Layout.agents")}
+              </Link>
             </SidebarMenuButton>
             <SidebarMenuAction
               className="group-hover/agents:opacity-100 opacity-0 transition-opacity"
@@ -116,7 +118,7 @@ export function AppSidebarAgents() {
             </SidebarMenuAction>
           </SidebarMenuItem>
 
-          {isLoading && agents.length === 0 ? (
+          {isLoading ? (
             <SidebarMenuItem>
               {Array.from({ length: 2 }).map(
                 (_, index) => mounted && <SidebarMenuSkeleton key={index} />,
@@ -193,7 +195,12 @@ export function AppSidebarAgents() {
                                 </div>
 
                                 <div className="flex items-center min-w-0 w-full">
-                                  <p className="truncate">{agent.name}</p>
+                                  <p
+                                    className="truncate"
+                                    data-testid="sidebar-agent-name"
+                                  >
+                                    {agent.name}
+                                  </p>
                                 </div>
                                 <div
                                   onClick={(e) => {

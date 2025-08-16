@@ -50,6 +50,7 @@ const staticModels = {
     "qwen3-8b:free": openrouter("qwen/qwen3-8b:free"),
     "qwen3-14b:free": openrouter("qwen/qwen3-14b:free"),
     "qwen3-coder": openrouter("qwen/qwen3-coder"),
+    "gemini-2.0-flash-exp:free": openrouter("google/gemini-2.0-flash-exp:free"),
   },
 };
 
@@ -83,10 +84,7 @@ export const isToolCallUnsupportedModel = (model: LanguageModel) => {
   return allUnsupportedModels.has(model);
 };
 
-const firstProvider = Object.keys(allModels)[0];
-const firstModel = Object.keys(allModels[firstProvider])[0];
-
-const fallbackModel = allModels[firstProvider][firstModel];
+const fallbackModel = staticModels.openai["gpt-4.1"];
 
 export const customModelProvider = {
   modelsInfo: Object.entries(allModels).map(([provider, models]) => ({
