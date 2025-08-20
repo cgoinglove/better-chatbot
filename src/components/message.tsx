@@ -128,7 +128,7 @@ const PurePreviewMessage = ({
             } else if (part.type === "step-start") {
               return null;
             } else {
-              return <div> unknown part {part.type}</div>;
+              return <div key={key}> unknown part {part.type}</div>;
             }
           })}
         </div>
