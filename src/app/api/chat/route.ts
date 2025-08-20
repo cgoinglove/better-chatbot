@@ -35,6 +35,7 @@ import {
   loadMcpTools,
   loadWorkFlowTools,
   loadAppDefaultTools,
+  convertToSavePart,
 } from "./shared.chat";
 import {
   rememberAgentAction,
@@ -42,7 +43,6 @@ import {
 } from "./actions";
 import { getSession } from "auth/server";
 import { colorize } from "consola/utils";
-import { isVercelAIWorkflowTool } from "app-types/workflow";
 
 const logger = globalLogger.withDefaults({
   message: colorize("blackBright", `Chat API: `),
@@ -85,10 +85,7 @@ export async function POST(request: Request) {
       return new Response("Forbidden", { status: 403 });
     }
 
-    // if is false, it means the last message is manual tool execution
-    const isLastMessageUserMessage = message.role == "user";
-
-    const previousMessages: UIMessage[] = (thread?.messages ?? []).map((m) => {
+    const messages: UIMessage[] = (thread?.messages ?? []).map((m) => {
       return {
         id: m.id,
         role: m.role,
@@ -97,9 +94,15 @@ export async function POST(request: Request) {
       };
     });
 
-    const messages: UIMessage[] = isLastMessageUserMessage
-      ? [...previousMessages, message]
-      : previousMessages;
+    const isMessageUpdate = messages.at(-1)?.id == message.id;
+
+    if (isMessageUpdate) {
+      messages.pop();
+    }
+
+    messages.push(message);
+
+    console.log({ isMessageUpdate });
 
     const inProgressToolStep = extractInProgressToolPart(messages.slice(-2));
 
@@ -238,48 +241,26 @@ export async function POST(request: Request) {
         );
       },
       onFinish: async ({ responseMessage }) => {
-        if (isLastMessageUserMessage) {
-          await chatRepository.upsertMessage({
-            threadId: thread!.id,
-            role: "user",
-            parts: message.parts,
-            id: message.id,
-          });
-        }
-
-        if (responseMessage.role == "assistant") {
-          responseMessage.metadata = metadata;
+        await chatRepository.upsertMessage({
+          threadId: thread!.id,
+          role: message.role,
+          parts: message.parts.map(convertToSavePart),
+          metadata:
+            message.role == "assistant" && isMessageUpdate
+              ? metadata
+              : (message.metadata as ChatMetadata),
+          id: message.id,
+        });
+        if (!isMessageUpdate) {
           await chatRepository.upsertMessage({
             threadId: thread!.id,
             role: responseMessage.role,
             id: responseMessage.id,
-            parts: (responseMessage.parts as UIMessage["parts"]).map(
-              (v: any) => {
-                if (
-                  isToolUIPart(v) &&
-                  v.state == "output-available" &&
-                  isVercelAIWorkflowTool(v.output)
-                ) {
-                  return {
-                    ...v,
-                    output: {
-                      ...v.output,
-                      history: v.output.history.map((h: any) => {
-                        return {
-                          ...h,
-                          result: undefined,
-                        };
-                      }),
-                    },
-                  };
-                }
-
-                return v;
-              },
-            ),
+            parts: responseMessage.parts.map(convertToSavePart),
             metadata,
           });
         }
+
         if (agent) {
           agentRepository.updateAgent(agent.id, session.user.id, {
             updatedAt: new Date(),

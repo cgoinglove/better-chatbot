@@ -15,6 +15,7 @@ import {
   DefaultChatTransport,
   getToolName,
   isToolUIPart,
+  lastAssistantMessageIsCompleteWithToolCalls,
   ToolUIPart,
   UIMessage,
 } from "ai";
@@ -137,8 +138,10 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
     stop,
   } = useChat({
     id: threadId,
+    sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
     transport: new DefaultChatTransport({
       api: "/api/chat",
+
       prepareSendMessagesRequest: ({ messages, body, id }) => {
         if (window.location.pathname !== `/chat/${threadId}`) {
           console.log("replace-state");
@@ -160,6 +163,7 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
           mentions: latestRef.current.mentions,
           message: lastMessage,
         };
+        console.log({ requestBody });
         return { body: requestBody };
       },
     }),

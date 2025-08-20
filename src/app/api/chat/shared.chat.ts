@@ -6,9 +6,14 @@ import {
   jsonSchema,
   tool as createTool,
   isToolUIPart,
+  UIMessagePart,
 } from "ai";
-import { ChatMention, ClientToolInvocationZodSchema } from "app-types/chat";
-import { errorToString, objectFlow } from "lib/utils";
+import {
+  ChatMention,
+  ChatMetadata,
+  ClientToolInvocationZodSchema,
+} from "app-types/chat";
+import { errorToString, exclude, objectFlow } from "lib/utils";
 import logger from "logger";
 import {
   AllowedMCPServer,
@@ -22,6 +27,7 @@ import { safe } from "ts-safe";
 import { workflowRepository } from "lib/db/repository";
 
 import {
+  isVercelAIWorkflowTool,
   VercelAIWorkflowTool,
   VercelAIWorkflowToolStreaming,
   VercelAIWorkflowToolStreamingResult,
@@ -476,3 +482,34 @@ export const loadAppDefaultTools = (opt?: {
       throw e;
     })
     .orElse({} as Record<string, Tool>);
+
+export const convertToSavePart = <T extends UIMessagePart<any, any>>(
+  part: T,
+) => {
+  return safe(
+    exclude(part as any, ["providerMetadata", "callProviderMetadata"]) as T,
+  )
+    .map((v) => {
+      if (
+        isToolUIPart(v) &&
+        v.state == "output-available" &&
+        isVercelAIWorkflowTool(v.output)
+      ) {
+        return {
+          ...v,
+          output: {
+            ...v.output,
+            history: v.output.history.map((h: any) => {
+              return {
+                ...h,
+                result: undefined,
+              };
+            }),
+          },
+        };
+      }
+
+      return v;
+    })
+    .unwrap();
+};
