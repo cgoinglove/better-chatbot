@@ -17,15 +17,15 @@ type TextUIPart = {
 export type MessageEditorProps = {
   message: UIMessage;
   setMode: Dispatch<SetStateAction<"view" | "edit">>;
-  setMessages: UseChatHelpers["setMessages"];
-  reload: UseChatHelpers["reload"];
+  setMessages: UseChatHelpers<UIMessage>["setMessages"];
+  sendMessage: UseChatHelpers<UIMessage>["sendMessage"];
 };
 
 export function MessageEditor({
   message,
   setMode,
   setMessages,
-  reload,
+  sendMessage,
 }: MessageEditorProps) {
   const t = useTranslations();
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -98,7 +98,7 @@ export function MessageEditor({
             });
 
             setMode("view");
-            reload({});
+            sendMessage();
           }}
         >
           {isSubmitting ? t("Common.saving") : t("Common.save")}

@@ -1,6 +1,6 @@
 "use client";
 
-import { ToolUIPart, UIMessage } from "ai";
+import { getToolName, ToolUIPart, UIMessage } from "ai";
 import {
   Check,
   Copy,
@@ -42,9 +42,12 @@ import { Separator } from "ui/separator";
 
 import { TextShimmer } from "ui/text-shimmer";
 import equal from "lib/equal";
-import { isVercelAIWorkflowTool } from "app-types/workflow";
+import {
+  isVercelAIWorkflowTool,
+  VercelAIWorkflowToolStreamingResult,
+} from "app-types/workflow";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
-import { DefaultToolName, SequentialThinkingToolName } from "lib/ai/tools";
+import { DefaultToolName } from "lib/ai/tools";
 import {
   Shortcut,
   getShortcutKeyList,
@@ -63,6 +66,7 @@ interface UserMessagePartProps {
   isLast: boolean;
   message: UIMessage;
   setMessages: UseChatHelpers<UIMessage>["setMessages"];
+  sendMessage: UseChatHelpers<UIMessage>["sendMessage"];
   status: UseChatHelpers<UIMessage>["status"];
   isError?: boolean;
 }
@@ -72,10 +76,11 @@ interface AssistMessagePartProps {
   isLast: boolean;
   isLoading: boolean;
   message: UIMessage;
+  prevMessage: UIMessage;
   showActions: boolean;
   threadId?: string;
   setMessages: UseChatHelpers<UIMessage>["setMessages"];
-
+  sendMessage: UseChatHelpers<UIMessage>["sendMessage"];
   isError?: boolean;
 }
 
@@ -98,6 +103,7 @@ export const UserMessagePart = memo(
     status,
     message,
     setMessages,
+    sendMessage,
     isError,
   }: UserMessagePartProps) {
     const { copied, copy } = useCopy();
@@ -145,9 +151,7 @@ export const UserMessagePart = memo(
             message={message}
             setMode={setMode}
             setMessages={setMessages}
-            reload={() => {
-              throw new Error("Not implemented");
-            }}
+            sendMessage={sendMessage}
           />
         </div>
       );
@@ -265,11 +269,13 @@ export const AssistMessagePart = memo(function AssistMessagePart({
   part,
   showActions,
   message,
-  setMessages,
+  prevMessage,
   isLast,
   isLoading: isChatLoading,
   isError,
   threadId,
+  setMessages,
+  sendMessage,
 }: AssistMessagePartProps) {
   const { copied, copy } = useCopy();
   const [isLoading, setIsLoading] = useState(false);
@@ -304,23 +310,19 @@ export const AssistMessagePart = memo(function AssistMessagePart({
       )
       .ifOk(() =>
         setMessages((messages) => {
-          const index = messages.findIndex((m) => m.id === message.id);
+          const index = messages.findIndex((m) => m.id === prevMessage.id);
           if (index !== -1) {
             return [...messages.slice(0, index)];
           }
           return messages;
         }),
       )
-      .ifOk(
-        () => {
-          throw new Error("Not implemented");
-        },
-        // reload({
-        //   body: {
-        //     model,
-        //     id: threadId,
-        //   },
-        // }),
+      .ifOk(() =>
+        sendMessage(prevMessage, {
+          body: {
+            model,
+          },
+        }),
       )
       .ifFail((error) => toast.error(error.message))
       .watch(() => setIsLoading(false))
@@ -332,7 +334,7 @@ export const AssistMessagePart = memo(function AssistMessagePart({
     if (isLast && isChatLoading && shouldAutoScroll && isAtBottom) {
       throttle(() => {
         ref.current?.scrollIntoView({ behavior: "smooth" });
-      }, 1000);
+      }, 500);
     }
   }, [isLast, isChatLoading, shouldAutoScroll, isAtBottom, part.text]);
 
@@ -353,7 +355,7 @@ export const AssistMessagePart = memo(function AssistMessagePart({
       },
       {
         root: null,
-        threshold: 0.01,
+        threshold: 0.1,
       },
     );
 
@@ -600,8 +602,15 @@ export const ToolMessagePart = memo(
     isManualToolInvocation,
   }: ToolMessagePartProps) => {
     const t = useTranslations("");
-    const { toolInvocation } = part;
-    const { toolName, toolCallId, state, args } = toolInvocation;
+
+    const { output, toolCallId, state, input, errorText } = part;
+
+    const toolName = useMemo(() => getToolName(part), [part.type]);
+
+    const isCompleted = useMemo(() => {
+      return state.startsWith("output");
+    }, [state]);
+
     const [expanded, setExpanded] = useState(false);
     const { copied: copiedInput, copy: copyInput } = useCopy();
     const { copied: copiedOutput, copy: copyOutput } = useCopy();
@@ -610,7 +619,7 @@ export const ToolMessagePart = memo(
     // Handle keyboard shortcuts for approve/reject actions
     useEffect(() => {
       // Only enable shortcuts when manual tool invocation buttons are shown
-      if (!onPoxyToolCall || !isManualToolInvocation || !isLast) return;
+      if (!onPoxyToolCall || !isManualToolInvocation) return;
 
       const handleKeyDown = (e: KeyboardEvent) => {
         const isApprove = isShortcutEvent(e, approveToolInvocationShortcut);
@@ -651,6 +660,7 @@ export const ToolMessagePart = memo(
         .watch(() => setIsDeleting(false))
         .unwrap();
     }, [messageId]);
+
     const onToolCallDirect = useMemo(
       () =>
         onPoxyToolCall
@@ -665,11 +675,14 @@ export const ToolMessagePart = memo(
     );
 
     const result = useMemo(() => {
-      if (state === "result") {
-        return Array.isArray(toolInvocation.result?.content)
+      if (state == "output-error") {
+        return errorText;
+      }
+      if (isCompleted) {
+        return Array.isArray(output)
           ? {
-              ...toolInvocation.result,
-              content: toolInvocation.result.content.map((node) => {
+              ...output,
+              content: output.map((node) => {
                 // mcp tools
                 if (node?.type === "text" && typeof node?.text === "string") {
                   const parsed = safeJSONParse(node.text);
@@ -681,24 +694,29 @@ export const ToolMessagePart = memo(
                 return node;
               }),
             }
-          : toolInvocation.result;
+          : output;
       }
       return null;
-    }, [state, (toolInvocation as any).result]);
+    }, [isCompleted, output, state, errorText]);
+
+    const isWorkflowTool = useMemo(
+      () => isVercelAIWorkflowTool(result),
+      [result],
+    );
 
     const CustomToolComponent = useMemo(() => {
       if (
         toolName === DefaultToolName.WebSearch ||
         toolName === DefaultToolName.WebContent
       ) {
-        return <WebSearchToolInvocation part={toolInvocation} />;
+        return <WebSearchToolInvocation part={part} />;
       }
 
       if (toolName === DefaultToolName.JavascriptExecution) {
         return (
           <CodeExecutor
-            part={toolInvocation}
-            key={toolInvocation.toolCallId}
+            part={part}
+            key={part.toolCallId}
             onResult={onToolCallDirect}
             type="javascript"
           />
@@ -708,44 +726,42 @@ export const ToolMessagePart = memo(
       if (toolName === DefaultToolName.PythonExecution) {
         return (
           <CodeExecutor
-            part={toolInvocation}
-            key={toolInvocation.toolCallId}
+            part={part}
+            key={part.toolCallId}
             onResult={onToolCallDirect}
             type="python"
           />
         );
       }
 
-      if (state === "result") {
+      if (state === "output-available") {
         switch (toolName) {
           case DefaultToolName.CreatePieChart:
             return (
-              <PieChart key={`${toolCallId}-${toolName}`} {...(args as any)} />
+              <PieChart key={`${toolCallId}-${toolName}`} {...(input as any)} />
             );
           case DefaultToolName.CreateBarChart:
             return (
-              <BarChart key={`${toolCallId}-${toolName}`} {...(args as any)} />
+              <BarChart key={`${toolCallId}-${toolName}`} {...(input as any)} />
             );
           case DefaultToolName.CreateLineChart:
             return (
-              <LineChart key={`${toolCallId}-${toolName}`} {...(args as any)} />
+              <LineChart
+                key={`${toolCallId}-${toolName}`}
+                {...(input as any)}
+              />
             );
           case DefaultToolName.CreateTable:
             return (
               <InteractiveTable
                 key={`${toolCallId}-${toolName}`}
-                {...(args as any)}
+                {...(input as any)}
               />
             );
         }
       }
       return null;
-    }, [toolName, state, onToolCallDirect, result, args]);
-
-    const isWorkflowTool = useMemo(
-      () => isVercelAIWorkflowTool(result),
-      [result],
-    );
+    }, [toolName, state, onToolCallDirect, result, input]);
 
     const { serverName: mcpServerName, toolName: mcpToolName } = useMemo(() => {
       return extractMCPToolId(toolName);
@@ -756,9 +772,12 @@ export const ToolMessagePart = memo(
     }, [expanded, result, isWorkflowTool]);
 
     const isExecuting = useMemo(() => {
-      if (isWorkflowTool) return result?.status == "running";
-      return state !== "result" && (isLast || !!onPoxyToolCall);
-    }, [isWorkflowTool, result, state, isLast, !!onPoxyToolCall]);
+      if (isWorkflowTool)
+        return (
+          (result as VercelAIWorkflowToolStreamingResult)?.status == "running"
+        );
+      return !isCompleted && (isLast || !!onPoxyToolCall);
+    }, [isWorkflowTool, isCompleted, result, isLast, !!onPoxyToolCall]);
 
     return (
       <div className="group w-full">
@@ -777,7 +796,12 @@ export const ToolMessagePart = memo(
                   <TriangleAlert className="size-3.5 text-destructive" />
                 ) : isWorkflowTool ? (
                   <Avatar className="size-3.5">
-                    <AvatarImage src={result.workflowIcon?.value} />
+                    <AvatarImage
+                      src={
+                        (result as VercelAIWorkflowToolStreamingResult)
+                          .workflowIcon?.value
+                      }
+                    />
                     <AvatarFallback>
                       {toolName.slice(0, 2).toUpperCase()}
                     </AvatarFallback>
@@ -838,9 +862,7 @@ export const ToolMessagePart = memo(
                         variant="ghost"
                         size="icon"
                         className="size-3 text-muted-foreground"
-                        onClick={() =>
-                          copyInput(JSON.stringify(toolInvocation.args))
-                        }
+                        onClick={() => copyInput(JSON.stringify(input))}
                       >
                         <Copy className="size-3" />
                       </Button>
@@ -848,12 +870,14 @@ export const ToolMessagePart = memo(
                   </div>
                   {isExpanded && (
                     <div className="p-2 max-h-[300px] overflow-y-auto ">
-                      <JsonView data={toolInvocation.args} />
+                      <JsonView data={input} />
                     </div>
                   )}
                 </div>
                 {!result ? null : isWorkflowTool ? (
-                  <WorkflowInvocation result={result} />
+                  <WorkflowInvocation
+                    result={result as VercelAIWorkflowToolStreamingResult}
+                  />
                 ) : (
                   <div
                     className={cn(

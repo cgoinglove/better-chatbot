@@ -167,7 +167,6 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
     generateId: generateUUID,
     onFinish,
   });
-
   const [isDeleteThreadPopupOpen, setIsDeleteThreadPopupOpen] = useState(false);
 
   const mounted = useMounted();
@@ -382,6 +381,7 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
                   <PreviewMessage
                     threadId={threadId}
                     messageIndex={index}
+                    prevMessage={messages[index - 1]}
                     key={message.id}
                     message={message}
                     status={status}
@@ -395,6 +395,7 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
                     isLoading={isLoading || isPendingToolCall}
                     isLastMessage={isLastMessage}
                     setMessages={setMessages}
+                    sendMessage={sendMessage}
                     className={
                       isLastMessage && message.role != "user" && !space
                         ? "min-h-[calc(55dvh-40px)]"

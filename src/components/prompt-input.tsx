@@ -35,6 +35,7 @@ import { ClaudeIcon } from "ui/claude-icon";
 import { GeminiIcon } from "ui/gemini-icon";
 
 import { EMOJI_DATA } from "lib/const";
+import { AgentSummary } from "app-types/agent";
 
 interface PromptInputProps {
   placeholder?: string;

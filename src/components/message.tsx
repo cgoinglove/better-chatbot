@@ -19,10 +19,12 @@ import { ChatMetadata, ClientToolInvocation } from "app-types/chat";
 
 interface Props {
   message: UIMessage;
+  prevMessage: UIMessage;
   threadId?: string;
   isLoading: boolean;
   isLastMessage: boolean;
   setMessages: UseChatHelpers<UIMessage>["setMessages"];
+  sendMessage: UseChatHelpers<UIMessage>["sendMessage"];
   className?: string;
   onPoxyToolCall?: (result: ClientToolInvocation) => void;
   messageIndex: number;
@@ -31,6 +33,7 @@ interface Props {
 
 const PurePreviewMessage = ({
   message,
+  prevMessage,
   threadId,
   isLoading,
   isLastMessage,
@@ -39,6 +42,7 @@ const PurePreviewMessage = ({
   setMessages,
   onPoxyToolCall,
   messageIndex,
+  sendMessage,
 }: Props) => {
   const isUserMessage = useMemo(() => message.role === "user", [message.role]);
   if (message.role == "system") {
@@ -77,6 +81,7 @@ const PurePreviewMessage = ({
                   isLast={isLastPart}
                   message={message}
                   setMessages={setMessages}
+                  sendMessage={sendMessage}
                 />
               );
             }
@@ -89,11 +94,13 @@ const PurePreviewMessage = ({
                   isLoading={isLoading}
                   key={key}
                   part={part}
+                  prevMessage={prevMessage}
                   showActions={
                     isLastMessage ? isLastPart && !isLoading : isLastPart
                   }
                   message={message}
                   setMessages={setMessages}
+                  sendMessage={sendMessage}
                 />
               );
             }
