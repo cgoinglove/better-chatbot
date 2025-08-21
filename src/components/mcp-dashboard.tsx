@@ -55,7 +55,7 @@ export default function MCPDashboard({ message }: { message?: string }) {
   }, [isValidating]);
 
   const particle = useMemo(() => {
-    if (isLoading || mcpList?.length !== 0) return;
+    if (mcpList?.length !== 0) return;
     return (
       <>
         <div className="absolute opacity-30 pointer-events-none top-0 left-0 w-full h-full z-10 fade-in animate-in duration-5000">
@@ -73,7 +73,7 @@ export default function MCPDashboard({ message }: { message?: string }) {
         </div>
       </>
     );
-  }, [isLoading, mcpList.length]);
+  }, [mcpList.length]);
 
   const handleScroll = useCallback((e: Event) => {
     const target = e.target as HTMLElement;
@@ -105,8 +105,9 @@ export default function MCPDashboard({ message }: { message?: string }) {
         <div className="flex-1 relative flex flex-col gap-4 px-8 max-w-3xl h-full mx-auto pb-8">
           <div
             className={cn(
-              "flex items-center sticky top-0 bg-background z-50 pb-8",
+              "flex items-center sticky top-0 z-50 pb-8",
               isScrolled && "border-b",
+              mcpList?.length !== 0 && "bg-background",
             )}
           >
             <h1 className="text-2xl font-bold flex items-center gap-2">
