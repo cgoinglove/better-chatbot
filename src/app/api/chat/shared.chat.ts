@@ -9,13 +9,15 @@ import {
   UIMessagePart,
   ToolUIPart,
   getToolName,
+  UIMessageStreamWriter,
 } from "ai";
 import {
   ChatMention,
-  ChatMetadata,
-  ClientToolInvocationZodSchema,
+  ManualToolConfirm,
+  ManualToolConfirmSchema,
+  ToolStreamData,
 } from "app-types/chat";
-import { errorToString, exclude, objectFlow, toAny } from "lib/utils";
+import { errorToString, exclude, objectFlow } from "lib/utils";
 import logger from "logger";
 import {
   AllowedMCPServer,
@@ -112,52 +114,43 @@ export function mergeSystemPrompt(
 
 export function manualToolExecuteByLastMessage(
   part: ToolUIPart,
+  confirm: ManualToolConfirm,
   tools: Record<
     string,
     VercelAIMcpTool | VercelAIWorkflowTool | (Tool & { __$ref__?: string })
   >,
   abortSignal?: AbortSignal,
 ) {
-  const { input, output } = part;
-
-  const clientToolInvocation: any = output;
+  const { input } = part;
 
   const toolName = getToolName(part);
 
   const tool = tools[toolName];
-
-  if (!clientToolInvocation?.result) return MANUAL_REJECT_RESPONSE_PROMPT;
   return safe(() => {
     if (!tool) throw new Error(`tool not found: ${toolName}`);
-    return ClientToolInvocationZodSchema.parse(clientToolInvocation?.result);
+    return ManualToolConfirmSchema.parse(confirm);
   })
-    .map((result) => {
-      const value = result?.result;
-      if (result.action == "direct") {
-        return value;
-      } else if (result.action == "manual") {
-        if (!value) return MANUAL_REJECT_RESPONSE_PROMPT;
-        if (tool.__$ref__ === "workflow") {
-          return tool.execute!(input, {
-            toolCallId: part.toolCallId,
-            abortSignal: abortSignal ?? new AbortController().signal,
-            messages: [],
-          });
-        } else if (tool.__$ref__ === "mcp") {
-          const mcpTool = tool as VercelAIMcpTool;
-          return mcpClientsManager.toolCall(
-            mcpTool._mcpServerId,
-            mcpTool._originToolName,
-            input,
-          );
-        }
+    .map(({ confirm }) => {
+      if (!confirm) return MANUAL_REJECT_RESPONSE_PROMPT;
+      if (tool.__$ref__ === "workflow") {
         return tool.execute!(input, {
           toolCallId: part.toolCallId,
           abortSignal: abortSignal ?? new AbortController().signal,
           messages: [],
         });
+      } else if (tool.__$ref__ === "mcp") {
+        const mcpTool = tool as VercelAIMcpTool;
+        return mcpClientsManager.toolCall(
+          mcpTool._mcpServerId,
+          mcpTool._originToolName,
+          input,
+        );
       }
-      throw new Error("Invalid Client Tool Invocation Action " + result.action);
+      return tool.execute!(input, {
+        toolCallId: part.toolCallId,
+        abortSignal: abortSignal ?? new AbortController().signal,
+        messages: [],
+      });
     })
     .ifFail((error) => ({
       isError: true,
@@ -177,22 +170,10 @@ export function handleError(error: any) {
   return errorToString(error.message);
 }
 
-export function extractInProgressToolPart(
-  messages: UIMessage[],
-): ToolUIPart | undefined {
-  let result: ToolUIPart | undefined = undefined;
-  for (const message of messages) {
-    for (const part of message.parts || []) {
-      if (!isToolUIPart(part)) continue;
-      if (
-        (message.metadata as ChatMetadata)?.toolChoice == "manual" &&
-        toAny(part.output).action == "manual"
-      ) {
-        result = part;
-        return result;
-      }
-    }
-  }
+export function extractInProgressToolPart(message: UIMessage): ToolUIPart[] {
+  return message.parts.filter(
+    (part) => isToolUIPart(part) && !part.state.startsWith("output"),
+  ) as ToolUIPart[];
 }
 export function assignToolResult(toolPart: any, result: any): ToolUIPart {
   return Object.assign(toolPart, {
@@ -254,7 +235,7 @@ export const workflowToVercelAITool = ({
   name: string;
   description?: string;
   schema: ObjectJsonSchema7;
-  dataStream: any; // v5에서 변경된 writer 타입
+  dataStream: UIMessageStreamWriter;
 }): VercelAIWorkflowTool => {
   const toolName = name
     .replace(/[^a-zA-Z0-9\s]/g, "")
@@ -333,15 +314,16 @@ export const workflowToVercelAITool = ({
                 result.endedAt = e.endedAt;
               }
             }
-            // v5에서는 tool 결과 스트리밍 방식이 변경됨
-            // 필요시 다른 data 타입으로 전송
-            dataStream.write({
+
+            const data: ToolStreamData = {
               type: "data-workflow-update",
               data: {
                 toolCallId,
-                result: toolResult,
+                output: toolResult,
               },
-            });
+            };
+
+            dataStream.write(data);
           });
           return executor.run(
             {
@@ -403,7 +385,7 @@ export const workflowToVercelAITools = (
     description?: string;
     schema: ObjectJsonSchema7;
   }[],
-  dataStream: any, // v5에서 변경된 writer 타입
+  dataStream: UIMessageStreamWriter,
 ) => {
   return workflows
     .map((v) =>

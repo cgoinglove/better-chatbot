@@ -19,7 +19,11 @@ import {
   buildUserSystemPrompt,
   buildToolCallUnsupportedModelSystemPrompt,
 } from "lib/ai/prompts";
-import { chatApiSchemaRequestBodySchema, ChatMetadata } from "app-types/chat";
+import {
+  chatApiSchemaRequestBodySchema,
+  ChatMetadata,
+  ToolStreamData,
+} from "app-types/chat";
 
 import { errorIf, safe } from "ts-safe";
 
@@ -29,7 +33,6 @@ import {
   manualToolExecuteByLastMessage,
   mergeSystemPrompt,
   extractInProgressToolPart,
-  assignToolResult,
   filterMcpServerCustomizations,
   loadMcpTools,
   loadWorkFlowTools,
@@ -64,6 +67,7 @@ export async function POST(request: Request) {
       toolChoice,
       allowedAppDefaultToolkit,
       allowedMcpServers,
+      manualToolConfirm,
       mentions = [],
     } = chatApiSchemaRequestBodySchema.parse(json);
 
@@ -99,8 +103,6 @@ export async function POST(request: Request) {
     }
     messages.push(message);
 
-    const inProgressToolStep = extractInProgressToolPart(messages.slice(-2));
-
     const supportToolCall = !isToolCallUnsupportedModel(model);
 
     const agentId = mentions.find((m) => m.type === "agent")?.agentId;
@@ -128,7 +130,6 @@ export async function POST(request: Request) {
         logger.info(
           `mcp-server count: ${mcpClients.length}, mcp-tools count :${Object.keys(mcpTools).length}`,
         );
-
         const MCP_TOOLS = await safe()
           .map(errorIf(() => !isToolCallAllowed && "Not allowed"))
           .map(() =>
@@ -159,18 +160,28 @@ export async function POST(request: Request) {
           )
           .orElse({});
 
-        if (inProgressToolStep) {
-          const toolResult = await manualToolExecuteByLastMessage(
-            inProgressToolStep,
-            { ...MCP_TOOLS, ...WORKFLOW_TOOLS, ...APP_DEFAULT_TOOLS },
-            request.signal,
+        if (manualToolConfirm) {
+          const inProgressToolParts = extractInProgressToolPart(
+            messages.find((m) => m.id == manualToolConfirm.messageId)!,
           );
-          const toolPart = assignToolResult(inProgressToolStep, toolResult);
-          dataStream.write({
-            type: "tool-output-available",
-            toolCallId: toolPart.toolCallId,
-            output: toolPart.output,
-          });
+          await Promise.all(
+            inProgressToolParts.map(async (part) => {
+              const result = await manualToolExecuteByLastMessage(
+                part,
+                manualToolConfirm,
+                { ...MCP_TOOLS, ...WORKFLOW_TOOLS, ...APP_DEFAULT_TOOLS },
+                request.signal,
+              );
+              const data: ToolStreamData = {
+                type: "data-tool-result",
+                data: {
+                  toolCallId: part.toolCallId,
+                  output: result,
+                },
+              };
+              dataStream.write(data);
+            }),
+          );
         }
 
         const userPreferences = thread?.userPreferences || undefined;
@@ -238,11 +249,12 @@ export async function POST(request: Request) {
                 return metadata;
               }
             },
-            sendReasoning: true,
             originalMessages: messages,
+            sendReasoning: true,
           }),
         );
       },
+
       generateId: generateUUID,
       onFinish: async ({ responseMessage }) => {
         if (responseMessage.id == message.id) {

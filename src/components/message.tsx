@@ -15,7 +15,7 @@ import {
 import { ChevronDown, ChevronUp, TriangleAlertIcon } from "lucide-react";
 import { Button } from "ui/button";
 import { useTranslations } from "next-intl";
-import { ChatMetadata, ClientToolInvocation } from "app-types/chat";
+import { ChatMetadata, ManualToolConfirm } from "app-types/chat";
 
 interface Props {
   message: UIMessage;
@@ -26,7 +26,8 @@ interface Props {
   setMessages: UseChatHelpers<UIMessage>["setMessages"];
   sendMessage: UseChatHelpers<UIMessage>["sendMessage"];
   className?: string;
-  onPoxyToolCall?: (result: ClientToolInvocation) => void;
+  addToolResult?: UseChatHelpers<UIMessage>["addToolResult"];
+  onManualToolConfirm?: (confirm: ManualToolConfirm) => void;
   messageIndex: number;
   status: UseChatHelpers<UIMessage>["status"];
 }
@@ -40,7 +41,8 @@ const PurePreviewMessage = ({
   status,
   className,
   setMessages,
-  onPoxyToolCall,
+  addToolResult,
+  onManualToolConfirm,
   messageIndex,
   sendMessage,
 }: Props) => {
@@ -108,7 +110,10 @@ const PurePreviewMessage = ({
             if (isToolUIPart(part)) {
               const isLast = isLastMessage && isLastPart;
               const isManualToolInvocation =
-                (message.metadata as ChatMetadata)?.toolChoice == "manual";
+                (message.metadata as ChatMetadata)?.toolChoice == "manual" &&
+                isLastMessage &&
+                isLastPart &&
+                !isLoading;
               return (
                 <ToolMessagePart
                   isLast={isLast}
@@ -117,7 +122,8 @@ const PurePreviewMessage = ({
                   showActions={
                     isLastMessage ? isLastPart && !isLoading : isLastPart
                   }
-                  onPoxyToolCall={onPoxyToolCall}
+                  addToolResult={addToolResult}
+                  onManualToolConfirm={onManualToolConfirm}
                   key={key}
                   part={part}
                   setMessages={setMessages}
@@ -146,8 +152,6 @@ function equalMessage(prevProps: Props, nextProps: Props) {
   if (prevProps.isLastMessage !== nextProps.isLastMessage) return false;
 
   if (prevProps.className !== nextProps.className) return false;
-
-  if (prevProps.onPoxyToolCall !== nextProps.onPoxyToolCall) return false;
 
   if (!equal(prevProps.message.metadata, nextProps.message.metadata))
     return false;

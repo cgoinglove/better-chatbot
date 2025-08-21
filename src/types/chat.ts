@@ -83,6 +83,14 @@ export const ChatMentionSchema = z.discriminatedUnion("type", [
 
 export type ChatMention = z.infer<typeof ChatMentionSchema>;
 
+export const ManualToolConfirmSchema = z.object({
+  confirm: z.boolean(),
+  messageId: z.string(),
+  toolCallId: z.string(),
+});
+
+export type ManualToolConfirm = z.infer<typeof ManualToolConfirmSchema>;
+
 export const chatApiSchemaRequestBodySchema = z.object({
   id: z.string(),
   message: z.any() as z.ZodType<UIMessage>,
@@ -93,6 +101,7 @@ export const chatApiSchemaRequestBodySchema = z.object({
     })
     .optional(),
   toolChoice: z.enum(["auto", "none", "manual"]),
+  manualToolConfirm: ManualToolConfirmSchema.optional(),
   mentions: z.array(ChatMentionSchema).optional(),
   allowedMcpServers: z.record(z.string(), AllowedMCPServerZodSchema).optional(),
   allowedAppDefaultToolkit: z.array(z.string()).optional(),
@@ -149,12 +158,10 @@ export type ChatRepository = {
     messages: PartialBy<ChatMessage, "createdAt">[],
   ): Promise<ChatMessage[]>;
 };
-
-export const ClientToolInvocationZodSchema = z.object({
-  action: z.enum(["manual", "direct"]),
-  result: z.any().optional(),
-});
-
-export type ClientToolInvocation = z.infer<
-  typeof ClientToolInvocationZodSchema
->;
+export type ToolStreamData = {
+  type: "data-tool-result" | "data-workflow-update";
+  data: {
+    toolCallId: string;
+    output: any;
+  };
+};

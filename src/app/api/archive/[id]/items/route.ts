@@ -75,7 +75,7 @@ export async function POST(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return Response.json(
-        { error: "Invalid input", details: error.errors },
+        { error: "Invalid input", details: error.message },
         { status: 400 },
       );
     }

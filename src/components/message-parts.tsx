@@ -34,7 +34,7 @@ import {
 
 import { toast } from "sonner";
 import { safe } from "ts-safe";
-import { ChatModel, ClientToolInvocation } from "app-types/chat";
+import { ChatModel, ManualToolConfirm } from "app-types/chat";
 
 import { useTranslations } from "next-intl";
 import { extractMCPToolId } from "lib/ai/mcp/mcp-tool-id";
@@ -90,7 +90,8 @@ interface ToolMessagePartProps {
   showActions: boolean;
   isLast?: boolean;
   isManualToolInvocation?: boolean;
-  onPoxyToolCall?: (result: ClientToolInvocation) => void;
+  addToolResult?: UseChatHelpers<UIMessage>["addToolResult"];
+  onManualToolConfirm?: (confirm: ManualToolConfirm) => void;
   isError?: boolean;
   setMessages?: UseChatHelpers<UIMessage>["setMessages"];
 }
@@ -595,7 +596,8 @@ export const ToolMessagePart = memo(
     part,
     isLast,
     showActions,
-    onPoxyToolCall,
+    addToolResult,
+    onManualToolConfirm,
     isError,
     messageId,
     setMessages,
@@ -619,7 +621,7 @@ export const ToolMessagePart = memo(
     // Handle keyboard shortcuts for approve/reject actions
     useEffect(() => {
       // Only enable shortcuts when manual tool invocation buttons are shown
-      if (!onPoxyToolCall || !isManualToolInvocation) return;
+      if (!isManualToolInvocation) return;
 
       const handleKeyDown = (e: KeyboardEvent) => {
         const isApprove = isShortcutEvent(e, approveToolInvocationShortcut);
@@ -632,17 +634,17 @@ export const ToolMessagePart = memo(
         e.stopImmediatePropagation();
 
         if (isApprove) {
-          onPoxyToolCall({ action: "manual", result: true });
+          onManualToolConfirm?.({ confirm: true, messageId, toolCallId });
         }
 
         if (isReject) {
-          onPoxyToolCall({ action: "manual", result: false });
+          onManualToolConfirm?.({ confirm: false, messageId, toolCallId });
         }
       };
 
       window.addEventListener("keydown", handleKeyDown);
       return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [onPoxyToolCall, isManualToolInvocation, isLast]);
+    }, [isManualToolInvocation, isLast]);
 
     const deleteMessage = useCallback(() => {
       safe(() => setIsDeleting(true))
@@ -661,17 +663,15 @@ export const ToolMessagePart = memo(
         .unwrap();
     }, [messageId]);
 
-    const onToolCallDirect = useMemo(
-      () =>
-        onPoxyToolCall
-          ? (result: any) => {
-              return onPoxyToolCall({
-                action: "direct",
-                result,
-              });
-            }
-          : undefined,
-      [onPoxyToolCall],
+    const onToolCallDirect = useCallback(
+      (result: any) => {
+        addToolResult?.({
+          tool: toolName,
+          toolCallId,
+          output: result,
+        });
+      },
+      [addToolResult, toolCallId],
     );
 
     const result = useMemo(() => {
@@ -776,8 +776,8 @@ export const ToolMessagePart = memo(
         return (
           (result as VercelAIWorkflowToolStreamingResult)?.status == "running"
         );
-      return !isCompleted && (isLast || !!onPoxyToolCall);
-    }, [isWorkflowTool, isCompleted, result, isLast, !!onPoxyToolCall]);
+      return !isCompleted && isLast;
+    }, [isWorkflowTool, isCompleted, result, isLast]);
 
     return (
       <div className="group w-full">
@@ -916,14 +916,18 @@ export const ToolMessagePart = memo(
                   </div>
                 )}
 
-                {onPoxyToolCall && isManualToolInvocation && isLast && (
+                {isManualToolInvocation && (
                   <div className="flex flex-row gap-2 items-center mt-2">
                     <Button
                       variant="secondary"
                       size="sm"
                       className="rounded-full text-xs hover:ring py-2"
                       onClick={() =>
-                        onPoxyToolCall({ action: "manual", result: true })
+                        onManualToolConfirm?.({
+                          confirm: true,
+                          messageId,
+                          toolCallId,
+                        })
                       }
                     >
                       <Check />
@@ -940,7 +944,11 @@ export const ToolMessagePart = memo(
                       size="sm"
                       className="rounded-full text-xs py-2"
                       onClick={() =>
-                        onPoxyToolCall({ action: "manual", result: false })
+                        onManualToolConfirm?.({
+                          confirm: false,
+                          messageId,
+                          toolCallId,
+                        })
                       }
                     >
                       <X />
@@ -989,7 +997,6 @@ export const ToolMessagePart = memo(
   (prev, next) => {
     if (prev.isError !== next.isError) return false;
     if (prev.isLast !== next.isLast) return false;
-    if (prev.onPoxyToolCall !== next.onPoxyToolCall) return false;
     if (prev.showActions !== next.showActions) return false;
     if (prev.isManualToolInvocation !== next.isManualToolInvocation)
       return false;

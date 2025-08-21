@@ -252,7 +252,6 @@ export function convertTiptapJsonToAiMessage({
   if (!json)
     return {
       role,
-      content: "",
       parts: [],
     };
 
@@ -274,7 +273,6 @@ export function convertTiptapJsonToAiMessage({
 
   return {
     role,
-    content: text,
     parts: [
       {
         type: "text",

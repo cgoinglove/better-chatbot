@@ -20,6 +20,7 @@ import {
 } from "../actions";
 import globalLogger from "lib/logger";
 import { colorize } from "consola/utils";
+import { toJSONSchema } from "zod";
 
 const logger = globalLogger.withDefaults({
   message: colorize("blackBright", `OpenAI Realtime API: `),
@@ -130,10 +131,12 @@ function vercelAIToolToOpenAITool(tool: VercelAIMcpTool, name: string) {
     name,
     type: "function",
     description: tool.description,
-    inputSchema: tool.parameters?.jsonSchema ?? {
-      type: "object",
-      properties: {},
-      required: [],
-    },
+    inputSchema: tool.inputSchema
+      ? toJSONSchema(tool.inputSchema as any)
+      : {
+          type: "object",
+          properties: {},
+          required: [],
+        },
   };
 }

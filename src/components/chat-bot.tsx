@@ -12,11 +12,10 @@ import { ChatGreeting } from "./chat-greeting";
 
 import { useShallow } from "zustand/shallow";
 import {
+  ChatOnDataCallback,
   DefaultChatTransport,
-  getToolName,
   isToolUIPart,
   lastAssistantMessageIsCompleteWithToolCalls,
-  ToolUIPart,
   UIMessage,
 } from "ai";
 
@@ -25,7 +24,9 @@ import { mutate } from "swr";
 import {
   ChatApiSchemaRequestBody,
   ChatModel,
-  ClientToolInvocation,
+  isToolStreamData,
+  ManualToolConfirm,
+  ToolStreamData,
 } from "app-types/chat";
 import { useToRef } from "@/hooks/use-latest";
 import { isShortcutEvent, Shortcuts } from "lib/keyboard-shortcuts";
@@ -128,6 +129,8 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
 
   const [input, setInput] = useState("");
 
+  const onData = useCallback((_data: ToolStreamData) => {}, []);
+
   const {
     messages,
     status,
@@ -138,6 +141,7 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
     stop,
   } = useChat({
     id: threadId,
+    onData,
     sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
     transport: new DefaultChatTransport({
       api: "/api/chat",
@@ -149,6 +153,7 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
         const lastMessage = messages.at(-1)!;
 
         const requestBody: ChatApiSchemaRequestBody = {
+          ...body,
           id,
           chatModel:
             (body as { model: ChatModel })?.model ?? latestRef.current.model,
@@ -162,7 +167,6 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
           mentions: latestRef.current.mentions,
           message: lastMessage,
         };
-        console.log({ requestBody });
         return { body: requestBody };
       },
     }),
@@ -213,16 +217,12 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
     return true;
   }, [status, messages]);
 
-  const proxyToolCall = useCallback((result: ClientToolInvocation) => {
-    return safe(async () => {
-      const lastMessage = latestRef.current.messages.at(-1)!;
-      const lastPart = lastMessage.parts.at(-1)! as ToolUIPart;
-      return addToolResult({
-        toolCallId: lastPart.toolCallId,
-        output: result,
-        tool: getToolName(lastPart),
-      });
-    }).unwrap();
+  const onManualToolConfirm = useCallback((confirm: ManualToolConfirm) => {
+    sendMessage(undefined, {
+      body: {
+        manualToolConfirm: confirm,
+      },
+    });
   }, []);
 
   const space = useMemo(() => {
@@ -382,11 +382,8 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
                     key={message.id}
                     message={message}
                     status={status}
-                    onPoxyToolCall={
-                      isPendingToolCall && isLastMessage
-                        ? proxyToolCall
-                        : undefined
-                    }
+                    addToolResult={addToolResult}
+                    onManualToolConfirm={onManualToolConfirm}
                     isLoading={isLoading || isPendingToolCall}
                     isLastMessage={isLastMessage}
                     setMessages={setMessages}
