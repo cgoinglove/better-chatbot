@@ -162,11 +162,15 @@ export async function POST(request: Request) {
         if (inProgressToolStep) {
           const toolResult = await manualToolExecuteByLastMessage(
             inProgressToolStep,
-            message,
             { ...MCP_TOOLS, ...WORKFLOW_TOOLS, ...APP_DEFAULT_TOOLS },
             request.signal,
           );
-          assignToolResult(inProgressToolStep, toolResult);
+          const toolPart = assignToolResult(inProgressToolStep, toolResult);
+          dataStream.write({
+            type: "tool-output-available",
+            toolCallId: toolPart.toolCallId,
+            output: toolPart.output,
+          });
         }
 
         const userPreferences = thread?.userPreferences || undefined;
@@ -224,13 +228,16 @@ export async function POST(request: Request) {
           stopWhen: stepCountIs(10),
           toolChoice: "auto",
           abortSignal: request.signal,
-          onFinish: async ({ usage }) => {
-            metadata.usage = usage;
-          },
         });
         result.consumeStream();
         dataStream.merge(
           result.toUIMessageStream({
+            messageMetadata: ({ part }) => {
+              if (part.type == "finish") {
+                metadata.usage = part.totalUsage;
+                return metadata;
+              }
+            },
             sendReasoning: true,
             originalMessages: messages,
           }),

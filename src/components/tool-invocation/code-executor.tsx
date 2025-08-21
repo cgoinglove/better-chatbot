@@ -64,9 +64,7 @@ export const CodeExecutor = memo(function CodeExecutor({
   const menualToolCall = useCallback(
     async (code: string) => {
       const result = await runCode(code, type);
-
       const logstring = JSON.stringify(result.logs);
-
       onResult?.({
         ...toAny({
           ...result,
@@ -288,7 +286,7 @@ export const CodeExecutor = memo(function CodeExecutor({
             <div className="absolute pointer-events-none top-0 left-0 w-1/6 h-full bg-gradient-to-r from-background to-transparent z-10" />
             <div className="absolute pointer-events-none top-0 right-0 w-1/6 h-full bg-gradient-to-l from-background to-transparent z-10" />
             <div
-              className="min-h-14 p-6 text-xs overflow-y-auto max-h-[40vh] "
+              className="min-h-14 p-6 text-xs overflow-y-auto max-h-[40vh]"
               ref={codeResultContainerRef}
             >
               <CodeBlock

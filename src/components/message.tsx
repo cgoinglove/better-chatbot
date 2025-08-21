@@ -107,10 +107,8 @@ const PurePreviewMessage = ({
 
             if (isToolUIPart(part)) {
               const isLast = isLastMessage && isLastPart;
-
               const isManualToolInvocation =
                 (message.metadata as ChatMetadata)?.toolChoice == "manual";
-
               return (
                 <ToolMessagePart
                   isLast={isLast}

@@ -7,9 +7,15 @@ import {
   tool as createTool,
   isToolUIPart,
   UIMessagePart,
+  ToolUIPart,
+  getToolName,
 } from "ai";
-import { ChatMention, ClientToolInvocationZodSchema } from "app-types/chat";
-import { errorToString, exclude, objectFlow } from "lib/utils";
+import {
+  ChatMention,
+  ChatMetadata,
+  ClientToolInvocationZodSchema,
+} from "app-types/chat";
+import { errorToString, exclude, objectFlow, toAny } from "lib/utils";
 import logger from "logger";
 import {
   AllowedMCPServer,
@@ -105,36 +111,34 @@ export function mergeSystemPrompt(
 }
 
 export function manualToolExecuteByLastMessage(
-  part: any, // Tool part from UIMessage
-  message: UIMessage,
+  part: ToolUIPart,
   tools: Record<
     string,
     VercelAIMcpTool | VercelAIWorkflowTool | (Tool & { __$ref__?: string })
   >,
   abortSignal?: AbortSignal,
 ) {
-  const { input: args, toolName } = part;
+  const { input, output } = part;
 
-  const manulConfirmation = (message.parts as any[]).find((_part) => {
-    return _part.toolCallId == part.toolCallId;
-  });
+  const clientToolInvocation: any = output;
+
+  const toolName = getToolName(part);
 
   const tool = tools[toolName];
 
-  if (!manulConfirmation?.result) return MANUAL_REJECT_RESPONSE_PROMPT;
+  if (!clientToolInvocation?.result) return MANUAL_REJECT_RESPONSE_PROMPT;
   return safe(() => {
     if (!tool) throw new Error(`tool not found: ${toolName}`);
-    return ClientToolInvocationZodSchema.parse(manulConfirmation?.result);
+    return ClientToolInvocationZodSchema.parse(clientToolInvocation?.result);
   })
     .map((result) => {
       const value = result?.result;
-
       if (result.action == "direct") {
         return value;
       } else if (result.action == "manual") {
         if (!value) return MANUAL_REJECT_RESPONSE_PROMPT;
         if (tool.__$ref__ === "workflow") {
-          return tool.execute!(args, {
+          return tool.execute!(input, {
             toolCallId: part.toolCallId,
             abortSignal: abortSignal ?? new AbortController().signal,
             messages: [],
@@ -144,10 +148,10 @@ export function manualToolExecuteByLastMessage(
           return mcpClientsManager.toolCall(
             mcpTool._mcpServerId,
             mcpTool._originToolName,
-            args,
+            input,
           );
         }
-        return tool.execute!(args, {
+        return tool.execute!(input, {
           toolCallId: part.toolCallId,
           abortSignal: abortSignal ?? new AbortController().signal,
           messages: [],
@@ -173,20 +177,24 @@ export function handleError(error: any) {
   return errorToString(error.message);
 }
 
-export function extractInProgressToolPart(messages: UIMessage[]): any | null {
-  let result: any | null = null;
-
+export function extractInProgressToolPart(
+  messages: UIMessage[],
+): ToolUIPart | undefined {
+  let result: ToolUIPart | undefined = undefined;
   for (const message of messages) {
     for (const part of message.parts || []) {
       if (!isToolUIPart(part)) continue;
-      if (part.state.startsWith("output")) continue;
-      result = part;
-      return result;
+      if (
+        (message.metadata as ChatMetadata)?.toolChoice == "manual" &&
+        toAny(part.output).action == "manual"
+      ) {
+        result = part;
+        return result;
+      }
     }
   }
-  return null;
 }
-export function assignToolResult(toolPart: any, result: any) {
+export function assignToolResult(toolPart: any, result: any): ToolUIPart {
   return Object.assign(toolPart, {
     state: "output-available",
     output: result,

@@ -202,9 +202,6 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
     [messages],
   );
 
-  const [isExecutingProxyToolCall, setIsExecutingProxyToolCall] =
-    useState(false);
-
   const isPendingToolCall = useMemo(() => {
     if (status != "ready") return false;
     const lastMessage = messages.at(-1);
@@ -217,7 +214,6 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
   }, [status, messages]);
 
   const proxyToolCall = useCallback((result: ClientToolInvocation) => {
-    setIsExecutingProxyToolCall(true);
     return safe(async () => {
       const lastMessage = latestRef.current.messages.at(-1)!;
       const lastPart = lastMessage.parts.at(-1)! as ToolUIPart;
@@ -226,9 +222,7 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
         output: result,
         tool: getToolName(lastPart),
       });
-    })
-      .watch(() => setIsExecutingProxyToolCall(false))
-      .unwrap();
+    }).unwrap();
   }, []);
 
   const space = useMemo(() => {
@@ -389,9 +383,7 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
                     message={message}
                     status={status}
                     onPoxyToolCall={
-                      isPendingToolCall &&
-                      !isExecutingProxyToolCall &&
-                      isLastMessage
+                      isPendingToolCall && isLastMessage
                         ? proxyToolCall
                         : undefined
                     }
