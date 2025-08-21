@@ -5,7 +5,6 @@ import {
   smoothStream,
   stepCountIs,
   streamText,
-  isToolUIPart,
   UIMessage,
 } from "ai";
 
@@ -43,6 +42,7 @@ import {
 } from "./actions";
 import { getSession } from "auth/server";
 import { colorize } from "consola/utils";
+import { generateUUID } from "lib/utils";
 
 const logger = globalLogger.withDefaults({
   message: colorize("blackBright", `Chat API: `),
@@ -94,15 +94,10 @@ export async function POST(request: Request) {
       };
     });
 
-    const isMessageUpdate = messages.at(-1)?.id == message.id;
-
-    if (isMessageUpdate) {
+    if (messages.at(-1)?.id == message.id) {
       messages.pop();
     }
-
     messages.push(message);
-
-    console.log({ isMessageUpdate });
 
     const inProgressToolStep = extractInProgressToolPart(messages.slice(-2));
 
@@ -237,21 +232,28 @@ export async function POST(request: Request) {
         dataStream.merge(
           result.toUIMessageStream({
             sendReasoning: true,
+            originalMessages: messages,
           }),
         );
       },
+      generateId: generateUUID,
       onFinish: async ({ responseMessage }) => {
-        await chatRepository.upsertMessage({
-          threadId: thread!.id,
-          role: message.role,
-          parts: message.parts.map(convertToSavePart),
-          metadata:
-            message.role == "assistant" && isMessageUpdate
-              ? metadata
-              : (message.metadata as ChatMetadata),
-          id: message.id,
-        });
-        if (!isMessageUpdate) {
+        if (responseMessage.id == message.id) {
+          await chatRepository.upsertMessage({
+            threadId: thread!.id,
+            ...responseMessage,
+            parts: [...message.parts, ...responseMessage.parts].map(
+              convertToSavePart,
+            ),
+            metadata,
+          });
+        } else {
+          await chatRepository.upsertMessage({
+            threadId: thread!.id,
+            role: message.role,
+            parts: message.parts.map(convertToSavePart),
+            id: message.id,
+          });
           await chatRepository.upsertMessage({
             threadId: thread!.id,
             role: responseMessage.role,

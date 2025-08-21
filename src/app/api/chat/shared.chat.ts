@@ -8,11 +8,7 @@ import {
   isToolUIPart,
   UIMessagePart,
 } from "ai";
-import {
-  ChatMention,
-  ChatMetadata,
-  ClientToolInvocationZodSchema,
-} from "app-types/chat";
+import { ChatMention, ClientToolInvocationZodSchema } from "app-types/chat";
 import { errorToString, exclude, objectFlow } from "lib/utils";
 import logger from "logger";
 import {
@@ -182,10 +178,8 @@ export function extractInProgressToolPart(messages: UIMessage[]): any | null {
 
   for (const message of messages) {
     for (const part of message.parts || []) {
-      // v5에서는 tool part 타입 체크 방식 변경
       if (!isToolUIPart(part)) continue;
-      // v5에서는 tool part가 다른 구조를 가짐
-      if ((part as any).state == "output-available") continue;
+      if (part.state.startsWith("output")) continue;
       result = part;
       return result;
     }
@@ -434,7 +428,7 @@ export const loadMcpTools = (opt?: {
 
 export const loadWorkFlowTools = (opt: {
   mentions?: ChatMention[];
-  dataStream: any; // v5에서 변경된 writer 타입
+  dataStream: any;
 }) =>
   safe(() =>
     opt?.mentions?.length
@@ -490,25 +484,22 @@ export const convertToSavePart = <T extends UIMessagePart<any, any>>(
     exclude(part as any, ["providerMetadata", "callProviderMetadata"]) as T,
   )
     .map((v) => {
-      if (
-        isToolUIPart(v) &&
-        v.state == "output-available" &&
-        isVercelAIWorkflowTool(v.output)
-      ) {
-        return {
-          ...v,
-          output: {
-            ...v.output,
-            history: v.output.history.map((h: any) => {
-              return {
-                ...h,
-                result: undefined,
-              };
-            }),
-          },
-        };
+      if (isToolUIPart(v) && v.state.startsWith("output")) {
+        if (isVercelAIWorkflowTool(v.output)) {
+          return {
+            ...v,
+            output: {
+              ...v.output,
+              history: v.output.history.map((h: any) => {
+                return {
+                  ...h,
+                  result: undefined,
+                };
+              }),
+            },
+          };
+        }
       }
-
       return v;
     })
     .unwrap();

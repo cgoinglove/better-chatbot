@@ -141,7 +141,6 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
     sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
     transport: new DefaultChatTransport({
       api: "/api/chat",
-
       prepareSendMessagesRequest: ({ messages, body, id }) => {
         if (window.location.pathname !== `/chat/${threadId}`) {
           console.log("replace-state");
@@ -213,7 +212,7 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
     const lastPart = lastMessage.parts.at(-1);
     if (!lastPart) return false;
     if (!isToolUIPart(lastPart)) return false;
-    if (lastPart.state == "output-available") return false;
+    if (lastPart.state.startsWith("output")) return false;
     return true;
   }, [status, messages]);
 

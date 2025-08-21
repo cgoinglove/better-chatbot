@@ -24,7 +24,7 @@ function PureWebSearchToolInvocation({ part }: WebSearchToolInvocationProps) {
   const t = useTranslations();
 
   const result = useMemo(() => {
-    if (part.state != "output-available") return null;
+    if (!part.state.startsWith("output")) return null;
     return part.output as ExaSearchResponse & {
       isError: boolean;
       error?: string;
@@ -67,7 +67,7 @@ function PureWebSearchToolInvocation({ part }: WebSearchToolInvocationProps) {
     );
   }, [result?.results, errorSrc]);
 
-  if (part.state != "output-available")
+  if (!part.state.startsWith("output"))
     return (
       <div className="flex items-center gap-2 text-sm">
         <GlobalIcon className="size-5 wiggle text-muted-foreground" />
@@ -236,7 +236,7 @@ function areEqual(
   if (prevPart.state != nextPart.state) return false;
   if (!equal(prevPart.input, nextPart.input)) return false;
   if (
-    prevPart.state == "output-available" &&
+    prevPart.state.startsWith("output")&&
     !equal(prevPart.output, toAny(nextPart).output)
   )
     return false;
