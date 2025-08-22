@@ -19,8 +19,8 @@ export const createBarChartTool = createTool({
       )
       .describe("Chart data with x-axis labels and series values"),
     title: z.string(),
-    description: z.string().optional(),
-    yAxisLabel: z.string().optional().describe("Label for Y-axis"),
+    description: z.string().nullable(),
+    yAxisLabel: z.string().nullable().describe("Label for Y-axis"),
   }),
   execute: async () => {
     return "Success";

@@ -75,7 +75,7 @@ export async function POST(request: Request) {
           ),
         )
         .describe("Agent allowed tools name")
-        .optional()
+        .nullable()
         .default([]),
     });
 

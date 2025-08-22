@@ -1,15 +1,22 @@
 "use client";
-
 import { appStore } from "@/app/store";
 import { useChat, UseChatHelpers } from "@ai-sdk/react";
 import { cn } from "lib/utils";
 
-import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import {
+  ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Button } from "ui/button";
 import {
   Drawer,
   DrawerClose,
   DrawerContent,
+  DrawerDescription,
   DrawerHeader,
   DrawerTitle,
 } from "ui/drawer";
@@ -56,11 +63,13 @@ export function ChatBotTemporary() {
   const { messages, sendMessage, status, setMessages, error, stop } = useChat({
     transport: new DefaultChatTransport({
       api: "/api/chat/temporary",
+
       body: {
         chatModel: temporaryChat.chatModel,
         instructions: temporaryChat.instructions,
       },
     }),
+    // experimental_throttle: 100,
     onError: () => {
       setMessages((prev) => prev.slice(0, -1));
     },
@@ -172,6 +181,7 @@ export function ChatBotTemporary() {
               </Button>
             </DrawerClose>
           </DrawerTitle>
+          <DrawerDescription className="sr-only"></DrawerDescription>
         </DrawerHeader>
         <DrawerTemporaryContent
           isLoading={isLoading}
@@ -218,16 +228,6 @@ function DrawerTemporaryContent({
     useShallow((state) => [state.temporaryChat, state.mutate]),
   );
 
-  const showThink = useMemo(() => {
-    if (!isLoading) return false;
-    const lastMessage = messages.at(-1);
-    if (lastMessage?.role == "user") return true;
-    const lastPart = lastMessage?.parts.at(-1);
-
-    if (lastPart?.type == "step-start") return true;
-    return false;
-  }, [isLoading, messages.at(-1)]);
-
   useEffect(() => {
     containerRef.current?.scrollTo({
       top: containerRef.current?.scrollHeight,
@@ -259,6 +259,15 @@ function DrawerTemporaryContent({
       };
     }
   }, [isLoading]);
+
+  const setModel = useCallback((model) => {
+    appStoreMutate({
+      temporaryChat: {
+        ...temporaryChat,
+        chatModel: model,
+      },
+    });
+  }, []);
 
   useEffect(() => {
     if (!temporaryChat.chatModel) {
@@ -310,7 +319,7 @@ function DrawerTemporaryContent({
             />
           );
         })}
-        {showThink && (
+        {isLoading && (
           <div className="w-full mx-auto max-w-3xl px-6">
             <Think />
           </div>
@@ -324,14 +333,7 @@ function DrawerTemporaryContent({
           sendMessage={sendMessage}
           disabledMention={true}
           model={temporaryChat.chatModel}
-          setModel={(model) => {
-            appStoreMutate({
-              temporaryChat: {
-                ...temporaryChat,
-                chatModel: model,
-              },
-            });
-          }}
+          setModel={setModel}
           toolDisabled
           placeholder={t("TemporaryChat.feelFreeToAskAnythingTemporarily")}
           setInput={setInput}
