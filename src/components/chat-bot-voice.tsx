@@ -1,6 +1,6 @@
 "use client";
 
-import { TextPart } from "ai";
+import { isToolUIPart, TextPart } from "ai";
 import { DEFAULT_VOICE_TOOLS, UIMessageWithCompleted } from "lib/ai/speech";
 
 import {
@@ -47,7 +47,6 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { ToolMessagePart } from "./message-parts";
 
 import { EnabledMcpToolsDropdown } from "./enabled-mcp-tools-dropdown";
-import { ToolInvocationUIPart } from "app-types/chat";
 import { appStore } from "@/app/store";
 import { useShallow } from "zustand/shallow";
 import { useTranslations } from "next-intl";
@@ -498,14 +497,14 @@ function ConversationView({
                         ))}
                     </p>
                   );
-                } else if (part.type === "tool-invocation") {
+                } else if (isToolUIPart(part)) {
                   return (
                     <ToolMessagePart
                       key={index}
                       part={part}
                       showActions={false}
                       messageId={message.id}
-                      isLast={part.toolInvocation.state != "result"}
+                      isLast={part.state.startsWith("input")}
                     />
                   );
                 }

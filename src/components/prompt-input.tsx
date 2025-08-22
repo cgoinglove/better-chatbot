@@ -42,7 +42,7 @@ interface PromptInputProps {
   setInput: (value: string) => void;
   input: string;
   onStop: () => void;
-  append: UseChatHelpers<UIMessage>["sendMessage"];
+  sendMessage: UseChatHelpers<UIMessage>["sendMessage"];
   toolDisabled?: boolean;
   isLoading?: boolean;
   model?: ChatModel;
@@ -62,7 +62,7 @@ const ChatMentionInput = dynamic(() => import("./chat-mention-input"), {
 
 export default function PromptInput({
   placeholder,
-  append,
+  sendMessage,
   model,
   setModel,
   input,
@@ -204,7 +204,7 @@ export default function PromptInput({
     const userMessage = input?.trim() || "";
     if (userMessage.length === 0) return;
     setInput("");
-    append!({
+    sendMessage({
       role: "user",
       parts: [
         {

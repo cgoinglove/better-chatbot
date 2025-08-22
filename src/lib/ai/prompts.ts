@@ -4,7 +4,6 @@ import { UserPreferences } from "app-types/user";
 import { User } from "better-auth";
 import { createMCPToolId } from "./mcp/mcp-tool-id";
 import { format } from "date-fns";
-import { SequentialThinkingToolName } from "./tools";
 import { Agent } from "app-types/agent";
 
 export const CREATE_THREAD_TITLE_PROMPT = `

@@ -131,12 +131,10 @@ function vercelAIToolToOpenAITool(tool: VercelAIMcpTool, name: string) {
     name,
     type: "function",
     description: tool.description,
-    inputSchema: tool.inputSchema
-      ? toJSONSchema(tool.inputSchema as any)
-      : {
-          type: "object",
-          properties: {},
-          required: [],
-        },
+    inputSchema: tool.inputSchema ?? {
+      type: "object",
+      properties: {},
+      required: [],
+    },
   };
 }

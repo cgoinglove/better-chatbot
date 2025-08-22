@@ -12,7 +12,6 @@ import { ChatGreeting } from "./chat-greeting";
 
 import { useShallow } from "zustand/shallow";
 import {
-  ChatOnDataCallback,
   DefaultChatTransport,
   isToolUIPart,
   lastAssistantMessageIsCompleteWithToolCalls,
@@ -24,7 +23,6 @@ import { mutate } from "swr";
 import {
   ChatApiSchemaRequestBody,
   ChatModel,
-  isToolStreamData,
   ManualToolConfirm,
   ToolStreamData,
 } from "app-types/chat";
@@ -429,7 +427,7 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
           <PromptInput
             input={input}
             threadId={threadId}
-            append={sendMessage}
+            sendMessage={sendMessage}
             setInput={setInput}
             isLoading={isLoading || isPendingToolCall}
             onStop={stop}

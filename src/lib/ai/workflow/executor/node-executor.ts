@@ -11,7 +11,12 @@ import {
   OutputSchemaSourceKey,
 } from "../workflow.interface";
 import { WorkflowRuntimeState } from "./graph-store";
-import { generateObject, generateText, UIMessage } from "ai";
+import {
+  convertToModelMessages,
+  generateObject,
+  generateText,
+  UIMessage,
+} from "ai";
 import { checkConditionBranch } from "../condition";
 import {
   convertTiptapJsonToAiMessage,
@@ -109,20 +114,19 @@ export const llmNodeExecutor: NodeExecutor<LLMNodeData> = async ({
   if (isTextResponse) {
     const response = await generateText({
       model,
-      messages,
-      maxSteps: 1,
+      messages: convertToModelMessages(messages),
     });
     return {
       output: {
         totalTokens: response.usage.totalTokens,
-        answer: response.text.text,
+        answer: response.text,
       },
     };
   }
 
   const response = await generateObject({
     model,
-    messages,
+    messages: convertToModelMessages(messages),
     schema: jsonSchemaToZod(node.outputSchema.properties.answer),
     maxRetries: 3,
   });
@@ -211,7 +215,6 @@ export const toolNodeExecutor: NodeExecutor<ToolNodeData> = async ({
 
     const response = await generateText({
       model: customModelProvider.getModel(node.model),
-      maxSteps: 1,
       toolChoice: "required", // Force the model to call the tool
       prompt,
       tools: {
@@ -223,7 +226,7 @@ export const toolNodeExecutor: NodeExecutor<ToolNodeData> = async ({
     });
 
     result.input = {
-      parameter: response.toolCalls.find((call) => call.args)?.args,
+      parameter: response.toolCalls.find((call) => call.input)?.input,
       prompt,
     };
   }
@@ -253,7 +256,7 @@ export const toolNodeExecutor: NodeExecutor<ToolNodeData> = async ({
           ? exaSearchToolForWorkflow.execute
           : () => "Unknown tool";
 
-    const toolResult = await executor(result.input.parameter, {
+    const toolResult = await executor?.(result.input.parameter, {
       messages: [],
       toolCallId: "",
     });
