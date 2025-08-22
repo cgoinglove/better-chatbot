@@ -69,7 +69,7 @@ export function ChatBotTemporary() {
         instructions: temporaryChat.instructions,
       },
     }),
-    experimental_throttle: 100,
+    // experimental_throttle: 100,
     onError: () => {
       setMessages((prev) => prev.slice(0, -1));
     },
