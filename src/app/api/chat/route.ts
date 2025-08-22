@@ -178,6 +178,7 @@ export async function POST(request: Request) {
                   toolCallId: part.toolCallId,
                   output: result,
                 },
+                transient: true,
               };
               dataStream.write(data);
             }),

@@ -321,6 +321,7 @@ export const workflowToVercelAITool = ({
                 toolCallId,
                 output: toolResult,
               },
+              transient: true,
             };
 
             dataStream.write(data);

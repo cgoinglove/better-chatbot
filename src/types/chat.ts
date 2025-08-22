@@ -164,4 +164,5 @@ export type ToolStreamData = {
     toolCallId: string;
     output: any;
   };
+  transient: true;
 };

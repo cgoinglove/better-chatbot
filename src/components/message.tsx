@@ -141,28 +141,34 @@ const PurePreviewMessage = ({
   );
 };
 
-function equalMessage(prevProps: Props, nextProps: Props) {
-  if (prevProps.message.id !== nextProps.message.id) {
-    console.log(`refresh id`, prevProps.message.id, nextProps.message.id);
-    return false;
-  }
+export const PreviewMessage = memo(
+  PurePreviewMessage,
+  function equalMessage(prevProps: Props, nextProps: Props) {
+    if (prevProps.message.id !== nextProps.message.id) {
+      console.log(`refresh id`, prevProps.message.id, nextProps.message.id);
+      return false;
+    }
 
-  if (prevProps.isLoading !== nextProps.isLoading) return false;
+    if (prevProps.isLoading !== nextProps.isLoading) return false;
 
-  if (prevProps.isLastMessage !== nextProps.isLastMessage) return false;
+    if (prevProps.isLastMessage !== nextProps.isLastMessage) return false;
 
-  if (prevProps.className !== nextProps.className) return false;
+    if (prevProps.className !== nextProps.className) return false;
 
-  if (!equal(prevProps.message.metadata, nextProps.message.metadata))
-    return false;
+    if (nextProps.isLastMessage && nextProps.status == "streaming")
+      return false;
 
-  if (!equal(prevProps.message.parts, nextProps.message.parts)) {
-    return false;
-  }
-  return true;
-}
+    if (!equal(prevProps.message.metadata, nextProps.message.metadata))
+      return false;
 
-export const PreviewMessage = memo(PurePreviewMessage, equalMessage);
+    if (prevProps.message.parts.length !== nextProps.message.parts.length) {
+      return false;
+    }
+    if (!equal(prevProps.message.parts, nextProps.message.parts)) return false;
+
+    return true;
+  },
+);
 
 export const ErrorMessage = ({
   error,

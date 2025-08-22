@@ -4,7 +4,6 @@ import {
   UIMessage,
   convertToModelMessages,
   smoothStream,
-  stepCountIs,
   streamText,
 } from "ai";
 import { customModelProvider } from "lib/ai/models";
@@ -40,7 +39,6 @@ export async function POST(request: Request) {
         instructions ? `\n\n${instructions}` : ""
       }`.trim(),
       messages: convertToModelMessages(messages),
-      stopWhen: stepCountIs(10),
       experimental_transform: smoothStream({ chunking: "word" }),
     }).toUIMessageStreamResponse();
   } catch (error: any) {
