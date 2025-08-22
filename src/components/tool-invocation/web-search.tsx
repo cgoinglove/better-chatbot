@@ -236,7 +236,7 @@ function areEqual(
   if (prevPart.state != nextPart.state) return false;
   if (!equal(prevPart.input, nextPart.input)) return false;
   if (
-    prevPart.state.startsWith("output")&&
+    prevPart.state.startsWith("output") &&
     !equal(prevPart.output, toAny(nextPart).output)
   )
     return false;
