@@ -15,7 +15,7 @@ import {
 import { ChevronDown, ChevronUp, TriangleAlertIcon } from "lucide-react";
 import { Button } from "ui/button";
 import { useTranslations } from "next-intl";
-import { ChatMetadata, ManualToolConfirm } from "app-types/chat";
+import { ChatMetadata } from "app-types/chat";
 
 interface Props {
   message: UIMessage;
@@ -27,7 +27,6 @@ interface Props {
   sendMessage: UseChatHelpers<UIMessage>["sendMessage"];
   className?: string;
   addToolResult?: UseChatHelpers<UIMessage>["addToolResult"];
-  onManualToolConfirm?: (confirm: ManualToolConfirm) => void;
   messageIndex: number;
   status: UseChatHelpers<UIMessage>["status"];
 }
@@ -42,7 +41,6 @@ const PurePreviewMessage = ({
   className,
   setMessages,
   addToolResult,
-  onManualToolConfirm,
   messageIndex,
   sendMessage,
 }: Props) => {
@@ -113,7 +111,7 @@ const PurePreviewMessage = ({
                 (message.metadata as ChatMetadata)?.toolChoice == "manual" &&
                 isLastMessage &&
                 isLastPart &&
-                !isLoading;
+                isLoading;
               return (
                 <ToolMessagePart
                   isLast={isLast}
@@ -123,7 +121,6 @@ const PurePreviewMessage = ({
                     isLastMessage ? isLastPart && !isLoading : isLastPart
                   }
                   addToolResult={addToolResult}
-                  onManualToolConfirm={onManualToolConfirm}
                   key={key}
                   part={part}
                   setMessages={setMessages}
@@ -152,8 +149,7 @@ export const PreviewMessage = memo(
 
     if (prevProps.className !== nextProps.className) return false;
 
-    if (nextProps.status == "streaming" && nextProps.isLastMessage)
-      return false;
+    if (nextProps.isLoading && nextProps.isLastMessage) return false;
 
     if (!equal(prevProps.message.metadata, nextProps.message.metadata))
       return false;

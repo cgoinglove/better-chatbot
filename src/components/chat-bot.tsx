@@ -20,12 +20,7 @@ import {
 
 import { safe } from "ts-safe";
 import { mutate } from "swr";
-import {
-  ChatApiSchemaRequestBody,
-  ChatModel,
-  ManualToolConfirm,
-  ToolStreamData,
-} from "app-types/chat";
+import { ChatApiSchemaRequestBody, ChatModel } from "app-types/chat";
 import { useToRef } from "@/hooks/use-latest";
 import { isShortcutEvent, Shortcuts } from "lib/keyboard-shortcuts";
 import { Button } from "ui/button";
@@ -127,22 +122,18 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
 
   const [input, setInput] = useState("");
 
-  const onData = useCallback((_data: ToolStreamData) => {}, []);
-
   const {
     messages,
     status,
     setMessages,
-    addToolResult,
+    addToolResult: _addToolResult,
     error,
     sendMessage,
     stop,
   } = useChat({
     id: threadId,
-    onData,
     sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
     transport: new DefaultChatTransport({
-      api: "/api/chat",
       prepareSendMessagesRequest: ({ messages, body, id }) => {
         if (window.location.pathname !== `/chat/${threadId}`) {
           console.log("replace-state");
@@ -170,9 +161,18 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
     }),
     messages: initialMessages,
     generateId: generateUUID,
+    experimental_throttle: 100,
     onFinish,
   });
   const [isDeleteThreadPopupOpen, setIsDeleteThreadPopupOpen] = useState(false);
+
+  const addToolResult = useCallback(
+    async (result: Parameters<typeof _addToolResult>[0]) => {
+      await _addToolResult(result);
+      // sendMessage();
+    },
+    [_addToolResult],
+  );
 
   const mounted = useMounted();
 
@@ -214,14 +214,6 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
     if (lastPart.state.startsWith("output")) return false;
     return true;
   }, [status, messages]);
-
-  const onManualToolConfirm = useCallback((confirm: ManualToolConfirm) => {
-    sendMessage(undefined, {
-      body: {
-        manualToolConfirm: confirm,
-      },
-    });
-  }, []);
 
   const space = useMemo(() => {
     if (!isLoading) return false;
@@ -381,7 +373,6 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
                     message={message}
                     status={status}
                     addToolResult={addToolResult}
-                    onManualToolConfirm={onManualToolConfirm}
                     isLoading={isLoading || isPendingToolCall}
                     isLastMessage={isLastMessage}
                     setMessages={setMessages}

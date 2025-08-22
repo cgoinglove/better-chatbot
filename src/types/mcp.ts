@@ -3,6 +3,7 @@ import {
   OAuthTokens,
 } from "@modelcontextprotocol/sdk/shared/auth.js";
 import { Tool } from "ai";
+import { tag } from "lib/tag";
 import { z } from "zod";
 
 export const MCPRemoteConfigZodSchema = z.object({
@@ -61,8 +62,9 @@ export type VercelAIMcpTool = Tool & {
   _mcpServerName: string;
   _mcpServerId: string;
   _originToolName: string;
-  __$ref__: "mcp";
 };
+
+export const VercelAIMcpToolTag = tag<VercelAIMcpTool>("mcp");
 
 export interface MCPRepository {
   save(server: McpServerInsert): Promise<McpServerSelect>;

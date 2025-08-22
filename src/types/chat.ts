@@ -2,6 +2,7 @@ import type { LanguageModelUsage, UIMessage } from "ai";
 import { z } from "zod";
 import { AllowedMCPServerZodSchema } from "./mcp";
 import { UserPreferences } from "./user";
+import { tag } from "lib/tag";
 
 export type ChatMetadata = {
   usage?: LanguageModelUsage;
@@ -83,14 +84,6 @@ export const ChatMentionSchema = z.discriminatedUnion("type", [
 
 export type ChatMention = z.infer<typeof ChatMentionSchema>;
 
-export const ManualToolConfirmSchema = z.object({
-  confirm: z.boolean(),
-  messageId: z.string(),
-  toolCallId: z.string(),
-});
-
-export type ManualToolConfirm = z.infer<typeof ManualToolConfirmSchema>;
-
 export const chatApiSchemaRequestBodySchema = z.object({
   id: z.string(),
   message: z.any() as z.ZodType<UIMessage>,
@@ -101,7 +94,6 @@ export const chatApiSchemaRequestBodySchema = z.object({
     })
     .optional(),
   toolChoice: z.enum(["auto", "none", "manual"]),
-  manualToolConfirm: ManualToolConfirmSchema.optional(),
   mentions: z.array(ChatMentionSchema).optional(),
   allowedMcpServers: z.record(z.string(), AllowedMCPServerZodSchema).optional(),
   allowedAppDefaultToolkit: z.array(z.string()).optional(),
@@ -158,11 +150,7 @@ export type ChatRepository = {
     messages: PartialBy<ChatMessage, "createdAt">[],
   ): Promise<ChatMessage[]>;
 };
-export type ToolStreamData = {
-  type: "data-tool-result" | "data-workflow-update";
-  data: {
-    toolCallId: string;
-    output: any;
-  };
-  transient: true;
-};
+
+export const ManualToolConfirmTag = tag<{
+  confirm: boolean;
+}>("manual-tool-confirm");

@@ -116,7 +116,7 @@ export function AppSidebarAgents() {
             </SidebarMenuAction>
           </SidebarMenuItem>
 
-          {isLoading && agents.length === 0 ? (
+          {isLoading ? (
             <SidebarMenuItem>
               {Array.from({ length: 2 }).map(
                 (_, index) => mounted && <SidebarMenuSkeleton key={index} />,

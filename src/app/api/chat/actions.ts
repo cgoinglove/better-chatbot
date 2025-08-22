@@ -199,7 +199,7 @@ export async function generateObjectAction({
   const result = await generateObject({
     model: customModelProvider.getModel(model),
     system: prompt.system,
-    prompt: prompt.user,
+    prompt: prompt.user || "",
     schema: jsonSchemaToZod(schema),
   });
   return result.object;
