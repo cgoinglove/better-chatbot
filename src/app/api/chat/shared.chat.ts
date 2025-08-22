@@ -1,22 +1,23 @@
 import "server-only";
 import {
   LoadAPIKeyError,
-  Message,
+  UIMessage,
   Tool,
-  ToolInvocation,
   jsonSchema,
   tool as createTool,
-  DataStreamWriter,
-  formatDataStreamPart,
+  isToolUIPart,
+  UIMessagePart,
+  ToolUIPart,
+  getToolName,
+  UIMessageStreamWriter,
 } from "ai";
 import {
   ChatMention,
-  ChatMessage,
-  ChatMessageAnnotation,
-  ClientToolInvocationZodSchema,
-  ToolInvocationUIPart,
+  ManualToolConfirm,
+  ManualToolConfirmSchema,
+  ToolStreamData,
 } from "app-types/chat";
-import { errorToString, objectFlow, toAny } from "lib/utils";
+import { errorToString, exclude, objectFlow } from "lib/utils";
 import logger from "logger";
 import {
   AllowedMCPServer,
@@ -30,6 +31,7 @@ import { safe } from "ts-safe";
 import { workflowRepository } from "lib/db/repository";
 
 import {
+  isVercelAIWorkflowTool,
   VercelAIWorkflowTool,
   VercelAIWorkflowToolStreaming,
   VercelAIWorkflowToolStreamingResult,
@@ -95,20 +97,10 @@ export function excludeToolExecution(
 ): Record<string, Tool> {
   return objectFlow(tool).map((value) => {
     return createTool({
-      parameters: value.parameters,
+      inputSchema: value.inputSchema,
       description: value.description,
     });
   });
-}
-
-export function appendAnnotations(
-  annotations: any[] = [],
-  annotationsToAppend: ChatMessageAnnotation[] | ChatMessageAnnotation,
-): ChatMessageAnnotation[] {
-  const newAnnotations = Array.isArray(annotationsToAppend)
-    ? annotationsToAppend
-    : [annotationsToAppend];
-  return [...annotations, ...newAnnotations];
 }
 
 export function mergeSystemPrompt(
@@ -121,57 +113,44 @@ export function mergeSystemPrompt(
 }
 
 export function manualToolExecuteByLastMessage(
-  part: ToolInvocationUIPart,
-  message: Message,
+  part: ToolUIPart,
+  confirm: ManualToolConfirm,
   tools: Record<
     string,
     VercelAIMcpTool | VercelAIWorkflowTool | (Tool & { __$ref__?: string })
   >,
   abortSignal?: AbortSignal,
 ) {
-  const { args, toolName } = part.toolInvocation;
+  const { input } = part;
 
-  const manulConfirmation = (message.parts as ToolInvocationUIPart[]).find(
-    (_part) => {
-      return _part.toolInvocation?.toolCallId == part.toolInvocation.toolCallId;
-    },
-  )?.toolInvocation as Extract<ToolInvocation, { state: "result" }>;
+  const toolName = getToolName(part);
 
   const tool = tools[toolName];
-
-  if (!manulConfirmation?.result) return MANUAL_REJECT_RESPONSE_PROMPT;
   return safe(() => {
     if (!tool) throw new Error(`tool not found: ${toolName}`);
-    return ClientToolInvocationZodSchema.parse(manulConfirmation?.result);
+    return ManualToolConfirmSchema.parse(confirm);
   })
-    .map((result) => {
-      const value = result?.result;
-
-      if (result.action == "direct") {
-        return value;
-      } else if (result.action == "manual") {
-        if (!value) return MANUAL_REJECT_RESPONSE_PROMPT;
-        if (tool.__$ref__ === "workflow") {
-          return tool.execute!(args, {
-            toolCallId: part.toolInvocation.toolCallId,
-            abortSignal: abortSignal ?? new AbortController().signal,
-            messages: [],
-          });
-        } else if (tool.__$ref__ === "mcp") {
-          const mcpTool = tool as VercelAIMcpTool;
-          return mcpClientsManager.toolCall(
-            mcpTool._mcpServerId,
-            mcpTool._originToolName,
-            args,
-          );
-        }
-        return tool.execute!(args, {
-          toolCallId: part.toolInvocation.toolCallId,
+    .map(({ confirm }) => {
+      if (!confirm) return MANUAL_REJECT_RESPONSE_PROMPT;
+      if (tool.__$ref__ === "workflow") {
+        return tool.execute!(input, {
+          toolCallId: part.toolCallId,
           abortSignal: abortSignal ?? new AbortController().signal,
           messages: [],
         });
+      } else if (tool.__$ref__ === "mcp") {
+        const mcpTool = tool as VercelAIMcpTool;
+        return mcpClientsManager.toolCall(
+          mcpTool._mcpServerId,
+          mcpTool._originToolName,
+          input,
+        );
       }
-      throw new Error("Invalid Client Tool Invocation Action " + result.action);
+      return tool.execute!(input, {
+        toolCallId: part.toolCallId,
+        abortSignal: abortSignal ?? new AbortController().signal,
+        messages: [],
+      });
     })
     .ifFail((error) => ({
       isError: true,
@@ -191,40 +170,15 @@ export function handleError(error: any) {
   return errorToString(error.message);
 }
 
-export function convertToMessage(message: ChatMessage): Message {
-  return {
-    ...message,
-    id: message.id,
-    content: "",
-    role: message.role,
-    parts: message.parts,
-    experimental_attachments:
-      toAny(message).attachments || toAny(message).experimental_attachments,
-  };
+export function extractInProgressToolPart(message: UIMessage): ToolUIPart[] {
+  return message.parts.filter(
+    (part) => isToolUIPart(part) && !part.state.startsWith("output"),
+  ) as ToolUIPart[];
 }
-
-export function extractInProgressToolPart(
-  messages: Message[],
-): ToolInvocationUIPart | null {
-  let result: ToolInvocationUIPart | null = null;
-
-  for (const message of messages) {
-    for (const part of message.parts || []) {
-      if (part.type != "tool-invocation") continue;
-      if (part.toolInvocation.state == "result") continue;
-      result = part as ToolInvocationUIPart;
-      return result;
-    }
-  }
-  return null;
-}
-export function assignToolResult(toolPart: ToolInvocationUIPart, result: any) {
+export function assignToolResult(toolPart: any, result: any): ToolUIPart {
   return Object.assign(toolPart, {
-    toolInvocation: {
-      ...toolPart.toolInvocation,
-      state: "result",
-      result,
-    },
+    state: "output-available",
+    output: result,
   });
 }
 
@@ -281,7 +235,7 @@ export const workflowToVercelAITool = ({
   name: string;
   description?: string;
   schema: ObjectJsonSchema7;
-  dataStream: DataStreamWriter;
+  dataStream: UIMessageStreamWriter;
 }): VercelAIWorkflowTool => {
   const toolName = name
     .replace(/[^a-zA-Z0-9\s]/g, "")
@@ -291,7 +245,7 @@ export const workflowToVercelAITool = ({
 
   const tool = createTool({
     description: `${name} ${description?.trim().slice(0, 50)}`,
-    parameters: jsonSchema(schema),
+    inputSchema: jsonSchema(schema),
     execute(query, { toolCallId, abortSignal }) {
       const history: VercelAIWorkflowToolStreaming[] = [];
       const toolResult: VercelAIWorkflowToolStreamingResult = {
@@ -360,12 +314,16 @@ export const workflowToVercelAITool = ({
                 result.endedAt = e.endedAt;
               }
             }
-            dataStream.write(
-              formatDataStreamPart("tool_result", {
+
+            const data: ToolStreamData = {
+              type: "data-workflow-update",
+              data: {
                 toolCallId,
-                result: toolResult,
-              }),
-            );
+                output: toolResult,
+              },
+            };
+
+            dataStream.write(data);
           });
           return executor.run(
             {
@@ -427,7 +385,7 @@ export const workflowToVercelAITools = (
     description?: string;
     schema: ObjectJsonSchema7;
   }[],
-  dataStream: DataStreamWriter,
+  dataStream: UIMessageStreamWriter,
 ) => {
   return workflows
     .map((v) =>
@@ -460,7 +418,7 @@ export const loadMcpTools = (opt?: {
 
 export const loadWorkFlowTools = (opt: {
   mentions?: ChatMention[];
-  dataStream: DataStreamWriter;
+  dataStream: any;
 }) =>
   safe(() =>
     opt?.mentions?.length
@@ -508,3 +466,31 @@ export const loadAppDefaultTools = (opt?: {
       throw e;
     })
     .orElse({} as Record<string, Tool>);
+
+export const convertToSavePart = <T extends UIMessagePart<any, any>>(
+  part: T,
+) => {
+  return safe(
+    exclude(part as any, ["providerMetadata", "callProviderMetadata"]) as T,
+  )
+    .map((v) => {
+      if (isToolUIPart(v) && v.state.startsWith("output")) {
+        if (isVercelAIWorkflowTool(v.output)) {
+          return {
+            ...v,
+            output: {
+              ...v.output,
+              history: v.output.history.map((h: any) => {
+                return {
+                  ...h,
+                  result: undefined,
+                };
+              }),
+            },
+          };
+        }
+      }
+      return v;
+    })
+    .unwrap();
+};

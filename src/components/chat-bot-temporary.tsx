@@ -18,7 +18,7 @@ import PromptInput from "./prompt-input";
 import { ErrorMessage, PreviewMessage } from "./message";
 import { Settings2, X } from "lucide-react";
 import { Separator } from "ui/separator";
-import { UIMessage } from "ai";
+import { DefaultChatTransport, UIMessage } from "ai";
 import { useShallow } from "zustand/shallow";
 import { isShortcutEvent, Shortcuts } from "lib/keyboard-shortcuts";
 import { useTranslations } from "next-intl";
@@ -51,23 +51,16 @@ export function ChatBotTemporary() {
     });
   };
 
-  const {
-    messages,
-    input,
-    setInput,
-    append,
-    status,
-    reload,
-    setMessages,
-    error,
-    stop,
-  } = useChat({
-    api: "/api/chat/temporary",
-    experimental_throttle: 100,
-    body: {
-      chatModel: temporaryChat.chatModel,
-      instructions: temporaryChat.instructions,
-    },
+  const [input, setInput] = useState("");
+
+  const { messages, sendMessage, status, setMessages, error, stop } = useChat({
+    transport: new DefaultChatTransport({
+      api: "/api/chat/temporary",
+      body: {
+        chatModel: temporaryChat.chatModel,
+        instructions: temporaryChat.instructions,
+      },
+    }),
     onError: () => {
       setMessages((prev) => prev.slice(0, -1));
     },
@@ -186,9 +179,8 @@ export function ChatBotTemporary() {
           error={error}
           input={input}
           setInput={setInput}
-          append={append}
+          sendMessage={sendMessage}
           setMessages={setMessages}
-          reload={reload}
           stop={stop}
           status={status}
         />
@@ -201,24 +193,22 @@ function DrawerTemporaryContent({
   messages,
   input,
   setInput,
-  append,
+  sendMessage,
   status,
   error,
   isLoading,
   setMessages,
-  reload,
   stop,
 }: {
   messages: UIMessage[];
   input: string;
   setInput: (input: string) => void;
-  append: UseChatHelpers["append"];
+  sendMessage: UseChatHelpers<UIMessage>["sendMessage"];
   status: "submitted" | "streaming" | "ready" | "error";
   isLoading: boolean;
   error: Error | undefined;
-  setMessages: UseChatHelpers["setMessages"];
-  reload: UseChatHelpers["reload"];
-  stop: UseChatHelpers["stop"];
+  setMessages: UseChatHelpers<UIMessage>["setMessages"];
+  stop: UseChatHelpers<UIMessage>["stop"];
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const t = useTranslations("Chat");
@@ -315,7 +305,8 @@ function DrawerTemporaryContent({
               isLoading={isLoading}
               isLastMessage={isLastMessage}
               setMessages={setMessages}
-              reload={reload}
+              prevMessage={messages[index - 1]}
+              sendMessage={sendMessage}
             />
           );
         })}
@@ -330,7 +321,7 @@ function DrawerTemporaryContent({
       <div className={"w-full my-6 mt-auto"}>
         <PromptInput
           input={input}
-          append={append}
+          sendMessage={sendMessage}
           disabledMention={true}
           model={temporaryChat.chatModel}
           setModel={(model) => {

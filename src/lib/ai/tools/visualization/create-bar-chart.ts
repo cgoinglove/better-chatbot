@@ -4,7 +4,7 @@ import { z } from "zod";
 
 export const createBarChartTool = createTool({
   description: "Create a bar chart with multiple data series",
-  parameters: z.object({
+  inputSchema: z.object({
     data: z
       .array(
         z.object({

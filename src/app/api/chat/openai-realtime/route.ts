@@ -130,7 +130,7 @@ function vercelAIToolToOpenAITool(tool: VercelAIMcpTool, name: string) {
     name,
     type: "function",
     description: tool.description,
-    parameters: tool.parameters?.jsonSchema ?? {
+    inputSchema: tool.inputSchema ?? {
       type: "object",
       properties: {},
       required: [],

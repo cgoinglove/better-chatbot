@@ -3,7 +3,7 @@ import { z } from "zod";
 
 export const createLineChartTool = createTool({
   description: "Create a line chart with multiple data series",
-  parameters: z.object({
+  inputSchema: z.object({
     data: z
       .array(
         z.object({

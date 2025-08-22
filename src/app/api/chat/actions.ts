@@ -5,7 +5,7 @@ import {
   generateText,
   jsonSchema,
   LanguageModel,
-  type Message,
+  type UIMessage,
 } from "ai";
 
 import {
@@ -46,7 +46,7 @@ export async function getUserId() {
 export async function generateTitleFromUserMessageAction({
   message,
   model,
-}: { message: Message; model: LanguageModel }) {
+}: { message: UIMessage; model: LanguageModel }) {
   await getSession();
   const prompt = toAny(message.parts?.at(-1))?.text || "unknown";
 

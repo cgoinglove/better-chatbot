@@ -1,6 +1,12 @@
 import { redirect } from "next/navigation";
 import { getSession } from "auth/server";
-import { Message, smoothStream, streamText } from "ai";
+import {
+  UIMessage,
+  convertToModelMessages,
+  smoothStream,
+  stepCountIs,
+  streamText,
+} from "ai";
 import { customModelProvider } from "lib/ai/models";
 import logger from "logger";
 import { buildUserSystemPrompt } from "lib/ai/prompts";
@@ -17,7 +23,7 @@ export async function POST(request: Request) {
     }
 
     const { messages, chatModel, instructions } = json as {
-      messages: Message[];
+      messages: UIMessage[];
       chatModel?: {
         provider: string;
         model: string;
@@ -33,11 +39,10 @@ export async function POST(request: Request) {
       system: `${buildUserSystemPrompt(session.user, userPreferences)} ${
         instructions ? `\n\n${instructions}` : ""
       }`.trim(),
-      messages,
-      maxSteps: 10,
-      experimental_continueSteps: true,
+      messages: convertToModelMessages(messages),
+      stopWhen: stepCountIs(10),
       experimental_transform: smoothStream({ chunking: "word" }),
-    }).toDataStreamResponse();
+    }).toUIMessageStreamResponse();
   } catch (error: any) {
     logger.error(error);
     return new Response(error.message || "Oops, an error occured!", {

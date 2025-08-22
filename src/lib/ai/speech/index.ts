@@ -25,7 +25,7 @@ export const DEFAULT_VOICE_TOOLS = [
     type: "function",
     name: "changeBrowserTheme",
     description: "Change the browser theme",
-    parameters: {
+    inputSchema: {
       type: "object",
       properties: {
         theme: {

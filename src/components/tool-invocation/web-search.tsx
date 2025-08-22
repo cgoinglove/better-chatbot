@@ -1,6 +1,6 @@
 "use client";
 
-import { ToolInvocationUIPart } from "app-types/chat";
+import { ToolUIPart } from "ai";
 import { ExaSearchResponse } from "lib/ai/tools/web/web-search";
 import equal from "lib/equal";
 import { notify } from "lib/notify";
@@ -17,15 +17,15 @@ import { TextShimmer } from "ui/text-shimmer";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 
 interface WebSearchToolInvocationProps {
-  part: ToolInvocationUIPart["toolInvocation"];
+  part: ToolUIPart;
 }
 
 function PureWebSearchToolInvocation({ part }: WebSearchToolInvocationProps) {
   const t = useTranslations();
 
   const result = useMemo(() => {
-    if (part.state != "result") return null;
-    return part.result as ExaSearchResponse & {
+    if (!part.state.startsWith("output")) return null;
+    return part.output as ExaSearchResponse & {
       isError: boolean;
       error?: string;
     };
@@ -45,12 +45,12 @@ function PureWebSearchToolInvocation({ part }: WebSearchToolInvocationProps) {
             {t("Chat.Tool.searchOptionsDescription")}
           </p>
           <div className="p-2">
-            <JsonView data={part.args} />
+            <JsonView data={part.input} />
           </div>
         </HoverCardContent>
       </HoverCard>
     );
-  }, [part.args]);
+  }, [part.input]);
 
   const onError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     const target = e.currentTarget;
@@ -67,7 +67,7 @@ function PureWebSearchToolInvocation({ part }: WebSearchToolInvocationProps) {
     );
   }, [result?.results, errorSrc]);
 
-  if (part.state != "result")
+  if (!part.state.startsWith("output"))
     return (
       <div className="flex items-center gap-2 text-sm">
         <GlobalIcon className="size-5 wiggle text-muted-foreground" />
@@ -234,10 +234,10 @@ function areEqual(
   { part: nextPart }: WebSearchToolInvocationProps,
 ) {
   if (prevPart.state != nextPart.state) return false;
-  if (!equal(prevPart.args, nextPart.args)) return false;
+  if (!equal(prevPart.input, nextPart.input)) return false;
   if (
-    prevPart.state == "result" &&
-    !equal(prevPart.result, toAny(nextPart).result)
+    prevPart.state.startsWith("output") &&
+    !equal(prevPart.output, toAny(nextPart).output)
   )
     return false;
   return true;
