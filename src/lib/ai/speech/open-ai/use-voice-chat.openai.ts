@@ -233,18 +233,17 @@ export function useOpenAIVoiceChat(
         },
       };
       updateUIMessage(id, (prev) => {
-        const prevPart = prev.parts.find((p) => p.type == "tool-invocation");
+        const prevPart = prev.parts.find((p) => p.type == `tool-${toolName}`);
         if (!prevPart) return prev;
-        const nextPart: ToolInvocationUIPart = {
-          ...prevPart,
-          toolInvocation: {
-            ...prevPart.toolInvocation,
-            result: toolResult,
-            state: "result",
-          },
+        const part: ToolUIPart = {
+          state: "output-available",
+          output: toolResult,
+          toolCallId: callId,
+          input: toolArgs,
+          type: `tool-${toolName}`,
         };
         return {
-          parts: [nextPart],
+          parts: [part],
         };
       });
       dataChannel.current?.send(JSON.stringify(event));

@@ -20,7 +20,6 @@ import {
 } from "../actions";
 import globalLogger from "lib/logger";
 import { colorize } from "consola/utils";
-import { toJSONSchema } from "zod";
 
 const logger = globalLogger.withDefaults({
   message: colorize("blackBright", `OpenAI Realtime API: `),
