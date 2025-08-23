@@ -248,16 +248,7 @@ export async function POST(request: Request) {
       },
 
       generateId: generateUUID,
-      onFinish: async ({ responseMessage, messages: originalMessages }) => {
-        console.dir(
-          {
-            responseMessage,
-            messages,
-            message,
-            originalMessages,
-          },
-          { depth: null },
-        );
+      onFinish: async ({ responseMessage }) => {
         if (responseMessage.id == message.id) {
           await chatRepository.upsertMessage({
             threadId: thread!.id,

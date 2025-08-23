@@ -71,13 +71,18 @@ export function ChatBotTemporary() {
   } = useChat({
     transport: new DefaultChatTransport({
       api: "/api/chat/temporary",
-
-      body: {
-        chatModel: temporaryChat.chatModel,
-        instructions: temporaryChat.instructions,
+      prepareSendMessagesRequest: ({ messages }) => {
+        const temporaryChat = appStore.getState().temporaryChat;
+        return {
+          body: {
+            chatModel: temporaryChat.chatModel,
+            instructions: temporaryChat.instructions,
+            messages,
+          },
+        };
       },
     }),
-    // experimental_throttle: 100,
+    experimental_throttle: 100,
     onError: () => {
       setMessages((prev) => prev.slice(0, -1));
     },

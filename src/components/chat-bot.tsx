@@ -126,7 +126,7 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
     messages,
     status,
     setMessages,
-    addToolResult: _addToolResult,
+    addToolResult,
     error,
     sendMessage,
     stop,
@@ -165,14 +165,6 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
     onFinish,
   });
   const [isDeleteThreadPopupOpen, setIsDeleteThreadPopupOpen] = useState(false);
-
-  const addToolResult = useCallback(
-    async (result: Parameters<typeof _addToolResult>[0]) => {
-      await _addToolResult(result);
-      // sendMessage();
-    },
-    [_addToolResult],
-  );
 
   const mounted = useMounted();
 
@@ -216,7 +208,7 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
   }, [status, messages]);
 
   const space = useMemo(() => {
-    if (!isLoading) return false;
+    if (!isLoading || error) return false;
     const lastMessage = messages.at(-1);
     if (lastMessage?.role == "user") return "think";
     const lastPart = lastMessage?.parts.at(-1);
@@ -378,7 +370,10 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
                     setMessages={setMessages}
                     sendMessage={sendMessage}
                     className={
-                      isLastMessage && message.role != "user" && !space
+                      isLastMessage &&
+                      message.role != "user" &&
+                      !space &&
+                      message.parts.length > 1
                         ? "min-h-[calc(55dvh-40px)]"
                         : ""
                     }

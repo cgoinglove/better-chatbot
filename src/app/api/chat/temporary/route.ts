@@ -7,9 +7,14 @@ import {
   streamText,
 } from "ai";
 import { customModelProvider } from "lib/ai/models";
-import logger from "logger";
+import globalLogger from "logger";
 import { buildUserSystemPrompt } from "lib/ai/prompts";
 import { userRepository } from "lib/db/repository";
+import { colorize } from "consola/utils";
+
+const logger = globalLogger.withDefaults({
+  message: colorize("blackBright", `Temporary Chat API: `),
+});
 
 export async function POST(request: Request) {
   try {
@@ -29,6 +34,7 @@ export async function POST(request: Request) {
       };
       instructions?: string;
     };
+    logger.info(`model: ${chatModel?.provider}/${chatModel?.model}`);
     const model = customModelProvider.getModel(chatModel);
     const userPreferences =
       (await userRepository.getPreferences(session.user.id)) || undefined;
