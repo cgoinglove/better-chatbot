@@ -31,6 +31,10 @@ interface ShareableCardProps {
   onBookmarkToggle?: (itemId: string, isBookmarked: boolean) => void;
   onVisibilityChange?: (itemId: string, visibility: Visibility) => void;
   onDelete?: (itemId: string) => void;
+  isVisibilityChangeLoading?: boolean;
+  isBookmarkToggleLoading?: boolean;
+  isDeleteLoading?: boolean;
+  actionsDisabled?: boolean;
 }
 
 export function ShareableCard({
@@ -41,6 +45,10 @@ export function ShareableCard({
   onBookmarkToggle,
   onVisibilityChange,
   onDelete,
+  isBookmarkToggleLoading,
+  isVisibilityChangeLoading,
+  isDeleteLoading,
+  actionsDisabled,
 }: ShareableCardProps) {
   const t = useTranslations();
   const isPublished = (item as WorkflowSummary).isPublished;
@@ -52,6 +60,9 @@ export function ShareableCard({
         className={cn(
           "w-full min-h-[196px] @container transition-colors group flex flex-col gap-3 cursor-pointer hover:bg-input",
         )}
+        data-testid={`${type}-card`}
+        data-item-name={item.name}
+        data-item-id={item.id}
       >
         <CardHeader className="shrink gap-y-0">
           <CardTitle className="flex gap-3 items-stretch min-w-0">
@@ -66,7 +77,12 @@ export function ShareableCard({
             </div>
 
             <div className="flex flex-col justify-around min-w-0 flex-1 overflow-hidden">
-              <span className="truncate font-medium">{item.name}</span>
+              <span
+                className="truncate font-medium"
+                data-testid={`${type}-card-name`}
+              >
+                {item.name}
+              </span>
               <div className="text-xs text-muted-foreground flex items-center gap-1 min-w-0">
                 <time className="shrink-0">
                   {format(item.updatedAt, "MMM d, yyyy")}
@@ -107,6 +123,10 @@ export function ShareableCard({
                     : undefined
                 }
                 onDelete={onDelete ? () => onDelete(item.id) : undefined}
+                isBookmarkToggleLoading={isBookmarkToggleLoading}
+                isVisibilityChangeLoading={isVisibilityChangeLoading}
+                isDeleteLoading={isDeleteLoading}
+                disabled={actionsDisabled}
               />
             </div>
 

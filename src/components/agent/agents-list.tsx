@@ -1,21 +1,23 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
-import { AgentSummary } from "app-types/agent";
+import { AgentSummary, AgentUpdateSchema } from "app-types/agent";
 import { Card, CardDescription, CardHeader, CardTitle } from "ui/card";
 import { Button } from "ui/button";
 import { Plus, ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import { BackgroundPaths } from "ui/background-paths";
-import { useBookmark } from "@/hooks/use-bookmark";
-import { useInvalidateAgents } from "@/hooks/queries/use-agents";
+import { useBookmark } from "@/hooks/queries/use-bookmark";
+import { useMutateAgents } from "@/hooks/queries/use-agents";
 import { toast } from "sonner";
 import useSWR from "swr";
 import { fetcher } from "lib/utils";
 import { Visibility } from "@/components/shareable-actions";
 import { ShareableCard } from "@/components/shareable-card";
 import { notify } from "lib/notify";
+import { useState } from "react";
+import { handleErrorWithToast } from "ui/shared-toast";
+import { safe } from "ts-safe";
 
 interface AgentsListProps {
   initialMyAgents: AgentSummary[];
@@ -29,10 +31,15 @@ export function AgentsList({
   userId,
 }: AgentsListProps) {
   const t = useTranslations();
-  const router = useRouter();
-  const invalidateAgents = useInvalidateAgents();
+  const mutateAgents = useMutateAgents();
+  const [deletingAgentLoading, setDeletingAgentLoading] = useState<
+    string | null
+  >(null);
+  const [visibilityChangeLoading, setVisibilityChangeLoading] = useState<
+    string | null
+  >(null);
 
-  const { data: allAgents, mutate: mutateAgents } = useSWR(
+  const { data: allAgents } = useSWR(
     "/api/agent?filters=mine,shared",
     fetcher,
     {
@@ -48,31 +55,34 @@ export function AgentsList({
     allAgents?.filter((agent: AgentSummary) => agent.userId !== userId) ||
     initialSharedAgents;
 
-  const { toggleBookmark: toggleBookmarkHook } = useBookmark({
-    itemType: "agent",
-  });
+  const { toggleBookmark: toggleBookmarkHook, isLoading: isBookmarkLoading } =
+    useBookmark({
+      itemType: "agent",
+    });
 
   const toggleBookmark = async (agentId: string, isBookmarked: boolean) => {
     await toggleBookmarkHook({ id: agentId, isBookmarked });
   };
 
   const updateVisibility = async (agentId: string, visibility: Visibility) => {
-    try {
-      const response = await fetch(`/api/agent/${agentId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ visibility }),
-      });
-
-      if (!response.ok) throw new Error("Failed to update visibility");
-
-      mutateAgents();
-      invalidateAgents();
-      router.refresh();
-      toast.success(t("Agent.visibilityUpdated"));
-    } catch {
-      toast.error(t("Common.error"));
-    }
+    safe(() => setVisibilityChangeLoading(agentId))
+      .map(() => AgentUpdateSchema.parse({ visibility }))
+      .map(JSON.stringify)
+      .map(async (body) =>
+        fetcher(`/api/agent/${agentId}`, {
+          method: "PUT",
+          body,
+        }),
+      )
+      .ifOk(() => {
+        mutateAgents({ id: agentId, visibility });
+        toast.success(t("Agent.visibilityUpdated"));
+      })
+      .ifFail((e) => {
+        handleErrorWithToast(e);
+        toast.error(t("Common.error"));
+      })
+      .watch(() => setVisibilityChangeLoading(null));
   };
 
   const deleteAgent = async (agentId: string) => {
@@ -80,27 +90,29 @@ export function AgentsList({
       description: t("Agent.deleteConfirm"),
     });
     if (!ok) return;
-
-    try {
-      const response = await fetch(`/api/agent/${agentId}`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) throw new Error("Failed to delete agent");
-
-      mutateAgents();
-      invalidateAgents();
-      router.refresh();
-      toast.success(t("Agent.deleted"));
-    } catch {
-      toast.error(t("Common.error"));
-    }
+    safe(() => setDeletingAgentLoading(agentId))
+      .map(() =>
+        fetcher(`/api/agent/${agentId}`, {
+          method: "DELETE",
+        }),
+      )
+      .ifOk(() => {
+        mutateAgents({ id: agentId }, true);
+        toast.success(t("Agent.deleted"));
+      })
+      .ifFail((e) => {
+        handleErrorWithToast(e);
+        toast.error(t("Common.error"));
+      })
+      .watch(() => setDeletingAgentLoading(null));
   };
 
   return (
     <div className="w-full flex flex-col gap-4 p-8">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">{t("Layout.agents")}</h1>
+        <h1 className="text-2xl font-bold" data-testid="agents-title">
+          {t("Layout.agents")}
+        </h1>
         <Link href="/agent/new">
           <Button variant="ghost">
             <Plus />
@@ -146,6 +158,8 @@ export function AgentsList({
               item={agent}
               href={`/agent/${agent.id}`}
               onVisibilityChange={updateVisibility}
+              isVisibilityChangeLoading={visibilityChangeLoading === agent.id}
+              isDeleteLoading={deletingAgentLoading === agent.id}
               onDelete={deleteAgent}
             />
           ))}
@@ -168,6 +182,7 @@ export function AgentsList({
               isOwner={false}
               href={`/agent/${agent.id}`}
               onBookmarkToggle={toggleBookmark}
+              isBookmarkToggleLoading={isBookmarkLoading(agent.id)}
             />
           ))}
           {sharedAgents.length === 0 && (

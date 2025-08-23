@@ -50,7 +50,7 @@ export async function GET(request: Request) {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: Request): Promise<Response> {
   const session = await getSession();
 
   if (!session?.user.id) {

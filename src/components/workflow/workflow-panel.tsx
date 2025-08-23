@@ -46,6 +46,7 @@ export const WorkflowPanel = memo(
   }) {
     const { setNodes, getNodes, getEdges } = useReactFlow();
     const [showExecutePanel, setShowExecutePanel] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
     const t = useTranslations();
 
     const handleArrangeNodes = useCallback(() => {
@@ -59,6 +60,7 @@ export const WorkflowPanel = memo(
     }, [getNodes, getEdges, setNodes, t]);
     const updateVisibility = useCallback(
       (visibility: DBWorkflow["visibility"]) => {
+        setIsSaving(true);
         const close = addProcess();
         safe(() =>
           fetch(`/api/workflow/${workflow.id}`, {
@@ -73,7 +75,10 @@ export const WorkflowPanel = memo(
         )
           .ifOk(() => mutate(`/api/workflow/${workflow.id}`))
           .ifFail((e) => handleErrorWithToast(e))
-          .watch(close);
+          .watch(() => {
+            setIsSaving(false);
+            close();
+          });
       },
       [workflow],
     );
@@ -234,6 +239,7 @@ export const WorkflowPanel = memo(
             visibility={workflow.visibility}
             isOwner={hasEditAccess || false}
             onVisibilityChange={hasEditAccess ? updateVisibility : undefined}
+            isVisibilityChangeLoading={isSaving}
           />
         </div>
         <div className="flex gap-2">

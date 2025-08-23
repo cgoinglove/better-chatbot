@@ -11,12 +11,14 @@ Thank you for your interest in contributing to better-chatbot! We welcome contri
 **For new features or significant changes, please create an issue first to discuss your idea before submitting a PR.**
 
 This helps us:
+
 - Align on the feature direction and design
 - Avoid duplicate work
 - Ensure the feature fits with the project roadmap
 - Save your valuable time on implementation
 
 **What requires discussion:**
+
 - New UI components or major UI changes
 - New API endpoints or data models
 - Integration with external services
@@ -24,6 +26,7 @@ This helps us:
 - Breaking changes
 
 **What doesn't require discussion:**
+
 - Bug fixes
 - Documentation improvements
 - Minor UI tweaks
@@ -52,12 +55,46 @@ This helps us:
 
 4. **Implement your changes**, following the existing code style and structure.
 
+For any new logic, please add comprehensive unit tests. For any UI changes, please add or modify e2e tests.
+If you are fixing a bug, please add tests to prevent the same bug from happening again.
+
 5. **Test your changes thoroughly**:
 
    ```bash
    pnpm dev
    pnpm test
    ```
+
+6. **Run e2e tests**:
+
+Before opening a PR run e2e tests to ensure your changes work as expected.
+
+```bash
+
+# install playwright browsers - you only need to do this once
+pnpm playwright:install # install playwright browsers
+
+# this is typically the command you will use to run all e2e tests
+pnpm test:e2e # run all e2e tests
+```
+
+To help you debug, you can run the tests individually or in headed mode to see the browser UI.
+
+```bash
+
+# Optional: run specific test suites in a folder
+pnpm test:e2e -- tests/agents/
+pnpm test:e2e -- tests/models/
+
+# Debug specific test file in headed mode to see the browser UI
+pnpm test:e2e -- tests/agents/agent-visibility.spec.ts --headed
+```
+
+**E2E Test Requirements:**
+
+- PostgreSQL database (use `pnpm docker:pg` for quick setup)
+- At least one LLM provider API key (OpenAI, Anthropic, or Google)
+- `BETTER_AUTH_SECRET` environment variable set
 
 ---
 
@@ -68,13 +105,13 @@ We use [Release Please](https://github.com/googleapis/release-please) to automat
 
 ### ✅ PR Title Examples
 
-* `fix: voice chat audio not initializing`
-* `feat: support multi-language UI toggle`
-* `chore: update dependencies`
+- `fix: voice chat audio not initializing`
+- `feat: support multi-language UI toggle`
+- `chore: update dependencies`
 
 ### ⚠️ Important Notes
 
-* PR **titles must start** with one of the following prefixes:
+- PR **titles must start** with one of the following prefixes:
 
   ```
   feat: ...
@@ -88,20 +125,21 @@ We use [Release Please](https://github.com/googleapis/release-please) to automat
   build: ...
   ```
 
-* Only the PR title is used for changelog and versioning
+- Only the PR title is used for changelog and versioning
 
-* We use **squash merge** to keep the history clean
+- We use **squash merge** to keep the history clean
 
-* Changelog entries and GitHub Releases are **automatically generated** after merging
+- Changelog entries and GitHub Releases are **automatically generated** after merging
 
 ---
 
 ## Submitting a Pull Request
 
-1. **Format your code**:
+1. **Format, check code quality and run tests**:
 
    ```bash
-   pnpm lint:fix
+   pnpm check # lint, type check, and run unit tests
+   pnpm test:e2e # run comprehensive e2e test suite (recommended)
    ```
 
 2. **Commit and push**:
@@ -114,10 +152,10 @@ We use [Release Please](https://github.com/googleapis/release-please) to automat
 
 3. **Open a Pull Request**:
 
-   * **Title**: Must follow the Conventional Commit format
-   * **Description**: Explain what you changed and why
-   * Link to related issues, if any
-   * **Include screenshots or demos** for any UI changes:
+   - **Title**: Must follow the Conventional Commit format
+   - **Description**: Explain what you changed, why you made the change, and how the changes were verified and tested.
+   - Link to related issues, if any
+   - **Include screenshots or demos** for any UI changes:
      - **Before/After images** are highly recommended
      - **Screen recordings** for interactive features
      - **Mobile/Desktop views** if responsive changes are made
@@ -127,6 +165,7 @@ We use [Release Please](https://github.com/googleapis/release-please) to automat
 When submitting **Issues** or **Pull Requests**:
 
 **For UI changes:**
+
 - **Always include before/after screenshots** when possible
 - Use **clear, high-quality images** that show the changes
 - **Highlight the changed areas** with arrows or borders if needed
@@ -134,24 +173,30 @@ When submitting **Issues** or **Pull Requests**:
 - For **interactive features**, consider adding a short screen recording
 
 **For feature requests:**
+
 - Include **reference images** or **mockups** to illustrate your idea
 - Add **screenshots from similar apps** if applicable
 - Use **diagrams** to explain complex workflows or integrations
 
 **For bug reports:**
+
 - Include **screenshots** showing the issue
 - Add **console errors** or **network logs** if relevant
 - Show **expected vs actual behavior** with images when possible
 
 **Example:**
+
 ```markdown
 ## Before
+
 ![before](./before-image.png)
 
-## After  
+## After
+
 ![after](./after-image.png)
 
 ## Reference
+
 ![reference](./reference-design.png)
 ```
 
@@ -160,4 +205,4 @@ When submitting **Issues** or **Pull Requests**:
 ## Thank You
 
 We sincerely appreciate your contribution to better-chatbot.
-Let’s build a powerful and lightweight AI experience together! 🚀
+Let’s build a powerful, well tested and lightweight AI experience together! 🚀

@@ -1,0 +1,99 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    env:
+      # Database
+      POSTGRES_URL: postgresql://testuser:testpass@localhost:5432/better_chatbot_test
+
+      # Authentication
+      BETTER_AUTH_SECRET: test-secret-key-for-ci-only-not-for-production-use
+      BETTER_AUTH_URL: http://localhost:3000
+
+      # Application
+      NEXT_PUBLIC_BASE_URL: http://localhost:3000
+
+      # LLM Provider (OpenRouter with free models)
+      OPENROUTER_API_KEY: ${{ secrets.E2E_OPENROUTER_API_KEY || 'test-key' }}
+      E2E_DEFAULT_MODEL: openRouter/moonshotai/kimi-k2:free
+
+      # Feature flags
+      DISABLE_SIGN_UP: 0
+      DISABLE_EMAIL_SIGN_IN: 0
+      FILE_BASED_MCP_CONFIG: false
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_DB: better_chatbot_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 10.2.1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
+
+      - uses: actions/cache@v4
+        name: Setup pnpm cache
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm playwright install chromium --with-deps
+
+      - name: Setup test environment
+        run: |
+          # Create minimal .env for Playwright (only non-runtime vars if needed)
+          touch .env
+
+      - name: Run database migrations
+        run: pnpm db:push
+
+      - name: Build application
+        run: pnpm build:local
+
+      - name: Run E2E tests
+        run: pnpm test:e2e
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: test-results
+          path: test-results/
+          retention-days: 30
