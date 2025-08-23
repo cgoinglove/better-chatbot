@@ -111,6 +111,7 @@ const PurePreviewMessage = ({
                 (message.metadata as ChatMetadata)?.toolChoice == "manual" &&
                 isLastMessage &&
                 isLastPart &&
+                part.state == "input-available" &&
                 isLoading;
               return (
                 <ToolMessagePart

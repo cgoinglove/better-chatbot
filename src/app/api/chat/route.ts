@@ -242,7 +242,6 @@ export async function POST(request: Request) {
                 return metadata;
               }
             },
-            // originalMessages: messages,
           }),
         );
       },

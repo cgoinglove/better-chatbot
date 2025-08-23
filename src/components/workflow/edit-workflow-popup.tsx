@@ -76,6 +76,7 @@ export function EditWorkflowPopup({
   children,
   defaultValue,
   submitAfterRoute = true,
+  onSave,
   open,
   onOpenChange,
 }: {
@@ -83,6 +84,7 @@ export function EditWorkflowPopup({
   defaultValue?: Pick<DBWorkflow, "id" | "name" | "description" | "icon">;
   submitAfterRoute?: boolean;
   open?: boolean;
+  onSave?: (workflow: DBWorkflow) => void;
   onOpenChange?: (open: boolean) => void;
 }) {
   const t = useTranslations();
@@ -125,6 +127,7 @@ export function EditWorkflowPopup({
           if (submitAfterRoute) {
             router.push(`/workflow/${workflow.id}`);
           }
+          onSave?.(workflow);
         })
         .ifFail(handleErrorWithToast)
         .watch(() => setLoading(false))
