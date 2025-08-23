@@ -1159,7 +1159,6 @@ export const ToolMessagePart = memo(
     );
   },
   (prev, next) => {
-    // if (prev.part.state.startsWith("output")) return false;
     if (prev.isError !== next.isError) return false;
     if (prev.isLast !== next.isLast) return false;
     if (prev.showActions !== next.showActions) return false;
