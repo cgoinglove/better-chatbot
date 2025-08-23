@@ -163,6 +163,7 @@ export function AppSidebarThreads() {
       loading: t("deletingUnarchivedChats"),
       success: () => {
         mutate("/api/thread");
+        router.push("/");
         return t("unarchivedChatsDeleted");
       },
       error: t("failedToDeleteUnarchivedChats"),

@@ -19,11 +19,7 @@ import {
   buildUserSystemPrompt,
   buildToolCallUnsupportedModelSystemPrompt,
 } from "lib/ai/prompts";
-import {
-  chatApiSchemaRequestBodySchema,
-  ChatMetadata,
-  ToolStreamData,
-} from "app-types/chat";
+import { chatApiSchemaRequestBodySchema, ChatMetadata } from "app-types/chat";
 
 import { errorIf, safe } from "ts-safe";
 
@@ -67,7 +63,6 @@ export async function POST(request: Request) {
       toolChoice,
       allowedAppDefaultToolkit,
       allowedMcpServers,
-      manualToolConfirm,
       mentions = [],
     } = chatApiSchemaRequestBodySchema.parse(json);
 
@@ -159,28 +154,22 @@ export async function POST(request: Request) {
             }),
           )
           .orElse({});
-
-        if (manualToolConfirm) {
-          const inProgressToolParts = extractInProgressToolPart(
-            messages.find((m) => m.id == manualToolConfirm.messageId)!,
-          );
+        const inProgressToolParts = extractInProgressToolPart(message);
+        if (inProgressToolParts.length) {
           await Promise.all(
             inProgressToolParts.map(async (part) => {
-              const result = await manualToolExecuteByLastMessage(
+              const output = await manualToolExecuteByLastMessage(
                 part,
-                manualToolConfirm,
                 { ...MCP_TOOLS, ...WORKFLOW_TOOLS, ...APP_DEFAULT_TOOLS },
                 request.signal,
               );
-              const data: ToolStreamData = {
-                type: "data-tool-result",
-                data: {
-                  toolCallId: part.toolCallId,
-                  output: result,
-                },
-                transient: true,
-              };
-              dataStream.write(data);
+              part.output = output;
+
+              dataStream.write({
+                type: "tool-output-available",
+                toolCallId: part.toolCallId,
+                output,
+              });
             }),
           );
         }
@@ -205,7 +194,10 @@ export async function POST(request: Request) {
         const vercelAITooles = safe({ ...MCP_TOOLS, ...WORKFLOW_TOOLS })
           .map((t) => {
             const bindingTools =
-              toolChoice === "manual" ? excludeToolExecution(t) : t;
+              toolChoice === "manual" ||
+              (message.metadata as ChatMetadata)?.toolChoice === "manual"
+                ? excludeToolExecution(t)
+                : t;
             return {
               ...bindingTools,
               ...APP_DEFAULT_TOOLS, // APP_DEFAULT_TOOLS Not Supported Manual
@@ -250,21 +242,27 @@ export async function POST(request: Request) {
                 return metadata;
               }
             },
-            originalMessages: messages,
-            sendReasoning: true,
+            // originalMessages: messages,
           }),
         );
       },
 
       generateId: generateUUID,
-      onFinish: async ({ responseMessage }) => {
+      onFinish: async ({ responseMessage, messages: originalMessages }) => {
+        console.dir(
+          {
+            responseMessage,
+            messages,
+            message,
+            originalMessages,
+          },
+          { depth: null },
+        );
         if (responseMessage.id == message.id) {
           await chatRepository.upsertMessage({
             threadId: thread!.id,
             ...responseMessage,
-            parts: [...message.parts, ...responseMessage.parts].map(
-              convertToSavePart,
-            ),
+            parts: responseMessage.parts.map(convertToSavePart),
             metadata,
           });
         } else {
@@ -290,6 +288,7 @@ export async function POST(request: Request) {
         }
       },
       onError: handleError,
+      originalMessages: messages,
     });
 
     return createUIMessageStreamResponse({

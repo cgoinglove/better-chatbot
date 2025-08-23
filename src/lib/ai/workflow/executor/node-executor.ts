@@ -216,7 +216,7 @@ export const toolNodeExecutor: NodeExecutor<ToolNodeData> = async ({
     const response = await generateText({
       model: customModelProvider.getModel(node.model),
       toolChoice: "required", // Force the model to call the tool
-      prompt,
+      prompt: prompt || "",
       tools: {
         [node.tool.id]: {
           description: node.tool.description,

@@ -34,7 +34,7 @@ import {
 
 import { toast } from "sonner";
 import { safe } from "ts-safe";
-import { ChatModel, ManualToolConfirm } from "app-types/chat";
+import { ChatModel, ManualToolConfirmTag } from "app-types/chat";
 
 import { useTranslations } from "next-intl";
 import { extractMCPToolId } from "lib/ai/mcp/mcp-tool-id";
@@ -43,8 +43,8 @@ import { Separator } from "ui/separator";
 import { TextShimmer } from "ui/text-shimmer";
 import equal from "lib/equal";
 import {
-  isVercelAIWorkflowTool,
   VercelAIWorkflowToolStreamingResult,
+  VercelAIWorkflowToolStreamingResultTag,
 } from "app-types/workflow";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { DefaultToolName } from "lib/ai/tools";
@@ -91,7 +91,6 @@ interface ToolMessagePartProps {
   isLast?: boolean;
   isManualToolInvocation?: boolean;
   addToolResult?: UseChatHelpers<UIMessage>["addToolResult"];
-  onManualToolConfirm?: (confirm: ManualToolConfirm) => void;
   isError?: boolean;
   setMessages?: UseChatHelpers<UIMessage>["setMessages"];
 }
@@ -597,7 +596,7 @@ export const ToolMessagePart = memo(
     isLast,
     showActions,
     addToolResult,
-    onManualToolConfirm,
+
     isError,
     messageId,
     setMessages,
@@ -634,11 +633,19 @@ export const ToolMessagePart = memo(
         e.stopImmediatePropagation();
 
         if (isApprove) {
-          onManualToolConfirm?.({ confirm: true, messageId, toolCallId });
+          addToolResult?.({
+            tool: toolName,
+            toolCallId,
+            output: ManualToolConfirmTag.create({ confirm: true }),
+          });
         }
 
         if (isReject) {
-          onManualToolConfirm?.({ confirm: false, messageId, toolCallId });
+          addToolResult?.({
+            tool: toolName,
+            toolCallId,
+            output: ManualToolConfirmTag.create({ confirm: false }),
+          });
         }
       };
 
@@ -700,7 +707,7 @@ export const ToolMessagePart = memo(
     }, [isCompleted, output, state, errorText]);
 
     const isWorkflowTool = useMemo(
-      () => isVercelAIWorkflowTool(result),
+      () => VercelAIWorkflowToolStreamingResultTag.isMaybe(result),
       [result],
     );
 
@@ -923,10 +930,12 @@ export const ToolMessagePart = memo(
                       size="sm"
                       className="rounded-full text-xs hover:ring py-2"
                       onClick={() =>
-                        onManualToolConfirm?.({
-                          confirm: true,
-                          messageId,
+                        addToolResult?.({
+                          tool: toolName,
                           toolCallId,
+                          output: ManualToolConfirmTag.create({
+                            confirm: true,
+                          }),
                         })
                       }
                     >
@@ -944,10 +953,12 @@ export const ToolMessagePart = memo(
                       size="sm"
                       className="rounded-full text-xs py-2"
                       onClick={() =>
-                        onManualToolConfirm?.({
-                          confirm: false,
-                          messageId,
+                        addToolResult?.({
+                          tool: toolName,
                           toolCallId,
+                          output: ManualToolConfirmTag.create({
+                            confirm: false,
+                          }),
                         })
                       }
                     >
@@ -995,6 +1006,7 @@ export const ToolMessagePart = memo(
     );
   },
   (prev, next) => {
+    // if (prev.part.state.startsWith("output")) return false;
     if (prev.isError !== next.isError) return false;
     if (prev.isLast !== next.isLast) return false;
     if (prev.showActions !== next.showActions) return false;

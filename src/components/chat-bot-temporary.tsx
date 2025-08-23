@@ -60,7 +60,15 @@ export function ChatBotTemporary() {
 
   const [input, setInput] = useState("");
 
-  const { messages, sendMessage, status, setMessages, error, stop } = useChat({
+  const {
+    messages,
+    sendMessage,
+    clearError,
+    status,
+    setMessages,
+    error,
+    stop,
+  } = useChat({
     transport: new DefaultChatTransport({
       api: "/api/chat/temporary",
 
@@ -79,6 +87,11 @@ export function ChatBotTemporary() {
     () => status === "streaming" || status === "submitted",
     [status],
   );
+
+  const reset = useCallback(() => {
+    setMessages([]);
+    clearError();
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -104,7 +117,7 @@ export function ChatBotTemporary() {
         e.preventDefault();
         e.stopPropagation();
         e.stopImmediatePropagation();
-        setMessages([]);
+        reset();
       } else if (
         temporaryChat.isOpen &&
         isShortcutEvent(e, {
@@ -147,7 +160,7 @@ export function ChatBotTemporary() {
             <Button
               variant={"secondary"}
               className="rounded-full"
-              onClick={() => setMessages([])}
+              onClick={reset}
               disabled={isLoading}
             >
               {t("resetChat")}
@@ -287,7 +300,7 @@ function DrawerTemporaryContent({
     <div
       className={cn("flex flex-col min-w-0 h-full flex-1 overflow-y-hidden")}
     >
-      {!messages.length && (
+      {!messages.length && !error && (
         <div className="flex-1 items-center flex">
           <div className="max-w-3xl mx-auto my-4">
             {" "}
