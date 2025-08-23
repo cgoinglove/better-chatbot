@@ -43,7 +43,6 @@ export async function POST(request: Request) {
       prompt: message,
       abortSignal: request.signal,
       onFinish: (ctx) => {
-        logger.debug(`onFinish`, ctx.text);
         chatRepository
           .upsertThread({
             id: threadId,
@@ -51,15 +50,11 @@ export async function POST(request: Request) {
             userId: session.user.id,
           })
           .catch((err) => logger.error(err));
-
-        logger.debug(
-          `usage input: ${ctx.usage.inputTokens}, usage output: ${ctx.usage.outputTokens}, usage total: ${ctx.usage.totalTokens}`,
-        );
       },
     });
 
     return result.toUIMessageStreamResponse();
   } catch (err) {
-    return handleError(err);
+    return new Response(handleError(err), { status: 500 });
   }
 }
