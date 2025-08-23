@@ -1,6 +1,6 @@
 import "server-only";
 
-import { createOllama } from "ollama-ai-provider";
+import { createOllama } from "ollama-ai-provider-v2";
 import { openai } from "@ai-sdk/openai";
 import { google } from "@ai-sdk/google";
 import { anthropic } from "@ai-sdk/anthropic";
@@ -48,6 +48,7 @@ const staticModels = {
     "gemma3:12b": ollama("gemma3:12b"),
   },
   openRouter: {
+    "gpt-oss-20b:free": openrouter("openai/gpt-oss-20b:free"),
     "qwen3-8b:free": openrouter("qwen/qwen3-8b:free"),
     "qwen3-14b:free": openrouter("qwen/qwen3-14b:free"),
     "qwen3-coder": openrouter("qwen/qwen3-coder"),
@@ -60,6 +61,7 @@ const staticUnsupportedModels = new Set([
   staticModels.ollama["gemma3:1b"],
   staticModels.ollama["gemma3:4b"],
   staticModels.ollama["gemma3:12b"],
+  staticModels.openRouter["gpt-oss-20b:free"],
   staticModels.openRouter["qwen3-8b:free"],
   staticModels.openRouter["qwen3-14b:free"],
 ]);

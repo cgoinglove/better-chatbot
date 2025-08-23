@@ -42,6 +42,128 @@ import { mcpClientsManager } from "lib/ai/mcp/mcp-manager";
 import { APP_DEFAULT_TOOL_KIT } from "lib/ai/tools/tool-kit";
 import { AppDefaultToolkit } from "lib/ai/tools";
 
+// Constants
+const WORKFLOW_DESCRIPTION_MAX_LENGTH = 50;
+
+// Helper functions for workflow tool creation
+function createToolName(name: string): string {
+  return name
+    .replace(/[^a-zA-Z0-9\s]/g, "")
+    .trim()
+    .replace(/\s+/g, "-")
+    .toUpperCase();
+}
+
+function createErrorObject(error: any): { name: string; message: string } {
+  return {
+    name: error?.name || "ERROR",
+    message: errorToString(error),
+  };
+}
+
+function createWorkflowToolResult(toolCallId: string, workflowName: string) {
+  return VercelAIWorkflowToolStreamingResultTag.create({
+    toolCallId,
+    workflowName,
+    startedAt: Date.now(),
+    endedAt: Date.now(),
+    history: [],
+    result: undefined,
+    status: "running",
+  });
+}
+
+interface WorkflowStructure {
+  nodes: Array<{
+    id: string;
+    name: string;
+    kind: string; // DB에서 오는 타입이 string이므로 수정
+  }>;
+  edges: any[];
+  icon?: any; // WorkflowIcon 타입을 any로 수정
+}
+
+function handleWorkflowEvent(
+  event: any, // 실제 GraphEvent 타입이 복잡하므로 any로 유지
+  workflow: WorkflowStructure,
+  history: VercelAIWorkflowToolStreaming[],
+  toolResult: any,
+  dataStream: UIMessageStreamWriter,
+  toolCallId: string,
+): void {
+  if (event.eventType == "WORKFLOW_START" || event.eventType == "WORKFLOW_END")
+    return;
+  if (event.node.name == "SKIP") return;
+
+  if (event.eventType == "NODE_START") {
+    const node = workflow.nodes.find(
+      (node: any) => node.id == event.node.name,
+    )!;
+    if (!node) return;
+    history.push({
+      id: event.nodeExecutionId,
+      name: node.name,
+      status: "running",
+      startedAt: event.startedAt,
+      kind: node.kind as NodeKind,
+    });
+  } else if (event.eventType == "NODE_END") {
+    const result = history.find((r) => r.id == event.nodeExecutionId);
+    if (result) {
+      if (event.isOk) {
+        result.status = "success";
+        result.result = {
+          input: event.node.output.getInput(event.node.name),
+          output: event.node.output.getOutput({
+            nodeId: event.node.name,
+            path: [],
+          }),
+        };
+      } else {
+        result.status = "fail";
+        result.error = createErrorObject(event.error);
+      }
+      result.endedAt = event.endedAt;
+    }
+  }
+
+  dataStream.write({
+    type: "tool-output-available",
+    toolCallId,
+    output: toolResult,
+  });
+}
+
+interface WorkflowExecutionResult {
+  isOk: boolean;
+  error?: Error;
+}
+
+function processWorkflowResult(
+  result: WorkflowExecutionResult,
+  toolResult: any,
+  history: VercelAIWorkflowToolStreaming[],
+): any {
+  toolResult.endedAt = Date.now();
+  toolResult.status = result.isOk ? "success" : "fail";
+  toolResult.error = result.error ? createErrorObject(result.error) : undefined;
+
+  const outputNodeResults = history
+    .filter((h) => h.kind == NodeKind.Output)
+    .map((v) => v.result?.output)
+    .filter(Boolean);
+
+  toolResult.history = history.map((h) => ({
+    ...h,
+    result: undefined, // save tokens.
+  }));
+
+  toolResult.result =
+    outputNodeResults.length == 1 ? outputNodeResults[0] : outputNodeResults;
+
+  return toolResult;
+}
+
 export function filterMCPToolsByMentions(
   tools: Record<string, VercelAIMcpTool>,
   mentions: ChatMention[],
@@ -53,7 +175,7 @@ export function filterMCPToolsByMentions(
     (mention) => mention.type == "mcpTool" || mention.type == "mcpServer",
   );
 
-  const metionsByServer = toolMentions.reduce(
+  const mentionsByServer = toolMentions.reduce(
     (acc, mention) => {
       if (mention.type == "mcpServer") {
         return {
@@ -72,8 +194,8 @@ export function filterMCPToolsByMentions(
   );
 
   return objectFlow(tools).filter((_tool) => {
-    if (!metionsByServer[_tool._mcpServerId]) return false;
-    return metionsByServer[_tool._mcpServerId].includes(_tool._originToolName);
+    if (!mentionsByServer[_tool._mcpServerId]) return false;
+    return mentionsByServer[_tool._mcpServerId].includes(_tool._originToolName);
   });
 }
 
@@ -233,27 +355,15 @@ export const workflowToVercelAITool = ({
   schema: ObjectJsonSchema7;
   dataStream: UIMessageStreamWriter;
 }): VercelAIWorkflowTool => {
-  const toolName = name
-    .replace(/[^a-zA-Z0-9\s]/g, "")
-    .trim()
-    .replace(/\s+/g, "-")
-    .toUpperCase();
+  const toolName = createToolName(name);
 
   const tool = createTool({
-    description: `${name} ${description?.trim().slice(0, 50)}`,
+    description: `${name} ${description?.trim().slice(0, WORKFLOW_DESCRIPTION_MAX_LENGTH)}`,
     inputSchema: jsonSchema(schema),
     execute(query, { toolCallId, abortSignal }) {
       const history: VercelAIWorkflowToolStreaming[] = [];
-      const toolResult = VercelAIWorkflowToolStreamingResultTag.create({
-        toolCallId,
-        workflowName: name,
+      const toolResult = createWorkflowToolResult(toolCallId, name);
 
-        startedAt: Date.now(),
-        endedAt: Date.now(),
-        history,
-        result: undefined,
-        status: "running",
-      });
       return safe(id)
         .map((id) =>
           workflowRepository.selectStructureById(id, {
@@ -269,54 +379,17 @@ export const workflowToVercelAITool = ({
           toolResult.workflowIcon = workflow.icon;
 
           abortSignal?.addEventListener("abort", () => executor.exit());
-          executor.subscribe((e) => {
-            if (
-              e.eventType == "WORKFLOW_START" ||
-              e.eventType == "WORKFLOW_END"
-            )
-              return;
-            if (e.node.name == "SKIP") return;
-            if (e.eventType == "NODE_START") {
-              const node = workflow.nodes.find(
-                (node) => node.id == e.node.name,
-              )!;
-              if (!node) return;
-              history.push({
-                id: e.nodeExecutionId,
-                name: node.name,
-                status: "running",
-                startedAt: e.startedAt,
-                kind: node.kind as NodeKind,
-              });
-            } else if (e.eventType == "NODE_END") {
-              const result = history.find((r) => r.id == e.nodeExecutionId);
-              if (result) {
-                if (e.isOk) {
-                  result.status = "success";
-                  result.result = {
-                    input: e.node.output.getInput(e.node.name),
-                    output: e.node.output.getOutput({
-                      nodeId: e.node.name,
-                      path: [],
-                    }),
-                  };
-                } else {
-                  result.status = "fail";
-                  result.error = {
-                    name: e.error?.name || "ERROR",
-                    message: errorToString(e.error),
-                  };
-                }
-                result.endedAt = e.endedAt;
-              }
-            }
-
-            dataStream.write({
-              type: "tool-output-available",
+          executor.subscribe((event) => {
+            handleWorkflowEvent(
+              event,
+              workflow,
+              history,
+              toolResult,
+              dataStream,
               toolCallId,
-              output: toolResult,
-            });
+            );
           });
+
           return executor.run(
             {
               query: query ?? ({} as any),
@@ -326,34 +399,11 @@ export const workflowToVercelAITool = ({
             },
           );
         })
-        .map((result) => {
-          toolResult.endedAt = Date.now();
-          toolResult.status = result.isOk ? "success" : "fail";
-          toolResult.error = result.error
-            ? {
-                name: result.error.name || "ERROR",
-                message: errorToString(result.error) || "Unknown Error",
-              }
-            : undefined;
-          const outputNodeResults = history
-            .filter((h) => h.kind == NodeKind.Output)
-            .map((v) => v.result?.output)
-            .filter(Boolean);
-          toolResult.history = history.map((h) => ({
-            ...h,
-            result: undefined, // save tokens.
-          }));
-          toolResult.result =
-            outputNodeResults.length == 1
-              ? outputNodeResults[0]
-              : outputNodeResults;
-          return toolResult;
-        })
+        .map((result) => processWorkflowResult(result, toolResult, history))
         .ifFail((err) => {
           return {
             error: {
-              name: err?.name || "ERROR",
-              message: errorToString(err),
+              ...createErrorObject(err),
               history,
             },
           };
@@ -409,7 +459,7 @@ export const loadMcpTools = (opt?: {
 
 export const loadWorkFlowTools = (opt: {
   mentions?: ChatMention[];
-  dataStream: any;
+  dataStream: UIMessageStreamWriter;
 }) =>
   safe(() =>
     opt?.mentions?.length

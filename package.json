@@ -99,7 +99,7 @@
     "next-intl": "^4.3.5",
     "next-themes": "^0.4.6",
     "ogl": "^1.0.11",
-    "ollama-ai-provider": "^1.2.0",
+    "ollama-ai-provider-v2": "^1.1.2",
     "pg": "^8.16.3",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
@@ -121,8 +121,8 @@
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
-    "@tailwindcss/postcss": "^4.1.12",
     "@playwright/test": "^1.54.2",
+    "@tailwindcss/postcss": "^4.1.12",
     "@types/json-schema": "^7.0.15",
     "@types/node": "^20.19.11",
     "@types/pg": "^8.15.5",
