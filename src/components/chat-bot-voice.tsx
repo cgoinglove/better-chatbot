@@ -75,15 +75,6 @@ export function ChatBotVoice() {
   const startAudio = useRef<HTMLAudioElement>(null);
   const [useCompactView, setUseCompactView] = useState(true);
 
-  // const useVoiceChat = useMemo<VoiceChatHook>(() => {
-  //   switch (voiceChat.options.provider) {
-  //     case "openai":
-  //       return OpenAIVoiceChat;
-  //     default:
-  //       return OpenAIVoiceChat;
-  //   }
-  // }, [voiceChat.options.provider]);
-
   const {
     isListening,
     isAssistantSpeaking,
@@ -525,9 +516,7 @@ function CompactMessageView({
 }) {
   const { toolParts, textPart } = useMemo(() => {
     const toolParts = messages
-      .filter((msg) =>
-        msg.parts.some((part) => part.type === "tool-invocation"),
-      )
+      .filter((msg) => msg.parts.some(isToolUIPart))
       .map((msg) => msg.parts.find(isToolUIPart));
 
     const textPart = messages.findLast((msg) => msg.role === "assistant")
@@ -539,7 +528,7 @@ function CompactMessageView({
     <div className="relative w-full h-full overflow-hidden">
       <div className="absolute bottom-6 max-h-[80vh] overflow-y-auto left-6 z-10 flex-col gap-2 hidden md:flex">
         {toolParts.map((toolPart, index) => {
-          const isExecuting = toolPart?.state.startsWith("output");
+          const isExecuting = toolPart?.state.startsWith("input");
           if (!toolPart) return null;
           return (
             <Dialog key={index}>

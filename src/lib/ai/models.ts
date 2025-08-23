@@ -19,13 +19,13 @@ const ollama = createOllama({
 
 const staticModels = {
   openai: {
+    "gpt-4.1": openai("gpt-4.1"),
+    "gpt-4.1-mini": openai("gpt-4.1-mini"),
+    "o4-mini": openai("o4-mini"),
+    o3: openai("o3"),
     "gpt-5": openai("gpt-5"),
     "gpt-5-mini": openai("gpt-5-mini"),
     "gpt-5-nano": openai("gpt-5-nano"),
-    "o4-mini": openai("o4-mini"),
-    o3: openai("o3"),
-    "gpt-4.1": openai("gpt-4.1"),
-    "gpt-4.1-mini": openai("gpt-4.1-mini"),
   },
   google: {
     "gemini-2.5-flash-lite": google("gemini-2.5-flash-lite"),

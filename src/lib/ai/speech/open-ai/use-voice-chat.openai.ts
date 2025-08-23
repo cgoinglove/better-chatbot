@@ -168,7 +168,12 @@ export function useOpenAIVoiceChat(
       if (response.status !== 200) {
         throw new Error(await response.text());
       }
-      return response.json();
+      const session = await response.json();
+      if (session.error) {
+        throw new Error(session.error.message);
+      }
+
+      return session;
     }, [model, voice, allowedAppDefaultToolkit, allowedMcpServers, agentId]);
 
   const updateUIMessage = useCallback(
@@ -383,6 +388,7 @@ export function useOpenAIVoiceChat(
     setMessages([]);
     try {
       const session = await createSession();
+      console.log({ session });
       const sessionToken = session.client_secret.value;
       const pc = new RTCPeerConnection();
       if (!audioElement.current) {

@@ -14,6 +14,7 @@ import {
   ChevronRight,
   TriangleAlert,
   HammerIcon,
+  EllipsisIcon,
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { Button } from "ui/button";
@@ -34,7 +35,7 @@ import {
 
 import { toast } from "sonner";
 import { safe } from "ts-safe";
-import { ChatModel, ManualToolConfirmTag } from "app-types/chat";
+import { ChatMetadata, ChatModel, ManualToolConfirmTag } from "app-types/chat";
 
 import { useTranslations } from "next-intl";
 import { extractMCPToolId } from "lib/ai/mcp/mcp-tool-id";
@@ -56,6 +57,10 @@ import {
 
 import { WorkflowInvocation } from "./tool-invocation/workflow-invocation";
 import dynamic from "next/dynamic";
+import { notify } from "lib/notify";
+import { ModelProviderIcon } from "ui/model-provider-icon";
+import { appStore } from "@/app/store";
+import { BACKGROUND_COLORS, EMOJI_DATA } from "lib/const";
 
 type MessagePart = UIMessage["parts"][number];
 type TextMessagePart = Extract<MessagePart, { type: "text" }>;
@@ -120,7 +125,12 @@ export const UserMessagePart = memo(
         ? part.text
         : truncateString(part.text, MAX_TEXT_LENGTH);
 
-    const deleteMessage = useCallback(() => {
+    const deleteMessage = useCallback(async () => {
+      const ok = await notify.confirm({
+        title: "Delete Message",
+        description: "Are you sure you want to delete this message?",
+      });
+      if (!ok) return;
       safe(() => setIsDeleting(true))
         .ifOk(() => deleteMessageAction(message.id))
         .ifOk(() =>
@@ -279,12 +289,23 @@ export const AssistMessagePart = memo(function AssistMessagePart({
 }: AssistMessagePartProps) {
   const { copied, copy } = useCopy();
   const [isLoading, setIsLoading] = useState(false);
+  const agentList = appStore((state) => state.agentList);
   const [isDeleting, setIsDeleting] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const [isAtBottom, setIsAtBottom] = useState(true);
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
+  const metadata = message.metadata as ChatMetadata | undefined;
 
-  const deleteMessage = useCallback(() => {
+  const agent = useMemo(() => {
+    return agentList.find((a) => a.id === metadata?.agentId);
+  }, [metadata, agentList]);
+
+  const deleteMessage = useCallback(async () => {
+    const ok = await notify.confirm({
+      title: "Delete Message",
+      description: "Are you sure you want to delete this message?",
+    });
+    if (!ok) return;
     safe(() => setIsDeleting(true))
       .ifOk(() => deleteMessageAction(message.id))
       .ifOk(() =>
@@ -367,7 +388,12 @@ export const AssistMessagePart = memo(function AssistMessagePart({
   }, [isLast, isChatLoading, shouldAutoScroll]);
 
   return (
-    <div className={cn(isLoading && "animate-pulse", "flex flex-col gap-2")}>
+    <div
+      className={cn(
+        isLoading && "animate-pulse",
+        "flex flex-col gap-2 group/message",
+      )}
+    >
       <div
         data-testid="message-content"
         className={cn("flex flex-col gap-4 px-2", {
@@ -421,10 +447,132 @@ export const AssistMessagePart = memo(function AssistMessagePart({
                 {isDeleting ? <Loader className="animate-spin" /> : <Trash2 />}
               </Button>
             </TooltipTrigger>
-            <TooltipContent className="text-destructive" side="bottom">
+            <TooltipContent className="text-destructive">
               Delete Message
             </TooltipContent>
           </Tooltip>
+          {metadata && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-3! p-4! opacity-0 group-hover/message:opacity-100 transition-opacity duration-300"
+                >
+                  <EllipsisIcon />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent className="p-4 w-72 bg-card border shadow-lg">
+                <div className="space-y-4">
+                  {agent && (
+                    <>
+                      <div className="space-y-2">
+                        <h4 className="text-sm font-semibold text-foreground">
+                          Agent
+                        </h4>
+                        <div className="flex gap-3 items-center">
+                          <div
+                            className="p-1.5 rounded-full ring-2 ring-border/50 bg-background shadow-sm"
+                            style={{
+                              backgroundColor:
+                                agent.icon?.style?.backgroundColor ||
+                                BACKGROUND_COLORS[0],
+                            }}
+                          >
+                            <Avatar className="size-3">
+                              <AvatarImage
+                                src={agent.icon?.value || EMOJI_DATA[0]}
+                              />
+                              <AvatarFallback className="bg-transparent text-xs">
+                                {agent.name[0]}
+                              </AvatarFallback>
+                            </Avatar>
+                          </div>
+                          <span className="font-medium text-sm">
+                            {agent.name}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="border-t border-border/50" />
+                    </>
+                  )}
+
+                  {metadata.chatModel && (
+                    <>
+                      <div className="space-y-2">
+                        <h4 className="text-sm font-semibold text-foreground">
+                          Model
+                        </h4>
+                        <div className="flex gap-3 items-center">
+                          <ModelProviderIcon
+                            provider={metadata.chatModel.provider}
+                            className="size-5 flex-shrink-0"
+                          />
+                          <div className="space-y-0.5 flex-1">
+                            <div className="text-sm font-medium text-foreground">
+                              {metadata.chatModel.provider}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {metadata.chatModel.model}
+                              {metadata.toolCount !== undefined &&
+                                metadata.toolCount > 0 && (
+                                  <span className="ml-2">
+                                    • {metadata.toolCount} tools
+                                  </span>
+                                )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="border-t border-border/50" />
+                    </>
+                  )}
+
+                  {metadata.usage && (
+                    <>
+                      <div className="space-y-3">
+                        <h4 className="text-sm font-semibold text-foreground">
+                          Token Usage
+                        </h4>
+                        <div className="space-y-2">
+                          {metadata.usage.inputTokens !== undefined && (
+                            <div className="flex items-center justify-between py-1 px-2 rounded-md bg-muted/30">
+                              <span className="text-xs text-muted-foreground">
+                                Input
+                              </span>
+                              <span className="text-xs font-mono font-medium">
+                                {metadata.usage.inputTokens.toLocaleString()}
+                              </span>
+                            </div>
+                          )}
+                          {metadata.usage.outputTokens !== undefined && (
+                            <div className="flex items-center justify-between py-1 px-2 rounded-md bg-muted/30">
+                              <span className="text-xs text-muted-foreground">
+                                Output
+                              </span>
+                              <span className="text-xs font-mono font-medium">
+                                {metadata.usage.outputTokens.toLocaleString()}
+                              </span>
+                            </div>
+                          )}
+                          {metadata.usage.totalTokens !== undefined && (
+                            <div className="flex items-center justify-between py-1.5 px-2 rounded-md bg-primary/10 border border-primary/20">
+                              <span className="text-xs font-medium text-primary">
+                                Total
+                              </span>
+                              <span className="text-xs font-mono font-bold text-primary">
+                                {metadata.usage.totalTokens.toLocaleString()}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          )}
         </div>
       )}
       <div ref={ref} className="min-w-0" />
@@ -653,7 +801,12 @@ export const ToolMessagePart = memo(
       return () => window.removeEventListener("keydown", handleKeyDown);
     }, [isManualToolInvocation, isLast]);
 
-    const deleteMessage = useCallback(() => {
+    const deleteMessage = useCallback(async () => {
+      const ok = await notify.confirm({
+        title: "Delete Message",
+        description: "Are you sure you want to delete this message?",
+      });
+      if (!ok) return;
       safe(() => setIsDeleting(true))
         .ifOk(() => deleteMessageAction(messageId))
         .ifOk(() =>

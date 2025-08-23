@@ -6,7 +6,6 @@ import { ChatModel } from "app-types/chat";
 import { CheckIcon, ChevronDown } from "lucide-react";
 import { Fragment, memo, PropsWithChildren, useEffect, useState } from "react";
 import { Button } from "ui/button";
-import { ClaudeIcon } from "ui/claude-icon";
 
 import {
   Command,
@@ -17,9 +16,7 @@ import {
   CommandList,
   CommandSeparator,
 } from "ui/command";
-import { GeminiIcon } from "ui/gemini-icon";
-import { GrokIcon } from "ui/grok-icon";
-import { OpenAIIcon } from "ui/openai-icon";
+import { ModelProviderIcon } from "ui/model-provider-icon";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 
 interface SelectModelProps {
@@ -49,7 +46,7 @@ export const SelectModel = (props: PropsWithChildren<SelectModelProps>) => {
           >
             <div className="mr-auto flex items-center gap-1">
               {(props.showProvider ?? true) && (
-                <ProviderIcon
+                <ModelProviderIcon
                   provider={model?.provider || ""}
                   className="size-2.5 mr-1"
                 />
@@ -120,30 +117,18 @@ export const SelectModel = (props: PropsWithChildren<SelectModelProps>) => {
   );
 };
 
-function ProviderIcon({
-  provider,
-  className,
-}: { provider: string; className?: string }) {
-  return provider === "openai" ? (
-    <OpenAIIcon className={className} />
-  ) : provider === "xai" ? (
-    <GrokIcon className={className} />
-  ) : provider === "anthropic" ? (
-    <ClaudeIcon className={className} />
-  ) : provider === "google" ? (
-    <GeminiIcon className={className} />
-  ) : null;
-}
-
 const ProviderHeader = memo(function ProviderHeader({
   provider,
 }: { provider: string }) {
   return (
     <div className="text-sm text-muted-foreground flex items-center gap-1.5 group-hover:text-foreground transition-colors duration-300">
       {provider === "openai" ? (
-        <ProviderIcon provider="openai" className="size-3 text-foreground" />
+        <ModelProviderIcon
+          provider="openai"
+          className="size-3 text-foreground"
+        />
       ) : (
-        <ProviderIcon provider={provider} className="size-3" />
+        <ModelProviderIcon provider={provider} className="size-3" />
       )}
       {provider}
     </div>
