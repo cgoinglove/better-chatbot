@@ -248,14 +248,21 @@ export async function POST(request: Request) {
       },
 
       generateId: generateUUID,
-      onFinish: async ({ responseMessage }) => {
+      onFinish: async ({ responseMessage, messages: originalMessages }) => {
+        console.dir(
+          {
+            responseMessage,
+            messages,
+            message,
+            originalMessages,
+          },
+          { depth: null },
+        );
         if (responseMessage.id == message.id) {
           await chatRepository.upsertMessage({
             threadId: thread!.id,
             ...responseMessage,
-            parts: [...message.parts, ...responseMessage.parts].map(
-              convertToSavePart,
-            ),
+            parts: responseMessage.parts.map(convertToSavePart),
             metadata,
           });
         } else {
