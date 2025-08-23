@@ -19,7 +19,7 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { Button } from "ui/button";
 import { Markdown } from "./markdown";
-import { cn, createThrottle, safeJSONParse, truncateString } from "lib/utils";
+import { cn, safeJSONParse, truncateString } from "lib/utils";
 import JsonView from "ui/json-view";
 import { useMemo, useState, memo, useEffect, useRef, useCallback } from "react";
 import { MessageEditor } from "./message-editor";
@@ -273,15 +273,11 @@ export const UserMessagePart = memo(
 );
 UserMessagePart.displayName = "UserMessagePart";
 
-const throttle = createThrottle();
-
 export const AssistMessagePart = memo(function AssistMessagePart({
   part,
   showActions,
   message,
   prevMessage,
-  isLast,
-  isLoading: isChatLoading,
   isError,
   threadId,
   setMessages,
@@ -292,8 +288,6 @@ export const AssistMessagePart = memo(function AssistMessagePart({
   const agentList = appStore((state) => state.agentList);
   const [isDeleting, setIsDeleting] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const [isAtBottom, setIsAtBottom] = useState(true);
-  const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
   const metadata = message.metadata as ChatMetadata | undefined;
 
   const agent = useMemo(() => {
@@ -349,43 +343,6 @@ export const AssistMessagePart = memo(function AssistMessagePart({
       .watch(() => setIsLoading(false))
       .unwrap();
   };
-
-  useEffect(() => {
-    // Only auto-scroll for the last message when AI is actively writing
-    if (isLast && isChatLoading && shouldAutoScroll && isAtBottom) {
-      throttle(() => {
-        ref.current?.scrollIntoView({ behavior: "smooth" });
-      }, 500);
-    }
-  }, [isLast, isChatLoading, shouldAutoScroll, isAtBottom, part.text]);
-
-  useEffect(() => {
-    // Only set up observer for the last message during loading
-    if (!ref.current || !isLast || !isChatLoading) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsAtBottom(entry.isIntersecting);
-
-        // If user scrolled away from bottom, immediately disable auto scroll
-        // Once disabled, it stays disabled for this message
-        if (!entry.isIntersecting) {
-          setShouldAutoScroll(false);
-          throttle.clear();
-        }
-      },
-      {
-        root: null,
-        threshold: 0.1,
-      },
-    );
-
-    observer.observe(ref.current);
-
-    return () => {
-      observer.disconnect();
-    };
-  }, [isLast, isChatLoading, shouldAutoScroll]);
 
   return (
     <div

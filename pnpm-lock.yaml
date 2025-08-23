@@ -10,28 +10,28 @@ importers:
     dependencies:
       '@ai-sdk/anthropic':
         specifier: ^2.0.6
-        version: 2.0.6(zod@4.0.17)
+        version: 2.0.6(zod@4.1.0)
       '@ai-sdk/google':
         specifier: ^2.0.8
-        version: 2.0.8(zod@4.0.17)
+        version: 2.0.8(zod@4.1.0)
       '@ai-sdk/openai':
         specifier: ^2.0.19
-        version: 2.0.19(zod@4.0.17)
+        version: 2.0.19(zod@4.1.0)
       '@ai-sdk/openai-compatible':
         specifier: ^1.0.11
-        version: 1.0.11(zod@4.0.17)
+        version: 1.0.11(zod@4.1.0)
       '@ai-sdk/react':
         specifier: ^2.0.22
-        version: 2.0.22(react@19.1.1)(zod@4.0.17)
+        version: 2.0.22(react@19.1.1)(zod@4.1.0)
       '@ai-sdk/xai':
         specifier: ^2.0.11
-        version: 2.0.11(zod@4.0.17)
+        version: 2.0.11(zod@4.1.0)
       '@modelcontextprotocol/sdk':
         specifier: ^1.17.4
         version: 1.17.4
       '@openrouter/ai-sdk-provider':
         specifier: ^1.1.2
-        version: 1.1.2(ai@5.0.22(zod@4.0.17))(zod@4.0.17)
+        version: 1.1.2(ai@5.0.22(zod@4.1.0))(zod@4.1.0)
       '@radix-ui/react-accordion':
         specifier: ^1.2.12
         version: 1.2.12(@types/react-dom@19.1.7(@types/react@19.1.11))(@types/react@19.1.11)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
@@ -103,13 +103,13 @@ importers:
         version: 12.8.4(@types/react@19.1.11)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       ai:
         specifier: ^5.0.22
-        version: 5.0.22(zod@4.0.17)
+        version: 5.0.22(zod@4.1.0)
       bcrypt-ts:
         specifier: ^7.1.0
         version: 7.1.0
       better-auth:
         specifier: ^1.3.7
-        version: 1.3.7(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(zod@4.0.17)
+        version: 1.3.7(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(zod@4.1.0)
       chokidar:
         specifier: ^4.0.3
         version: 4.0.3
@@ -163,10 +163,10 @@ importers:
         version: 5.1.5
       next:
         specifier: 15.3.2
-        version: 15.3.2(@opentelemetry/api@1.9.0)(@playwright/test@1.54.2)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+        version: 15.3.2(@opentelemetry/api@1.9.0)(@playwright/test@1.55.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       next-intl:
         specifier: ^4.3.5
-        version: 4.3.5(next@15.3.2(@opentelemetry/api@1.9.0)(@playwright/test@1.54.2)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react@19.1.1)(typescript@5.9.2)
+        version: 4.3.5(next@15.3.2(@opentelemetry/api@1.9.0)(@playwright/test@1.55.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react@19.1.1)(typescript@5.9.2)
       next-themes:
         specifier: ^0.4.6
         version: 0.4.6(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
@@ -175,7 +175,7 @@ importers:
         version: 1.0.11
       ollama-ai-provider-v2:
         specifier: ^1.1.2
-        version: 1.1.2(zod@4.0.17)
+        version: 1.1.2(zod@4.1.0)
       pg:
         specifier: ^8.16.3
         version: 8.16.3
@@ -225,8 +225,8 @@ importers:
         specifier: ^1.1.2
         version: 1.1.2(@types/react-dom@19.1.7(@types/react@19.1.11))(@types/react@19.1.11)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       zod:
-        specifier: ^4.0.17
-        version: 4.0.17
+        specifier: ^4.1.0
+        version: 4.1.0
       zustand:
         specifier: ^5.0.8
         version: 5.0.8(@types/react@19.1.11)(react@19.1.1)(use-sync-external-store@1.5.0(react@19.1.1))
@@ -235,8 +235,8 @@ importers:
         specifier: 1.9.4
         version: 1.9.4
       '@playwright/test':
-        specifier: ^1.54.2
-        version: 1.54.2
+        specifier: ^1.55.0
+        version: 1.55.0
       '@tailwindcss/postcss':
         specifier: ^4.1.12
         version: 4.1.12
@@ -1333,8 +1333,8 @@ packages:
   '@petamoriken/float16@3.9.2':
     resolution: {integrity: sha512-VgffxawQde93xKxT3qap3OH+meZf7VaSB5Sqd4Rqc+FP5alWbpOyan/7tRbOAvynjpG3GpdtAuGU/NdhQpmrog==}
 
-  '@playwright/test@1.54.2':
-    resolution: {integrity: sha512-A+znathYxPf+72riFd1r1ovOLqsIIB0jKIoPjyK2kqEIe30/6jF6BC7QNluHuwUmsD2tv1XZVugN8GqfTMOxsA==}
+  '@playwright/test@1.55.0':
+    resolution: {integrity: sha512-04IXzPwHrW69XusN/SIdDdKZBzMfOT9UNT/YiJit/xpy2VuAoB8NHc8Aplb96zsWDddLnbkPL3TsmrS04ZU2xQ==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -1865,103 +1865,103 @@ packages:
   '@remirror/core-constants@3.0.0':
     resolution: {integrity: sha512-42aWfPrimMfDKDi4YegyS7x+/0tlzaqwPQCULLanv3DMIlu96KTJR0fM5isWX2UViOqlGnX6YFgqWepcX+XMNg==}
 
-  '@rollup/rollup-android-arm-eabi@4.47.1':
-    resolution: {integrity: sha512-lTahKRJip0knffA/GTNFJMrToD+CM+JJ+Qt5kjzBK/sFQ0EWqfKW3AYQSlZXN98tX0lx66083U9JYIMioMMK7g==}
+  '@rollup/rollup-android-arm-eabi@4.48.0':
+    resolution: {integrity: sha512-aVzKH922ogVAWkKiyKXorjYymz2084zrhrZRXtLrA5eEx5SO8Dj0c/4FpCHZyn7MKzhW2pW4tK28vVr+5oQ2xw==}
     cpu: [arm]
     os: [android]
 
-  '@rollup/rollup-android-arm64@4.47.1':
-    resolution: {integrity: sha512-uqxkb3RJLzlBbh/bbNQ4r7YpSZnjgMgyoEOY7Fy6GCbelkDSAzeiogxMG9TfLsBbqmGsdDObo3mzGqa8hps4MA==}
+  '@rollup/rollup-android-arm64@4.48.0':
+    resolution: {integrity: sha512-diOdQuw43xTa1RddAFbhIA8toirSzFMcnIg8kvlzRbK26xqEnKJ/vqQnghTAajy2Dcy42v+GMPMo6jq67od+Dw==}
     cpu: [arm64]
     os: [android]
 
-  '@rollup/rollup-darwin-arm64@4.47.1':
-    resolution: {integrity: sha512-tV6reObmxBDS4DDyLzTDIpymthNlxrLBGAoQx6m2a7eifSNEZdkXQl1PE4ZjCkEDPVgNXSzND/k9AQ3mC4IOEQ==}
+  '@rollup/rollup-darwin-arm64@4.48.0':
+    resolution: {integrity: sha512-QhR2KA18fPlJWFefySJPDYZELaVqIUVnYgAOdtJ+B/uH96CFg2l1TQpX19XpUMWUqMyIiyY45wje8K6F4w4/CA==}
     cpu: [arm64]
     os: [darwin]
 
-  '@rollup/rollup-darwin-x64@4.47.1':
-    resolution: {integrity: sha512-XuJRPTnMk1lwsSnS3vYyVMu4x/+WIw1MMSiqj5C4j3QOWsMzbJEK90zG+SWV1h0B1ABGCQ0UZUjti+TQK35uHQ==}
+  '@rollup/rollup-darwin-x64@4.48.0':
+    resolution: {integrity: sha512-Q9RMXnQVJ5S1SYpNSTwXDpoQLgJ/fbInWOyjbCnnqTElEyeNvLAB3QvG5xmMQMhFN74bB5ZZJYkKaFPcOG8sGg==}
     cpu: [x64]
     os: [darwin]
 
-  '@rollup/rollup-freebsd-arm64@4.47.1':
-    resolution: {integrity: sha512-79BAm8Ag/tmJ5asCqgOXsb3WY28Rdd5Lxj8ONiQzWzy9LvWORd5qVuOnjlqiWWZJw+dWewEktZb5yiM1DLLaHw==}
+  '@rollup/rollup-freebsd-arm64@4.48.0':
+    resolution: {integrity: sha512-3jzOhHWM8O8PSfyft+ghXZfBkZawQA0PUGtadKYxFqpcYlOYjTi06WsnYBsbMHLawr+4uWirLlbhcYLHDXR16w==}
     cpu: [arm64]
     os: [freebsd]
 
-  '@rollup/rollup-freebsd-x64@4.47.1':
-    resolution: {integrity: sha512-OQ2/ZDGzdOOlyfqBiip0ZX/jVFekzYrGtUsqAfLDbWy0jh1PUU18+jYp8UMpqhly5ltEqotc2miLngf9FPSWIA==}
+  '@rollup/rollup-freebsd-x64@4.48.0':
+    resolution: {integrity: sha512-NcD5uVUmE73C/TPJqf78hInZmiSBsDpz3iD5MF/BuB+qzm4ooF2S1HfeTChj5K4AV3y19FFPgxonsxiEpy8v/A==}
     cpu: [x64]
     os: [freebsd]
 
-  '@rollup/rollup-linux-arm-gnueabihf@4.47.1':
-    resolution: {integrity: sha512-HZZBXJL1udxlCVvoVadstgiU26seKkHbbAMLg7680gAcMnRNP9SAwTMVet02ANA94kXEI2VhBnXs4e5nf7KG2A==}
+  '@rollup/rollup-linux-arm-gnueabihf@4.48.0':
+    resolution: {integrity: sha512-JWnrj8qZgLWRNHr7NbpdnrQ8kcg09EBBq8jVOjmtlB3c8C6IrynAJSMhMVGME4YfTJzIkJqvSUSVJRqkDnu/aA==}
     cpu: [arm]
     os: [linux]
 
-  '@rollup/rollup-linux-arm-musleabihf@4.47.1':
-    resolution: {integrity: sha512-sZ5p2I9UA7T950JmuZ3pgdKA6+RTBr+0FpK427ExW0t7n+QwYOcmDTK/aRlzoBrWyTpJNlS3kacgSlSTUg6P/Q==}
+  '@rollup/rollup-linux-arm-musleabihf@4.48.0':
+    resolution: {integrity: sha512-9xu92F0TxuMH0tD6tG3+GtngwdgSf8Bnz+YcsPG91/r5Vgh5LNofO48jV55priA95p3c92FLmPM7CvsVlnSbGQ==}
     cpu: [arm]
     os: [linux]
 
-  '@rollup/rollup-linux-arm64-gnu@4.47.1':
-    resolution: {integrity: sha512-3hBFoqPyU89Dyf1mQRXCdpc6qC6At3LV6jbbIOZd72jcx7xNk3aAp+EjzAtN6sDlmHFzsDJN5yeUySvorWeRXA==}
+  '@rollup/rollup-linux-arm64-gnu@4.48.0':
+    resolution: {integrity: sha512-NLtvJB5YpWn7jlp1rJiY0s+G1Z1IVmkDuiywiqUhh96MIraC0n7XQc2SZ1CZz14shqkM+XN2UrfIo7JB6UufOA==}
     cpu: [arm64]
     os: [linux]
 
-  '@rollup/rollup-linux-arm64-musl@4.47.1':
-    resolution: {integrity: sha512-49J4FnMHfGodJWPw73Ve+/hsPjZgcXQGkmqBGZFvltzBKRS+cvMiWNLadOMXKGnYRhs1ToTGM0sItKISoSGUNA==}
+  '@rollup/rollup-linux-arm64-musl@4.48.0':
+    resolution: {integrity: sha512-QJ4hCOnz2SXgCh+HmpvZkM+0NSGcZACyYS8DGbWn2PbmA0e5xUk4bIP8eqJyNXLtyB4gZ3/XyvKtQ1IFH671vQ==}
     cpu: [arm64]
     os: [linux]
 
-  '@rollup/rollup-linux-loongarch64-gnu@4.47.1':
-    resolution: {integrity: sha512-4yYU8p7AneEpQkRX03pbpLmE21z5JNys16F1BZBZg5fP9rIlb0TkeQjn5du5w4agConCCEoYIG57sNxjryHEGg==}
+  '@rollup/rollup-linux-loongarch64-gnu@4.48.0':
+    resolution: {integrity: sha512-Pk0qlGJnhILdIC5zSKQnprFjrGmjfDM7TPZ0FKJxRkoo+kgMRAg4ps1VlTZf8u2vohSicLg7NP+cA5qE96PaFg==}
     cpu: [loong64]
     os: [linux]
 
-  '@rollup/rollup-linux-ppc64-gnu@4.47.1':
-    resolution: {integrity: sha512-fAiq+J28l2YMWgC39jz/zPi2jqc0y3GSRo1yyxlBHt6UN0yYgnegHSRPa3pnHS5amT/efXQrm0ug5+aNEu9UuQ==}
+  '@rollup/rollup-linux-ppc64-gnu@4.48.0':
+    resolution: {integrity: sha512-/dNFc6rTpoOzgp5GKoYjT6uLo8okR/Chi2ECOmCZiS4oqh3mc95pThWma7Bgyk6/WTEvjDINpiBCuecPLOgBLQ==}
     cpu: [ppc64]
     os: [linux]
 
-  '@rollup/rollup-linux-riscv64-gnu@4.47.1':
-    resolution: {integrity: sha512-daoT0PMENNdjVYYU9xec30Y2prb1AbEIbb64sqkcQcSaR0zYuKkoPuhIztfxuqN82KYCKKrj+tQe4Gi7OSm1ow==}
+  '@rollup/rollup-linux-riscv64-gnu@4.48.0':
+    resolution: {integrity: sha512-YBwXsvsFI8CVA4ej+bJF2d9uAeIiSkqKSPQNn0Wyh4eMDY4wxuSp71BauPjQNCKK2tD2/ksJ7uhJ8X/PVY9bHQ==}
     cpu: [riscv64]
     os: [linux]
 
-  '@rollup/rollup-linux-riscv64-musl@4.47.1':
-    resolution: {integrity: sha512-JNyXaAhWtdzfXu5pUcHAuNwGQKevR+6z/poYQKVW+pLaYOj9G1meYc57/1Xv2u4uTxfu9qEWmNTjv/H/EpAisw==}
+  '@rollup/rollup-linux-riscv64-musl@4.48.0':
+    resolution: {integrity: sha512-FI3Rr2aGAtl1aHzbkBIamsQyuauYtTF9SDUJ8n2wMXuuxwchC3QkumZa1TEXYIv/1AUp1a25Kwy6ONArvnyeVQ==}
     cpu: [riscv64]
     os: [linux]
 
-  '@rollup/rollup-linux-s390x-gnu@4.47.1':
-    resolution: {integrity: sha512-U/CHbqKSwEQyZXjCpY43/GLYcTVKEXeRHw0rMBJP7fP3x6WpYG4LTJWR3ic6TeYKX6ZK7mrhltP4ppolyVhLVQ==}
+  '@rollup/rollup-linux-s390x-gnu@4.48.0':
+    resolution: {integrity: sha512-Dx7qH0/rvNNFmCcIRe1pyQ9/H0XO4v/f0SDoafwRYwc2J7bJZ5N4CHL/cdjamISZ5Cgnon6iazAVRFlxSoHQnQ==}
     cpu: [s390x]
     os: [linux]
 
-  '@rollup/rollup-linux-x64-gnu@4.47.1':
-    resolution: {integrity: sha512-uTLEakjxOTElfeZIGWkC34u2auLHB1AYS6wBjPGI00bWdxdLcCzK5awjs25YXpqB9lS8S0vbO0t9ZcBeNibA7g==}
+  '@rollup/rollup-linux-x64-gnu@4.48.0':
+    resolution: {integrity: sha512-GUdZKTeKBq9WmEBzvFYuC88yk26vT66lQV8D5+9TgkfbewhLaTHRNATyzpQwwbHIfJvDJ3N9WJ90wK/uR3cy3Q==}
     cpu: [x64]
     os: [linux]
 
-  '@rollup/rollup-linux-x64-musl@4.47.1':
-    resolution: {integrity: sha512-Ft+d/9DXs30BK7CHCTX11FtQGHUdpNDLJW0HHLign4lgMgBcPFN3NkdIXhC5r9iwsMwYreBBc4Rho5ieOmKNVQ==}
+  '@rollup/rollup-linux-x64-musl@4.48.0':
+    resolution: {integrity: sha512-ao58Adz/v14MWpQgYAb4a4h3fdw73DrDGtaiF7Opds5wNyEQwtO6M9dBh89nke0yoZzzaegq6J/EXs7eBebG8A==}
     cpu: [x64]
     os: [linux]
 
-  '@rollup/rollup-win32-arm64-msvc@4.47.1':
-    resolution: {integrity: sha512-N9X5WqGYzZnjGAFsKSfYFtAShYjwOmFJoWbLg3dYixZOZqU7hdMq+/xyS14zKLhFhZDhP9VfkzQnsdk0ZDS9IA==}
+  '@rollup/rollup-win32-arm64-msvc@4.48.0':
+    resolution: {integrity: sha512-kpFno46bHtjZVdRIOxqaGeiABiToo2J+st7Yce+aiAoo1H0xPi2keyQIP04n2JjDVuxBN6bSz9R6RdTK5hIppw==}
     cpu: [arm64]
     os: [win32]
 
-  '@rollup/rollup-win32-ia32-msvc@4.47.1':
-    resolution: {integrity: sha512-O+KcfeCORZADEY8oQJk4HK8wtEOCRE4MdOkb8qGZQNun3jzmj2nmhV/B/ZaaZOkPmJyvm/gW9n0gsB4eRa1eiQ==}
+  '@rollup/rollup-win32-ia32-msvc@4.48.0':
+    resolution: {integrity: sha512-rFYrk4lLk9YUTIeihnQMiwMr6gDhGGSbWThPEDfBoU/HdAtOzPXeexKi7yU8jO+LWRKnmqPN9NviHQf6GDwBcQ==}
     cpu: [ia32]
     os: [win32]
 
-  '@rollup/rollup-win32-x64-msvc@4.47.1':
-    resolution: {integrity: sha512-CpKnYa8eHthJa3c+C38v/E+/KZyF1Jdh2Cz3DyKZqEWYgrM1IHFArXNWvBLPQCKUEsAqqKX27tTqVEFbDNUcOA==}
+  '@rollup/rollup-win32-x64-msvc@4.48.0':
+    resolution: {integrity: sha512-sq0hHLTgdtwOPDB5SJOuaoHyiP1qSwg+71TQWk8iDS04bW1wIE0oQ6otPiRj2ZvLYNASLMaTp8QRGUVZ+5OL5A==}
     cpu: [x64]
     os: [win32]
 
@@ -4720,13 +4720,13 @@ packages:
   pkg-types@2.3.0:
     resolution: {integrity: sha512-SIqCzDRg0s9npO5XQ3tNZioRY1uK06lA41ynBC1YmFTmnY6FjUjVt6s4LoADmwoig1qqD0oK8h1p/8mlMx8Oig==}
 
-  playwright-core@1.54.2:
-    resolution: {integrity: sha512-n5r4HFbMmWsB4twG7tJLDN9gmBUeSPcsBZiWSE4DnYz9mJMAFqr2ID7+eGC9kpEnxExJ1epttwR59LEWCk8mtA==}
+  playwright-core@1.55.0:
+    resolution: {integrity: sha512-GvZs4vU3U5ro2nZpeiwyb0zuFaqb9sUiAJuyrWpcGouD8y9/HLgGbNRjIph7zU9D3hnPaisMl9zG9CgFi/biIg==}
     engines: {node: '>=18'}
     hasBin: true
 
-  playwright@1.54.2:
-    resolution: {integrity: sha512-Hu/BMoA1NAdRUuulyvQC0pEqZ4vQbGfn8f7wPXcnqQmM+zct9UliKxsIkLNmz/ku7LElUNqmaiv1TG/aL5ACsw==}
+  playwright@1.55.0:
+    resolution: {integrity: sha512-sdCWStblvV1YU909Xqx0DhOjPZE4/5lJsIS84IfN9dAZfcl/CIZ5O8l3o0j7hPMjDvqoTF8ZUcc+i/GL5erstA==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -5027,8 +5027,8 @@ packages:
   robust-predicates@3.0.2:
     resolution: {integrity: sha512-IXgzBWvWQwE6PrDI05OvmXUIruQTcoMDzRsOd5CDvHCVLcLHMTSYvOK5Cm46kWqlV3yAbuSpBZdJ5oP5OUoStg==}
 
-  rollup@4.47.1:
-    resolution: {integrity: sha512-iasGAQoZ5dWDzULEUX3jiW0oB1qyFOepSyDyoU6S/OhVlDIwj5knI5QBa5RRQ0sK7OE0v+8VIi2JuV+G+3tfNg==}
+  rollup@4.48.0:
+    resolution: {integrity: sha512-BXHRqK1vyt9XVSEHZ9y7xdYtuYbwVod2mLwOMFP7t/Eqoc1pHRlG/WdV2qNeNvZHRQdLedaFycljaYYM96RqJQ==}
     engines: {node: '>=18.0.0', npm: '>=8.0.0'}
     hasBin: true
 
@@ -5737,8 +5737,8 @@ packages:
   zod@3.25.76:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
-  zod@4.0.17:
-    resolution: {integrity: sha512-1PHjlYRevNxxdy2JZ8JcNAw7rX8V9P1AKkP+x/xZfxB0K5FYfuV+Ug6P/6NVSR2jHQ+FzDDoDHS04nYUsOIyLQ==}
+  zod@4.1.0:
+    resolution: {integrity: sha512-UWxluYj2IDX9MHRXTMbB/2eeWrAMmmMSESM+MfT9MQw8U1qo9q5ASW08anoJh6AJ7pkt099fLdNFmfI+4aChHg==}
 
   zustand@4.5.7:
     resolution: {integrity: sha512-CHOUy7mu3lbD6o6LJLfllpjkzhHXSBlX8B9+qPddUsIfeF5S/UZ5q0kmCsnRqT1UHFQZchNFDDzMbQsuesHWlw==}
@@ -5778,72 +5778,72 @@ packages:
 
 snapshots:
 
-  '@ai-sdk/anthropic@2.0.6(zod@4.0.17)':
+  '@ai-sdk/anthropic@2.0.6(zod@4.1.0)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.5(zod@4.0.17)
-      zod: 4.0.17
+      '@ai-sdk/provider-utils': 3.0.5(zod@4.1.0)
+      zod: 4.1.0
 
-  '@ai-sdk/gateway@1.0.11(zod@4.0.17)':
+  '@ai-sdk/gateway@1.0.11(zod@4.1.0)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.5(zod@4.0.17)
-      zod: 4.0.17
+      '@ai-sdk/provider-utils': 3.0.5(zod@4.1.0)
+      zod: 4.1.0
 
-  '@ai-sdk/google@2.0.8(zod@4.0.17)':
+  '@ai-sdk/google@2.0.8(zod@4.1.0)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.5(zod@4.0.17)
-      zod: 4.0.17
+      '@ai-sdk/provider-utils': 3.0.5(zod@4.1.0)
+      zod: 4.1.0
 
-  '@ai-sdk/openai-compatible@1.0.11(zod@4.0.17)':
+  '@ai-sdk/openai-compatible@1.0.11(zod@4.1.0)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.5(zod@4.0.17)
-      zod: 4.0.17
+      '@ai-sdk/provider-utils': 3.0.5(zod@4.1.0)
+      zod: 4.1.0
 
-  '@ai-sdk/openai@2.0.19(zod@4.0.17)':
+  '@ai-sdk/openai@2.0.19(zod@4.1.0)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.5(zod@4.0.17)
-      zod: 4.0.17
+      '@ai-sdk/provider-utils': 3.0.5(zod@4.1.0)
+      zod: 4.1.0
 
-  '@ai-sdk/provider-utils@3.0.1(zod@4.0.17)':
+  '@ai-sdk/provider-utils@3.0.1(zod@4.1.0)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
       '@standard-schema/spec': 1.0.0
       eventsource-parser: 3.0.5
-      zod: 4.0.17
-      zod-to-json-schema: 3.24.6(zod@4.0.17)
+      zod: 4.1.0
+      zod-to-json-schema: 3.24.6(zod@4.1.0)
 
-  '@ai-sdk/provider-utils@3.0.5(zod@4.0.17)':
+  '@ai-sdk/provider-utils@3.0.5(zod@4.1.0)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
       '@standard-schema/spec': 1.0.0
       eventsource-parser: 3.0.5
-      zod: 4.0.17
-      zod-to-json-schema: 3.24.6(zod@4.0.17)
+      zod: 4.1.0
+      zod-to-json-schema: 3.24.6(zod@4.1.0)
 
   '@ai-sdk/provider@2.0.0':
     dependencies:
       json-schema: 0.4.0
 
-  '@ai-sdk/react@2.0.22(react@19.1.1)(zod@4.0.17)':
+  '@ai-sdk/react@2.0.22(react@19.1.1)(zod@4.1.0)':
     dependencies:
-      '@ai-sdk/provider-utils': 3.0.5(zod@4.0.17)
-      ai: 5.0.22(zod@4.0.17)
+      '@ai-sdk/provider-utils': 3.0.5(zod@4.1.0)
+      ai: 5.0.22(zod@4.1.0)
       react: 19.1.1
       swr: 2.3.6(react@19.1.1)
       throttleit: 2.1.0
     optionalDependencies:
-      zod: 4.0.17
+      zod: 4.1.0
 
-  '@ai-sdk/xai@2.0.11(zod@4.0.17)':
+  '@ai-sdk/xai@2.0.11(zod@4.1.0)':
     dependencies:
-      '@ai-sdk/openai-compatible': 1.0.11(zod@4.0.17)
+      '@ai-sdk/openai-compatible': 1.0.11(zod@4.1.0)
       '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.5(zod@4.0.17)
-      zod: 4.0.17
+      '@ai-sdk/provider-utils': 3.0.5(zod@4.1.0)
+      zod: 4.1.0
 
   '@alloc/quick-lru@5.2.0': {}
 
@@ -6552,10 +6552,10 @@ snapshots:
 
   '@nolyfill/is-core-module@1.0.39': {}
 
-  '@openrouter/ai-sdk-provider@1.1.2(ai@5.0.22(zod@4.0.17))(zod@4.0.17)':
+  '@openrouter/ai-sdk-provider@1.1.2(ai@5.0.22(zod@4.1.0))(zod@4.1.0)':
     dependencies:
-      ai: 5.0.22(zod@4.0.17)
-      zod: 4.0.17
+      ai: 5.0.22(zod@4.1.0)
+      zod: 4.1.0
 
   '@opentelemetry/api@1.9.0': {}
 
@@ -6594,9 +6594,9 @@ snapshots:
 
   '@petamoriken/float16@3.9.2': {}
 
-  '@playwright/test@1.54.2':
+  '@playwright/test@1.55.0':
     dependencies:
-      playwright: 1.54.2
+      playwright: 1.55.0
 
   '@popperjs/core@2.11.8': {}
 
@@ -7148,64 +7148,64 @@ snapshots:
 
   '@remirror/core-constants@3.0.0': {}
 
-  '@rollup/rollup-android-arm-eabi@4.47.1':
+  '@rollup/rollup-android-arm-eabi@4.48.0':
     optional: true
 
-  '@rollup/rollup-android-arm64@4.47.1':
+  '@rollup/rollup-android-arm64@4.48.0':
     optional: true
 
-  '@rollup/rollup-darwin-arm64@4.47.1':
+  '@rollup/rollup-darwin-arm64@4.48.0':
     optional: true
 
-  '@rollup/rollup-darwin-x64@4.47.1':
+  '@rollup/rollup-darwin-x64@4.48.0':
     optional: true
 
-  '@rollup/rollup-freebsd-arm64@4.47.1':
+  '@rollup/rollup-freebsd-arm64@4.48.0':
     optional: true
 
-  '@rollup/rollup-freebsd-x64@4.47.1':
+  '@rollup/rollup-freebsd-x64@4.48.0':
     optional: true
 
-  '@rollup/rollup-linux-arm-gnueabihf@4.47.1':
+  '@rollup/rollup-linux-arm-gnueabihf@4.48.0':
     optional: true
 
-  '@rollup/rollup-linux-arm-musleabihf@4.47.1':
+  '@rollup/rollup-linux-arm-musleabihf@4.48.0':
     optional: true
 
-  '@rollup/rollup-linux-arm64-gnu@4.47.1':
+  '@rollup/rollup-linux-arm64-gnu@4.48.0':
     optional: true
 
-  '@rollup/rollup-linux-arm64-musl@4.47.1':
+  '@rollup/rollup-linux-arm64-musl@4.48.0':
     optional: true
 
-  '@rollup/rollup-linux-loongarch64-gnu@4.47.1':
+  '@rollup/rollup-linux-loongarch64-gnu@4.48.0':
     optional: true
 
-  '@rollup/rollup-linux-ppc64-gnu@4.47.1':
+  '@rollup/rollup-linux-ppc64-gnu@4.48.0':
     optional: true
 
-  '@rollup/rollup-linux-riscv64-gnu@4.47.1':
+  '@rollup/rollup-linux-riscv64-gnu@4.48.0':
     optional: true
 
-  '@rollup/rollup-linux-riscv64-musl@4.47.1':
+  '@rollup/rollup-linux-riscv64-musl@4.48.0':
     optional: true
 
-  '@rollup/rollup-linux-s390x-gnu@4.47.1':
+  '@rollup/rollup-linux-s390x-gnu@4.48.0':
     optional: true
 
-  '@rollup/rollup-linux-x64-gnu@4.47.1':
+  '@rollup/rollup-linux-x64-gnu@4.48.0':
     optional: true
 
-  '@rollup/rollup-linux-x64-musl@4.47.1':
+  '@rollup/rollup-linux-x64-musl@4.48.0':
     optional: true
 
-  '@rollup/rollup-win32-arm64-msvc@4.47.1':
+  '@rollup/rollup-win32-arm64-msvc@4.48.0':
     optional: true
 
-  '@rollup/rollup-win32-ia32-msvc@4.47.1':
+  '@rollup/rollup-win32-ia32-msvc@4.48.0':
     optional: true
 
-  '@rollup/rollup-win32-x64-msvc@4.47.1':
+  '@rollup/rollup-win32-x64-msvc@4.48.0':
     optional: true
 
   '@rtsao/scc@1.1.0': {}
@@ -7929,13 +7929,13 @@ snapshots:
 
   acorn@8.15.0: {}
 
-  ai@5.0.22(zod@4.0.17):
+  ai@5.0.22(zod@4.1.0):
     dependencies:
-      '@ai-sdk/gateway': 1.0.11(zod@4.0.17)
+      '@ai-sdk/gateway': 1.0.11(zod@4.1.0)
       '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.5(zod@4.0.17)
+      '@ai-sdk/provider-utils': 3.0.5(zod@4.1.0)
       '@opentelemetry/api': 1.9.0
-      zod: 4.0.17
+      zod: 4.1.0
 
   ajv@6.12.6:
     dependencies:
@@ -8059,7 +8059,7 @@ snapshots:
 
   bcrypt-ts@7.1.0: {}
 
-  better-auth@1.3.7(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(zod@4.0.17):
+  better-auth@1.3.7(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(zod@4.1.0):
     dependencies:
       '@better-auth/utils': 0.2.6
       '@better-fetch/fetch': 1.1.18
@@ -8072,7 +8072,7 @@ snapshots:
       jose: 5.10.0
       kysely: 0.28.5
       nanostores: 0.11.4
-      zod: 4.0.17
+      zod: 4.1.0
     optionalDependencies:
       react: 19.1.1
       react-dom: 19.1.1(react@19.1.1)
@@ -10226,11 +10226,11 @@ snapshots:
 
   negotiator@1.0.0: {}
 
-  next-intl@4.3.5(next@15.3.2(@opentelemetry/api@1.9.0)(@playwright/test@1.54.2)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react@19.1.1)(typescript@5.9.2):
+  next-intl@4.3.5(next@15.3.2(@opentelemetry/api@1.9.0)(@playwright/test@1.55.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react@19.1.1)(typescript@5.9.2):
     dependencies:
       '@formatjs/intl-localematcher': 0.5.10
       negotiator: 1.0.0
-      next: 15.3.2(@opentelemetry/api@1.9.0)(@playwright/test@1.54.2)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      next: 15.3.2(@opentelemetry/api@1.9.0)(@playwright/test@1.55.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       react: 19.1.1
       use-intl: 4.3.5(react@19.1.1)
     optionalDependencies:
@@ -10241,7 +10241,7 @@ snapshots:
       react: 19.1.1
       react-dom: 19.1.1(react@19.1.1)
 
-  next@15.3.2(@opentelemetry/api@1.9.0)(@playwright/test@1.54.2)(react-dom@19.1.1(react@19.1.1))(react@19.1.1):
+  next@15.3.2(@opentelemetry/api@1.9.0)(@playwright/test@1.55.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1):
     dependencies:
       '@next/env': 15.3.2
       '@swc/counter': 0.1.3
@@ -10262,7 +10262,7 @@ snapshots:
       '@next/swc-win32-arm64-msvc': 15.3.2
       '@next/swc-win32-x64-msvc': 15.3.2
       '@opentelemetry/api': 1.9.0
-      '@playwright/test': 1.54.2
+      '@playwright/test': 1.55.0
       sharp: 0.34.3
     transitivePeerDependencies:
       - '@babel/core'
@@ -10322,11 +10322,11 @@ snapshots:
 
   ogl@1.0.11: {}
 
-  ollama-ai-provider-v2@1.1.2(zod@4.0.17):
+  ollama-ai-provider-v2@1.1.2(zod@4.1.0):
     dependencies:
       '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.1(zod@4.0.17)
-      zod: 4.0.17
+      '@ai-sdk/provider-utils': 3.0.1(zod@4.1.0)
+      zod: 4.1.0
 
   on-finished@2.4.1:
     dependencies:
@@ -10469,11 +10469,11 @@ snapshots:
       exsolve: 1.0.7
       pathe: 2.0.3
 
-  playwright-core@1.54.2: {}
+  playwright-core@1.55.0: {}
 
-  playwright@1.54.2:
+  playwright@1.55.0:
     dependencies:
-      playwright-core: 1.54.2
+      playwright-core: 1.55.0
     optionalDependencies:
       fsevents: 2.3.2
 
@@ -10855,30 +10855,30 @@ snapshots:
 
   robust-predicates@3.0.2: {}
 
-  rollup@4.47.1:
+  rollup@4.48.0:
     dependencies:
       '@types/estree': 1.0.8
     optionalDependencies:
-      '@rollup/rollup-android-arm-eabi': 4.47.1
-      '@rollup/rollup-android-arm64': 4.47.1
-      '@rollup/rollup-darwin-arm64': 4.47.1
-      '@rollup/rollup-darwin-x64': 4.47.1
-      '@rollup/rollup-freebsd-arm64': 4.47.1
-      '@rollup/rollup-freebsd-x64': 4.47.1
-      '@rollup/rollup-linux-arm-gnueabihf': 4.47.1
-      '@rollup/rollup-linux-arm-musleabihf': 4.47.1
-      '@rollup/rollup-linux-arm64-gnu': 4.47.1
-      '@rollup/rollup-linux-arm64-musl': 4.47.1
-      '@rollup/rollup-linux-loongarch64-gnu': 4.47.1
-      '@rollup/rollup-linux-ppc64-gnu': 4.47.1
-      '@rollup/rollup-linux-riscv64-gnu': 4.47.1
-      '@rollup/rollup-linux-riscv64-musl': 4.47.1
-      '@rollup/rollup-linux-s390x-gnu': 4.47.1
-      '@rollup/rollup-linux-x64-gnu': 4.47.1
-      '@rollup/rollup-linux-x64-musl': 4.47.1
-      '@rollup/rollup-win32-arm64-msvc': 4.47.1
-      '@rollup/rollup-win32-ia32-msvc': 4.47.1
-      '@rollup/rollup-win32-x64-msvc': 4.47.1
+      '@rollup/rollup-android-arm-eabi': 4.48.0
+      '@rollup/rollup-android-arm64': 4.48.0
+      '@rollup/rollup-darwin-arm64': 4.48.0
+      '@rollup/rollup-darwin-x64': 4.48.0
+      '@rollup/rollup-freebsd-arm64': 4.48.0
+      '@rollup/rollup-freebsd-x64': 4.48.0
+      '@rollup/rollup-linux-arm-gnueabihf': 4.48.0
+      '@rollup/rollup-linux-arm-musleabihf': 4.48.0
+      '@rollup/rollup-linux-arm64-gnu': 4.48.0
+      '@rollup/rollup-linux-arm64-musl': 4.48.0
+      '@rollup/rollup-linux-loongarch64-gnu': 4.48.0
+      '@rollup/rollup-linux-ppc64-gnu': 4.48.0
+      '@rollup/rollup-linux-riscv64-gnu': 4.48.0
+      '@rollup/rollup-linux-riscv64-musl': 4.48.0
+      '@rollup/rollup-linux-s390x-gnu': 4.48.0
+      '@rollup/rollup-linux-x64-gnu': 4.48.0
+      '@rollup/rollup-linux-x64-musl': 4.48.0
+      '@rollup/rollup-win32-arm64-msvc': 4.48.0
+      '@rollup/rollup-win32-ia32-msvc': 4.48.0
+      '@rollup/rollup-win32-x64-msvc': 4.48.0
       fsevents: 2.3.3
 
   rope-sequence@1.3.4: {}
@@ -11552,7 +11552,7 @@ snapshots:
       fdir: 6.5.0(picomatch@4.0.3)
       picomatch: 4.0.3
       postcss: 8.5.6
-      rollup: 4.47.1
+      rollup: 4.48.0
       tinyglobby: 0.2.14
     optionalDependencies:
       '@types/node': 20.19.11
@@ -11717,13 +11717,13 @@ snapshots:
     dependencies:
       zod: 3.25.76
 
-  zod-to-json-schema@3.24.6(zod@4.0.17):
+  zod-to-json-schema@3.24.6(zod@4.1.0):
     dependencies:
-      zod: 4.0.17
+      zod: 4.1.0
 
   zod@3.25.76: {}
 
-  zod@4.0.17: {}
+  zod@4.1.0: {}
 
   zustand@4.5.7(@types/react@19.1.11)(react@19.1.1):
     dependencies:
