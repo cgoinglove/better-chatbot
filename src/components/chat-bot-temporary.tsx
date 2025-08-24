@@ -1,15 +1,22 @@
 "use client";
-
 import { appStore } from "@/app/store";
 import { useChat, UseChatHelpers } from "@ai-sdk/react";
 import { cn } from "lib/utils";
 
-import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import {
+  ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Button } from "ui/button";
 import {
   Drawer,
   DrawerClose,
   DrawerContent,
+  DrawerDescription,
   DrawerHeader,
   DrawerTitle,
 } from "ui/drawer";
@@ -18,7 +25,7 @@ import PromptInput from "./prompt-input";
 import { ErrorMessage, PreviewMessage } from "./message";
 import { Settings2, X } from "lucide-react";
 import { Separator } from "ui/separator";
-import { UIMessage } from "ai";
+import { DefaultChatTransport, UIMessage } from "ai";
 import { useShallow } from "zustand/shallow";
 import { isShortcutEvent, Shortcuts } from "lib/keyboard-shortcuts";
 import { useTranslations } from "next-intl";
@@ -51,23 +58,31 @@ export function ChatBotTemporary() {
     });
   };
 
+  const [input, setInput] = useState("");
+
   const {
     messages,
-    input,
-    setInput,
-    append,
+    sendMessage,
+    clearError,
     status,
-    reload,
     setMessages,
     error,
     stop,
   } = useChat({
-    api: "/api/chat/temporary",
+    transport: new DefaultChatTransport({
+      api: "/api/chat/temporary",
+      prepareSendMessagesRequest: ({ messages }) => {
+        const temporaryChat = appStore.getState().temporaryChat;
+        return {
+          body: {
+            chatModel: temporaryChat.chatModel,
+            instructions: temporaryChat.instructions,
+            messages,
+          },
+        };
+      },
+    }),
     experimental_throttle: 100,
-    body: {
-      chatModel: temporaryChat.chatModel,
-      instructions: temporaryChat.instructions,
-    },
     onError: () => {
       setMessages((prev) => prev.slice(0, -1));
     },
@@ -77,6 +92,11 @@ export function ChatBotTemporary() {
     () => status === "streaming" || status === "submitted",
     [status],
   );
+
+  const reset = useCallback(() => {
+    setMessages([]);
+    clearError();
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -102,7 +122,7 @@ export function ChatBotTemporary() {
         e.preventDefault();
         e.stopPropagation();
         e.stopImmediatePropagation();
-        setMessages([]);
+        reset();
       } else if (
         temporaryChat.isOpen &&
         isShortcutEvent(e, {
@@ -145,7 +165,7 @@ export function ChatBotTemporary() {
             <Button
               variant={"secondary"}
               className="rounded-full"
-              onClick={() => setMessages([])}
+              onClick={reset}
               disabled={isLoading}
             >
               {t("resetChat")}
@@ -179,6 +199,7 @@ export function ChatBotTemporary() {
               </Button>
             </DrawerClose>
           </DrawerTitle>
+          <DrawerDescription className="sr-only"></DrawerDescription>
         </DrawerHeader>
         <DrawerTemporaryContent
           isLoading={isLoading}
@@ -186,9 +207,8 @@ export function ChatBotTemporary() {
           error={error}
           input={input}
           setInput={setInput}
-          append={append}
+          sendMessage={sendMessage}
           setMessages={setMessages}
-          reload={reload}
           stop={stop}
           status={status}
         />
@@ -201,24 +221,22 @@ function DrawerTemporaryContent({
   messages,
   input,
   setInput,
-  append,
+  sendMessage,
   status,
   error,
   isLoading,
   setMessages,
-  reload,
   stop,
 }: {
   messages: UIMessage[];
   input: string;
   setInput: (input: string) => void;
-  append: UseChatHelpers["append"];
+  sendMessage: UseChatHelpers<UIMessage>["sendMessage"];
   status: "submitted" | "streaming" | "ready" | "error";
   isLoading: boolean;
   error: Error | undefined;
-  setMessages: UseChatHelpers["setMessages"];
-  reload: UseChatHelpers["reload"];
-  stop: UseChatHelpers["stop"];
+  setMessages: UseChatHelpers<UIMessage>["setMessages"];
+  stop: UseChatHelpers<UIMessage>["stop"];
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const t = useTranslations("Chat");
@@ -227,16 +245,6 @@ function DrawerTemporaryContent({
   const [temporaryChat, appStoreMutate] = appStore(
     useShallow((state) => [state.temporaryChat, state.mutate]),
   );
-
-  const showThink = useMemo(() => {
-    if (!isLoading) return false;
-    const lastMessage = messages.at(-1);
-    if (lastMessage?.role == "user") return true;
-    const lastPart = lastMessage?.parts.at(-1);
-
-    if (lastPart?.type == "step-start") return true;
-    return false;
-  }, [isLoading, messages.at(-1)]);
 
   useEffect(() => {
     containerRef.current?.scrollTo({
@@ -270,6 +278,15 @@ function DrawerTemporaryContent({
     }
   }, [isLoading]);
 
+  const setModel = useCallback((model) => {
+    appStoreMutate({
+      temporaryChat: {
+        ...temporaryChat,
+        chatModel: model,
+      },
+    });
+  }, []);
+
   useEffect(() => {
     if (!temporaryChat.chatModel) {
       appStoreMutate((state) => {
@@ -288,7 +305,7 @@ function DrawerTemporaryContent({
     <div
       className={cn("flex flex-col min-w-0 h-full flex-1 overflow-y-hidden")}
     >
-      {!messages.length && (
+      {!messages.length && !error && (
         <div className="flex-1 items-center flex">
           <div className="max-w-3xl mx-auto my-4">
             {" "}
@@ -315,11 +332,12 @@ function DrawerTemporaryContent({
               isLoading={isLoading}
               isLastMessage={isLastMessage}
               setMessages={setMessages}
-              reload={reload}
+              prevMessage={messages[index - 1]}
+              sendMessage={sendMessage}
             />
           );
         })}
-        {showThink && (
+        {isLoading && (
           <div className="w-full mx-auto max-w-3xl px-6">
             <Think />
           </div>
@@ -330,17 +348,10 @@ function DrawerTemporaryContent({
       <div className={"w-full my-6 mt-auto"}>
         <PromptInput
           input={input}
-          append={append}
+          sendMessage={sendMessage}
           disabledMention={true}
           model={temporaryChat.chatModel}
-          setModel={(model) => {
-            appStoreMutate({
-              temporaryChat: {
-                ...temporaryChat,
-                chatModel: model,
-              },
-            });
-          }}
+          setModel={setModel}
           toolDisabled
           placeholder={t("TemporaryChat.feelFreeToAskAnythingTemporarily")}
           setInput={setInput}

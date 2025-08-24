@@ -3,7 +3,7 @@ import { MCPCard } from "@/components/mcp-card";
 
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { MCPOverview } from "@/components/mcp-overview";
+import { MCPOverview, RECOMMENDED_MCPS } from "@/components/mcp-overview";
 
 import { Skeleton } from "ui/skeleton";
 
@@ -12,11 +12,18 @@ import { useTranslations } from "next-intl";
 import { MCPIcon } from "ui/mcp-icon";
 import { useMcpList } from "@/hooks/queries/use-mcp-list";
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { MCPServerInfo } from "app-types/mcp";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { cn } from "lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "ui/dropdown-menu";
+import { useRouter } from "next/navigation";
 
 const LightRays = dynamic(() => import("@/components/ui/light-rays"), {
   ssr: false,
@@ -24,8 +31,7 @@ const LightRays = dynamic(() => import("@/components/ui/light-rays"), {
 
 export default function MCPDashboard({ message }: { message?: string }) {
   const t = useTranslations("MCP");
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [isScrolled, setIsScrolled] = useState(false);
+  const router = useRouter();
   const {
     data: mcpList,
     isLoading,
@@ -43,19 +49,22 @@ export default function MCPDashboard({ message }: { message?: string }) {
     });
   }, [mcpList]);
 
+  const displayIcons = useMemo(() => {
+    const shuffled = [...RECOMMENDED_MCPS].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, 5);
+  }, []);
+
   // Delay showing validating spinner until validating persists for 500ms
   const [showValidating, setShowValidating] = useState(false);
-  useEffect(() => {
-    if (isValidating) {
-      setShowValidating(false);
-      const timerId = setTimeout(() => setShowValidating(true), 500);
-      return () => clearTimeout(timerId);
-    }
-    setShowValidating(false);
-  }, [isValidating]);
+
+  const handleRecommendedSelect = (mcp: (typeof RECOMMENDED_MCPS)[number]) => {
+    const params = new URLSearchParams();
+    params.set("name", mcp.name);
+    params.set("config", JSON.stringify(mcp.config));
+    router.push(`/mcp/create?${params.toString()}`);
+  };
 
   const particle = useMemo(() => {
-    if (isLoading || mcpList?.length !== 0) return;
     return (
       <>
         <div className="absolute opacity-30 pointer-events-none top-0 left-0 w-full h-full z-10 fade-in animate-in duration-5000">
@@ -73,22 +82,16 @@ export default function MCPDashboard({ message }: { message?: string }) {
         </div>
       </>
     );
-  }, [isLoading, mcpList.length]);
-
-  const handleScroll = useCallback((e: Event) => {
-    const target = e.target as HTMLElement;
-    setIsScrolled(target.scrollTop > 0);
-  }, []);
+  }, [mcpList.length]);
 
   useEffect(() => {
-    const scrollElement = scrollRef.current?.querySelector(
-      "[data-radix-scroll-area-viewport]",
-    );
-    if (scrollElement) {
-      scrollElement.addEventListener("scroll", handleScroll);
-      return () => scrollElement.removeEventListener("scroll", handleScroll);
+    if (isValidating) {
+      setShowValidating(false);
+      const timerId = setTimeout(() => setShowValidating(true), 500);
+      return () => clearTimeout(timerId);
     }
-  }, [handleScroll]);
+    setShowValidating(false);
+  }, [isValidating]);
 
   useEffect(() => {
     if (message) {
@@ -101,14 +104,9 @@ export default function MCPDashboard({ message }: { message?: string }) {
   return (
     <>
       {particle}
-      <ScrollArea ref={scrollRef} className="h-full w-full z-40">
-        <div className="flex-1 relative flex flex-col gap-4 px-8 max-w-3xl h-full mx-auto pb-8">
-          <div
-            className={cn(
-              "flex items-center sticky top-0 bg-background z-50 pb-8",
-              isScrolled && "border-b",
-            )}
-          >
+      <ScrollArea className="h-full w-full z-40 ">
+        <div className="pt-8 flex-1 relative flex flex-col gap-4 px-8 max-w-3xl h-full mx-auto pb-8">
+          <div className={cn("flex items-center  pb-8")}>
             <h1 className="text-2xl font-bold flex items-center gap-2">
               MCP Servers
               {showValidating && isValidating && !isLoading && (
@@ -118,17 +116,51 @@ export default function MCPDashboard({ message }: { message?: string }) {
             <div className="flex-1" />
 
             <div className="flex gap-2">
-              <Link
-                href="https://smithery.ai/"
-                target="_blank"
-                className="hidden sm:block"
-              >
-                <Button className="font-semibold" variant={"ghost"}>
-                  {t("marketplace")}
-                </Button>
-              </Link>
+              {mcpList?.length ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className="gap-1 data-[state=open]:bg-muted data-[state=open]:text-foreground text-muted-foreground"
+                    >
+                      <div className="flex -space-x-2">
+                        {displayIcons.map((mcp, index) => {
+                          const Icon = mcp.icon;
+                          return (
+                            <div
+                              key={mcp.name}
+                              className="relative rounded-full bg-background border-[1px] p-1"
+                              style={{
+                                zIndex: displayIcons.length - index,
+                              }}
+                            >
+                              <Icon className="size-3" />
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    {RECOMMENDED_MCPS.map((mcp) => {
+                      const Icon = mcp.icon;
+                      return (
+                        <DropdownMenuItem
+                          key={mcp.name}
+                          onClick={() => handleRecommendedSelect(mcp)}
+                          className="cursor-pointer"
+                        >
+                          <Icon className="size-4 mr-2" />
+                          <span>{mcp.label}</span>
+                        </DropdownMenuItem>
+                      );
+                    })}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : null}
+
               <Link href="/mcp/create">
-                <Button className="font-semibold bg-input/20" variant="outline">
+                <Button className="font-semibold" variant="outline">
                   <MCPIcon className="fill-foreground size-3.5" />
                   {t("addMcpServer")}
                 </Button>
@@ -142,7 +174,7 @@ export default function MCPDashboard({ message }: { message?: string }) {
               <Skeleton className="h-60 w-full" />
             </div>
           ) : sortedMcpList?.length ? (
-            <div className="flex flex-col gap-6 mb-4">
+            <div className="flex flex-col gap-6 mb-4 z-20">
               {sortedMcpList.map((mcp) => (
                 <MCPCard key={mcp.id} {...mcp} />
               ))}

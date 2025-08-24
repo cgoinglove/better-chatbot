@@ -27,6 +27,7 @@ import { allNodeValidate } from "lib/ai/workflow/node-validate";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import { arrangeNodes } from "lib/ai/workflow/arrange-nodes";
+import { EditWorkflowPopup } from "./edit-workflow-popup";
 
 export const WorkflowPanel = memo(
   function WorkflowPanel({
@@ -46,6 +47,8 @@ export const WorkflowPanel = memo(
   }) {
     const { setNodes, getNodes, getEdges } = useReactFlow();
     const [showExecutePanel, setShowExecutePanel] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
     const t = useTranslations();
 
     const handleArrangeNodes = useCallback(() => {
@@ -59,6 +62,7 @@ export const WorkflowPanel = memo(
     }, [getNodes, getEdges, setNodes, t]);
     const updateVisibility = useCallback(
       (visibility: DBWorkflow["visibility"]) => {
+        setIsSaving(true);
         const close = addProcess();
         safe(() =>
           fetch(`/api/workflow/${workflow.id}`, {
@@ -73,7 +77,10 @@ export const WorkflowPanel = memo(
         )
           .ifOk(() => mutate(`/api/workflow/${workflow.id}`))
           .ifFail((e) => handleErrorWithToast(e))
-          .watch(close);
+          .watch(() => {
+            setIsSaving(false);
+            close();
+          });
       },
       [workflow],
     );
@@ -124,6 +131,11 @@ export const WorkflowPanel = memo(
       [workflow],
     );
 
+    const handleWorkflowMasterSave = useCallback((workflow: DBWorkflow) => {
+      mutate(`/api/workflow/${workflow.id}`);
+      setIsEditing(false);
+    }, []);
+
     return (
       <div className="min-h-0 flex flex-col items-end">
         <div className="flex items-center gap-2 mb-2">
@@ -133,6 +145,7 @@ export const WorkflowPanel = memo(
                 style={{
                   backgroundColor: workflow.icon?.style?.backgroundColor,
                 }}
+                onClick={() => setIsEditing(true)}
                 className="border transition-colors hover:bg-secondary! group items-center justify-center flex w-8 h-8 rounded-md ring ring-background hover:ring-ring"
               >
                 <Avatar className="size-6">
@@ -234,6 +247,7 @@ export const WorkflowPanel = memo(
             visibility={workflow.visibility}
             isOwner={hasEditAccess || false}
             onVisibilityChange={hasEditAccess ? updateVisibility : undefined}
+            isVisibilityChangeLoading={isSaving}
           />
         </div>
         <div className="flex gap-2">
@@ -248,6 +262,12 @@ export const WorkflowPanel = memo(
             />
           )}
         </div>
+        <EditWorkflowPopup
+          open={isEditing}
+          onOpenChange={setIsEditing}
+          defaultValue={workflow}
+          onSave={handleWorkflowMasterSave}
+        />
       </div>
     );
   },

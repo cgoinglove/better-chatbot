@@ -13,7 +13,7 @@ import { exclude, isString } from "lib/utils";
 import { DBEdge, DBNode } from "app-types/workflow";
 import { Edge } from "@xyflow/react";
 import { GraphEvent } from "ts-edge";
-import { Message } from "ai";
+import { UIMessage } from "ai";
 
 export const defaultObjectJsonSchema: ObjectJsonSchema7 = {
   type: "object",
@@ -248,11 +248,10 @@ export function convertTiptapJsonToAiMessage({
   role: "user" | "assistant" | "system";
   getOutput: (key: OutputSchemaSourceKey) => any;
   json?: TipTapMentionJsonContent;
-}): Omit<Message, "id"> {
+}): Omit<UIMessage, "id"> {
   if (!json)
     return {
       role,
-      content: "",
       parts: [],
     };
 
@@ -274,7 +273,6 @@ export function convertTiptapJsonToAiMessage({
 
   return {
     role,
-    content: text,
     parts: [
       {
         type: "text",

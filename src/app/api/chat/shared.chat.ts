@@ -1,27 +1,28 @@
 import "server-only";
 import {
   LoadAPIKeyError,
-  Message,
+  UIMessage,
   Tool,
-  ToolInvocation,
   jsonSchema,
   tool as createTool,
-  DataStreamWriter,
-  formatDataStreamPart,
+  isToolUIPart,
+  UIMessagePart,
+  ToolUIPart,
+  getToolName,
+  UIMessageStreamWriter,
 } from "ai";
 import {
   ChatMention,
-  ChatMessage,
-  ChatMessageAnnotation,
-  ClientToolInvocationZodSchema,
-  ToolInvocationUIPart,
+  ChatMetadata,
+  ManualToolConfirmTag,
 } from "app-types/chat";
-import { errorToString, objectFlow, toAny } from "lib/utils";
+import { errorToString, exclude, objectFlow } from "lib/utils";
 import logger from "logger";
 import {
   AllowedMCPServer,
   McpServerCustomizationsPrompt,
   VercelAIMcpTool,
+  VercelAIMcpToolTag,
 } from "app-types/mcp";
 import { MANUAL_REJECT_RESPONSE_PROMPT } from "lib/ai/prompts";
 
@@ -32,7 +33,8 @@ import { workflowRepository } from "lib/db/repository";
 import {
   VercelAIWorkflowTool,
   VercelAIWorkflowToolStreaming,
-  VercelAIWorkflowToolStreamingResult,
+  VercelAIWorkflowToolStreamingResultTag,
+  VercelAIWorkflowToolTag,
 } from "app-types/workflow";
 import { createWorkflowExecutor } from "lib/ai/workflow/executor/workflow-executor";
 import { NodeKind } from "lib/ai/workflow/workflow.interface";
@@ -95,20 +97,10 @@ export function excludeToolExecution(
 ): Record<string, Tool> {
   return objectFlow(tool).map((value) => {
     return createTool({
-      parameters: value.parameters,
+      inputSchema: value.inputSchema,
       description: value.description,
     });
   });
-}
-
-export function appendAnnotations(
-  annotations: any[] = [],
-  annotationsToAppend: ChatMessageAnnotation[] | ChatMessageAnnotation,
-): ChatMessageAnnotation[] {
-  const newAnnotations = Array.isArray(annotationsToAppend)
-    ? annotationsToAppend
-    : [annotationsToAppend];
-  return [...annotations, ...newAnnotations];
 }
 
 export function mergeSystemPrompt(
@@ -121,57 +113,41 @@ export function mergeSystemPrompt(
 }
 
 export function manualToolExecuteByLastMessage(
-  part: ToolInvocationUIPart,
-  message: Message,
-  tools: Record<
-    string,
-    VercelAIMcpTool | VercelAIWorkflowTool | (Tool & { __$ref__?: string })
-  >,
+  part: ToolUIPart,
+  tools: Record<string, VercelAIMcpTool | VercelAIWorkflowTool | Tool>,
   abortSignal?: AbortSignal,
 ) {
-  const { args, toolName } = part.toolInvocation;
+  const { input } = part;
 
-  const manulConfirmation = (message.parts as ToolInvocationUIPart[]).find(
-    (_part) => {
-      return _part.toolInvocation?.toolCallId == part.toolInvocation.toolCallId;
-    },
-  )?.toolInvocation as Extract<ToolInvocation, { state: "result" }>;
+  const toolName = getToolName(part);
 
   const tool = tools[toolName];
-
-  if (!manulConfirmation?.result) return MANUAL_REJECT_RESPONSE_PROMPT;
   return safe(() => {
     if (!tool) throw new Error(`tool not found: ${toolName}`);
-    return ClientToolInvocationZodSchema.parse(manulConfirmation?.result);
+    if (!ManualToolConfirmTag.isMaybe(part.output))
+      throw new Error("manual tool confirm not found");
+    return part.output;
   })
-    .map((result) => {
-      const value = result?.result;
-
-      if (result.action == "direct") {
-        return value;
-      } else if (result.action == "manual") {
-        if (!value) return MANUAL_REJECT_RESPONSE_PROMPT;
-        if (tool.__$ref__ === "workflow") {
-          return tool.execute!(args, {
-            toolCallId: part.toolInvocation.toolCallId,
-            abortSignal: abortSignal ?? new AbortController().signal,
-            messages: [],
-          });
-        } else if (tool.__$ref__ === "mcp") {
-          const mcpTool = tool as VercelAIMcpTool;
-          return mcpClientsManager.toolCall(
-            mcpTool._mcpServerId,
-            mcpTool._originToolName,
-            args,
-          );
-        }
-        return tool.execute!(args, {
-          toolCallId: part.toolInvocation.toolCallId,
+    .map(({ confirm }) => {
+      if (!confirm) return MANUAL_REJECT_RESPONSE_PROMPT;
+      if (VercelAIWorkflowToolTag.isMaybe(tool)) {
+        return tool.execute!(input, {
+          toolCallId: part.toolCallId,
           abortSignal: abortSignal ?? new AbortController().signal,
           messages: [],
         });
+      } else if (VercelAIMcpToolTag.isMaybe(tool)) {
+        return mcpClientsManager.toolCall(
+          tool._mcpServerId,
+          tool._originToolName,
+          input,
+        );
       }
-      throw new Error("Invalid Client Tool Invocation Action " + result.action);
+      return tool.execute!(input, {
+        toolCallId: part.toolCallId,
+        abortSignal: abortSignal ?? new AbortController().signal,
+        messages: [],
+      });
     })
     .ifFail((error) => ({
       isError: true,
@@ -185,47 +161,20 @@ export function handleError(error: any) {
   if (LoadAPIKeyError.isInstance(error)) {
     return error.message;
   }
-
   logger.error(error);
-  logger.error(error.name);
+  logger.error(`Route Error: ${error.name}`);
   return errorToString(error.message);
 }
 
-export function convertToMessage(message: ChatMessage): Message {
-  return {
-    ...message,
-    id: message.id,
-    content: "",
-    role: message.role,
-    parts: message.parts,
-    experimental_attachments:
-      toAny(message).attachments || toAny(message).experimental_attachments,
-  };
-}
-
-export function extractInProgressToolPart(
-  messages: Message[],
-): ToolInvocationUIPart | null {
-  let result: ToolInvocationUIPart | null = null;
-
-  for (const message of messages) {
-    for (const part of message.parts || []) {
-      if (part.type != "tool-invocation") continue;
-      if (part.toolInvocation.state == "result") continue;
-      result = part as ToolInvocationUIPart;
-      return result;
-    }
-  }
-  return null;
-}
-export function assignToolResult(toolPart: ToolInvocationUIPart, result: any) {
-  return Object.assign(toolPart, {
-    toolInvocation: {
-      ...toolPart.toolInvocation,
-      state: "result",
-      result,
-    },
-  });
+export function extractInProgressToolPart(message: UIMessage): ToolUIPart[] {
+  if (message.role != "assistant") return [];
+  if ((message.metadata as ChatMetadata)?.toolChoice != "manual") return [];
+  return message.parts.filter(
+    (part) =>
+      isToolUIPart(part) &&
+      part.state == "output-available" &&
+      ManualToolConfirmTag.isMaybe(part.output),
+  ) as ToolUIPart[];
 }
 
 export function filterMcpServerCustomizations(
@@ -281,7 +230,7 @@ export const workflowToVercelAITool = ({
   name: string;
   description?: string;
   schema: ObjectJsonSchema7;
-  dataStream: DataStreamWriter;
+  dataStream: UIMessageStreamWriter;
 }): VercelAIWorkflowTool => {
   const toolName = name
     .replace(/[^a-zA-Z0-9\s]/g, "")
@@ -291,19 +240,19 @@ export const workflowToVercelAITool = ({
 
   const tool = createTool({
     description: `${name} ${description?.trim().slice(0, 50)}`,
-    parameters: jsonSchema(schema),
+    inputSchema: jsonSchema(schema),
     execute(query, { toolCallId, abortSignal }) {
       const history: VercelAIWorkflowToolStreaming[] = [];
-      const toolResult: VercelAIWorkflowToolStreamingResult = {
+      const toolResult = VercelAIWorkflowToolStreamingResultTag.create({
         toolCallId,
         workflowName: name,
-        __$ref__: "workflow",
+
         startedAt: Date.now(),
         endedAt: Date.now(),
         history,
         result: undefined,
         status: "running",
-      };
+      });
       return safe(id)
         .map((id) =>
           workflowRepository.selectStructureById(id, {
@@ -360,12 +309,12 @@ export const workflowToVercelAITool = ({
                 result.endedAt = e.endedAt;
               }
             }
-            dataStream.write(
-              formatDataStreamPart("tool_result", {
-                toolCallId,
-                result: toolResult,
-              }),
-            );
+
+            dataStream.write({
+              type: "tool-output-available",
+              toolCallId,
+              output: toolResult,
+            });
           });
           return executor.run(
             {
@@ -415,9 +364,8 @@ export const workflowToVercelAITool = ({
   tool._workflowId = id;
   tool._originToolName = name;
   tool._toolName = toolName;
-  tool.__$ref__ = "workflow";
 
-  return tool;
+  return VercelAIWorkflowToolTag.create(tool);
 };
 
 export const workflowToVercelAITools = (
@@ -427,7 +375,7 @@ export const workflowToVercelAITools = (
     description?: string;
     schema: ObjectJsonSchema7;
   }[],
-  dataStream: DataStreamWriter,
+  dataStream: UIMessageStreamWriter,
 ) => {
   return workflows
     .map((v) =>
@@ -460,7 +408,7 @@ export const loadMcpTools = (opt?: {
 
 export const loadWorkFlowTools = (opt: {
   mentions?: ChatMention[];
-  dataStream: DataStreamWriter;
+  dataStream: UIMessageStreamWriter;
 }) =>
   safe(() =>
     opt?.mentions?.length
@@ -508,3 +456,31 @@ export const loadAppDefaultTools = (opt?: {
       throw e;
     })
     .orElse({} as Record<string, Tool>);
+
+export const convertToSavePart = <T extends UIMessagePart<any, any>>(
+  part: T,
+) => {
+  return safe(
+    exclude(part as any, ["providerMetadata", "callProviderMetadata"]) as T,
+  )
+    .map((v) => {
+      if (isToolUIPart(v) && v.state.startsWith("output")) {
+        if (VercelAIWorkflowToolStreamingResultTag.isMaybe(v.output)) {
+          return {
+            ...v,
+            output: {
+              ...v.output,
+              history: v.output.history.map((h: any) => {
+                return {
+                  ...h,
+                  result: undefined,
+                };
+              }),
+            },
+          };
+        }
+      }
+      return v;
+    })
+    .unwrap();
+};

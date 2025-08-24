@@ -1,5 +1,6 @@
 import { useCopy } from "@/hooks/use-copy";
-import { ToolInvocationUIPart } from "app-types/chat";
+import { ToolUIPart } from "ai";
+
 import { callCodeRunWorker } from "lib/code-runner/call-worker";
 
 import {
@@ -28,7 +29,7 @@ export const CodeExecutor = memo(function CodeExecutor({
   onResult,
   type,
 }: {
-  part: ToolInvocationUIPart["toolInvocation"];
+  part: ToolUIPart;
   onResult?: (result?: any) => void;
   type: "javascript" | "python";
 }) {
@@ -63,9 +64,7 @@ export const CodeExecutor = memo(function CodeExecutor({
   const menualToolCall = useCallback(
     async (code: string) => {
       const result = await runCode(code, type);
-
       const logstring = JSON.stringify(result.logs);
-
       onResult?.({
         ...toAny({
           ...result,
@@ -92,7 +91,7 @@ export const CodeExecutor = memo(function CodeExecutor({
     [onResult],
   );
   const isRunning = useMemo(() => {
-    return isExecuting || part.state != "result";
+    return isExecuting || part.state.startsWith("input");
   }, [isExecuting, part.state]);
 
   const scrollToCode = useCallback(() => {
@@ -103,8 +102,8 @@ export const CodeExecutor = memo(function CodeExecutor({
   }, []);
 
   const result = useMemo(() => {
-    if (part.state != "result") return null;
-    return part.result as CodeRunnerResult;
+    if (part.state.startsWith("input")) return null;
+    return part.output as CodeRunnerResult;
   }, [part]);
 
   const logs = useMemo(() => {
@@ -173,10 +172,10 @@ export const CodeExecutor = memo(function CodeExecutor({
         time: Date.now(),
       },
     ]);
-    const code = part.args?.code;
+    const code = toAny(part.input)?.code;
 
     safe(() => runCode(code, type)).watch(() => setIsExecuting(false));
-  }, [part.args, isExecuting]);
+  }, [part.input, isExecuting]);
 
   const header = useMemo(() => {
     if (isRunning)
@@ -230,9 +229,14 @@ export const CodeExecutor = memo(function CodeExecutor({
   }, [logs, isRunning]);
 
   useEffect(() => {
-    if (onResult && part.args && part.state == "call" && !isRun.current) {
+    if (
+      onResult &&
+      part.input &&
+      part.state == "input-available" &&
+      !isRun.current
+    ) {
       isRun.current = true;
-      menualToolCall(part.args.code);
+      menualToolCall(toAny(part.input)?.code);
     }
   }, [part.state, !!onResult]);
 
@@ -240,7 +244,7 @@ export const CodeExecutor = memo(function CodeExecutor({
     if (isRunning) {
       const closeKey = setInterval(scrollToCode, 300);
       return () => clearInterval(closeKey);
-    } else if (part.state == "result" && isRun.current) {
+    } else if (part.state.startsWith("output") && isRun.current) {
       scrollToCode();
     }
   }, [isRunning]);
@@ -253,7 +257,7 @@ export const CodeExecutor = memo(function CodeExecutor({
             {header}
             <div className="flex-1" />
 
-            {part.state == "result" && (
+            {part.state.startsWith("output") && (
               <>
                 <div
                   className="flex items-center gap-1 text-[10px] text-muted-foreground px-2 py-1 transition-all rounded-sm cursor-pointer hover:bg-input hover:text-foreground font-semibold"
@@ -264,7 +268,7 @@ export const CodeExecutor = memo(function CodeExecutor({
                 </div>
                 <div
                   className="flex items-center gap-1 text-[10px] text-muted-foreground px-2 py-1 transition-all rounded-sm cursor-pointer hover:bg-input hover:text-foreground font-semibold"
-                  onClick={() => copy(part.args?.code ?? "")}
+                  onClick={() => copy(toAny(part.input)?.code ?? "")}
                 >
                   {copied ? (
                     <CheckIcon className="size-2" />
@@ -282,12 +286,12 @@ export const CodeExecutor = memo(function CodeExecutor({
             <div className="absolute pointer-events-none top-0 left-0 w-1/6 h-full bg-gradient-to-r from-background to-transparent z-10" />
             <div className="absolute pointer-events-none top-0 right-0 w-1/6 h-full bg-gradient-to-l from-background to-transparent z-10" />
             <div
-              className="min-h-14 p-6 text-xs overflow-y-auto max-h-[40vh] "
+              className="min-h-14 p-6 text-xs overflow-y-auto max-h-[40vh]"
               ref={codeResultContainerRef}
             >
               <CodeBlock
                 className="p-4 text-[10px] overflow-x-auto"
-                code={part.args?.code}
+                code={toAny(part.input)?.code}
                 lang={type}
                 fallback={fallback}
               />

@@ -1,6 +1,7 @@
 import { Tool } from "ai";
 import { ObjectJsonSchema7, Visibility } from "./util";
 import { NodeKind } from "lib/ai/workflow/workflow.interface";
+import { tag } from "lib/tag";
 
 export type WorkflowIcon = {
   type: "emoji";
@@ -117,11 +118,12 @@ export interface WorkflowRepository {
 }
 
 export type VercelAIWorkflowTool = Tool & {
-  __$ref__: "workflow";
   _workflowId: string;
   _toolName: string;
   _originToolName: string;
 };
+
+export const VercelAIWorkflowToolTag = tag<VercelAIWorkflowTool>("workflow");
 
 export type VercelAIWorkflowToolStreaming = {
   name: string;
@@ -138,7 +140,7 @@ export type VercelAIWorkflowToolStreamingResult = {
   toolCallId: string;
   workflowName: string;
   workflowIcon?: WorkflowIcon;
-  __$ref__: "workflow";
+
   startedAt: number;
   endedAt: number;
   history: VercelAIWorkflowToolStreaming[];
@@ -147,11 +149,5 @@ export type VercelAIWorkflowToolStreamingResult = {
   status: "running" | "success" | "fail";
 };
 
-export function isVercelAIWorkflowTool(
-  value?: any,
-): value is VercelAIWorkflowToolStreamingResult {
-  if (!value || typeof value !== "object") return false;
-  return (
-    value.__$ref__ === "workflow" && value.toolCallId && value.workflowName
-  );
-}
+export const VercelAIWorkflowToolStreamingResultTag =
+  tag<VercelAIWorkflowToolStreamingResult>("workflow-streaming-result");

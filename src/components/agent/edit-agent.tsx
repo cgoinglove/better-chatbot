@@ -4,11 +4,11 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { useInvalidateAgents } from "@/hooks/queries/use-agents";
+import { useMutateAgents } from "@/hooks/queries/use-agents";
 import { useMcpList } from "@/hooks/queries/use-mcp-list";
 import { useWorkflowToolList } from "@/hooks/queries/use-workflow-tool-list";
 import { useObjectState } from "@/hooks/use-object-state";
-import { useBookmark } from "@/hooks/use-bookmark";
+import { useBookmark } from "@/hooks/queries/use-bookmark";
 import { Agent, AgentCreateSchema, AgentUpdateSchema } from "app-types/agent";
 import { ChatMention } from "app-types/chat";
 import { MCPServerInfo } from "app-types/mcp";
@@ -18,13 +18,7 @@ import { BACKGROUND_COLORS } from "lib/const";
 import { cn, fetcher, objectFlow } from "lib/utils";
 import { safe } from "ts-safe";
 import { handleErrorWithToast } from "ui/shared-toast";
-import {
-  ChevronDownIcon,
-  Loader,
-  WandSparklesIcon,
-  Bookmark,
-  BookmarkCheck,
-} from "lucide-react";
+import { ChevronDownIcon, Loader, WandSparklesIcon } from "lucide-react";
 import { Button } from "ui/button";
 import {
   DropdownMenu,
@@ -85,22 +79,30 @@ export default function EditAgent({
   userId,
   isOwner = true,
   hasEditAccess = true,
-  isBookmarked: initialBookmarked = false,
 }: EditAgentProps) {
   const t = useTranslations();
-  const invalidateAgents = useInvalidateAgents();
+  const mutateAgents = useMutateAgents();
   const router = useRouter();
 
   const [openGenerateAgentDialog, setOpenGenerateAgentDialog] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [isBookmarked, setIsBookmarked] = useState(initialBookmarked);
+  const [isVisibilityChangeLoading, setIsVisibilityChangeLoading] =
+    useState(false);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Initialize agent state with initial data or defaults
   const [agent, setAgent] = useObjectState(initialAgent || defaultConfig());
 
-  const { toggleBookmark } = useBookmark({ itemType: "agent" });
+  const { toggleBookmark, isLoading: isBookmarkToggleLoadingFn } = useBookmark({
+    itemType: "agent",
+  });
+  const isBookmarkToggleLoading = useMemo(
+    () =>
+      (initialAgent?.id && isBookmarkToggleLoadingFn(initialAgent?.id)) ||
+      false,
+    [initialAgent?.id, isBookmarkToggleLoadingFn],
+  );
 
   const { data: mcpList, isLoading: isMcpLoading } = useMcpList();
   const { data: workflowToolList, isLoading: isWorkflowLoading } =
@@ -157,7 +159,8 @@ export default function EditAgent({
 
   const saveAgent = useCallback(() => {
     if (initialAgent) {
-      safe(() => AgentUpdateSchema.parse({ ...agent }))
+      safe(() => setIsSaving(true))
+        .map(() => AgentUpdateSchema.parse({ ...agent }))
         .map(JSON.stringify)
         .map(async (body) =>
           fetcher(`/api/agent/${initialAgent.id}`, {
@@ -165,37 +168,38 @@ export default function EditAgent({
             body,
           }),
         )
-        .ifOk(() => {
-          invalidateAgents();
+        .ifOk((updatedAgent) => {
+          mutateAgents(updatedAgent);
           toast.success(t("Agent.updated"));
           router.push(`/agents`);
         })
         .ifFail(handleErrorWithToast)
         .watch(() => setIsSaving(false));
     } else {
-      setIsSaving(true);
-      safe(() => AgentCreateSchema.parse({ ...agent, userId }))
+      safe(() => setIsSaving(true))
+        .map(() => AgentCreateSchema.parse({ ...agent, userId }))
         .map(JSON.stringify)
-        .map(async (body) =>
-          fetcher(`/api/agent`, {
+        .map(async (body) => {
+          return fetcher(`/api/agent`, {
             method: "POST",
             body,
-          }),
-        )
-        .ifOk(() => {
-          invalidateAgents();
-          toast.success(initialAgent ? t("Agent.updated") : t("Agent.created"));
+          });
+        })
+        .ifOk((updatedAgent) => {
+          mutateAgents(updatedAgent);
+          toast.success(t("Agent.created"));
           router.push(`/agents`);
         })
         .ifFail(handleErrorWithToast)
         .watch(() => setIsSaving(false));
     }
-  }, [agent, userId, invalidateAgents, router, initialAgent, t]);
+  }, [agent, userId, mutateAgents, router, initialAgent, t]);
 
   const updateVisibility = useCallback(
     async (visibility: Visibility) => {
       if (initialAgent?.id) {
-        safe(() => AgentUpdateSchema.parse({ visibility }))
+        safe(() => setIsVisibilityChangeLoading(true))
+          .map(() => AgentUpdateSchema.parse({ visibility }))
           .map(JSON.stringify)
           .map(async (body) =>
             fetcher(`/api/agent/${initialAgent.id}`, {
@@ -205,45 +209,57 @@ export default function EditAgent({
           )
           .ifOk(() => {
             setAgent({ visibility });
-            invalidateAgents();
-            toast.success("Visibility updated");
+            mutateAgents({ id: initialAgent.id, visibility });
+            toast.success(t("Agent.visibilityUpdated"));
           })
           .ifFail(handleErrorWithToast)
-          .watch(() => setIsSaving(false));
+          .watch(() => setIsVisibilityChangeLoading(false));
       } else {
         setAgent({ visibility });
       }
     },
-    [initialAgent?.id, invalidateAgents, setAgent],
+    [initialAgent?.id, mutateAgents, setAgent, setIsVisibilityChangeLoading, t],
   );
 
   const deleteAgent = useCallback(async () => {
     if (!initialAgent?.id) return;
-
     const ok = await notify.confirm({
       description: t("Agent.deleteConfirm"),
     });
     if (!ok) return;
-
-    try {
-      await fetcher(`/api/agent/${initialAgent.id}`, {
-        method: "DELETE",
-      });
-
-      invalidateAgents();
-      toast.success(t("Agent.deleted"));
-      router.push("/agents");
-    } catch (error) {
-      handleErrorWithToast(error as Error);
-    }
-  }, [initialAgent?.id, invalidateAgents, router, t]);
+    safe(() => setIsSaving(true))
+      .map(() =>
+        fetcher(`/api/agent/${initialAgent.id}`, {
+          method: "DELETE",
+        }),
+      )
+      .ifOk(() => {
+        mutateAgents({ id: initialAgent.id }, true);
+        toast.success(t("Agent.deleted"));
+        router.push("/agents");
+      })
+      .ifFail(handleErrorWithToast)
+      .watch(() => setIsSaving(false));
+  }, [initialAgent?.id, mutateAgents, router, t]);
 
   const handleBookmarkToggle = useCallback(async () => {
-    if (!initialAgent?.id) return;
-
-    await toggleBookmark({ id: initialAgent.id, isBookmarked });
-    setIsBookmarked(!isBookmarked);
-  }, [initialAgent?.id, isBookmarked, toggleBookmark]);
+    if (!initialAgent?.id || isBookmarkToggleLoading) return;
+    safe(async () => {
+      await toggleBookmark({
+        id: initialAgent.id,
+        isBookmarked: agent.isBookmarked,
+      });
+    })
+      .ifOk(() => {
+        setAgent({ isBookmarked: !agent.isBookmarked });
+      })
+      .ifFail(handleErrorWithToast);
+  }, [
+    initialAgent?.id,
+    toggleBookmark,
+    agent.isBookmarked,
+    isBookmarkToggleLoading,
+  ]);
 
   const handleAgentChange = useCallback((generatedData: any) => {
     if (textareaRef.current) {
@@ -282,8 +298,18 @@ export default function EditAgent({
   }, [isMcpLoading, isWorkflowLoading]);
 
   const isLoading = useMemo(() => {
-    return isLoadingTool || isSaving;
-  }, [isLoadingTool, isSaving]);
+    return (
+      isLoadingTool ||
+      isSaving ||
+      isVisibilityChangeLoading ||
+      isBookmarkToggleLoading
+    );
+  }, [
+    isLoadingTool,
+    isSaving,
+    isVisibilityChangeLoading,
+    isBookmarkToggleLoading,
+  ]);
 
   const isGenerating = openGenerateAgentDialog;
 
@@ -308,6 +334,7 @@ export default function EditAgent({
                   variant="ghost"
                   disabled={isLoading}
                   onClick={() => setOpenGenerateAgentDialog(true)}
+                  data-testid="agent-generate-with-ai-button"
                 >
                   <WandSparklesIcon className="size-3" />
                   {t("Common.generateWithAI")}
@@ -318,6 +345,7 @@ export default function EditAgent({
                       variant="outline"
                       className="justify-between data-[state=open]:bg-input"
                       disabled={isLoading}
+                      data-testid="agent-create-with-example-button"
                     >
                       {t("Common.createWithExample")}
                       <ChevronDownIcon className="size-4" />
@@ -332,7 +360,10 @@ export default function EditAgent({
                         <span>Generate Random Data</span>
                       </div>
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setAgent(WeatherExample)}>
+                    <DropdownMenuItem
+                      data-testid="agent-create-with-example-weather-button"
+                      onClick={() => setAgent(WeatherExample)}
+                    >
                       <div className="flex items-center gap-2">
                         <span>🌤️</span>
                         <span>Weather Checker</span>
@@ -345,31 +376,17 @@ export default function EditAgent({
 
             {initialAgent && (
               <div className="flex items-center gap-2">
-                {/* Bookmark button - only for non-owners */}
-                {!isOwner && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleBookmarkToggle}
-                    disabled={isLoading}
-                  >
-                    {isBookmarked ? (
-                      <BookmarkCheck className="size-4" />
-                    ) : (
-                      <Bookmark className="size-4" />
-                    )}
-                  </Button>
-                )}
-
-                {/* Visibility dropdown - only for owners */}
-                {isOwner && (
-                  <ShareableActions
-                    type="agent"
-                    visibility={agent.visibility || "private"}
-                    isOwner={true}
-                    onVisibilityChange={updateVisibility}
-                  />
-                )}
+                <ShareableActions
+                  type="agent"
+                  visibility={agent.visibility || "private"}
+                  isBookmarked={agent?.isBookmarked || false}
+                  isOwner={isOwner}
+                  onVisibilityChange={updateVisibility}
+                  isVisibilityChangeLoading={isVisibilityChangeLoading}
+                  disabled={isLoading}
+                  onBookmarkToggle={handleBookmarkToggle}
+                  isBookmarkToggleLoading={isBookmarkToggleLoading}
+                />
               </div>
             )}
           </div>
@@ -390,6 +407,7 @@ export default function EditAgent({
                 disabled={isLoading || !hasEditAccess}
                 className="hover:bg-input bg-secondary/40 transition-colors border-transparent border-none! focus-visible:bg-input! ring-0!"
                 id="agent-name"
+                data-testid="agent-name-input"
                 placeholder={t("Agent.agentNamePlaceholder")}
                 readOnly={!hasEditAccess}
               />
@@ -415,6 +433,7 @@ export default function EditAgent({
           ) : (
             <Input
               id="agent-description"
+              data-testid="agent-description-input"
               disabled={isLoading || !hasEditAccess}
               placeholder={t("Agent.agentDescriptionPlaceholder")}
               className="hover:bg-input placeholder:text-xs bg-secondary/40 transition-colors border-transparent border-none! focus-visible:bg-input! ring-0!"
@@ -439,6 +458,7 @@ export default function EditAgent({
             ) : (
               <Input
                 id="agent-role"
+                data-testid="agent-role-input"
                 disabled={isLoading || !hasEditAccess}
                 placeholder={t("Agent.agentRolePlaceholder")}
                 className="hover:bg-input placeholder:text-xs bg-secondary/40 w-44 transition-colors border-transparent border-none! focus-visible:bg-input! ring-0!"
@@ -466,6 +486,7 @@ export default function EditAgent({
             ) : (
               <Textarea
                 id="agent-prompt"
+                data-testid="agent-prompt-textarea"
                 ref={textareaRef}
                 disabled={isLoading || !hasEditAccess}
                 placeholder={t("Agent.agentInstructionsPlaceholder")}
@@ -526,7 +547,8 @@ export default function EditAgent({
             <Button
               className={cn("mt-2", !initialAgent || !isOwner ? "ml-auto" : "")}
               onClick={saveAgent}
-              disabled={isLoading}
+              disabled={isLoading || !hasEditAccess}
+              data-testid="agent-save-button"
             >
               {isSaving ? t("Common.saving") : t("Common.save")}
               {isSaving && <Loader className="size-4 animate-spin" />}

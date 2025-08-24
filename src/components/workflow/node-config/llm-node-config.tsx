@@ -101,7 +101,7 @@ export const LLMNodeDataConfig = memo(function ({
     <div className="flex flex-col gap-2 text-sm h-full px-4 ">
       <Label className="text-sm">Model</Label>
       <SelectModel
-        defaultModel={model}
+        currentModel={model}
         onSelect={(model) => {
           updateNodeData(data.id, {
             model,

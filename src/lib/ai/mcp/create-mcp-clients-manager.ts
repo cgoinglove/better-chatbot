@@ -1,8 +1,9 @@
-import type {
-  MCPServerConfig,
-  McpServerInsert,
-  McpServerSelect,
-  VercelAIMcpTool,
+import {
+  VercelAIMcpToolTag,
+  type MCPServerConfig,
+  type McpServerInsert,
+  type McpServerSelect,
+  type VercelAIMcpTool,
 } from "app-types/mcp";
 import { createMCPClient, type MCPClient } from "./create-mcp-client";
 import {
@@ -16,7 +17,7 @@ import { safe } from "ts-safe";
 import { McpServerSchema } from "lib/db/pg/schema.pg";
 import { createMCPToolId } from "./mcp-tool-id";
 import globalLogger from "logger";
-import { jsonSchema, ToolExecutionOptions } from "ai";
+import { jsonSchema, ToolCallOptions } from "ai";
 import { createMemoryMCPConfigStorage } from "./memory-mcp-config-storage";
 import { colorize } from "consola/utils";
 
@@ -120,24 +121,24 @@ export class MCPClientsManager {
             (bcc, tool) => {
               return {
                 ...bcc,
-                [createMCPToolId(clientName, tool.name)]: {
-                  description: tool.description,
-                  parameters: jsonSchema(
-                    toAny({
-                      ...tool.inputSchema,
-                      properties: tool.inputSchema?.properties ?? {},
-                      additionalProperties: false,
-                    }),
-                  ),
-                  _originToolName: tool.name,
-                  __$ref__: "mcp",
-                  _mcpServerName: clientName,
-                  _mcpServerId: id,
-                  execute: (params, options: ToolExecutionOptions) => {
-                    options?.abortSignal?.throwIfAborted();
-                    return this.toolCall(id, tool.name, params);
-                  },
-                },
+                [createMCPToolId(clientName, tool.name)]:
+                  VercelAIMcpToolTag.create({
+                    description: tool.description,
+                    inputSchema: jsonSchema(
+                      toAny({
+                        ...tool.inputSchema,
+                        properties: tool.inputSchema?.properties ?? {},
+                        additionalProperties: false,
+                      }),
+                    ),
+                    _originToolName: tool.name,
+                    _mcpServerName: clientName,
+                    _mcpServerId: id,
+                    execute: (params, options: ToolCallOptions) => {
+                      options?.abortSignal?.throwIfAborted();
+                      return this.toolCall(id, tool.name, params);
+                    },
+                  }),
               };
             },
             {} as Record<string, VercelAIMcpTool>,

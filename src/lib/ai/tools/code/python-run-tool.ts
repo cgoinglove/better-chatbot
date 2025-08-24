@@ -16,5 +16,5 @@ export const pythonExecutionSchema: JSONSchema7 = {
 export const pythonExecutionTool = createTool({
   description:
     "Execute Python code directly in the user's browser using Pyodide. Code runs client-side without server dependency.",
-  parameters: jsonSchemaToZod(pythonExecutionSchema),
+  inputSchema: jsonSchemaToZod(pythonExecutionSchema),
 });

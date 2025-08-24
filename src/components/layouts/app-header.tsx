@@ -37,7 +37,11 @@ export function AppHeader() {
     <header className="sticky top-0 z-50 flex items-center px-3 py-2">
       <Tooltip>
         <TooltipTrigger asChild>
-          <Toggle aria-label="Toggle italic" onClick={toggleSidebar}>
+          <Toggle
+            aria-label="Toggle Sidebar"
+            onClick={toggleSidebar}
+            data-testid="sidebar-toggle"
+          >
             <PanelLeft />
           </Toggle>
         </TooltipTrigger>

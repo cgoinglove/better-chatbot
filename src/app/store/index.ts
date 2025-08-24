@@ -103,7 +103,7 @@ export const appStore = create<AppState & AppDispatch>()(
         allowedAppDefaultToolkit: (
           state.allowedAppDefaultToolkit ??
           initialState.allowedAppDefaultToolkit
-        )?.filter((v) => AppDefaultToolkit[v]),
+        )?.filter((v) => Object.values(AppDefaultToolkit).includes(v)),
         temporaryChat: {
           ...initialState.temporaryChat,
           ...state.temporaryChat,

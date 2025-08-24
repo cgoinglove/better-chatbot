@@ -55,14 +55,16 @@ export async function POST(request: NextRequest) {
 
     agent && logger.info(`Agent: ${agent.name}`);
 
-    const tools = safe(mcpTools)
+    const allowedMcpTools = safe(mcpTools)
       .map((tools) => {
         return filterMCPToolsByAllowedMCPServers(tools, allowedMcpServers);
       })
       .orElse(undefined);
 
-    if (tools) {
-      logger.info(`Tools: ${Object.keys(tools).join(", ")}`);
+    const toolNames = Object.keys(allowedMcpTools ?? {});
+
+    if (toolNames.length > 0) {
+      logger.info(`${toolNames.length} tools found`);
     } else {
       logger.info(`No tools found`);
     }
@@ -73,16 +75,18 @@ export async function POST(request: NextRequest) {
 
     const mcpServerCustomizations = await safe()
       .map(() => {
-        if (Object.keys(tools ?? {}).length === 0)
+        if (Object.keys(allowedMcpTools ?? {}).length === 0)
           throw new Error("No tools found");
         return rememberMcpServerCustomizationsAction(session.user.id);
       })
-      .map((v) => filterMcpServerCustomizations(tools!, v))
+      .map((v) => filterMcpServerCustomizations(allowedMcpTools!, v))
       .orElse({});
 
-    const openAITools = Object.entries(tools ?? {}).map(([name, tool]) => {
-      return vercelAIToolToOpenAITool(tool, name);
-    });
+    const openAITools = Object.entries(allowedMcpTools ?? {}).map(
+      ([name, tool]) => {
+        return vercelAIToolToOpenAITool(tool, name);
+      },
+    );
 
     const systemPrompt = mergeSystemPrompt(
       buildSpeechSystemPrompt(
@@ -92,6 +96,8 @@ export async function POST(request: NextRequest) {
       ),
       buildMcpServerCustomizationsSystemPrompt(mcpServerCustomizations),
     );
+
+    const bindingTools = [...openAITools, ...DEFAULT_VOICE_TOOLS];
 
     const r = await fetch("https://api.openai.com/v1/realtime/sessions", {
       method: "POST",
@@ -107,7 +113,7 @@ export async function POST(request: NextRequest) {
           model: "whisper-1",
         },
         instructions: systemPrompt,
-        tools: [...openAITools, ...DEFAULT_VOICE_TOOLS],
+        tools: bindingTools,
       }),
     });
 
@@ -130,7 +136,7 @@ function vercelAIToolToOpenAITool(tool: VercelAIMcpTool, name: string) {
     name,
     type: "function",
     description: tool.description,
-    parameters: tool.parameters?.jsonSchema ?? {
+    parameters: (tool.inputSchema as any).jsonSchema ?? {
       type: "object",
       properties: {},
       required: [],

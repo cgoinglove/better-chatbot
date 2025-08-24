@@ -1,12 +1,11 @@
 import {
-  appendResponseMessages,
-  createDataStreamResponse,
+  convertToModelMessages,
+  createUIMessageStream,
+  createUIMessageStreamResponse,
   smoothStream,
+  stepCountIs,
   streamText,
-  type UIMessage,
-  formatDataStreamPart,
-  appendClientMessage,
-  Message,
+  UIMessage,
 } from "ai";
 
 import { customModelProvider, isToolCallUnsupportedModel } from "lib/ai/models";
@@ -19,25 +18,22 @@ import {
   buildMcpServerCustomizationsSystemPrompt,
   buildUserSystemPrompt,
   buildToolCallUnsupportedModelSystemPrompt,
-  buildThinkingSystemPrompt,
 } from "lib/ai/prompts";
-import { chatApiSchemaRequestBodySchema } from "app-types/chat";
+import { chatApiSchemaRequestBodySchema, ChatMetadata } from "app-types/chat";
 
 import { errorIf, safe } from "ts-safe";
 
 import {
-  appendAnnotations,
   excludeToolExecution,
   handleError,
   manualToolExecuteByLastMessage,
   mergeSystemPrompt,
-  convertToMessage,
   extractInProgressToolPart,
-  assignToolResult,
   filterMcpServerCustomizations,
   loadMcpTools,
   loadWorkFlowTools,
   loadAppDefaultTools,
+  convertToSavePart,
 } from "./shared.chat";
 import {
   rememberAgentAction,
@@ -45,9 +41,7 @@ import {
 } from "./actions";
 import { getSession } from "auth/server";
 import { colorize } from "consola/utils";
-import { isVercelAIWorkflowTool } from "app-types/workflow";
-import { SequentialThinkingToolName } from "lib/ai/tools";
-import { sequentialThinkingTool } from "lib/ai/tools/thinking/sequential-thinking";
+import { generateUUID } from "lib/utils";
 
 const logger = globalLogger.withDefaults({
   message: colorize("blackBright", `Chat API: `),
@@ -62,7 +56,6 @@ export async function POST(request: Request) {
     if (!session?.user.id) {
       return new Response("Unauthorized", { status: 401 });
     }
-
     const {
       id,
       message,
@@ -70,7 +63,6 @@ export async function POST(request: Request) {
       toolChoice,
       allowedAppDefaultToolkit,
       allowedMcpServers,
-      thinking,
       mentions = [],
     } = chatApiSchemaRequestBodySchema.parse(json);
 
@@ -92,19 +84,19 @@ export async function POST(request: Request) {
       return new Response("Forbidden", { status: 403 });
     }
 
-    // if is false, it means the last message is manual tool execution
-    const isLastMessageUserMessage = message.role == "user";
+    const messages: UIMessage[] = (thread?.messages ?? []).map((m) => {
+      return {
+        id: m.id,
+        role: m.role,
+        parts: m.parts,
+        metadata: m.metadata,
+      };
+    });
 
-    const previousMessages = (thread?.messages ?? []).map(convertToMessage);
-
-    const messages: Message[] = isLastMessageUserMessage
-      ? appendClientMessage({
-          messages: previousMessages,
-          message,
-        })
-      : previousMessages;
-
-    const inProgressToolStep = extractInProgressToolPart(messages.slice(-2));
+    if (messages.at(-1)?.id == message.id) {
+      messages.pop();
+    }
+    messages.push(message);
 
     const supportToolCall = !isToolCallUnsupportedModel(model);
 
@@ -119,14 +111,20 @@ export async function POST(request: Request) {
     const isToolCallAllowed =
       supportToolCall && (toolChoice != "none" || mentions.length > 0);
 
-    return createDataStreamResponse({
-      execute: async (dataStream) => {
+    const metadata: ChatMetadata = {
+      agentId: agent?.id,
+      toolChoice: toolChoice,
+      toolCount: 0,
+      chatModel: chatModel,
+    };
+
+    const stream = createUIMessageStream({
+      execute: async ({ writer: dataStream }) => {
         const mcpClients = await mcpClientsManager.getClients();
         const mcpTools = await mcpClientsManager.tools();
         logger.info(
           `mcp-server count: ${mcpClients.length}, mcp-tools count :${Object.keys(mcpTools).length}`,
         );
-
         const MCP_TOOLS = await safe()
           .map(errorIf(() => !isToolCallAllowed && "Not allowed"))
           .map(() =>
@@ -156,19 +154,22 @@ export async function POST(request: Request) {
             }),
           )
           .orElse({});
+        const inProgressToolParts = extractInProgressToolPart(message);
+        if (inProgressToolParts.length) {
+          await Promise.all(
+            inProgressToolParts.map(async (part) => {
+              const output = await manualToolExecuteByLastMessage(
+                part,
+                { ...MCP_TOOLS, ...WORKFLOW_TOOLS, ...APP_DEFAULT_TOOLS },
+                request.signal,
+              );
+              part.output = output;
 
-        if (inProgressToolStep) {
-          const toolResult = await manualToolExecuteByLastMessage(
-            inProgressToolStep,
-            message,
-            { ...MCP_TOOLS, ...WORKFLOW_TOOLS, ...APP_DEFAULT_TOOLS },
-            request.signal,
-          );
-          assignToolResult(inProgressToolStep, toolResult);
-          dataStream.write(
-            formatDataStreamPart("tool_result", {
-              toolCallId: inProgressToolStep.toolInvocation.toolCallId,
-              result: toolResult,
+              dataStream.write({
+                type: "tool-output-available",
+                toolCallId: part.toolCallId,
+                output,
+              });
             }),
           );
         }
@@ -188,38 +189,29 @@ export async function POST(request: Request) {
           buildUserSystemPrompt(session.user, userPreferences, agent),
           buildMcpServerCustomizationsSystemPrompt(mcpServerCustomizations),
           !supportToolCall && buildToolCallUnsupportedModelSystemPrompt,
-          (!supportToolCall ||
-            ["openai", "anthropic"].includes(chatModel?.provider ?? "")) &&
-            thinking &&
-            buildThinkingSystemPrompt(supportToolCall),
         );
 
         const vercelAITooles = safe({ ...MCP_TOOLS, ...WORKFLOW_TOOLS })
           .map((t) => {
             const bindingTools =
-              toolChoice === "manual" ? excludeToolExecution(t) : t;
+              toolChoice === "manual" ||
+              (message.metadata as ChatMetadata)?.toolChoice === "manual"
+                ? excludeToolExecution(t)
+                : t;
             return {
               ...bindingTools,
               ...APP_DEFAULT_TOOLS, // APP_DEFAULT_TOOLS Not Supported Manual
             };
           })
-          .map((t) => {
-            if (supportToolCall && thinking) {
-              return {
-                ...t,
-                [SequentialThinkingToolName]: sequentialThinkingTool,
-              };
-            }
-            return t;
-          })
           .unwrap();
+        metadata.toolCount = Object.keys(vercelAITooles).length;
 
         const allowedMcpTools = Object.values(allowedMcpServers ?? {})
           .map((t) => t.tools)
           .flat();
 
         logger.info(
-          `${agent ? `agent: ${agent.name}, ` : ""}tool mode: ${toolChoice}, mentions: ${mentions.length}, thinking: ${thinking}`,
+          `${agent ? `agent: ${agent.name}, ` : ""}tool mode: ${toolChoice}, mentions: ${mentions.length}`,
         );
 
         logger.info(
@@ -233,110 +225,64 @@ export async function POST(request: Request) {
         const result = streamText({
           model,
           system: systemPrompt,
-          messages,
-          maxSteps: 10,
-          toolCallStreaming: true,
+          messages: convertToModelMessages(messages),
           experimental_transform: smoothStream({ chunking: "word" }),
           maxRetries: 2,
           tools: vercelAITooles,
+          stopWhen: stepCountIs(10),
           toolChoice: "auto",
           abortSignal: request.signal,
-          onFinish: async ({ response, usage }) => {
-            const appendMessages = appendResponseMessages({
-              messages: messages.slice(-1),
-              responseMessages: response.messages,
-            });
-            if (isLastMessageUserMessage) {
-              await chatRepository.upsertMessage({
-                threadId: thread!.id,
-                model: chatModel?.model ?? null,
-                role: "user",
-                parts: message.parts,
-                attachments: message.experimental_attachments,
-                id: message.id,
-                annotations: appendAnnotations(message.annotations, {
-                  usageTokens: usage.promptTokens,
-                }),
-              });
-            }
-            const assistantMessage = appendMessages.at(-1);
-            if (assistantMessage) {
-              const annotations = appendAnnotations(
-                assistantMessage.annotations,
-                {
-                  usageTokens: usage.completionTokens,
-                  toolChoice,
-                },
-              );
-              dataStream.writeMessageAnnotation(annotations.at(-1)!);
-              chatRepository.upsertMessage({
-                model: chatModel?.model ?? null,
-                threadId: thread!.id,
-                role: assistantMessage.role,
-                id: assistantMessage.id,
-                parts: (assistantMessage.parts as UIMessage["parts"]).map(
-                  (v) => {
-                    if (
-                      v.type == "tool-invocation" &&
-                      v.toolInvocation.state == "result" &&
-                      isVercelAIWorkflowTool(v.toolInvocation.result)
-                    ) {
-                      return {
-                        ...v,
-                        toolInvocation: {
-                          ...v.toolInvocation,
-                          result: {
-                            ...v.toolInvocation.result,
-                            history: v.toolInvocation.result.history.map(
-                              (h) => {
-                                return {
-                                  ...h,
-                                  result: undefined,
-                                };
-                              },
-                            ),
-                          },
-                        },
-                      };
-                    }
-                    if (
-                      v.type == "tool-invocation" &&
-                      v.toolInvocation.state == "result" &&
-                      v.toolInvocation.toolName == SequentialThinkingToolName
-                    ) {
-                      return {
-                        ...v,
-                        toolInvocation: {
-                          ...v.toolInvocation,
-                          args: {},
-                        },
-                      };
-                    }
-                    return v;
-                  },
-                ),
-                attachments: assistantMessage.experimental_attachments,
-                annotations,
-              });
-            }
-            if (agent) {
-              await agentRepository.updateAgent(agent.id, session.user.id, {
-                updatedAt: new Date(),
-              } as any);
-            }
-          },
         });
         result.consumeStream();
-        result.mergeIntoDataStream(dataStream, {
-          sendReasoning: true,
-        });
-        result.usage.then((useage) => {
-          logger.debug(
-            `usage input: ${useage.promptTokens}, usage output: ${useage.completionTokens}, usage total: ${useage.totalTokens}`,
-          );
-        });
+        dataStream.merge(
+          result.toUIMessageStream({
+            messageMetadata: ({ part }) => {
+              if (part.type == "finish") {
+                metadata.usage = part.totalUsage;
+                return metadata;
+              }
+            },
+          }),
+        );
+      },
+
+      generateId: generateUUID,
+      onFinish: async ({ responseMessage }) => {
+        if (responseMessage.id == message.id) {
+          await chatRepository.upsertMessage({
+            threadId: thread!.id,
+            ...responseMessage,
+            parts: responseMessage.parts.map(convertToSavePart),
+            metadata,
+          });
+        } else {
+          await chatRepository.upsertMessage({
+            threadId: thread!.id,
+            role: message.role,
+            parts: message.parts.map(convertToSavePart),
+            id: message.id,
+          });
+          await chatRepository.upsertMessage({
+            threadId: thread!.id,
+            role: responseMessage.role,
+            id: responseMessage.id,
+            parts: responseMessage.parts.map(convertToSavePart),
+            metadata,
+          });
+        }
+
+        if (agent) {
+          agentRepository.updateAgent(agent.id, session.user.id, {
+            updatedAt: new Date(),
+          } as any);
+        }
       },
       onError: handleError,
+      originalMessages: messages,
+    });
+
+    return createUIMessageStreamResponse({
+      stream,
     });
   } catch (error: any) {
     logger.error(error);

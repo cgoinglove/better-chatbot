@@ -4,9 +4,9 @@ import { z } from "zod";
 export const createTableTool = createTool({
   description:
     "Create an interactive table with data. The table will automatically have sorting, filtering, and search functionality.",
-  parameters: z.object({
+  inputSchema: z.object({
     title: z.string().describe("Table title"),
-    description: z.string().optional().describe("Optional table description"),
+    description: z.string().nullable().describe("Optional table description"),
     columns: z
       .array(
         z.object({
@@ -16,7 +16,7 @@ export const createTableTool = createTool({
           label: z.string().describe("Display label for the column header"),
           type: z
             .enum(["string", "number", "date", "boolean"])
-            .optional()
+            .nullable()
             .default("string")
             .describe("Data type for proper sorting and formatting"),
         }),

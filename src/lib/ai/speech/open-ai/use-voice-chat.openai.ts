@@ -7,13 +7,12 @@ import {
   VoiceChatSession,
 } from "..";
 import { generateUUID } from "lib/utils";
-import { TextPart } from "ai";
+import { TextPart, ToolUIPart } from "ai";
 import {
   OpenAIRealtimeServerEvent,
   OpenAIRealtimeSession,
 } from "./openai-realtime-event";
 
-import { ToolInvocationUIPart } from "app-types/chat";
 import { appStore } from "@/app/store";
 import { useShallow } from "zustand/shallow";
 import { useTheme } from "next-themes";
@@ -50,19 +49,16 @@ type Content =
       result?: any;
     };
 
-const createUIPart = (content: Content): TextPart | ToolInvocationUIPart => {
+const createUIPart = (content: Content): TextPart | ToolUIPart => {
   if (content.type == "tool-invocation") {
-    return {
-      type: "tool-invocation",
-      toolInvocation: {
-        args: content.arguments,
-        state: content.state,
-        result: content.result,
-        step: 0,
-        toolName: content.name,
-        toolCallId: content.toolCallId,
-      },
+    const part: ToolUIPart = {
+      type: `tool-${content.name}`,
+      input: content.arguments,
+      state: "output-available",
+      toolCallId: content.toolCallId,
+      output: content.result,
     };
+    return part;
   }
   return {
     type: "text",
@@ -80,10 +76,8 @@ const createUIMessage = (m: {
   return {
     id,
     role: m.role,
-    content: "",
     parts: [createUIPart(m.content)],
     completed: m.completed ?? false,
-    createdAt: new Date(),
   };
 };
 
@@ -174,7 +168,12 @@ export function useOpenAIVoiceChat(
       if (response.status !== 200) {
         throw new Error(await response.text());
       }
-      return response.json();
+      const session = await response.json();
+      if (session.error) {
+        throw new Error(session.error.message);
+      }
+
+      return session;
     }, [model, voice, allowedAppDefaultToolkit, allowedMcpServers, agentId]);
 
   const updateUIMessage = useCallback(
@@ -239,18 +238,17 @@ export function useOpenAIVoiceChat(
         },
       };
       updateUIMessage(id, (prev) => {
-        const prevPart = prev.parts.find((p) => p.type == "tool-invocation");
+        const prevPart = prev.parts.find((p) => p.type == `tool-${toolName}`);
         if (!prevPart) return prev;
-        const nextPart: ToolInvocationUIPart = {
-          ...prevPart,
-          toolInvocation: {
-            ...prevPart.toolInvocation,
-            result: toolResult,
-            state: "result",
-          },
+        const part: ToolUIPart = {
+          state: "output-available",
+          output: toolResult,
+          toolCallId: callId,
+          input: toolArgs,
+          type: `tool-${toolName}`,
         };
         return {
-          parts: [nextPart],
+          parts: [part],
         };
       });
       dataChannel.current?.send(JSON.stringify(event));
@@ -390,6 +388,7 @@ export function useOpenAIVoiceChat(
     setMessages([]);
     try {
       const session = await createSession();
+      console.log({ session });
       const sessionToken = session.client_secret.value;
       const pc = new RTCPeerConnection();
       if (!audioElement.current) {

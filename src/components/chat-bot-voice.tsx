@@ -1,6 +1,6 @@
 "use client";
 
-import { TextPart } from "ai";
+import { getToolName, isToolUIPart, TextPart } from "ai";
 import { DEFAULT_VOICE_TOOLS, UIMessageWithCompleted } from "lib/ai/speech";
 
 import {
@@ -47,7 +47,6 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { ToolMessagePart } from "./message-parts";
 
 import { EnabledMcpToolsDropdown } from "./enabled-mcp-tools-dropdown";
-import { ToolInvocationUIPart } from "app-types/chat";
 import { appStore } from "@/app/store";
 import { useShallow } from "zustand/shallow";
 import { useTranslations } from "next-intl";
@@ -75,15 +74,6 @@ export function ChatBotVoice() {
   const [isClosing, setIsClosing] = useState(false);
   const startAudio = useRef<HTMLAudioElement>(null);
   const [useCompactView, setUseCompactView] = useState(true);
-
-  // const useVoiceChat = useMemo<VoiceChatHook>(() => {
-  //   switch (voiceChat.options.provider) {
-  //     case "openai":
-  //       return OpenAIVoiceChat;
-  //     default:
-  //       return OpenAIVoiceChat;
-  //   }
-  // }, [voiceChat.options.provider]);
 
   const {
     isListening,
@@ -498,14 +488,14 @@ function ConversationView({
                         ))}
                     </p>
                   );
-                } else if (part.type === "tool-invocation") {
+                } else if (isToolUIPart(part)) {
                   return (
                     <ToolMessagePart
                       key={index}
                       part={part}
                       showActions={false}
                       messageId={message.id}
-                      isLast={part.toolInvocation.state != "result"}
+                      isLast={part.state.startsWith("input")}
                     />
                   );
                 }
@@ -526,15 +516,8 @@ function CompactMessageView({
 }) {
   const { toolParts, textPart } = useMemo(() => {
     const toolParts = messages
-      .filter((msg) =>
-        msg.parts.some((part) => part.type === "tool-invocation"),
-      )
-      .map(
-        (msg) =>
-          msg.parts.find(
-            (part) => part.type === "tool-invocation",
-          ) as ToolInvocationUIPart,
-      );
+      .filter((msg) => msg.parts.some(isToolUIPart))
+      .map((msg) => msg.parts.find(isToolUIPart));
 
     const textPart = messages.findLast((msg) => msg.role === "assistant")
       ?.parts[0] as TextPart;
@@ -545,7 +528,7 @@ function CompactMessageView({
     <div className="relative w-full h-full overflow-hidden">
       <div className="absolute bottom-6 max-h-[80vh] overflow-y-auto left-6 z-10 flex-col gap-2 hidden md:flex">
         {toolParts.map((toolPart, index) => {
-          const isExecuting = toolPart.toolInvocation.state !== "result";
+          const isExecuting = toolPart?.state.startsWith("input");
           if (!toolPart) return null;
           return (
             <Dialog key={index}>
@@ -558,7 +541,7 @@ function CompactMessageView({
                   >
                     <WrenchIcon className="size-3.5" />
                     <span className="text-sm font-bold min-w-0 truncate mr-auto">
-                      {toolPart.toolInvocation.toolName}
+                      {getToolName(toolPart)}
                     </span>
                     {isExecuting ? (
                       <Loader className="size-3.5 animate-spin" />
@@ -569,7 +552,7 @@ function CompactMessageView({
                 </div>
               </DialogTrigger>
               <DialogContent className="z-50 md:max-w-2xl! max-h-[80vh] overflow-y-auto p-8">
-                <DialogTitle>{toolPart.toolInvocation.toolName}</DialogTitle>
+                <DialogTitle>{getToolName(toolPart)}</DialogTitle>
                 <div className="flex flex-row gap-4 text-sm ">
                   <div className="w-1/2 min-w-0 flex flex-col">
                     <div className="flex items-center gap-2 mb-2 pt-2 pb-1 z-10">
@@ -577,7 +560,7 @@ function CompactMessageView({
                         Inputs
                       </h5>
                     </div>
-                    <JsonView data={toolPart.toolInvocation.args} />
+                    <JsonView data={toolPart.input} />
                   </div>
 
                   <div className="w-1/2 min-w-0 pl-4 flex flex-col">
@@ -588,9 +571,11 @@ function CompactMessageView({
                     </div>
                     <JsonView
                       data={
-                        toolPart.toolInvocation.state === "result"
-                          ? toolPart.toolInvocation.result
-                          : {}
+                        toolPart.state === "output-available"
+                          ? toolPart.output
+                          : toolPart.state == "output-error"
+                            ? toolPart.errorText
+                            : {}
                       }
                     />
                   </div>

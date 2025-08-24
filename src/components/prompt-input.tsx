@@ -4,7 +4,6 @@ import {
   AudioWaveformIcon,
   ChevronDown,
   CornerRightUp,
-  LightbulbIcon,
   PlusIcon,
   Square,
   XIcon,
@@ -12,7 +11,7 @@ import {
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { Button } from "ui/button";
 import { notImplementedToast } from "ui/shared-toast";
-import { UseChatHelpers } from "@ai-sdk/react";
+import { UIMessage, UseChatHelpers } from "@ai-sdk/react";
 import { SelectModel } from "./select-model";
 import { appStore } from "@/app/store";
 import { useShallow } from "zustand/shallow";
@@ -34,22 +33,19 @@ import { OpenAIIcon } from "ui/openai-icon";
 import { GrokIcon } from "ui/grok-icon";
 import { ClaudeIcon } from "ui/claude-icon";
 import { GeminiIcon } from "ui/gemini-icon";
-import { cn } from "lib/utils";
-import { getShortcutKeyList, isShortcutEvent } from "lib/keyboard-shortcuts";
-import { AgentSummary } from "app-types/agent";
+
 import { EMOJI_DATA } from "lib/const";
+import { AgentSummary } from "app-types/agent";
 
 interface PromptInputProps {
   placeholder?: string;
   setInput: (value: string) => void;
   input: string;
   onStop: () => void;
-  append: UseChatHelpers["append"];
+  sendMessage: UseChatHelpers<UIMessage>["sendMessage"];
   toolDisabled?: boolean;
   isLoading?: boolean;
   model?: ChatModel;
-  onThinkingChange?: (thinking: boolean) => void;
-  thinking?: boolean;
   setModel?: (model: ChatModel) => void;
   voiceDisabled?: boolean;
   threadId?: string;
@@ -64,16 +60,9 @@ const ChatMentionInput = dynamic(() => import("./chat-mention-input"), {
   },
 });
 
-const THINKING_SHORTCUT = {
-  shortcut: {
-    command: true,
-    key: "E",
-  },
-};
-
 export default function PromptInput({
   placeholder,
-  append,
+  sendMessage,
   model,
   setModel,
   input,
@@ -84,8 +73,6 @@ export default function PromptInput({
   toolDisabled,
   voiceDisabled,
   threadId,
-  onThinkingChange,
-  thinking,
   disabledMention,
 }: PromptInputProps) {
   const t = useTranslations("Chat");
@@ -217,9 +204,8 @@ export default function PromptInput({
     const userMessage = input?.trim() || "";
     if (userMessage.length === 0) return;
     setInput("");
-    append!({
+    sendMessage({
       role: "user",
-      content: "",
       parts: [
         {
           type: "text",
@@ -228,21 +214,6 @@ export default function PromptInput({
       ],
     });
   };
-
-  useEffect(() => {
-    if (!onThinkingChange) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (isShortcutEvent(e, THINKING_SHORTCUT)) {
-        e.preventDefault();
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-        onThinkingChange(!thinking);
-        editorRef.current?.commands.focus();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [!!onThinkingChange, thinking]);
 
   // Handle ESC key to clear mentions
   useEffect(() => {
@@ -355,35 +326,6 @@ export default function PromptInput({
                 >
                   <PlusIcon />
                 </Button>
-                {onThinkingChange && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size={"sm"}
-                        className={cn(
-                          "rounded-full hover:bg-input! p-2!",
-                          thinking && "bg-input!",
-                        )}
-                        onClick={() => {
-                          onThinkingChange(!thinking);
-                          editorRef.current?.commands.focus();
-                        }}
-                      >
-                        <LightbulbIcon />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent
-                      className="flex items-center gap-2"
-                      side="top"
-                    >
-                      Sequential Thinking
-                      <span className="text-muted-foreground ml-2">
-                        {getShortcutKeyList(THINKING_SHORTCUT).join("")}
-                      </span>
-                    </TooltipContent>
-                  </Tooltip>
-                )}
 
                 {!toolDisabled && (
                   <>
@@ -401,11 +343,12 @@ export default function PromptInput({
 
                 <div className="flex-1" />
 
-                <SelectModel onSelect={setChatModel} defaultModel={chatModel}>
+                <SelectModel onSelect={setChatModel} currentModel={chatModel}>
                   <Button
                     variant={"ghost"}
                     size={"sm"}
                     className="rounded-full group data-[state=open]:bg-input! hover:bg-input! mr-1"
+                    data-testid="model-selector-button"
                   >
                     {chatModel?.model ? (
                       <>
@@ -418,7 +361,10 @@ export default function PromptInput({
                         ) : chatModel.provider === "google" ? (
                           <GeminiIcon className="size-3 opacity-0 group-data-[state=open]:opacity-100 group-hover:opacity-100" />
                         ) : null}
-                        <span className="text-foreground group-data-[state=open]:text-foreground  ">
+                        <span
+                          className="text-foreground group-data-[state=open]:text-foreground  "
+                          data-testid="selected-model-name"
+                        >
                           {chatModel.model}
                         </span>
                       </>

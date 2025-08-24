@@ -40,7 +40,7 @@ export async function GET(request: Request) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return Response.json(
-        { error: "Invalid query parameters", details: error.errors },
+        { error: "Invalid query parameters", details: error.message },
         { status: 400 },
       );
     }
@@ -50,7 +50,7 @@ export async function GET(request: Request) {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: Request): Promise<Response> {
   const session = await getSession();
 
   if (!session?.user.id) {
@@ -71,7 +71,7 @@ export async function POST(request: Request) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return Response.json(
-        { error: "Invalid input", details: error.errors },
+        { error: "Invalid input", details: error.message },
         { status: 400 },
       );
     }

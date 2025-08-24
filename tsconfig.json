@@ -43,7 +43,8 @@
     "src/types/global.d.ts",
     "vitest.setup.ts",
     "vitest.config.ts",
-    "drizzle.config.ts"
+    "drizzle.config.ts",
+    "tests/**/*.ts"
   ],
   "exclude": ["node_modules"]
 }

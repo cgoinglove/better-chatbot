@@ -1,7 +1,16 @@
-import type { UIMessage, Message } from "ai";
+import type { LanguageModelUsage, UIMessage } from "ai";
 import { z } from "zod";
 import { AllowedMCPServerZodSchema } from "./mcp";
 import { UserPreferences } from "./user";
+import { tag } from "lib/tag";
+
+export type ChatMetadata = {
+  usage?: LanguageModelUsage;
+  chatModel?: ChatModel;
+  toolChoice?: "auto" | "none" | "manual";
+  toolCount?: number;
+  agentId?: string;
+};
 
 export type ChatModel = {
   provider: string;
@@ -20,9 +29,7 @@ export type ChatMessage = {
   threadId: string;
   role: UIMessage["role"];
   parts: UIMessage["parts"];
-  annotations?: ChatMessageAnnotation[];
-  attachments?: unknown[];
-  model: string | null;
+  metadata?: ChatMetadata;
   createdAt: Date;
 };
 
@@ -77,16 +84,9 @@ export const ChatMentionSchema = z.discriminatedUnion("type", [
 
 export type ChatMention = z.infer<typeof ChatMentionSchema>;
 
-export type ChatMessageAnnotation = {
-  usageTokens?: number;
-  toolChoice?: "auto" | "none" | "manual";
-  [key: string]: any;
-};
-
 export const chatApiSchemaRequestBodySchema = z.object({
   id: z.string(),
   message: z.any() as z.ZodType<UIMessage>,
-  thinking: z.boolean().optional(),
   chatModel: z
     .object({
       provider: z.string(),
@@ -101,11 +101,6 @@ export const chatApiSchemaRequestBodySchema = z.object({
 
 export type ChatApiSchemaRequestBody = z.infer<
   typeof chatApiSchemaRequestBodySchema
->;
-
-export type ToolInvocationUIPart = Extract<
-  Exclude<Message["parts"], undefined>[number],
-  { type: "tool-invocation" }
 >;
 
 export type ChatRepository = {
@@ -156,11 +151,6 @@ export type ChatRepository = {
   ): Promise<ChatMessage[]>;
 };
 
-export const ClientToolInvocationZodSchema = z.object({
-  action: z.enum(["manual", "direct"]),
-  result: z.any().optional(),
-});
-
-export type ClientToolInvocation = z.infer<
-  typeof ClientToolInvocationZodSchema
->;
+export const ManualToolConfirmTag = tag<{
+  confirm: boolean;
+}>("manual-tool-confirm");

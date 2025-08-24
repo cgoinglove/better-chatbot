@@ -1,10 +1,20 @@
 import { redirect } from "next/navigation";
 import { getSession } from "auth/server";
-import { Message, smoothStream, streamText } from "ai";
+import {
+  UIMessage,
+  convertToModelMessages,
+  smoothStream,
+  streamText,
+} from "ai";
 import { customModelProvider } from "lib/ai/models";
-import logger from "logger";
+import globalLogger from "logger";
 import { buildUserSystemPrompt } from "lib/ai/prompts";
 import { userRepository } from "lib/db/repository";
+import { colorize } from "consola/utils";
+
+const logger = globalLogger.withDefaults({
+  message: colorize("blackBright", `Temporary Chat API: `),
+});
 
 export async function POST(request: Request) {
   try {
@@ -17,13 +27,14 @@ export async function POST(request: Request) {
     }
 
     const { messages, chatModel, instructions } = json as {
-      messages: Message[];
+      messages: UIMessage[];
       chatModel?: {
         provider: string;
         model: string;
       };
       instructions?: string;
     };
+    logger.info(`model: ${chatModel?.provider}/${chatModel?.model}`);
     const model = customModelProvider.getModel(chatModel);
     const userPreferences =
       (await userRepository.getPreferences(session.user.id)) || undefined;
@@ -33,11 +44,9 @@ export async function POST(request: Request) {
       system: `${buildUserSystemPrompt(session.user, userPreferences)} ${
         instructions ? `\n\n${instructions}` : ""
       }`.trim(),
-      messages,
-      maxSteps: 10,
-      experimental_continueSteps: true,
+      messages: convertToModelMessages(messages),
       experimental_transform: smoothStream({ chunking: "word" }),
-    }).toDataStreamResponse();
+    }).toUIMessageStreamResponse();
   } catch (error: any) {
     logger.error(error);
     return new Response(error.message || "Oops, an error occured!", {

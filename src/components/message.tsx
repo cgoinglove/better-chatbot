@@ -1,12 +1,11 @@
 "use client";
 
-import type { UIMessage } from "ai";
+import { isToolUIPart, type UIMessage } from "ai";
 import { memo, useMemo, useState } from "react";
 import equal from "lib/equal";
 
 import { cn, truncateString } from "lib/utils";
 import type { UseChatHelpers } from "@ai-sdk/react";
-import { Alert, AlertDescription, AlertTitle } from "ui/alert";
 import {
   UserMessagePart,
   AssistMessagePart,
@@ -16,67 +15,49 @@ import {
 import { ChevronDown, ChevronUp, TriangleAlertIcon } from "lucide-react";
 import { Button } from "ui/button";
 import { useTranslations } from "next-intl";
-import { ChatMessageAnnotation, ClientToolInvocation } from "app-types/chat";
+import { ChatMetadata } from "app-types/chat";
 
 interface Props {
   message: UIMessage;
+  prevMessage: UIMessage;
   threadId?: string;
   isLoading: boolean;
   isLastMessage: boolean;
-  setMessages: UseChatHelpers["setMessages"];
-  reload: UseChatHelpers["reload"];
+  setMessages: UseChatHelpers<UIMessage>["setMessages"];
+  sendMessage: UseChatHelpers<UIMessage>["sendMessage"];
   className?: string;
-  onPoxyToolCall?: (result: ClientToolInvocation) => void;
-  status: UseChatHelpers["status"];
+  addToolResult?: UseChatHelpers<UIMessage>["addToolResult"];
   messageIndex: number;
-  isError?: boolean;
+  status: UseChatHelpers<UIMessage>["status"];
 }
 
 const PurePreviewMessage = ({
   message,
+  prevMessage,
   threadId,
-  setMessages,
   isLoading,
   isLastMessage,
-  reload,
   status,
   className,
-  onPoxyToolCall,
+  setMessages,
+  addToolResult,
   messageIndex,
-  isError,
+  sendMessage,
 }: Props) => {
   const isUserMessage = useMemo(() => message.role === "user", [message.role]);
-
   if (message.role == "system") {
     return null; // system message is not shown
   }
-
   if (!message.parts.length) return null;
   return (
     <div className="w-full mx-auto max-w-3xl px-6 group/message">
       <div
         className={cn(
-          className,
           "flex gap-4 w-full group-data-[role=user]/message:ml-auto group-data-[role=user]/message:max-w-2xl",
+          className,
         )}
       >
         <div className="flex flex-col gap-4 w-full">
-          {message.experimental_attachments && (
-            <div
-              data-testid={"message-attachments"}
-              className="flex flex-row justify-end gap-2"
-            >
-              {message.experimental_attachments.map((attachment) => (
-                <Alert key={attachment.url}>
-                  <AlertTitle>Attachment</AlertTitle>
-                  <AlertDescription>
-                    attachment not yet implemented 😁
-                  </AlertDescription>
-                </Alert>
-              ))}
-            </div>
-          )}
-
           {message.parts?.map((part, index) => {
             const key = `message-${messageIndex}-part-${part.type}-${index}`;
             const isLastPart = index === message.parts.length - 1;
@@ -85,7 +66,7 @@ const PurePreviewMessage = ({
               return (
                 <ReasoningPart
                   key={key}
-                  reasoning={part.reasoning}
+                  reasoningText={part.text}
                   isThinking={isLastPart && isLastMessage && isLoading}
                 />
               );
@@ -98,10 +79,9 @@ const PurePreviewMessage = ({
                   status={status}
                   part={part}
                   isLast={isLastPart}
-                  isError={isError}
                   message={message}
                   setMessages={setMessages}
-                  reload={reload}
+                  sendMessage={sendMessage}
                 />
               );
             }
@@ -114,24 +94,25 @@ const PurePreviewMessage = ({
                   isLoading={isLoading}
                   key={key}
                   part={part}
+                  prevMessage={prevMessage}
                   showActions={
                     isLastMessage ? isLastPart && !isLoading : isLastPart
                   }
                   message={message}
                   setMessages={setMessages}
-                  reload={reload}
-                  isError={isError}
+                  sendMessage={sendMessage}
                 />
               );
             }
 
-            if (part.type === "tool-invocation") {
+            if (isToolUIPart(part)) {
               const isLast = isLastMessage && isLastPart;
-
-              const isManualToolInvocation = (
-                message.annotations as ChatMessageAnnotation[]
-              )?.some((a) => a.toolChoice == "manual");
-
+              const isManualToolInvocation =
+                (message.metadata as ChatMetadata)?.toolChoice == "manual" &&
+                isLastMessage &&
+                isLastPart &&
+                part.state == "input-available" &&
+                isLoading;
               return (
                 <ToolMessagePart
                   isLast={isLast}
@@ -140,13 +121,16 @@ const PurePreviewMessage = ({
                   showActions={
                     isLastMessage ? isLastPart && !isLoading : isLastPart
                   }
-                  onPoxyToolCall={onPoxyToolCall}
+                  addToolResult={addToolResult}
                   key={key}
                   part={part}
-                  isError={isError}
                   setMessages={setMessages}
                 />
               );
+            } else if (part.type === "step-start") {
+              return null;
+            } else {
+              return <div key={key}> unknown part {part.type}</div>;
             }
           })}
         </div>
@@ -157,17 +141,27 @@ const PurePreviewMessage = ({
 
 export const PreviewMessage = memo(
   PurePreviewMessage,
-  (prevProps, nextProps) => {
+  function equalMessage(prevProps: Props, nextProps: Props) {
     if (prevProps.message.id !== nextProps.message.id) return false;
+
     if (prevProps.isLoading !== nextProps.isLoading) return false;
+
     if (prevProps.isLastMessage !== nextProps.isLastMessage) return false;
+
     if (prevProps.className !== nextProps.className) return false;
-    if (prevProps.status !== nextProps.status) return false;
-    if (prevProps.message.annotations !== nextProps.message.annotations)
+
+    if (nextProps.isLoading && nextProps.isLastMessage) return false;
+
+    if (!equal(prevProps.message.metadata, nextProps.message.metadata))
       return false;
-    if (prevProps.isError !== nextProps.isError) return false;
-    if (prevProps.onPoxyToolCall !== nextProps.onPoxyToolCall) return false;
-    if (!equal(prevProps.message.parts, nextProps.message.parts)) return false;
+
+    if (prevProps.message.parts.length !== nextProps.message.parts.length) {
+      return false;
+    }
+    if (!equal(prevProps.message.parts, nextProps.message.parts)) {
+      return false;
+    }
+
     return true;
   },
 );

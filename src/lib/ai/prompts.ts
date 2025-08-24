@@ -4,7 +4,6 @@ import { UserPreferences } from "app-types/user";
 import { User } from "better-auth";
 import { createMCPToolId } from "./mcp/mcp-tool-id";
 import { format } from "date-fns";
-import { SequentialThinkingToolName } from "./tools";
 import { Agent } from "app-types/agent";
 
 export const CREATE_THREAD_TITLE_PROMPT = `
@@ -291,25 +290,3 @@ export const buildToolCallUnsupportedModelSystemPrompt = `
 - You are using a model that does not support tool calls. 
 - When users request tool usage, simply explain that the current model cannot use tools and that they can switch to a model that supports tool calling to use tools.
 `.trim();
-
-export const buildThinkingSystemPrompt = (supportToolCall: boolean) => {
-  if (supportToolCall) {
-    return `
-# SEQUENTIAL THINKING MODE ACTIVATED
-
-**YOU MUST use the \`${SequentialThinkingToolName}\` tool for your response.** 
-
-The user has activated thinking mode to see your complete reasoning process in structured steps.
-
-Plan your complete thinking sequence from initial analysis to final conclusion, then use the sequential-thinking tool with all steps included.
-`.trim();
-  }
-  return `
-
-# SEQUENTIAL THINKING MODE - MODEL CHANGE REQUIRED
-
-You have activated Sequential Thinking mode, but the current model does not support tool/function calling.
-
-**Guide the user to switch to a tool-compatible model** to use the \`${SequentialThinkingToolName}\` tool for structured reasoning visualization.
-`.trim();
-};
