@@ -3,7 +3,7 @@ import { MCPCard } from "@/components/mcp-card";
 
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { MCPOverview } from "@/components/mcp-overview";
+import { MCPOverview, RECOMMENDED_MCPS } from "@/components/mcp-overview";
 
 import { Skeleton } from "ui/skeleton";
 
@@ -17,6 +17,13 @@ import { MCPServerInfo } from "app-types/mcp";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { cn } from "lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "ui/dropdown-menu";
+import { useRouter } from "next/navigation";
 
 const LightRays = dynamic(() => import("@/components/ui/light-rays"), {
   ssr: false,
@@ -24,7 +31,7 @@ const LightRays = dynamic(() => import("@/components/ui/light-rays"), {
 
 export default function MCPDashboard({ message }: { message?: string }) {
   const t = useTranslations("MCP");
-
+  const router = useRouter();
   const {
     data: mcpList,
     isLoading,
@@ -42,16 +49,20 @@ export default function MCPDashboard({ message }: { message?: string }) {
     });
   }, [mcpList]);
 
+  const displayIcons = useMemo(() => {
+    const shuffled = [...RECOMMENDED_MCPS].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, 5);
+  }, []);
+
   // Delay showing validating spinner until validating persists for 500ms
   const [showValidating, setShowValidating] = useState(false);
-  useEffect(() => {
-    if (isValidating) {
-      setShowValidating(false);
-      const timerId = setTimeout(() => setShowValidating(true), 500);
-      return () => clearTimeout(timerId);
-    }
-    setShowValidating(false);
-  }, [isValidating]);
+
+  const handleRecommendedSelect = (mcp: (typeof RECOMMENDED_MCPS)[number]) => {
+    const params = new URLSearchParams();
+    params.set("name", mcp.name);
+    params.set("config", JSON.stringify(mcp.config));
+    router.push(`/mcp/create?${params.toString()}`);
+  };
 
   const particle = useMemo(() => {
     return (
@@ -72,6 +83,15 @@ export default function MCPDashboard({ message }: { message?: string }) {
       </>
     );
   }, [mcpList.length]);
+
+  useEffect(() => {
+    if (isValidating) {
+      setShowValidating(false);
+      const timerId = setTimeout(() => setShowValidating(true), 500);
+      return () => clearTimeout(timerId);
+    }
+    setShowValidating(false);
+  }, [isValidating]);
 
   useEffect(() => {
     if (message) {
@@ -96,8 +116,48 @@ export default function MCPDashboard({ message }: { message?: string }) {
             <div className="flex-1" />
 
             <div className="flex gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="gap-1 data-[state=open]:bg-muted data-[state=open]:text-foreground text-muted-foreground"
+                  >
+                    <div className="flex -space-x-2">
+                      {displayIcons.map((mcp, index) => {
+                        const Icon = mcp.icon;
+                        return (
+                          <div
+                            key={mcp.name}
+                            className="relative rounded-full bg-background border-[1px] p-1"
+                            style={{
+                              zIndex: displayIcons.length - index,
+                            }}
+                          >
+                            <Icon className="size-3" />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  {RECOMMENDED_MCPS.map((mcp) => {
+                    const Icon = mcp.icon;
+                    return (
+                      <DropdownMenuItem
+                        key={mcp.name}
+                        onClick={() => handleRecommendedSelect(mcp)}
+                        className="cursor-pointer"
+                      >
+                        <Icon className="size-4 mr-2" />
+                        <span>{mcp.label}</span>
+                      </DropdownMenuItem>
+                    );
+                  })}
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Link href="/mcp/create">
-                <Button className="font-semibold" variant="ghost">
+                <Button className="font-semibold" variant="outline">
                   <MCPIcon className="fill-foreground size-3.5" />
                   {t("addMcpServer")}
                 </Button>
