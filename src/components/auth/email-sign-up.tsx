@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/card";
 import { useObjectState } from "@/hooks/use-object-state";
 import { cn } from "lib/utils";
-import { ChevronLeft, Loader } from "lucide-react";
+import { ChevronLeft, Loader, Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { safe } from "ts-safe";
 import { UserZodSchema } from "app-types/user";
@@ -41,6 +41,16 @@ export default function EmailSignUp({
     t("Auth.SignUp.step2"),
     t("Auth.SignUp.step3"),
   ];
+
+  // Password validation checklist
+  const passwordValidation = useMemo(() => {
+    const password = formData.password;
+    return {
+      hasMinLength: password.length >= 8 && password.length <= 20,
+      hasLetter: /[a-zA-Z]/.test(password),
+      hasNumber: /\d/.test(password),
+    };
+  }, [formData.password]);
 
   const safeProcessWithLoading = function <T>(fn: () => Promise<T>) {
     setIsLoading(true);
@@ -195,6 +205,58 @@ export default function EmailSignUp({
                 onChange={(e) => setFormData({ password: e.target.value })}
                 required
               />
+              {formData.password && (
+                <div className="space-y-1 mt-2">
+                  <div className="flex items-center gap-2 text-xs">
+                    {passwordValidation.hasMinLength ? (
+                      <Check className="size-3 text-primary" />
+                    ) : (
+                      <X className="size-3 text-destructive" />
+                    )}
+                    <span
+                      className={
+                        passwordValidation.hasMinLength
+                          ? "text-primary"
+                          : "text-muted-foreground"
+                      }
+                    >
+                      8-20 characters
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs">
+                    {passwordValidation.hasLetter ? (
+                      <Check className="size-3 text-primary" />
+                    ) : (
+                      <X className="size-3 text-destructive" />
+                    )}
+                    <span
+                      className={
+                        passwordValidation.hasLetter
+                          ? "text-primary"
+                          : "text-muted-foreground"
+                      }
+                    >
+                      At least one letter
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs">
+                    {passwordValidation.hasNumber ? (
+                      <Check className="size-3 text-primary" />
+                    ) : (
+                      <X className="size-3 text-destructive" />
+                    )}
+                    <span
+                      className={
+                        passwordValidation.hasNumber
+                          ? "text-primary"
+                          : "text-muted-foreground"
+                      }
+                    >
+                      At least one number
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
           )}
           <p className="text-muted-foreground text-xs mb-6">
