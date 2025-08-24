@@ -139,7 +139,7 @@ Sample prompt:
 
 ### 🤖 Custom Agents
 
-<img width="1567" alt="agent-example" loading="lazy" src="https://github.com/user-attachments/assets/173ce957-88a3-4f68-8916-a46be5fdbf03" />
+<img width="1567" alt="agent-example" loading="lazy" src="https://github.com/user-attachments/assets/d0a325c0-ff1e-4038-b6bf-fcf57659a5c1" />
 
 **Example:** Create specialized AI agents with custom instructions and tool access.
 
