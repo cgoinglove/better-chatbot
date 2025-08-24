@@ -1,4 +1,5 @@
-<img width="1647" alt="thumbnail" loading="lazy" src="https://github.com/user-attachments/assets/7b0f279a-8771-42a0-b8b6-128b3b1a076c" />
+<img width="1184" height="576" alt="thumbnail" loading="lazy" src="https://github.com/user-attachments/assets/d6ba80ff-a62a-4920-b266-85c4a89d6076" />
+
 
 [![MCP Supported](https://img.shields.io/badge/MCP-Supported-00c853)](https://modelcontextprotocol.io/introduction)
 [![Local First](https://img.shields.io/badge/Local-First-blue)](https://localfirstweb.dev/)
@@ -100,7 +101,8 @@ Get a feel for the UX — here's a quick look at what's possible.
 
 ### 🧩 Browser Automation with Playwright MCP
 
-![preview](https://github.com/user-attachments/assets/58b4c561-9b59-40db-9c62-9fd5aeea4432)
+![preview](https://github.com/user-attachments/assets/e4febb04-26d5-45da-a7bb-f7d452d333c2)
+
 
 **Example:** Control a web browser using Microsoft's [playwright-mcp](https://github.com/microsoft/playwright-mcp) tool.
 
@@ -123,7 +125,7 @@ Sample prompt:
 
 ### 🔗 Visual Workflows as Custom Tools
 
-<img width="1755" alt="workflow" src="https://github.com/user-attachments/assets/afa895f0-cc59-4c2f-beb3-4b7a1dc1f891" loading="lazy" />
+<img width="1912" height="953" alt="workflow" loading="lazy" src="https://github.com/user-attachments/assets/e69e72e8-595c-480e-b519-4531f4c6331f" />
 
 <img width="1567" alt="workflow-mention" loading="lazy" src="https://github.com/user-attachments/assets/cf3e1339-ee44-4615-a71d-f6b46833e41f" />
 
@@ -137,7 +139,7 @@ Sample prompt:
 
 ### 🤖 Custom Agents
 
-<img width="1567" alt="agent-example" loading="lazy" src="https://github.com/user-attachments/assets/placeholder-agent-image" />
+<img width="1567" alt="agent-example" loading="lazy" src="https://github.com/user-attachments/assets/173ce957-88a3-4f68-8916-a46be5fdbf03" />
 
 **Example:** Create specialized AI agents with custom instructions and tool access.
 
@@ -163,7 +165,7 @@ Talk to the assistant naturally, and watch it execute tools in real time.
 
 ### ⚡️ Quick Tool Mentions (`@`) & Presets
 
-<img width="1225" alt="image" src="https://github.com/user-attachments/assets/4d56dd25-a94c-4c19-9efa-fd7b5d3d2187" loading="lazy"/>
+<img width="1225" alt="image" src="https://github.com/user-attachments/assets/dfe76b3b-c3d8-436e-8a7c-7b23292e234c" loading="lazy"/>
 
 Quickly call tool during chat by typing `@toolname`.
 No need to memorize — just type `@` and pick from the list!
@@ -204,7 +206,7 @@ Built-in web search powered by [Exa AI](https://exa.ai). Search the web with sem
 
 #### ⚡️ JS,PYTHON Executor
 
-<img width="1225" alt="js-executor-preview" src="https://github.com/user-attachments/assets/24d51665-c500-4c92-89de-7b46216e869f" loading="lazy"/>
+<img width="1225" alt="js-executor-preview" src="https://github.com/user-attachments/assets/7deed824-e70b-46d4-a294-de20ed4dc869" loading="lazy"/>
 
 It is a simple JS execution tool.
 
