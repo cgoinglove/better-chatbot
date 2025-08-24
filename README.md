@@ -6,9 +6,20 @@
 
 [![Deploy with Vercel](https://vercel.com/button)](<https://vercel.com/new/clone?repository-url=https://github.com/cgoinglove/better-chatbot&env=BETTER_AUTH_SECRET&env=OPENAI_API_KEY&env=GOOGLE_GENERATIVE_AI_API_KEY&env=ANTHROPIC_API_KEY&envDescription=BETTER_AUTH_SECRET+is+required+(enter+any+secret+value).+At+least+one+LLM+provider+API+key+(OpenAI,+Claude,+or+Google)+is+required,+but+you+can+add+all+of+them.+See+the+link+below+for+details.&envLink=https://github.com/cgoinglove/better-chatbot/blob/main/.env.example&demo-title=better-chatbot&demo-description=An+Open-Source+Chatbot+Template+Built+With+Next.js+and+the+AI+SDK+by+Vercel.&products=[{"type":"integration","protocol":"storage","productSlug":"neon","integrationSlug":"neon"},{"type":"integration","protocol":"storage","productSlug":"upstash-kv","integrationSlug":"upstash"}]>)
 
-See the experience in action in the [preview](#preview) below!
+🚀 **[Live Demo](https://better-chatbot-demo.vercel.app/)** | See the experience in action in the [preview](#preview) below!
 
-> Built with [Vercel AI SDK](https://sdk.vercel.ai) and [Next.js](https://nextjs.org/), this app adopts modern patterns for building AI chat interfaces. It leverages the power of the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) to seamlessly integrate external tools into your chat experience. You can also create custom workflows that become callable tools in chat, allowing you to chain multiple MCP tools, LLM interactions, and logic into powerful automated sequences.
+**Better Chatbot** - A better open-source AI chatbot for individuals and teams, inspired by ChatGPT, Claude, Grok, and Gemini.
+
+• **Multi-AI Support** - Integrates all major LLMs: OpenAI, Anthropic, Google, xAI, Ollama, and more  
+• **Powerful Tools** - MCP protocol, web search, JS/Python code execution, data visualization  
+• **Automation** - Custom agents, visual workflows, artifact generation  
+• **Collaboration** - Share agents, workflows, and MCP configurations with your team  
+• **Voice Assistant** - Realtime voice chat with full MCP tool integration  
+• **Intuitive UX** - Instantly invoke any feature with `@mention`  
+• **Quick Start** - Deploy free with Vercel Deploy button  
+
+Built with Vercel AI SDK and Next.js, combining the best features of leading AI services into one platform.
+
 
 ### Quick Start 🚀
 
@@ -55,27 +66,28 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to get start
 - [Preview](#preview)
   - [🧩 Browser Automation with Playwright MCP](#-browser-automation-with-playwright-mcp)
   - [🔗 Visual Workflows as Custom Tools](#-visual-workflows-as-custom-tools)
+  - [🤖 Custom Agents](#-custom-agents)
   - [🎙️ Realtime Voice Assistant + MCP Tools](#️-realtime-voice-assistant--mcp-tools)
   - [⚡️ Quick Tool Mentions (`@`) \& Presets](#️-quick-tool-mentions---presets)
   - [🧭 Tool Choice Mode](#-tool-choice-mode)
   - [🛠️ Default Tools](#️-default-tools)
     - [🌐 Web Search](#-web-search)
-    - [⚡️ JS Executor](#️-js-executor)
+    - [⚡️ JS,PYTHON Executor](#️-jspython-executor)
     - [📊 Data Visualization Tools](#-data-visualization-tools)
 - [Getting Started](#getting-started)
   - [Quick Start (Docker Compose Version) 🐳](#quick-start-docker-compose-version-)
   - [Quick Start (Local Version) 🚀](#quick-start-local-version-)
   - [Environment Variables](#environment-variables)
 - [📘 Guides](#-guides)
-  - [🔌 MCP Server Setup \& Tool Testing](#-mcp-server-setup--tool-testing)
-  - [🐳 Docker Hosting Guide](#-docker-hosting-guide)
-  - [▲ Vercel Hosting Guide](#-vercel-hosting-guide)
-  - [🎯 System Prompts \& Chat Customization](#-system-prompts--chat-customization)
-  - [🔐 OAuth Sign-In Setup](#-oauth-sign-in-setup)
-  - [🕵🏿 Adding openAI like providers](#-adding-openai-like-providers)
+    - [🔌 MCP Server Setup \& Tool Testing](#-mcp-server-setup--tool-testing)
+    - [🐳 Docker Hosting Guide](#-docker-hosting-guide)
+    - [▲ Vercel Hosting Guide](#-vercel-hosting-guide)
+    - [🎯 System Prompts \& Chat Customization](#-system-prompts--chat-customization)
+    - [🔐 OAuth Sign-In Setup](#-oauth-sign-in-setup)
+    - [🕵🏿 Adding openAI like providers](#-adding-openai-like-providers)
+    - [🧪 E2E Testing Guide](#-e2e-testing-guide)
 - [💡 Tips](#-tips)
-  - [🧠 Agentic Chatbot with Project Instructions](#-agentic-chatbot-with-project-instructions)
-  - [💬 Temporary Chat Windows](#-temporary-chat-windows)
+    - [💬 Temporary Chat Windows](#-temporary-chat-windows)
 - [🗺️ Roadmap](#️-roadmap)
 - [🙌 Contributing](#-contributing)
 - [💬 Join Our Discord](#-join-our-discord)
@@ -120,6 +132,23 @@ Sample prompt:
 - Build visual workflows by connecting LLM nodes (for AI reasoning) and Tool nodes (for MCP tool execution)
 - Publish workflows to make them available as `@workflow_name` tools in chat
 - Chain complex multi-step processes into reusable, automated sequences
+
+<br/>
+
+### 🤖 Custom Agents
+
+<img width="1567" alt="agent-example" loading="lazy" src="https://github.com/user-attachments/assets/placeholder-agent-image" />
+
+**Example:** Create specialized AI agents with custom instructions and tool access.
+
+- Define custom agents with specific system prompts and available tools
+- Easily invoke agents in chat using `@agent_name` 
+- Build task-specific assistants like a GitHub Manager agent with issue/PR tools and project context
+
+For instance, create a GitHub Manager agent by:
+- Providing GitHub tools (issue/PR creation, comments, queries)
+- Adding project details to the system prompt
+- Calling it with `@github_manager` to manage your repository
 
 <br/>
 
@@ -173,7 +202,7 @@ Built-in web search powered by [Exa AI](https://exa.ai). Search the web with sem
 - **Free Tier:** 1,000 requests/month at no cost, no credit card required
 - **Easy Setup:** Get your API key instantly at [dashboard.exa.ai](https://dashboard.exa.ai)
 
-#### ⚡️ JS Executor
+#### ⚡️ JS,PYTHON Executor
 
 <img width="1225" alt="js-executor-preview" src="https://github.com/user-attachments/assets/24d51665-c500-4c92-89de-7b46216e869f" loading="lazy"/>
 
@@ -352,12 +381,6 @@ Step-by-step setup guides for running and configuring better-chatbot.
   <br/>
 
 ## 💡 Tips
-
-Advanced use cases and extra capabilities that enhance your chatbot experience.
-
-#### [🧠 Agentic Chatbot with Project Instructions](./docs/tips-guides/project_with_mcp.md)
-
-- Use MCP servers and structured project instructions to build a custom assistant that helps with specific tasks.
 
 #### [💬 Temporary Chat Windows](./docs/tips-guides/temporary_chat.md)
 
