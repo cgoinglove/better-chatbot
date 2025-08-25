@@ -51,8 +51,9 @@ const staticModels = {
     "gpt-oss-20b:free": openrouter("openai/gpt-oss-20b:free"),
     "qwen3-8b:free": openrouter("qwen/qwen3-8b:free"),
     "qwen3-14b:free": openrouter("qwen/qwen3-14b:free"),
-    "qwen3-coder:free": openrouter("qwen/qwen3-coder"),
+    "qwen3-coder:free": openrouter("qwen/qwen3-coder:free"),
     "deepseek-r1:free": openrouter("deepseek/deepseek-r1-0528:free"),
+    "deepseek-v3:free": openrouter("deepseek/deepseek-chat-v3-0324:free"),
     "gemini-2.0-flash-exp:free": openrouter("google/gemini-2.0-flash-exp:free"),
   },
 };
@@ -65,6 +66,8 @@ const staticUnsupportedModels = new Set([
   staticModels.openRouter["gpt-oss-20b:free"],
   staticModels.openRouter["qwen3-8b:free"],
   staticModels.openRouter["qwen3-14b:free"],
+  staticModels.openRouter["deepseek-r1:free"],
+  staticModels.openRouter["gemini-2.0-flash-exp:free"],
 ]);
 
 const openaiCompatibleProviders = openaiCompatibleModelsSafeParse(
