@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import {
@@ -21,6 +21,35 @@ export const metadata: Metadata = {
   title: "better-chatbot",
   description:
     "Better Chatbot is a chatbot that uses the Tools to answer questions.",
+  applicationName: "better-chatbot",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "better-chatbot",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  openGraph: {
+    type: "website",
+    siteName: "better-chatbot",
+    title: "better-chatbot",
+    description:
+      "Better Chatbot is a chatbot that uses the Tools to answer questions.",
+  },
+  twitter: {
+    card: "summary",
+    title: "better-chatbot",
+    description:
+      "Better Chatbot is a chatbot that uses the Tools to answer questions.",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#000000",
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 // const themes = BASE_THEMES.flatMap((t) => [t, `${t}-dark`]);
