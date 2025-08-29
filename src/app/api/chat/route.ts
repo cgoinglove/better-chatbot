@@ -12,7 +12,11 @@ import { customModelProvider, isToolCallUnsupportedModel } from "lib/ai/models";
 
 import { mcpClientsManager } from "lib/ai/mcp/mcp-manager";
 
-import { agentRepository, chatRepository } from "lib/db/repository";
+import {
+  agentRepository,
+  chatRepository,
+  mcpRepository,
+} from "lib/db/repository";
 import globalLogger from "logger";
 import {
   buildMcpServerCustomizationsSystemPrompt,
@@ -127,12 +131,17 @@ export async function POST(request: Request) {
         );
         const MCP_TOOLS = await safe()
           .map(errorIf(() => !isToolCallAllowed && "Not allowed"))
-          .map(() =>
-            loadMcpTools({
+          .map(async () => {
+            const accessible = await mcpRepository.selectAllByAccess(
+              session.user.id,
+            );
+            const accessibleIds = new Set<string>(accessible.map((s) => s.id));
+            return loadMcpTools({
               mentions,
               allowedMcpServers,
-            }),
-          )
+              accessibleServerIds: accessibleIds,
+            });
+          })
           .orElse({});
 
         const WORKFLOW_TOOLS = await safe()

@@ -42,6 +42,8 @@ describe("DB-based MCP Config Storage", () => {
     enabled: true,
     createdAt: new Date(),
     updatedAt: new Date(),
+    visibility: "public" as const,
+    userId: null,
   };
 
   beforeEach(() => {
@@ -100,6 +102,8 @@ describe("DB-based MCP Config Storage", () => {
 
       vi.mocked(mockMcpRepository.save).mockResolvedValue({
         ...serverToSave,
+        visibility: "private",
+        userId: null,
       });
 
       const result = await storage.save(serverToSave);

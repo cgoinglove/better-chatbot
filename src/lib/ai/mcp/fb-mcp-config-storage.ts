@@ -197,6 +197,8 @@ function fillMcpServerSchema(
     enabled: true,
     createdAt: new Date(),
     updatedAt: new Date(),
+    visibility: server.visibility ?? "private",
+    userId: server.userId ?? null,
   };
 }
 
