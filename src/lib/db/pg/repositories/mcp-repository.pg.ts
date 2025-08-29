@@ -13,6 +13,8 @@ export const pgMcpRepository: MCPRepository = {
         name: server.name,
         config: server.config,
         enabled: true,
+        userId: server.userId ?? null,
+        visibility: server.visibility ?? "private",
         createdAt: new Date(),
         updatedAt: new Date(),
       })

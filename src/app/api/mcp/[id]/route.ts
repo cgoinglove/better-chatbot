@@ -24,7 +24,7 @@ export async function PUT(
   if (!session?.user?.id) return new Response("Unauthorized", { status: 401 });
   const { id } = await params;
 
-  const hasAccess = await mcpRepository.checkAccess(id, session.user.id);
+  const hasAccess = await mcpRepository.checkAccess(id, session.user.id, true);
   if (!hasAccess) return new Response("Unauthorized", { status: 401 });
 
   const body = (await request.json()) as {
