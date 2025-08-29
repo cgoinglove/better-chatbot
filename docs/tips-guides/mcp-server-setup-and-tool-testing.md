@@ -76,8 +76,7 @@ Simply paste your configuration in the MCP Configuration form (or .mcp-config.js
 - owner: the user who created the MCP server (`user_id`).
 - visibility values:
   - private: only the owner can list, use, update and delete.
-  - public: any authenticated user can list and use; only the owner can update/delete.
-  - readonly: same as public for listing/using; only the owner can update/delete.
+  - public/readonly: any authenticated user can list and use; only the owner can update/delete. Note: both are treated the same for read access today.
 - defaults: new servers default to `private` across all storages.
 - unauthenticated users: `GET /api/mcp/list` returns an empty list.
 
