@@ -51,11 +51,15 @@ export type McpServerInsert = {
   name: string;
   config: MCPServerConfig;
   id?: string;
+  userId?: string | null;
+  visibility?: "public" | "private" | "readonly";
 };
 export type McpServerSelect = {
   name: string;
   config: MCPServerConfig;
   id: string;
+  userId?: string | null;
+  visibility: "public" | "private" | "readonly";
 };
 
 export type VercelAIMcpTool = Tool & {
@@ -70,7 +74,17 @@ export interface MCPRepository {
   save(server: McpServerInsert): Promise<McpServerSelect>;
   selectById(id: string): Promise<McpServerSelect | null>;
   selectByServerName(name: string): Promise<McpServerSelect | null>;
-  selectAll(): Promise<McpServerSelect[]>;
+  selectAll(): Promise<McpServerSelect[]>; // global list (for sync)
+  selectAllByAccess(userId: string): Promise<McpServerSelect[]>; // mine + shared
+  checkAccess(
+    id: string,
+    userId: string,
+    destructive?: boolean,
+  ): Promise<boolean>;
+  updateVisibility(
+    id: string,
+    visibility: "public" | "private" | "readonly",
+  ): Promise<void>;
   deleteById(id: string): Promise<void>;
   existsByServerName(name: string): Promise<boolean>;
 }

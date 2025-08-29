@@ -396,13 +396,22 @@ export const workflowToVercelAITools = (
 export const loadMcpTools = (opt?: {
   mentions?: ChatMention[];
   allowedMcpServers?: Record<string, AllowedMCPServer>;
+  accessibleServerIds?: Set<string>;
 }) =>
   safe(() => mcpClientsManager.tools())
     .map((tools) => {
+      const filteredByAccess = opt?.accessibleServerIds
+        ? objectFlow(tools).filter((t) =>
+            opt.accessibleServerIds!.has(t._mcpServerId),
+          )
+        : tools;
       if (opt?.mentions?.length) {
-        return filterMCPToolsByMentions(tools, opt.mentions);
+        return filterMCPToolsByMentions(filteredByAccess, opt.mentions);
       }
-      return filterMCPToolsByAllowedMCPServers(tools, opt?.allowedMcpServers);
+      return filterMCPToolsByAllowedMCPServers(
+        filteredByAccess,
+        opt?.allowedMcpServers,
+      );
     })
     .orElse({} as Record<string, VercelAIMcpTool>);
 

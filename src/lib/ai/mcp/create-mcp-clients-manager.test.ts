@@ -65,6 +65,8 @@ describe("MCPClientsManager", () => {
     enabled: true,
     createdAt: new Date(),
     updatedAt: new Date(),
+    visibility: "public" as const,
+    userId: null,
   };
 
   beforeEach(() => {
@@ -212,6 +214,8 @@ describe("MCPClientsManager", () => {
       vi.mocked(mockStorage.save).mockResolvedValue({
         ...serverToSave,
         id: "new-server-id",
+        visibility: "private",
+        userId: null,
       });
 
       await manager.persistClient(serverToSave);

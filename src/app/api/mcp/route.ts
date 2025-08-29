@@ -11,7 +11,11 @@ export async function POST(request: Request) {
   const json = (await request.json()) as typeof McpServerSchema.$inferInsert;
 
   try {
-    await saveMcpClientAction(json);
+    await saveMcpClientAction({
+      ...json,
+      userId: session.user.id,
+      visibility: json.visibility ?? "private",
+    });
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
