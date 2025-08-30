@@ -6,18 +6,19 @@ import {
   MCPRemoteConfigZodSchema,
   MCPStdioConfigZodSchema,
 } from "app-types/mcp";
+import { VisibilitySchema } from "app-types/util";
+
+const McpPostSchema = z.object({
+  name: z.string().min(1),
+  config: z.union([MCPRemoteConfigZodSchema, MCPStdioConfigZodSchema]),
+  visibility: VisibilitySchema.optional(),
+});
 
 export async function POST(request: Request) {
   const session = await getSession();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const McpPostSchema = z.object({
-    name: z.string().min(1),
-    config: z.union([MCPRemoteConfigZodSchema, MCPStdioConfigZodSchema]),
-    visibility: z.enum(["public", "private", "readonly"]).optional(),
-  });
-
   const result = McpPostSchema.safeParse(await request.json());
   if (!result.success) {
     return NextResponse.json(

@@ -1,6 +1,11 @@
 import { getSession } from "auth/server";
 import { mcpRepository } from "lib/db/repository";
 import { z } from "zod";
+import { VisibilitySchema } from "app-types/util";
+
+const UpdateVisibilitySchema = z.object({
+  visibility: VisibilitySchema.optional(),
+});
 
 export async function GET(
   _request: Request,
@@ -27,10 +32,6 @@ export async function PUT(
 
   const hasAccess = await mcpRepository.checkAccess(id, session.user.id, true);
   if (!hasAccess) return new Response("Unauthorized", { status: 401 });
-
-  const UpdateVisibilitySchema = z.object({
-    visibility: z.enum(["private", "public", "readonly"]).optional(),
-  });
 
   const parseResult = UpdateVisibilitySchema.safeParse(await request.json());
   if (!parseResult.success) {

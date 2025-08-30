@@ -1,6 +1,6 @@
 import { pgDb as db } from "../db.pg";
 import { McpServerSchema } from "../schema.pg";
-import { eq, or } from "drizzle-orm";
+import { eq, or, inArray } from "drizzle-orm";
 import { generateUUID } from "lib/utils";
 import type { MCPRepository } from "app-types/mcp";
 
@@ -50,8 +50,7 @@ export const pgMcpRepository: MCPRepository = {
       .where(
         or(
           eq(McpServerSchema.userId, userId),
-          eq(McpServerSchema.visibility, "public"),
-          eq(McpServerSchema.visibility, "readonly"),
+          inArray(McpServerSchema.visibility, ["public", "readonly"]),
         ),
       );
     return results;
