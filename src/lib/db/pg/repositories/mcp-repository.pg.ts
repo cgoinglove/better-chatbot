@@ -84,14 +84,15 @@ export const pgMcpRepository: MCPRepository = {
       })
       .from(McpServerSchema)
       .where(eq(McpServerSchema.id, id));
-    if (!server) return false;
-    if (server.userId === userId) return true;
-    if (
-      !destructive &&
-      (server.visibility === "public" || server.visibility === "readonly")
-    )
-      return true;
-    return false;
+    if (!server) return false; // not found
+    if (server.userId === userId) return true; // owner
+    if (server.userId == null) {
+      // legacy ownerless servers: preserve ability for any authenticated user to delete
+      if (destructive) return true;
+      return ["public", "readonly"].includes(server.visibility);
+    }
+    if (destructive) return false; // non-owner destructive not allowed
+    return ["public", "readonly"].includes(server.visibility); // non-destructive shared
   },
   async updateVisibility(id, visibility) {
     await db
