@@ -11,7 +11,7 @@ import { useObjectState } from "@/hooks/use-object-state";
 import { useBookmark } from "@/hooks/queries/use-bookmark";
 import { Agent, AgentCreateSchema, AgentUpdateSchema } from "app-types/agent";
 import { ChatMention } from "app-types/chat";
-import { MCPServerInfo } from "app-types/mcp";
+// Removed: MCPServerInfo unused after refactor
 import { WorkflowSummary } from "app-types/workflow";
 import { DefaultToolName } from "lib/ai/tools";
 import { BACKGROUND_COLORS } from "lib/const";
@@ -104,7 +104,7 @@ export default function EditAgent({
     [initialAgent?.id, isBookmarkToggleLoadingFn],
   );
 
-  const { data: mcpList, isLoading: isMcpLoading } = useMcpList();
+  const { items: mcpList, isLoading: isMcpLoading } = useMcpList();
   const { data: workflowToolList, isLoading: isWorkflowLoading } =
     useWorkflowToolList();
 
@@ -122,7 +122,7 @@ export default function EditAgent({
         }
       });
 
-      (mcpList as (MCPServerInfo & { id: string })[])?.forEach((mcp) => {
+      mcpList?.forEach((mcp) => {
         mcp.toolInfo.forEach((tool) => {
           if (toolNames.includes(tool.name)) {
             allMentions.push({

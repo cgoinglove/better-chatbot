@@ -42,7 +42,8 @@
     "generateWithAI": "AI로 생성",
     "resultsFound": "{count}개의 결과 찾음",
     "youAreAnExpertIn": "당신은 {role} 전문가입니다",
-    "sharedBy": "{userName}님이 공유함"
+    "sharedBy": "{userName}님이 공유함",
+    "changeVisibility": "가시성 변경"
   },
   "Auth": {
     "SignIn": {
@@ -140,7 +141,6 @@
     },
     "Thread": {
       "chat": "채팅",
-
       "renameChat": "채팅 이름 변경",
       "deleteChat": "채팅 삭제",
       "deleteUnarchivedChats": "아카이브되지 않은 채팅 모두 삭제",
@@ -155,7 +155,6 @@
       "threadUpdated": "채팅이 업데이트되었습니다",
       "areYouSureYouWantToDeleteThisChatThread": "이 채팅을 삭제하시겠습니까?"
     },
-
     "ChatPreferences": {
       "title": "채팅 환경설정",
       "whatShouldWeCallYou": "뭐라고 불러드릴까요?",
@@ -345,6 +344,38 @@
     "mcpServerCustomizationDescription": "MCP 서버 사용자 지정 지침은 MCP서버를 사용할 때 시스템 프롬프트에 추가됩니다.",
     "toolCustomizationInstructionsPlaceholder": "도구 사용자 지정 지침이 없습니다.",
     "mcpServerCustomizationPlaceholder": "예) 이 MCP 서버의 툴중에 입력값이 email인 경우 항상 example@example.com 형식으로 입력해주세요."
+  },
+  "Mcp": {
+    "title": "MCP 서버",
+    "myServers": "내 MCP 서버",
+    "sharedServers": "공유된 MCP 서버",
+    "newServer": "MCP 생성",
+    "noSharedServers": "공유된 서버가 없습니다",
+    "noMyServers": "아직 서버가 없습니다",
+    "create": "생성",
+    "authorize": "승인",
+    "toolsTest": "도구 테스트",
+    "toolsCount": "{count, plural, other {#개 도구}}",
+    "visibilityUpdated": "가시성이 성공적으로 업데이트되었습니다",
+    "deleted": "서버가 삭제되었습니다",
+    "kind": {
+      "remote": "원격",
+      "stdio": "Stdio"
+    },
+    "status": {
+      "connected": "연결됨",
+      "disconnected": "연결 끊김",
+      "loading": "로딩 중",
+      "authorizing": "승인 중"
+    },
+    "visibility": {
+      "private": "비공개",
+      "readonly": "읽기 전용",
+      "public": "공개",
+      "privateDescription": "나만 이 서버를 보고, 편집하고, 사용할 수 있습니다.",
+      "readonlyDescription": "다른 사람들은 도구를 보고 사용할 수 있지만, 편집은 나만 할 수 있습니다.",
+      "publicDescription": "누구나 이 서버의 도구를 보고, 편집하고, 사용할 수 있습니다."
+    }
   },
   "Error": {},
   "Info": {

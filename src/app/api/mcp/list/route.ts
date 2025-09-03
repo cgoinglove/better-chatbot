@@ -42,13 +42,18 @@ export async function GET() {
   const result = visibleServers.map((server) => {
     const mem = memoryMap.get(server.id);
     const info = mem?.getInfo();
-    const mcpInfo: MCPServerInfo & { id: string } = {
+    const isOwner = server.userId === session?.user?.id;
+    const mcpInfo: MCPServerInfo & { id: string } & {
+      visibility: "private" | "public" | "readonly";
+    } & { ownerId?: string | null } = {
       id: server.id,
       name: server.name,
       config: server.config,
       status: info?.status ?? "loading",
       error: info?.error,
       toolInfo: info?.toolInfo ?? [],
+      visibility: server.visibility,
+      ...(isOwner ? {} : { ownerId: server.userId }),
     };
     return mcpInfo;
   });

@@ -42,7 +42,8 @@
     "generateWithAI": "用 AI 生成",
     "resultsFound": "找到 {count} 个结果",
     "youAreAnExpertIn": "您是{role}专家",
-    "sharedBy": "{userName} 分享"
+    "sharedBy": "{userName} 分享",
+    "changeVisibility": "更改可见性"
   },
   "Auth": {
     "SignIn": {
@@ -140,7 +141,6 @@
     },
     "Thread": {
       "chat": "聊天",
-
       "renameChat": "重命名",
       "deleteChat": "删除聊天",
       "deleteUnarchivedChats": "删除所有未归档的聊天",
@@ -155,7 +155,6 @@
       "threadUpdated": "线程已更新",
       "areYouSureYouWantToDeleteThisChatThread": "您确定要删除此聊天线程吗？"
     },
-
     "ChatPreferences": {
       "title": "聊天偏好",
       "whatShouldWeCallYou": "我们应该怎么称呼您？",
@@ -222,7 +221,6 @@
     "theme": "主题",
     "signOut": "登出",
     "language": "语言",
-
     "showAllChats": "查看所有聊天",
     "showLessChats": "显示更少",
     "reportAnIssue": "报告问题",
@@ -346,6 +344,38 @@
     "mcpServerCustomizationDescription": "MCP 服务器自定义指令将在 MCP 服务器可用时添加到系统提示中。",
     "toolCustomizationInstructionsPlaceholder": "工具自定义指令不可用。",
     "mcpServerCustomizationPlaceholder": "例如：如果输入值是电子邮件，始终以 example@example.com 格式输入电子邮件。"
+  },
+  "Mcp": {
+    "title": "MCP 服务器",
+    "myServers": "我的 MCP 服务器",
+    "sharedServers": "共享的 MCP 服务器",
+    "newServer": "创建 MCP",
+    "noSharedServers": "没有共享服务器",
+    "noMyServers": "还没有服务器",
+    "create": "创建",
+    "authorize": "授权",
+    "toolsTest": "工具测试",
+    "toolsCount": "{count, plural, other {# 个工具}}",
+    "visibilityUpdated": "可见性更新成功",
+    "deleted": "服务器已删除",
+    "kind": {
+      "remote": "远程",
+      "stdio": "Stdio"
+    },
+    "status": {
+      "connected": "已连接",
+      "disconnected": "已断开",
+      "loading": "加载中",
+      "authorizing": "授权中"
+    },
+    "visibility": {
+      "private": "私有",
+      "readonly": "只读",
+      "public": "公开",
+      "privateDescription": "只有您可以查看、编辑并使用此服务器。",
+      "readonlyDescription": "其他人可以查看并使用工具，但只有您可以编辑。",
+      "publicDescription": "任何人都可以查看、编辑并使用此服务器的工具。"
+    }
   },
   "Error": {},
   "Info": {

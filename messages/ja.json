@@ -41,7 +41,8 @@
     "createWithExample": "例で作成",
     "resultsFound": "{count}件の結果が見つかりました",
     "youAreAnExpertIn": "あなたは{role}の専門家です",
-    "sharedBy": "{userName}さんが共有"
+    "sharedBy": "{userName}さんが共有",
+    "changeVisibility": "公開設定を変更"
   },
   "Auth": {
     "SignIn": {
@@ -139,7 +140,6 @@
     },
     "Thread": {
       "chat": "チャット",
-
       "renameChat": "名前を変更",
       "deleteChat": "チャットを削除",
       "deleteUnarchivedChats": "アーカイブされていないチャットをすべて削除",
@@ -154,7 +154,6 @@
       "threadUpdated": "スレッドが更新されました",
       "areYouSureYouWantToDeleteThisChatThread": "このチャットスレッドを削除してもよろしいですか？"
     },
-
     "ChatPreferences": {
       "title": "チャット設定",
       "whatShouldWeCallYou": "何とお呼びすればよろしいですか？",
@@ -344,6 +343,38 @@
     "mcpServerCustomizationDescription": "MCPサーバーカスタマイゼーション指示は、MCPサーバーが利用可能な場合にシステムプロンプトに追加されます。",
     "toolCustomizationInstructionsPlaceholder": "ツールカスタマイゼーション指示は利用できません。",
     "mcpServerCustomizationPlaceholder": "例：入力値がメールの場合、常にexample@example.comの形式でメールを入力してください。"
+  },
+  "Mcp": {
+    "title": "MCP サーバー",
+    "myServers": "自分の MCP サーバー",
+    "sharedServers": "共有された MCP サーバー",
+    "newServer": "MCP を作成",
+    "noSharedServers": "共有サーバーはありません",
+    "noMyServers": "まだサーバーがありません",
+    "create": "作成",
+    "authorize": "認可",
+    "toolsTest": "ツールテスト",
+    "toolsCount": "{count, plural, other {# 個のツール}}",
+    "visibilityUpdated": "公開設定が正常に更新されました",
+    "deleted": "サーバーを削除しました",
+    "kind": {
+      "remote": "リモート",
+      "stdio": "Stdio"
+    },
+    "status": {
+      "connected": "接続済み",
+      "disconnected": "切断",
+      "loading": "読み込み中",
+      "authorizing": "認可中"
+    },
+    "visibility": {
+      "private": "非公開",
+      "readonly": "読み取り専用",
+      "public": "公開",
+      "privateDescription": "このサーバーを表示・編集・使用できるのはあなただけです。",
+      "readonlyDescription": "他の人はツールを表示・使用できますが、編集できるのはあなただけです。",
+      "publicDescription": "誰でもこのサーバーのツールを表示・編集・使用できます。"
+    }
   },
   "Error": {},
   "Info": {

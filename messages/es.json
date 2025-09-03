@@ -41,7 +41,8 @@
     "createWithExample": "Crear con Ejemplo",
     "resultsFound": "{count} resultados encontrados",
     "youAreAnExpertIn": "Eres un experto en {role}",
-    "sharedBy": "Compartido por {userName}"
+    "sharedBy": "Compartido por {userName}",
+    "changeVisibility": "Cambiar visibilidad"
   },
   "Auth": {
     "SignIn": {
@@ -139,7 +140,6 @@
     },
     "Thread": {
       "chat": "Chat",
-
       "renameChat": "Renombrar",
       "deleteChat": "Eliminar Chat",
       "deleteUnarchivedChats": "Eliminar Todos los Chats No Archivados",
@@ -154,7 +154,6 @@
       "threadUpdated": "Hilo actualizado",
       "areYouSureYouWantToDeleteThisChatThread": "¿Estás seguro de que quieres eliminar este hilo de chat?"
     },
-
     "ChatPreferences": {
       "title": "Preferencias de Chat",
       "whatShouldWeCallYou": "¿Cómo deberíamos llamarte?",
@@ -221,7 +220,6 @@
     "theme": "Tema",
     "signOut": "Cerrar sesión",
     "language": "Idioma",
-
     "showAllChats": "Ver Todos los Chats",
     "showLessChats": "Mostrar menos",
     "reportAnIssue": "Reportar un problema",
@@ -345,6 +343,38 @@
     "mcpServerCustomizationDescription": "Las instrucciones de personalización del servidor MCP se añadirán al prompt del sistema cuando el servidor MCP esté disponible.",
     "toolCustomizationInstructionsPlaceholder": "Las instrucciones de personalización de herramientas no están disponibles.",
     "mcpServerCustomizationPlaceholder": "ej. Si el valor de entrada es email, siempre ingresa el email en el formato ejemplo@ejemplo.com."
+  },
+  "Mcp": {
+    "title": "Servidores MCP",
+    "myServers": "Mis Servidores MCP",
+    "sharedServers": "Servidores MCP Compartidos",
+    "newServer": "Crear MCP",
+    "noSharedServers": "No hay servidores compartidos",
+    "noMyServers": "Aún no hay servidores",
+    "create": "Crear",
+    "authorize": "Autorizar",
+    "toolsTest": "Prueba de Herramientas",
+    "toolsCount": "{count, plural, one {# herramienta} other {# herramientas}}",
+    "visibilityUpdated": "Visibilidad actualizada exitosamente",
+    "deleted": "Servidor eliminado",
+    "kind": {
+      "remote": "Remoto",
+      "stdio": "Stdio"
+    },
+    "status": {
+      "connected": "Conectado",
+      "disconnected": "Desconectado",
+      "loading": "Cargando",
+      "authorizing": "Autorizando"
+    },
+    "visibility": {
+      "private": "Privado",
+      "readonly": "Solo Lectura",
+      "public": "Público",
+      "privateDescription": "Solo tú puedes ver, editar y usar este servidor.",
+      "readonlyDescription": "Otros pueden ver y usar herramientas, pero solo tú puedes editar.",
+      "publicDescription": "Cualquiera puede ver, editar y usar las herramientas de este servidor."
+    }
   },
   "Error": {},
   "Info": {

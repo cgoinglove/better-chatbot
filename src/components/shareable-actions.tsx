@@ -56,10 +56,24 @@ const VISIBILITY_CONFIG = {
       description: "Workflow.publicDescription",
     },
   },
+  mcp: {
+    private: {
+      label: "Mcp.visibility.private",
+      description: "Mcp.visibility.privateDescription",
+    },
+    readonly: {
+      label: "Mcp.visibility.readonly",
+      description: "Mcp.visibility.readonlyDescription",
+    },
+    public: {
+      label: "Mcp.visibility.public",
+      description: "Mcp.visibility.publicDescription",
+    },
+  },
 } as const;
 
 interface ShareableActionsProps {
-  type: "agent" | "workflow";
+  type: "agent" | "workflow" | "mcp";
   visibility?: Visibility;
   isOwner: boolean;
   isBookmarked?: boolean;
@@ -142,7 +156,7 @@ export function ShareableActions({
                     </DropdownMenuTrigger>
                   </div>
                 </TooltipTrigger>
-                <TooltipContent>Change visibility</TooltipContent>
+                <TooltipContent>{t("Common.changeVisibility")}</TooltipContent>
               </Tooltip>
               <DropdownMenuContent className="max-w-sm">
                 {visibilityItems.map((visibilityItem) => (
@@ -183,8 +197,8 @@ export function ShareableActions({
         </>
       )}
 
-      {/* Bookmark */}
-      {!isOwner && onBookmarkToggle && (
+      {/* Bookmark (not rendered for MCP) */}
+      {type !== "mcp" && !isOwner && onBookmarkToggle && (
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
