@@ -12,6 +12,7 @@ import {
 } from "ai";
 
 import { myProvider } from "@/lib/ai/models";
+import { generateUUID } from "lib/utils";
 
 import { mcpClientsManager } from "lib/ai/mcp/mcp-manager";
 
@@ -258,7 +259,7 @@ export async function POST(request: Request) {
                 role: "user",
                 parts: currentMessage.parts,
                 attachments: currentMessage.experimental_attachments,
-                id: currentMessage.id,
+                id: currentMessage.id || generateUUID(),
                 annotations: appendAnnotations(currentMessage.annotations, {
                   usageTokens: usage.promptTokens,
                 }),
