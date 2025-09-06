@@ -108,7 +108,7 @@ export async function PUT(request: Request) {
       description: content,
       session: session as BetterAuthSession,
       dataStream: {
-        writeData: async (data: any) => {},
+        writeData: async (_data: any) => {},
         write: async () => {},
         writeMessageAnnotation: async () => {},
         writeSource: async () => {},

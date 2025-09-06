@@ -228,7 +228,7 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  const handleFormSubmit = useCallback(
+  const _handleFormSubmit = useCallback(
     async (
       event?: { preventDefault?: () => void },
       chatRequestOptions?: ChatRequestOptions,
@@ -366,13 +366,6 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
   );
 }
 
-function vercelAISdkV4ToolInvocationIssueCatcher(message: UIMessage) {
-  if (message.role != "assistant") return;
-  const lastPart = message.parts.at(-1);
-  if (lastPart?.type != "tool-invocation") return;
-  if (!message.toolInvocations)
-    message.toolInvocations = [lastPart.toolInvocation];
-}
 
 function DeleteThreadPopup({
   threadId,

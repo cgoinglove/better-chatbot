@@ -14,7 +14,7 @@ export function ArtifactWrapper() {
         <Artifact
           threadId=""
           input=""
-          setInput={(value) => {}}
+          setInput={(_value) => {}}
           status="ready"
           stop={() => Promise.resolve()}
           append={() => Promise.resolve("")}

@@ -135,16 +135,24 @@ export async function POST(request: Request) {
       artifactTools.updateDocument = createToolWithDataStream(updateDocument);
     }
 
-    // Get weather tools directly
-    const weatherTools = defaultTools[AppDefaultToolkit.Weather] ?? {};
+    // Get enabled default toolkit tools based on allowedAppDefaultToolkit
+    const enabledDefaultTools: Record<string, Tool> = {};
     
-    // Get web search tools directly
-    const webSearchTools = defaultTools[AppDefaultToolkit.WebSearch] ?? {};
+    if (allowedAppDefaultToolkit?.includes(AppDefaultToolkit.Weather)) {
+      Object.assign(enabledDefaultTools, defaultTools[AppDefaultToolkit.Weather] ?? {});
+    }
+    
+    if (allowedAppDefaultToolkit?.includes(AppDefaultToolkit.WebSearch)) {
+      Object.assign(enabledDefaultTools, defaultTools[AppDefaultToolkit.WebSearch] ?? {});
+    }
+    
+    if (allowedAppDefaultToolkit?.includes(AppDefaultToolkit.Visualization)) {
+      Object.assign(enabledDefaultTools, defaultTools[AppDefaultToolkit.Visualization] ?? {});
+    }
 
     // Get all available tools
     const availableTools: Record<string, Tool> = {
-      ...weatherTools,
-      ...webSearchTools,
+      ...enabledDefaultTools,
       ...artifactTools,
       ...(isToolCallAllowed ? mcpTools : {}),
     };
