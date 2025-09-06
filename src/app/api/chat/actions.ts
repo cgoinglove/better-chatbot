@@ -38,6 +38,15 @@ export async function generateTitleFromUserMessageAction({
   message,
   model,
 }: { message: Message; model: LanguageModel }) {
+  // Debug logging to understand the message structure
+  console.log('[DEBUG] generateTitleFromUserMessageAction - message:', JSON.stringify(message, null, 2));
+  
+  // Safety check for message structure
+  if (!message || !message.parts || !Array.isArray(message.parts)) {
+    console.error('[ERROR] Invalid message structure:', message);
+    return "New Chat";
+  }
+  
   const prompt = toAny(message.parts?.at(-1))?.text || "unknown";
 
   const { text: title } = await generateText({
