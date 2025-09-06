@@ -2,6 +2,7 @@ import { createPieChartTool } from "./create-pie-chart";
 import { createBarChartTool } from "./create-bar-chart";
 import { createLineChartTool } from "./create-line-chart";
 import { getWeather } from "./get-weather";
+import { webSearchTool, webContentsTool } from "./web-search";
 import { DefaultToolName } from "./utils";
 import { AppDefaultToolkit } from "@/types/chat";
 
@@ -13,5 +14,9 @@ export const defaultTools = {
   },
   [AppDefaultToolkit.Weather]: {
     getWeather,
+  },
+  [AppDefaultToolkit.WebSearch]: {
+    webSearchTool,
+    webContentsTool,
   },
 };

@@ -44,6 +44,7 @@ export type ChatMessageAnnotation = {
 export enum AppDefaultToolkit {
   Visualization = "visualization",
   Weather = "weather",
+  WebSearch = "websearch",
 }
 
 export const chatApiSchemaRequestBodySchema = z.object({

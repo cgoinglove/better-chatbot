@@ -7,6 +7,7 @@ import { cn } from "lib/utils";
 import {
   ChartColumn,
   ChevronRight,
+  Search,
   Loader,
   Package,
   Plus,
@@ -510,6 +511,22 @@ function AppDefaultToolKitSelector() {
           className="ml-auto"
           checked={allowedAppDefaultToolkit?.includes(
             AppDefaultToolkit.Visualization,
+          )}
+        />
+      </DropdownMenuItem>
+      <DropdownMenuItem
+        className="cursor-pointer font-semibold text-xs"
+        onClick={(e) => {
+          e.preventDefault();
+          toggleAppDefaultToolkit(AppDefaultToolkit.WebSearch);
+        }}
+      >
+        <Search className="size-3.5 text-green-500 stroke-3" />
+        Web Search
+        <Switch
+          className="ml-auto"
+          checked={allowedAppDefaultToolkit?.includes(
+            AppDefaultToolkit.WebSearch,
           )}
         />
       </DropdownMenuItem>

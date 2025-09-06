@@ -40,7 +40,7 @@ const initialState: AppState = {
   currentProjectId: null,
   toolChoice: "auto",
   allowedMcpServers: undefined,
-  allowedAppDefaultToolkit: [AppDefaultToolkit.Weather],
+  allowedAppDefaultToolkit: [AppDefaultToolkit.Weather, AppDefaultToolkit.WebSearch],
   model: DEFAULT_MODEL,
   temporaryModel: DEFAULT_MODEL,
   openTemporaryChat: false,

@@ -137,10 +137,14 @@ export async function POST(request: Request) {
 
     // Get weather tools directly
     const weatherTools = defaultTools[AppDefaultToolkit.Weather] ?? {};
+    
+    // Get web search tools directly
+    const webSearchTools = defaultTools[AppDefaultToolkit.WebSearch] ?? {};
 
     // Get all available tools
     const availableTools: Record<string, Tool> = {
       ...weatherTools,
+      ...webSearchTools,
       ...artifactTools,
       ...(isToolCallAllowed ? mcpTools : {}),
     };
