@@ -16,11 +16,7 @@ import { ErrorMessage, PreviewMessage } from "./message";
 import { Greeting } from "./greeting";
 
 import { useShallow } from "zustand/shallow";
-import { 
-  ChatRequestOptions, 
-  UIMessage,
-  DefaultChatTransport
-} from "ai";
+import { ChatRequestOptions, UIMessage } from "ai";
 
 import { safe } from "ts-safe";
 import { mutate } from "swr";
@@ -92,38 +88,14 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
     stop,
   } = useChat({
     id: threadId,
-    transport: new DefaultChatTransport({
-      prepareSendMessagesRequest: ({ messages, body, id }) => {
-        window.history.replaceState({}, "", `/chat/${threadId}`);
-        const lastMessage = messages.at(-1)!;
-        vercelAISdkV4ToolInvocationIssueCatcher(lastMessage);
-
-        // Ensure latestRef is synced
-        if (!latestRef.current || !latestRef.current.threadId) {
-          latestRef.current = {
-            toolChoice,
-            model,
-            allowedAppDefaultToolkit,
-            allowedMcpServers,
-            messages,
-            threadId,
-          };
-        }
-
-        const request: ChatApiSchemaRequestBody = {
-          ...body,
-          id: latestRef.current.threadId,
-          model: latestRef.current.model,
-          toolChoice: latestRef.current.toolChoice,
-          allowedAppDefaultToolkit: latestRef.current.allowedAppDefaultToolkit,
-          allowedMcpServers: latestRef.current.allowedMcpServers,
-          message: lastMessage,
-        };
-
-        return { body: request };
-      },
-    }),
+    api: "/api/chat",
     initialMessages,
+    body: {
+      model: model,
+      toolChoice: toolChoice,
+      allowedAppDefaultToolkit: allowedAppDefaultToolkit,
+      allowedMcpServers: allowedMcpServers,
+    },
     generateId: generateUUID,
     experimental_throttle: 100,
     onFinish() {

@@ -1,4 +1,4 @@
-import { createOllama } from "ollama-ai-provider-v2";
+import { createOllama } from "ollama-ai-provider";
 import { openai } from "@ai-sdk/openai";
 import { google } from "@ai-sdk/google";
 import { anthropic } from "@ai-sdk/anthropic";
