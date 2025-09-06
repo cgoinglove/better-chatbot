@@ -28,7 +28,6 @@ import {
 
 import { AppDefaultToolkit } from "app-types/chat";
 import { defaultTools } from "lib/ai/tools";
-import { errorIf, safe } from "ts-safe";
 import type { ChatRequestBody } from "./types";
 
 import {
@@ -65,7 +64,7 @@ export async function POST(request: Request) {
     const {
       id,
       message,
-      messages,
+      messages: requestMessages,
       model: modelName,
       toolChoice,
       allowedAppDefaultToolkit,
@@ -74,10 +73,10 @@ export async function POST(request: Request) {
     } = chatApiSchemaRequestBodySchema.parse(json);
     
     console.log('[DEBUG] Chat API - Parsed message:', JSON.stringify(message, null, 2));
-    console.log('[DEBUG] Chat API - Parsed messages:', JSON.stringify(messages, null, 2));
+    console.log('[DEBUG] Chat API - Parsed messages:', JSON.stringify(requestMessages, null, 2));
     
     // Handle both AI SDK v4 (single message) and v5 (messages array) formats
-    const currentMessage = message || (messages && messages[messages.length - 1]);
+    const currentMessage = message || (requestMessages && requestMessages[requestMessages.length - 1]);
     console.log('[DEBUG] Chat API - Current message for title:', JSON.stringify(currentMessage, null, 2));
 
     const model = myProvider.getModel(modelName);
