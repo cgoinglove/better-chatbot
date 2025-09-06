@@ -64,7 +64,6 @@ export async function POST(request: Request) {
 
     const {
       id,
-      message,
       messages: requestMessages,
       model: modelName,
       toolChoice,
@@ -73,12 +72,11 @@ export async function POST(request: Request) {
       projectId,
     } = chatApiSchemaRequestBodySchema.parse(json);
     
-    console.log('[DEBUG] Chat API - Parsed message:', JSON.stringify(message, null, 2));
-    console.log('[DEBUG] Chat API - Parsed messages:', JSON.stringify(requestMessages, null, 2));
+    // AI SDK v5 sends messages array, we want the last one
+    const message = requestMessages[requestMessages.length - 1];
     
-    // Handle both AI SDK v4 (single message) and v5 (messages array) formats
-    const currentMessage = message || (requestMessages && requestMessages[requestMessages.length - 1]);
-    console.log('[DEBUG] Chat API - Current message for title:', JSON.stringify(currentMessage, null, 2));
+    console.log('[DEBUG] Chat API - Parsed messages:', JSON.stringify(requestMessages, null, 2));
+    console.log('[DEBUG] Chat API - Current message:', JSON.stringify(message, null, 2));
 
     const model = myProvider.getModel(modelName);
 
@@ -86,7 +84,7 @@ export async function POST(request: Request) {
 
     if (!thread) {
       const title = await generateTitleFromUserMessageAction({
-        message: currentMessage,
+        message,
         model,
       });
       const newThread = await chatRepository.insertThread({
@@ -100,7 +98,7 @@ export async function POST(request: Request) {
     }
 
     // if is false, it means the last message is manual tool execution
-    const isLastMessageUserMessage = isUserMessage(currentMessage);
+    const isLastMessageUserMessage = isUserMessage(message);
 
     const previousMessages = (thread?.messages ?? []).map(convertToMessage);
 
@@ -108,7 +106,7 @@ export async function POST(request: Request) {
       return new Response("Thread not found", { status: 404 });
     }
 
-    const annotations = (currentMessage?.annotations as ChatMessageAnnotation[]) ?? [];
+    const annotations = (message?.annotations as ChatMessageAnnotation[]) ?? [];
 
     const mcpTools = mcpClientsManager.tools();
 
@@ -192,7 +190,7 @@ export async function POST(request: Request) {
     const messages: Message[] = isLastMessageUserMessage
       ? appendClientMessage({
           messages: previousMessages,
-          message: currentMessage,
+          message: message,
         })
       : previousMessages;
 
@@ -208,7 +206,7 @@ export async function POST(request: Request) {
         if (inProgressToolStep) {
           const toolResult = await manualToolExecuteByLastMessage(
             inProgressToolStep,
-            currentMessage,
+            message,
           );
           assignToolResult(inProgressToolStep, toolResult);
           dataStream.write(
@@ -257,10 +255,10 @@ export async function POST(request: Request) {
                 threadId: thread!.id,
                 model: modelName,
                 role: "user",
-                parts: currentMessage.parts,
-                attachments: currentMessage.experimental_attachments,
-                id: currentMessage.id || generateUUID(),
-                annotations: appendAnnotations(currentMessage.annotations, {
+                parts: message.parts,
+                attachments: message.experimental_attachments,
+                id: message.id || generateUUID(),
+                annotations: appendAnnotations(message.annotations, {
                   usageTokens: usage.promptTokens,
                 }),
               });

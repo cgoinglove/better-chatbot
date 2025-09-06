@@ -101,6 +101,7 @@ export default function ProjectPage() {
   const { input, setInput, append, stop, status } = useChat({
     id: threadId,
     api: "/api/chat",
+    initialMessages: [],
     body: {
       model: latestRef.current.model,
       toolChoice: latestRef.current.toolChoice,
@@ -108,7 +109,6 @@ export default function ProjectPage() {
       allowedMcpServers: latestRef.current.allowedMcpServers,
       projectId: id as string,
     },
-    initialMessages: [],
     generateId: generateUUID,
     experimental_throttle: 100,
     onFinish: () => {
