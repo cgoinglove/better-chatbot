@@ -16,7 +16,11 @@ import { ErrorMessage, PreviewMessage } from "./message";
 import { Greeting } from "./greeting";
 
 import { useShallow } from "zustand/shallow";
-import { ChatRequestOptions, UIMessage } from "ai";
+import { 
+  ChatRequestOptions, 
+  UIMessage,
+  DefaultChatTransport
+} from "ai";
 
 import { safe } from "ts-safe";
 import { mutate } from "swr";
@@ -88,37 +92,38 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
     stop,
   } = useChat({
     id: threadId,
-    api: "/api/chat",
-    initialMessages,
-    experimental_prepareRequestBody: ({ messages }) => {
-      window.history.replaceState({}, "", `/chat/${threadId}`);
-      const lastMessage = messages.at(-1)!;
-      vercelAISdkV4ToolInvocationIssueCatcher(lastMessage);
+    transport: new DefaultChatTransport({
+      prepareSendMessagesRequest: ({ messages, body, id }) => {
+        window.history.replaceState({}, "", `/chat/${threadId}`);
+        const lastMessage = messages.at(-1)!;
+        vercelAISdkV4ToolInvocationIssueCatcher(lastMessage);
 
-      // Ensure latestRef is synced
-      if (!latestRef.current || !latestRef.current.threadId) {
-        latestRef.current = {
-          toolChoice,
-          model,
-          allowedAppDefaultToolkit,
-          allowedMcpServers,
-          messages,
-          threadId,
+        // Ensure latestRef is synced
+        if (!latestRef.current || !latestRef.current.threadId) {
+          latestRef.current = {
+            toolChoice,
+            model,
+            allowedAppDefaultToolkit,
+            allowedMcpServers,
+            messages,
+            threadId,
+          };
+        }
+
+        const request: ChatApiSchemaRequestBody = {
+          ...body,
+          id: latestRef.current.threadId,
+          model: latestRef.current.model,
+          toolChoice: latestRef.current.toolChoice,
+          allowedAppDefaultToolkit: latestRef.current.allowedAppDefaultToolkit,
+          allowedMcpServers: latestRef.current.allowedMcpServers,
+          message: lastMessage,
         };
-      }
 
-      const request: ChatApiSchemaRequestBody = {
-        id: latestRef.current.threadId,
-        model: latestRef.current.model,
-        toolChoice: latestRef.current.toolChoice,
-        allowedAppDefaultToolkit: latestRef.current.allowedAppDefaultToolkit,
-        allowedMcpServers: latestRef.current.allowedMcpServers,
-        message: lastMessage,
-      };
-
-      return request;
-    },
-    sendExtraMessageFields: true,
+        return { body: request };
+      },
+    }),
+    initialMessages,
     generateId: generateUUID,
     experimental_throttle: 100,
     onFinish() {
