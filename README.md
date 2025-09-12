@@ -187,11 +187,17 @@ FILE_BASED_MCP_CONFIG=false
 
 # (Optional)
 # === OAuth Settings ===
-# Fill in these values only if you want to enable Google/GitHub login
+# Fill in these values only if you want to enable social login
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
 GITHUB_CLIENT_ID=
 GITHUB_CLIENT_SECRET=
+
+# === Okta OAuth Settings ===
+# Fill in these values to enable Okta authentication
+OKTA_DOMAIN=
+OKTA_CLIENT_ID=
+OKTA_CLIENT_SECRET=
 ```
 
 <br/>
@@ -219,7 +225,7 @@ Step-by-step setup guides for running and configuring MCP Client Chatbot.
 
 #### [🔐 OAuth Sign-In Setup](./docs/tips-guides/oauth.md)
 
-- Configure Google and GitHub OAuth for secure user login support.
+- Configure Google, GitHub, and Okta OAuth for secure user login support.
 
 #### [Adding openAI like providers](docs/tips-guides/adding-openAI-like-providers.md)
 - Adding openAI like ai providers

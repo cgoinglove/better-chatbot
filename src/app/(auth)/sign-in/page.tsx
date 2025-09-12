@@ -20,6 +20,7 @@ import { authClient } from "auth/client";
 import { toast } from "sonner";
 import { GithubIcon } from "ui/github-icon";
 import { GoogleIcon } from "ui/google-icon";
+import { OktaIcon } from "ui/okta-icon";
 import { useTranslations } from "next-intl";
 
 export default function SignInPage() {
@@ -74,6 +75,39 @@ export default function SignInPage() {
       .catch((e) => {
         toast.error(e.error);
       });
+  };
+
+  const oktaSignIn = async () => {
+    if (
+      !process.env.NEXT_PUBLIC_OKTA_CLIENT_ID ||
+      !process.env.NEXT_PUBLIC_OKTA_DOMAIN
+    )
+      return toast.warning(t("oauthClientIdNotSet", { provider: "Okta" }));
+
+    try {
+      // Use fetch to POST to the OAuth2 endpoint
+      const response = await fetch("/api/auth/sign-in/oauth2", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          providerId: "okta",
+          callbackURL: window.location.origin,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.url) {
+          window.location.href = data.url;
+        }
+      } else {
+        toast.error("Failed to initiate Okta sign-in");
+      }
+    } catch (_error) {
+      toast.error("Error connecting to Okta");
+    }
   };
 
   return (
@@ -140,18 +174,28 @@ export default function SignInPage() {
             </span>
             <div className="flex-1 h-px bg-accent"></div>
           </div>
-          <div className="flex gap-2 w-full">
-            <Button
-              variant="outline"
-              onClick={googleSignIn}
-              className="flex-1 "
-            >
-              <GoogleIcon className="size-4 fill-foreground" />
-              Google
-            </Button>
-            <Button variant="outline" onClick={githubSignIn} className="flex-1">
-              <GithubIcon className="size-4 fill-foreground" />
-              GitHub
+          <div className="flex flex-col gap-2 w-full">
+            <div className="flex gap-2 w-full">
+              <Button
+                variant="outline"
+                onClick={googleSignIn}
+                className="flex-1"
+              >
+                <GoogleIcon className="size-4 fill-foreground" />
+                Google
+              </Button>
+              <Button
+                variant="outline"
+                onClick={githubSignIn}
+                className="flex-1"
+              >
+                <GithubIcon className="size-4 fill-foreground" />
+                GitHub
+              </Button>
+            </div>
+            <Button variant="outline" onClick={oktaSignIn} className="w-full">
+              <OktaIcon className="size-4 fill-foreground" />
+              Okta
             </Button>
           </div>
 

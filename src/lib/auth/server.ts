@@ -6,6 +6,7 @@ import {
 } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
+import { genericOAuth } from "better-auth/plugins/generic-oauth";
 import { pgDb } from "lib/db/pg/db.pg";
 import { headers } from "next/headers";
 import { toast } from "sonner";
@@ -23,7 +24,33 @@ import logger from "logger";
 import { redirect } from "next/navigation";
 
 export const auth = betterAuth({
-  plugins: [nextCookies()],
+  plugins: [
+    nextCookies(),
+    genericOAuth({
+      config: [
+        {
+          providerId: "okta",
+          discoveryUrl: process.env.OKTA_DOMAIN
+            ? `https://${process.env.OKTA_DOMAIN}/.well-known/openid-configuration`
+            : undefined,
+          clientId: process.env.OKTA_CLIENT_ID || "",
+          clientSecret: process.env.OKTA_CLIENT_SECRET || "",
+          scopes: ["openid", "profile", "email"],
+          pkce: true,
+          redirectURI:
+            process.env.NODE_ENV === "production"
+              ? `${process.env.BETTER_AUTH_URL}/api/auth/callback/okta`
+              : "http://localhost:3000/api/auth/callback/okta",
+          mapProfileToUser: (profile: Record<string, any>) => ({
+            id: profile.sub,
+            email: profile.email,
+            name: profile.name,
+            image: profile.picture,
+          }),
+        },
+      ],
+    }),
+  ],
   database: drizzleAdapter(pgDb, {
     provider: "pg",
     schema: {
@@ -57,7 +84,7 @@ export const auth = betterAuth({
   },
   account: {
     accountLinking: {
-      trustedProviders: ["google", "github"],
+      trustedProviders: ["google", "github", "okta"],
     },
   },
   fetchOptions: {

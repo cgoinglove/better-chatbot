@@ -1,7 +1,6 @@
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 
-
 export default () => {
   const nextConfig: NextConfig = {
     cleanDistDir: true,
@@ -12,6 +11,8 @@ export default () => {
       NO_HTTPS: process.env.NO_HTTPS,
       NEXT_PUBLIC_GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
       NEXT_PUBLIC_GITHUB_CLIENT_ID: process.env.GITHUB_CLIENT_ID,
+      NEXT_PUBLIC_OKTA_DOMAIN: process.env.OKTA_DOMAIN,
+      NEXT_PUBLIC_OKTA_CLIENT_ID: process.env.OKTA_CLIENT_ID,
     },
   };
   const withNextIntl = createNextIntlPlugin();
