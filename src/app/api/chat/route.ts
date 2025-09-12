@@ -27,6 +27,7 @@ import {
 } from "app-types/chat";
 
 import { errorIf, safe } from "ts-safe";
+import { generateUUID } from "lib/utils";
 
 import {
   appendAnnotations,
@@ -196,12 +197,77 @@ export async function POST(request: Request) {
           vercelAITooles || {},
           computedToolChoice,
           dataStream,
-          async () => {
-            // Handle database operations for message persistence
-            // This callback will be called when the streaming completes
-            logger.info(
-              "Multi-phase flow completed, handling database operations",
-            );
+                    async (finishResult) => {
+            // CRITICAL: Handle database operations for message persistence
+            logger.info("Multi-phase flow completed, handling database operations");
+            
+            try {
+              // Save the user message if it's a new message
+              if (isLastMessageUserMessage && message) {
+                const userMessage = {
+                  id: message.id,
+                  threadId: id,
+                  role: message.role,
+                  content: message.content,
+                  parts: message.parts,
+                  annotations: message.annotations,
+                  attachments: message.attachments,
+                };
+                await chatRepository.upsertMessage(userMessage);
+                logger.info(`Saved user message ${message.id} to database`);
+              }
+
+              // Save the assistant response
+              if (finishResult) {
+                const assistantMessageParts = [];
+                
+                if (finishResult.text) {
+                  assistantMessageParts.push({
+                    type: "text" as const,
+                    text: finishResult.text,
+                  });
+                }
+
+                if (finishResult.toolCalls?.length > 0) {
+                  for (const toolCall of finishResult.toolCalls) {
+                    assistantMessageParts.push({
+                      type: "tool-call" as const,
+                      toolCallId: toolCall.toolCallId,
+                      toolName: toolCall.toolName,
+                      args: toolCall.args,
+                    });
+                  }
+                }
+
+                if (finishResult.toolResults?.length > 0) {
+                  for (const toolResult of finishResult.toolResults) {
+                    assistantMessageParts.push({
+                      type: "tool-result" as const,
+                      toolCallId: toolResult.toolCallId,
+                      toolName: toolResult.toolName,
+                      result: toolResult.result,
+                    });
+                  }
+                }
+
+                const assistantMessage = {
+                  id: generateUUID(),
+                  threadId: id,
+                  role: "assistant" as const,
+                  content: finishResult.text || "",
+                  parts: assistantMessageParts,
+                  annotations: annotations,
+                  model: chatModel,
+                };
+                
+                await chatRepository.upsertMessage(assistantMessage);
+                logger.info(`Saved assistant message ${assistantMessage.id} to database`);
+              }
+
+              logger.info("Messages successfully saved to database");
+            } catch (error) {
+              logger.error("Failed to save messages to database:", error);
+            }
           },
         );
 
