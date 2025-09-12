@@ -325,7 +325,7 @@ export function createResourceEnhancedTools(
   resourcesByTool: Record<string, string>,
 ): Record<string, VercelAIMcpTool> {
   return objectFlow(tools).map((tool) => {
-    const toolKey = `${tool._mcpServerId}:${tool._originToolName}`;
+    const toolKey = `${tool._mcpServerId}__${tool._originToolName}`;
     const resourceContent = resourcesByTool[toolKey];
 
     if (!resourceContent) {
