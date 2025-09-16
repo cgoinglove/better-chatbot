@@ -1,0 +1,428 @@
+From 561b59a88b03f4ceaf4c99461216ac4d202e73e6 Mon Sep 17 00:00:00 2001
+From: Akshay <akshay.gana@gmail.com>
+Date: Fri, 12 Sep 2025 11:56:33 -0700
+Subject: [PATCH] feat: Add Okta OAuth integration support
+
+- Add comprehensive Okta OAuth provider configuration
+- Implement Okta sign-in UI component with custom icon
+- Add complete setup documentation and troubleshooting guide
+- Update environment configuration for Okta credentials
+- Enable account linking between Okta and existing providers
+- Include PKCE and OpenID Connect Discovery for enhanced security
+
+Closes #260
+---
+ README.md                       | 10 ++++-
+ docs/tips-guides/oauth.md       | 77 +++++++++++++++++++++++++++++++--
+ next.config.ts                  |  3 +-
+ scripts/initial-env.ts          | 58 ++++++++++++++++++++++++-
+ src/app/(auth)/sign-in/page.tsx | 68 ++++++++++++++++++++++++-----
+ src/components/ui/okta-icon.tsx |  9 ++++
+ src/lib/auth/server.ts          | 31 ++++++++++++-
+ 7 files changed, 234 insertions(+), 22 deletions(-)
+ create mode 100644 src/components/ui/okta-icon.tsx
+
+diff --git a/README.md b/README.md
+index ce4473f..8a6049b 100644
+--- a/README.md
++++ b/README.md
+@@ -187,11 +187,17 @@ FILE_BASED_MCP_CONFIG=false
+ 
+ # (Optional)
+ # === OAuth Settings ===
+-# Fill in these values only if you want to enable Google/GitHub login
++# Fill in these values only if you want to enable social login
+ GOOGLE_CLIENT_ID=
+ GOOGLE_CLIENT_SECRET=
+ GITHUB_CLIENT_ID=
+ GITHUB_CLIENT_SECRET=
++
++# === Okta OAuth Settings ===
++# Fill in these values to enable Okta authentication
++OKTA_DOMAIN=
++OKTA_CLIENT_ID=
++OKTA_CLIENT_SECRET=
+ ```
+ 
+ <br/>
+@@ -219,7 +225,7 @@ Step-by-step setup guides for running and configuring MCP Client Chatbot.
+ 
+ #### [🔐 OAuth Sign-In Setup](./docs/tips-guides/oauth.md)
+ 
+-- Configure Google and GitHub OAuth for secure user login support.
++- Configure Google, GitHub, and Okta OAuth for secure user login support.
+ 
+ #### [Adding openAI like providers](docs/tips-guides/adding-openAI-like-providers.md)
+ - Adding openAI like ai providers
+diff --git a/docs/tips-guides/oauth.md b/docs/tips-guides/oauth.md
+index 50808f1..b5de60d 100644
+--- a/docs/tips-guides/oauth.md
++++ b/docs/tips-guides/oauth.md
+@@ -1,4 +1,4 @@
+-## Social Login Setup (Google & GitHub, English)
++## Social Login Setup (Google, GitHub & Okta)
+ 
+ ### Get your Google credentials
+ To use Google as a social provider, you need to get your Google credentials. You can get them by creating a new project in the [Google Cloud Console](https://console.cloud.google.com/apis/dashboard).
+@@ -31,17 +31,86 @@ To use GitHub sign in, you need a client ID and client secret. You can get them
+   GITHUB_CLIENT_SECRET=your_client_secret
+   ```
+ 
++### Get your Okta credentials
++To use Okta as a social provider, you need to set up an OAuth application in your Okta Developer Console.
++
++#### Prerequisites
++- An Okta developer account or access to your organization's Okta admin console
++- Admin privileges to create OAuth applications
++
++#### Setup Steps
++
++1. **Log into your Okta Admin Console**
++   - Go to your Okta domain (e.g., `https://your-domain.okta.com`)
++   - Sign in with admin credentials
++
++2. **Create a new OAuth Application**
++   - Navigate to **Applications** > **Applications**
++   - Click **Create App Integration**
++   - Select **OIDC - OpenID Connect** as the sign-in method
++   - Choose **Web Application** as the application type
++
++3. **Configure Application Settings**
++   - **App integration name**: `MCP Client Chatbot` (or your preferred name)
++   - **Grant type**: Select **Authorization Code**
++   - **Sign-in redirect URIs**:
++     - For local development: `http://localhost:3000/api/auth/callback/okta`
++     - For production: `https://your-domain.com/api/auth/callback/okta`
++   - **Sign-out redirect URIs**: (Optional) Set if you want custom logout behavior
++   - **Controlled access**: Choose appropriate access level for your organization
++
++4. **Get your credentials**
++   - After creation, note down your **Client ID** and **Client Secret**
++   - Your **Okta Domain** is your organization's Okta URL (e.g., `dev-12345.okta.com`)
++
++5. **Add to environment variables**
++   ```env
++   OKTA_DOMAIN=your-okta-domain.okta.com
++   OKTA_CLIENT_ID=your_client_id
++   OKTA_CLIENT_SECRET=your_client_secret
++   ```
++
++#### Important Notes
++- The Okta integration uses **OpenID Connect Discovery** for automatic configuration
++- **PKCE (Proof Key for Code Exchange)** is enabled for enhanced security
++- The integration requests `openid`, `profile`, and `email` scopes
++- Users can link their Okta account with existing accounts created via other providers
++
+ ## Environment Variable Check
+ 
+-Make sure your `.env` file contains the following variables:
++Make sure your `.env` file contains the following variables for the providers you want to use:
+ 
+-```
++```env
++# Google OAuth (optional)
+ GOOGLE_CLIENT_ID=your_google_client_id
+ GOOGLE_CLIENT_SECRET=your_google_client_secret
++
++# GitHub OAuth (optional)
+ GITHUB_CLIENT_ID=your_github_client_id
+ GITHUB_CLIENT_SECRET=your_github_client_secret
++
++# Okta OAuth (optional)
++OKTA_DOMAIN=your-okta-domain.okta.com
++OKTA_CLIENT_ID=your_okta_client_id
++OKTA_CLIENT_SECRET=your_okta_client_secret
+ ```
+ 
++## Troubleshooting
++
++### Okta-specific Issues
++
++**"Invalid redirect URI" error:**
++- Ensure your redirect URI in Okta matches exactly: `http://localhost:3000/api/auth/callback/okta` (development) or `https://your-domain.com/api/auth/callback/okta` (production)
++- Check that your `BETTER_AUTH_URL` environment variable is set correctly for production
++
++**"Client authentication failed" error:**
++- Verify your `OKTA_CLIENT_ID` and `OKTA_CLIENT_SECRET` are correct
++- Ensure your Okta application is configured as a "Web Application" with "Authorization Code" grant type
++
++**"Discovery endpoint not found" error:**
++- Confirm your `OKTA_DOMAIN` is correct and accessible
++- The domain should be in format: `your-domain.okta.com` (without `https://`)
++
+ ## Done
+ 
+-You can now sign in to MCP Client Chatbot using your Google or GitHub account. Restart the application to apply the changes. 
+\ No newline at end of file
++You can now sign in to MCP Client Chatbot using your Google, GitHub, or Okta account. Restart the application to apply the changes. 
+\ No newline at end of file
+diff --git a/next.config.ts b/next.config.ts
+index f009f4b..88d09f7 100644
+--- a/next.config.ts
++++ b/next.config.ts
+@@ -1,7 +1,6 @@
+ import type { NextConfig } from "next";
+ import createNextIntlPlugin from "next-intl/plugin";
+ 
+-
+ export default () => {
+   const nextConfig: NextConfig = {
+     cleanDistDir: true,
+@@ -12,6 +11,8 @@ export default () => {
+       NO_HTTPS: process.env.NO_HTTPS,
+       NEXT_PUBLIC_GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+       NEXT_PUBLIC_GITHUB_CLIENT_ID: process.env.GITHUB_CLIENT_ID,
++      NEXT_PUBLIC_OKTA_DOMAIN: process.env.OKTA_DOMAIN,
++      NEXT_PUBLIC_OKTA_CLIENT_ID: process.env.OKTA_CLIENT_ID,
+     },
+   };
+   const withNextIntl = createNextIntlPlugin();
+diff --git a/scripts/initial-env.ts b/scripts/initial-env.ts
+index 11268ee..d331356 100644
+--- a/scripts/initial-env.ts
++++ b/scripts/initial-env.ts
+@@ -14,6 +14,50 @@ const DOCKER_ENV_CONTENT =
+     "POSTGRES_PASSWORD=your_password",
+   ].join("\n") + "\n";
+ 
++const ENV_EXAMPLE_CONTENT = `# === LLM Provider API Keys ===
++# You only need to enter the keys for the providers you plan to use
++GOOGLE_GENERATIVE_AI_API_KEY=
++OPENAI_API_KEY=
++XAI_API_KEY=
++ANTHROPIC_API_KEY=
++OPENROUTER_API_KEY=
++OLLAMA_BASE_URL=http://localhost:11434/api
++
++# Secret for Better Auth (generate with: npx @better-auth/cli@latest secret)
++BETTER_AUTH_SECRET=
++
++# (Optional)
++# URL for Better Auth (the URL you access the app from)
++BETTER_AUTH_URL=
++
++# === Database ===
++# If you don't have PostgreSQL running locally, start it with: pnpm docker:pg
++POSTGRES_URL=postgres://your_username:your_password@localhost:5432/your_database_name
++
++# Whether to use file-based MCP config (default: false)
++FILE_BASED_MCP_CONFIG=false
++
++# (Optional)
++# === OAuth Settings ===
++# Fill in these values only if you want to enable social login
++GOOGLE_CLIENT_ID=
++GOOGLE_CLIENT_SECRET=
++GITHUB_CLIENT_ID=
++GITHUB_CLIENT_SECRET=
++
++# === Okta OAuth Settings ===
++# Fill in these values to enable Okta authentication
++OKTA_DOMAIN=
++OKTA_CLIENT_ID=
++OKTA_CLIENT_SECRET=
++
++# Whether to disable user registration (default: false)
++DISABLE_SIGN_UP=false
++
++# Optional: Set to '1' to disable HTTPS in local development
++NO_HTTPS=
++`;
++
+ /**
+  * Copy .env.example to .env if .env doesn't exist
+  */
+@@ -21,13 +65,25 @@ function copyEnvFile() {
+   const envPath = path.join(ROOT, ".env");
+   const envExamplePath = path.join(ROOT, ".env.example");
+ 
++  // Create .env.example if it doesn't exist
++  if (!fs.existsSync(envExamplePath)) {
++    try {
++      fs.writeFileSync(envExamplePath, ENV_EXAMPLE_CONTENT, "utf-8");
++      console.log(".env.example file has been created.");
++    } catch (error) {
++      console.error("Error occurred while creating .env.example file.");
++      console.error(error);
++      return false;
++    }
++  }
++
+   if (!fs.existsSync(envPath)) {
+     try {
+       console.warn(".env file not found. Copying from .env.example...");
+       fs.copyFileSync(envExamplePath, envPath);
+       console.log(".env file has been created.");
+       console.warn(
+-        "Important: You may need to edit the .env file to set your API keys.",
++        "Important: You may need to edit the .env file to set your API keys and OAuth credentials.",
+       );
+     } catch (error) {
+       console.error("Error occurred while creating .env file.");
+diff --git a/src/app/(auth)/sign-in/page.tsx b/src/app/(auth)/sign-in/page.tsx
+index 58f7b0f..24ef278 100644
+--- a/src/app/(auth)/sign-in/page.tsx
++++ b/src/app/(auth)/sign-in/page.tsx
+@@ -20,6 +20,7 @@ import { authClient } from "auth/client";
+ import { toast } from "sonner";
+ import { GithubIcon } from "ui/github-icon";
+ import { GoogleIcon } from "ui/google-icon";
++import { OktaIcon } from "ui/okta-icon";
+ import { useTranslations } from "next-intl";
+ 
+ export default function SignInPage() {
+@@ -76,6 +77,39 @@ export default function SignInPage() {
+       });
+   };
+ 
++  const oktaSignIn = async () => {
++    if (
++      !process.env.NEXT_PUBLIC_OKTA_CLIENT_ID ||
++      !process.env.NEXT_PUBLIC_OKTA_DOMAIN
++    )
++      return toast.warning(t("oauthClientIdNotSet", { provider: "Okta" }));
++
++    try {
++      // Use fetch to POST to the OAuth2 endpoint
++      const response = await fetch("/api/auth/sign-in/oauth2", {
++        method: "POST",
++        headers: {
++          "Content-Type": "application/json",
++        },
++        body: JSON.stringify({
++          providerId: "okta",
++          callbackURL: window.location.origin,
++        }),
++      });
++
++      if (response.ok) {
++        const data = await response.json();
++        if (data.url) {
++          window.location.href = data.url;
++        }
++      } else {
++        toast.error("Failed to initiate Okta sign-in");
++      }
++    } catch (_error) {
++      toast.error("Error connecting to Okta");
++    }
++  };
++
+   return (
+     <div className="w-full h-full flex flex-col p-4 md:p-8 justify-center">
+       <Card className="w-full md:max-w-md bg-background border-none mx-auto shadow-none animate-in fade-in duration-1000">
+@@ -140,18 +174,28 @@ export default function SignInPage() {
+             </span>
+             <div className="flex-1 h-px bg-accent"></div>
+           </div>
+-          <div className="flex gap-2 w-full">
+-            <Button
+-              variant="outline"
+-              onClick={googleSignIn}
+-              className="flex-1 "
+-            >
+-              <GoogleIcon className="size-4 fill-foreground" />
+-              Google
+-            </Button>
+-            <Button variant="outline" onClick={githubSignIn} className="flex-1">
+-              <GithubIcon className="size-4 fill-foreground" />
+-              GitHub
++          <div className="flex flex-col gap-2 w-full">
++            <div className="flex gap-2 w-full">
++              <Button
++                variant="outline"
++                onClick={googleSignIn}
++                className="flex-1"
++              >
++                <GoogleIcon className="size-4 fill-foreground" />
++                Google
++              </Button>
++              <Button
++                variant="outline"
++                onClick={githubSignIn}
++                className="flex-1"
++              >
++                <GithubIcon className="size-4 fill-foreground" />
++                GitHub
++              </Button>
++            </div>
++            <Button variant="outline" onClick={oktaSignIn} className="w-full">
++              <OktaIcon className="size-4 fill-foreground" />
++              Okta
+             </Button>
+           </div>
+ 
+diff --git a/src/components/ui/okta-icon.tsx b/src/components/ui/okta-icon.tsx
+new file mode 100644
+index 0000000..8afad1c
+--- /dev/null
++++ b/src/components/ui/okta-icon.tsx
+@@ -0,0 +1,9 @@
++import { SVGProps } from "react";
++
++export function OktaIcon(props: SVGProps<SVGSVGElement>) {
++  return (
++    <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
++      <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm0 16c-3.314 0-6-2.686-6-6s2.686-6 6-6 6 2.686 6 6-2.686 6-6 6z" />
++    </svg>
++  );
++}
+diff --git a/src/lib/auth/server.ts b/src/lib/auth/server.ts
+index 248108c..1e49ba7 100644
+--- a/src/lib/auth/server.ts
++++ b/src/lib/auth/server.ts
+@@ -6,6 +6,7 @@ import {
+ } from "better-auth";
+ import { drizzleAdapter } from "better-auth/adapters/drizzle";
+ import { nextCookies } from "better-auth/next-js";
++import { genericOAuth } from "better-auth/plugins/generic-oauth";
+ import { pgDb } from "lib/db/pg/db.pg";
+ import { headers } from "next/headers";
+ import { toast } from "sonner";
+@@ -23,7 +24,33 @@ import logger from "logger";
+ import { redirect } from "next/navigation";
+ 
+ export const auth = betterAuth({
+-  plugins: [nextCookies()],
++  plugins: [
++    nextCookies(),
++    genericOAuth({
++      config: [
++        {
++          providerId: "okta",
++          discoveryUrl: process.env.OKTA_DOMAIN
++            ? `https://${process.env.OKTA_DOMAIN}/.well-known/openid-configuration`
++            : undefined,
++          clientId: process.env.OKTA_CLIENT_ID || "",
++          clientSecret: process.env.OKTA_CLIENT_SECRET || "",
++          scopes: ["openid", "profile", "email"],
++          pkce: true,
++          redirectURI:
++            process.env.NODE_ENV === "production"
++              ? `${process.env.BETTER_AUTH_URL}/api/auth/callback/okta`
++              : "http://localhost:3000/api/auth/callback/okta",
++          mapProfileToUser: (profile: Record<string, any>) => ({
++            id: profile.sub,
++            email: profile.email,
++            name: profile.name,
++            image: profile.picture,
++          }),
++        },
++      ],
++    }),
++  ],
+   database: drizzleAdapter(pgDb, {
+     provider: "pg",
+     schema: {
+@@ -57,7 +84,7 @@ export const auth = betterAuth({
+   },
+   account: {
+     accountLinking: {
+-      trustedProviders: ["google", "github"],
++      trustedProviders: ["google", "github", "okta"],
+     },
+   },
+   fetchOptions: {
+-- 
+2.39.5 (Apple Git-154)
+
