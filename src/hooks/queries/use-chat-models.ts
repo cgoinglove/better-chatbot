@@ -6,6 +6,7 @@ export const useChatModels = () => {
   return useSWR<
     {
       provider: string;
+      hasAPIKey: boolean;
       models: {
         name: string;
         isToolCallUnsupported: boolean;

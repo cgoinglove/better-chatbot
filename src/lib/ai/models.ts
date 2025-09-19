@@ -59,7 +59,6 @@ const staticModels = {
     "gpt-oss-120b": groq("openai/gpt-oss-120b"),
     "qwen3-32b": groq("qwen/qwen3-32b"),
   },
-
   openRouter: {
     "gpt-oss-20b:free": openrouter("openai/gpt-oss-20b:free"),
     "qwen3-8b:free": openrouter("qwen/qwen3-8b:free"),
@@ -112,9 +111,40 @@ export const customModelProvider = {
       name,
       isToolCallUnsupported: isToolCallUnsupportedModel(model),
     })),
+    hasAPIKey: checkProviderAPIKey(provider as keyof typeof staticModels),
   })),
   getModel: (model?: ChatModel): LanguageModel => {
     if (!model) return fallbackModel;
     return allModels[model.provider]?.[model.model] || fallbackModel;
   },
 };
+
+function checkProviderAPIKey(provider: keyof typeof staticModels) {
+  let key: string | undefined;
+  switch (provider) {
+    case "openai":
+      key = process.env.OPENAI_API_KEY;
+      break;
+    case "google":
+      key = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+      break;
+    case "anthropic":
+      key = process.env.ANTHROPIC_API_KEY;
+      break;
+    case "xai":
+      key = process.env.XAI_API_KEY;
+      break;
+    case "ollama":
+      key = process.env.OLLAMA_API_KEY;
+      break;
+    case "groq":
+      key = process.env.GROQ_API_KEY;
+      break;
+    case "openRouter":
+      key = process.env.OPENROUTER_API_KEY;
+      break;
+    default:
+      return true; // assume the provider has an API key
+  }
+  return !!key && key != "****";
+}
