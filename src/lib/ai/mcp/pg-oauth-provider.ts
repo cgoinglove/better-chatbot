@@ -104,22 +104,18 @@ export class PgOAuthClientProvider implements OAuthClientProvider {
   }
 
   get redirectUrl(): string {
-    this.logger.info("redirectUrl");
     return this.config._clientMetadata.redirect_uris[0];
   }
 
   get clientMetadata(): OAuthClientMetadata {
-    this.logger.info("clientMetadata");
     return this.config._clientMetadata;
   }
 
   state(): string {
-    this.logger.info("state");
     return this.currentOAuthState;
   }
 
   async clientInformation(): Promise<OAuthClientInformation | undefined> {
-    this.logger.info("clientInformation");
     const authData = await this.getAuthData();
     if (authData?.clientInfo) {
       // Check if redirect URI matches (security check)
@@ -152,7 +148,6 @@ export class PgOAuthClientProvider implements OAuthClientProvider {
   }
 
   async tokens(): Promise<OAuthTokens | undefined> {
-    this.logger.info("tokens");
     const authData = await this.getAuthData();
     if (authData?.tokens) {
       return authData.tokens;
@@ -173,7 +168,6 @@ export class PgOAuthClientProvider implements OAuthClientProvider {
   }
 
   async redirectToAuthorization(authorizationUrl: URL): Promise<void> {
-    this.logger.info("redirectToAuthorization");
     authorizationUrl.searchParams.set("state", this.state());
     await this.config.onRedirectToAuthorization(authorizationUrl);
   }
@@ -185,7 +179,6 @@ export class PgOAuthClientProvider implements OAuthClientProvider {
   }
 
   async codeVerifier(): Promise<string> {
-    this.logger.info("codeVerifier");
     const authData = await this.getAuthData();
     if (!authData?.codeVerifier) {
       throw new UnauthorizedError("OAuth code verifier not found");
