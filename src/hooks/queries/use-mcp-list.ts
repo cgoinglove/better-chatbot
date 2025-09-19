@@ -13,8 +13,7 @@ export type McpListItem = {
   error?: unknown;
   toolInfo: MCPToolInfo[];
   visibility: "private" | "public" | "readonly";
-  ownerId?: string | null;
-  isOwner: boolean;
+  owner: { id: string | null; name?: string; avatarUrl?: string };
 };
 
 export function useMcpList(options?: SWRConfiguration) {

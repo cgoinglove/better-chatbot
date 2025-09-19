@@ -23,6 +23,7 @@ import {
 import { useRouter } from "next/navigation";
 import { Card, CardHeader, CardTitle } from "ui/card";
 import { MCPCard } from "@/components/mcp-card";
+import { authClient } from "auth/client";
 
 const LightRays = dynamic(() => import("@/components/ui/light-rays"), {
   ssr: false,
@@ -34,23 +35,25 @@ export default function MCPDashboard({ message }: { message?: string }) {
   const { data, isLoading, isValidating } = useMcpList({
     refreshInterval: 10000,
   });
+  const { data: session } = authClient.useSession();
+  const currentUserId = session?.user?.id;
 
   const statusWeight = (s: McpListItem["status"]) =>
     s === "authorizing" ? 0 : 1;
   const sortedMy = useMemo(() => {
-    const mine = data.filter((i) => i.isOwner);
+    const mine = data.filter((i) => i.owner.id === currentUserId);
     return mine.sort((a, b) => {
       const w = statusWeight(a.status) - statusWeight(b.status);
       return w !== 0 ? w : a.name.localeCompare(b.name);
     });
-  }, [data]);
+  }, [data, currentUserId]);
   const sortedShared = useMemo(() => {
-    const shared = data.filter((i) => !i.isOwner);
+    const shared = data.filter((i) => i.owner.id !== currentUserId);
     return shared.sort((a, b) => {
       const w = statusWeight(a.status) - statusWeight(b.status);
       return w !== 0 ? w : a.name.localeCompare(b.name);
     });
-  }, [data]);
+  }, [data, currentUserId]);
 
   const displayIcons = useMemo(() => {
     const shuffled = [...RECOMMENDED_MCPS].sort(() => 0.5 - Math.random());
@@ -199,7 +202,7 @@ export default function MCPDashboard({ message }: { message?: string }) {
                       error={item.error}
                       toolInfo={item.toolInfo}
                       visibility={item.visibility}
-                      isOwner={item.isOwner}
+                      isOwner={item.owner.id === currentUserId}
                     />
                   ))}
                   {sortedMy.length === 0 && (
@@ -231,7 +234,7 @@ export default function MCPDashboard({ message }: { message?: string }) {
                       error={item.error}
                       toolInfo={item.toolInfo}
                       visibility={item.visibility}
-                      isOwner={item.isOwner}
+                      isOwner={item.owner.id === currentUserId}
                     />
                   ))}
                   {sortedShared.length === 0 && (

@@ -23,7 +23,7 @@ import { GET } from "./route";
 describe("/api/mcp/list", () => {
   beforeEach(() => vi.resetAllMocks());
 
-  it("returns only visible servers for user and includes visibility, conditional ownerId and isOwner", async () => {
+  it("returns only visible servers for user and includes visibility and owner object", async () => {
     vi.mocked(getSession).mockResolvedValue({ user: { id: "U" } } as any);
     vi.mocked(mcpRepository.selectAll).mockResolvedValue([
       { id: "S1", name: "s1", config: { command: "x" } },
@@ -53,7 +53,7 @@ describe("/api/mcp/list", () => {
       },
     ] as any);
     vi.mocked(mcpRepository.selectAllByAccess).mockResolvedValue([
-      // Owned item - should NOT include ownerId
+      // Owned item
       {
         id: "S1",
         name: "s1",
@@ -61,7 +61,7 @@ describe("/api/mcp/list", () => {
         userId: "U",
         visibility: "private",
       },
-      // Shared item - should include ownerId
+      // Shared item
       {
         id: "S2",
         name: "s2",
@@ -76,25 +76,26 @@ describe("/api/mcp/list", () => {
     expect(res.status).toBe(200);
     // All items should include visibility
     expect(body.every((i: any) => typeof i.visibility === "string")).toBe(true);
-    // Owned item: has visibility, no ownerId, isOwner true
+    expect(
+      body.every((i: any) => i.owner && typeof i.owner.id !== "undefined"),
+    ).toBe(true);
+    // Owned item: has visibility and owner object
     const owned = body.find((v: any) => v.id === "S1");
     expect(owned).toMatchObject({
       id: "S1",
       name: "s1",
       status: "connected",
       visibility: "private",
-      isOwner: true,
+      owner: { id: "U" },
     });
-    expect(owned.ownerId).toBeUndefined();
 
-    // Shared item: has visibility and ownerId, isOwner false
+    // Shared item: has visibility and owner object
     const shared = body.find((v: any) => v.id === "S2");
     expect(shared).toMatchObject({
       id: "S2",
       name: "s2",
       visibility: "public",
-      ownerId: "OTHER",
-      isOwner: false,
+      owner: { id: "OTHER" },
     });
   });
 
