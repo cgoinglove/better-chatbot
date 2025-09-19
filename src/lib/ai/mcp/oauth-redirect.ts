@@ -10,8 +10,12 @@ export function redriectMcpOauth(id: string) {
   return authorizeMcpClientAction(id).then((authUrl) => {
     if (!authUrl) throw new Error("Not Authorizing");
     return new Promise((resolve, reject) => {
+      // Safely append prompt parameter to authUrl
+      const url = new URL(authUrl);
+      url.searchParams.set("prompt", "select_account");
+
       const authWindow = window.open(
-        authUrl,
+        url.toString(),
         "oauth",
         "width=600,height=800,scrollbars=yes,resizable=yes",
       );
