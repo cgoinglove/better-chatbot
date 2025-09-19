@@ -76,6 +76,10 @@ export interface MCPRepository {
   selectByServerName(name: string): Promise<McpServerSelect | null>;
   selectAll(): Promise<McpServerSelect[]>; // global list (for sync)
   selectAllByAccess(userId: string): Promise<McpServerSelect[]>; // mine + shared
+  selectByAccessForIds(
+    userId: string,
+    ids: string[],
+  ): Promise<McpServerSelect[]>;
   checkAccess(
     id: string,
     userId: string,

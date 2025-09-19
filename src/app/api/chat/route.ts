@@ -12,11 +12,7 @@ import { customModelProvider, isToolCallUnsupportedModel } from "lib/ai/models";
 
 import { mcpClientsManager } from "lib/ai/mcp/mcp-manager";
 
-import {
-  agentRepository,
-  chatRepository,
-  mcpRepository,
-} from "lib/db/repository";
+import { agentRepository, chatRepository } from "lib/db/repository";
 import globalLogger from "logger";
 import {
   buildMcpServerCustomizationsSystemPrompt,
@@ -124,45 +120,45 @@ export async function POST(request: Request) {
 
     const stream = createUIMessageStream({
       execute: async ({ writer: dataStream }) => {
-        const mcpClients = await mcpClientsManager.getClients();
-        const mcpTools = await mcpClientsManager.tools();
+        const [mcpClients, mcpTools] = await Promise.all([
+          mcpClientsManager.getClients(),
+          mcpClientsManager.tools(),
+        ]);
         logger.info(
           `mcp-server count: ${mcpClients.length}, mcp-tools count :${Object.keys(mcpTools).length}`,
         );
-        const accessible = await mcpRepository.selectAllByAccess(
-          session.user.id,
-        );
-        const accessibleIds = new Set<string>(accessible.map((s) => s.id));
-        const MCP_TOOLS = await safe()
-          .map(errorIf(() => !isToolCallAllowed && "Not allowed"))
-          .map(() =>
-            loadMcpTools({
-              mentions,
-              allowedMcpServers,
-              accessibleServerIds: accessibleIds,
-            }),
-          )
-          .orElse({});
-
-        const WORKFLOW_TOOLS = await safe()
-          .map(errorIf(() => !isToolCallAllowed && "Not allowed"))
-          .map(() =>
-            loadWorkFlowTools({
-              mentions,
-              dataStream,
-            }),
-          )
-          .orElse({});
-
-        const APP_DEFAULT_TOOLS = await safe()
-          .map(errorIf(() => !isToolCallAllowed && "Not allowed"))
-          .map(() =>
-            loadAppDefaultTools({
-              mentions,
-              allowedAppDefaultToolkit,
-            }),
-          )
-          .orElse({});
+        const [MCP_TOOLS, WORKFLOW_TOOLS, APP_DEFAULT_TOOLS] =
+          await Promise.all([
+            safe()
+              .map(errorIf(() => !isToolCallAllowed && "Not allowed"))
+              .map(() =>
+                loadMcpTools({
+                  userId: session.user.id,
+                  mentions,
+                  allowedMcpServers,
+                  allTools: mcpTools,
+                }),
+              )
+              .orElse({}),
+            safe()
+              .map(errorIf(() => !isToolCallAllowed && "Not allowed"))
+              .map(() =>
+                loadWorkFlowTools({
+                  mentions,
+                  dataStream,
+                }),
+              )
+              .orElse({}),
+            safe()
+              .map(errorIf(() => !isToolCallAllowed && "Not allowed"))
+              .map(() =>
+                loadAppDefaultTools({
+                  mentions,
+                  allowedAppDefaultToolkit,
+                }),
+              )
+              .orElse({}),
+          ]);
         const inProgressToolParts = extractInProgressToolPart(message);
         if (inProgressToolParts.length) {
           await Promise.all(

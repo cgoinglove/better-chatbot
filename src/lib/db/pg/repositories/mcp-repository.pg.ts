@@ -1,6 +1,6 @@
 import { pgDb as db } from "../db.pg";
 import { McpServerSchema } from "../schema.pg";
-import { eq, or, inArray } from "drizzle-orm";
+import { eq, or, inArray, and } from "drizzle-orm";
 import { generateUUID } from "lib/utils";
 import type { MCPRepository } from "app-types/mcp";
 
@@ -51,6 +51,23 @@ export const pgMcpRepository: MCPRepository = {
         or(
           eq(McpServerSchema.userId, userId),
           inArray(McpServerSchema.visibility, ["public", "readonly"]),
+        ),
+      );
+    return results;
+  },
+
+  async selectByAccessForIds(userId, ids) {
+    if (!ids || ids.length === 0) return [];
+    const results = await db
+      .select()
+      .from(McpServerSchema)
+      .where(
+        and(
+          inArray(McpServerSchema.id, ids),
+          or(
+            eq(McpServerSchema.userId, userId),
+            inArray(McpServerSchema.visibility, ["public", "readonly"]),
+          ),
         ),
       );
     return results;
