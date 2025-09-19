@@ -73,7 +73,7 @@
     "public": "Public",
     "privateDescription": "Only you can view, edit, and use this workflow as a tool.",
     "readonlyDescription": "Others can view and use as a tool, but only you can edit.",
-    "publicDescription": "Anyone can view, edit, and use this workflow as a tool.",
+    "publicDescription": "Anyone can view and use this workflow as a tool.",
     "visibilityDescription": "Control who can access and modify this workflow",
     "nodeDescriptionPlaceholder": "node description...",
     "nextNode": "Next Node",
@@ -407,7 +407,7 @@
     "public": "Public",
     "privateDescription": "Only you can view, edit, and use this agent.",
     "readOnlyDescription": "Others can view and use as a tool, but only you can edit.",
-    "publicDescription": "Anyone can view, edit, and use this agent as a tool."
+    "publicDescription": "Anyone can view and use this agent as a tool."
   },
   "KeyboardShortcuts": {
     "title": "Keyboard Shortcuts",
@@ -487,7 +487,7 @@
       "public": "Public",
       "privateDescription": "Only you can view, edit, and use this server.",
       "readonlyDescription": "Others can view and use tools, only you can edit.",
-      "publicDescription": "Anyone can view, edit, and use this server's tools."
+      "publicDescription": "Anyone can view and use this server's tools."
     }
   }
 }

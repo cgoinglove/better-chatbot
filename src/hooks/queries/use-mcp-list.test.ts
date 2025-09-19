@@ -18,6 +18,7 @@ vi.mock("swr", async () => {
               status: "connected",
               toolInfo: [],
               visibility: "private",
+              isOwner: true,
             },
             {
               id: "B",
@@ -27,6 +28,7 @@ vi.mock("swr", async () => {
               toolInfo: [],
               visibility: "public",
               ownerId: "U2",
+              isOwner: false,
             },
           ],
           isLoading: false,
@@ -41,14 +43,16 @@ vi.mock("swr", async () => {
 
 import { useMcpList } from "./use-mcp-list";
 
-describe("useMcpList segmentation", () => {
+describe("useMcpList returns data; segmentation done by consumer", () => {
   beforeEach(() => vi.resetAllMocks());
 
-  it("segments my and shared mcps via ownerId presence", () => {
-    const { items, myMcps, sharedMcps, isLoading } = useMcpList();
+  it("returns data and consumers can segment using isOwner", () => {
+    const { data, isLoading } = useMcpList();
     expect(isLoading).toBe(false);
-    expect(items.length).toBe(2);
-    expect(myMcps.map((i) => i.id)).toEqual(["A"]);
-    expect(sharedMcps.map((i) => i.id)).toEqual(["B"]);
+    expect(data.length).toBe(2);
+    const my = data.filter((i) => i.isOwner).map((i) => i.id);
+    const shared = data.filter((i) => !i.isOwner).map((i) => i.id);
+    expect(my).toEqual(["A"]);
+    expect(shared).toEqual(["B"]);
   });
 });

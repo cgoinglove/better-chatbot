@@ -293,7 +293,7 @@
     "public": "公開",
     "privateDescription": "あなただけがこのエージェントを表示、編集、使用できます。",
     "readOnlyDescription": "他の人もツールとして表示・使用できますが、編集はあなただけができます。",
-    "publicDescription": "誰でもこのエージェントをツールとして表示、編集、使用できます。"
+    "publicDescription": "誰でもこのエージェントをツールとして表示し、使用できます。"
   },
   "KeyboardShortcuts": {
     "title": "キーボードショートカット",
@@ -373,7 +373,7 @@
       "public": "公開",
       "privateDescription": "このサーバーを表示・編集・使用できるのはあなただけです。",
       "readonlyDescription": "他の人はツールを表示・使用できますが、編集できるのはあなただけです。",
-      "publicDescription": "誰でもこのサーバーのツールを表示・編集・使用できます。"
+      "publicDescription": "誰でもこのサーバーのツールを表示・使用できます。"
     }
   },
   "Error": {},
@@ -401,7 +401,7 @@
     "public": "公開",
     "privateDescription": "このワークフローを表示、編集、ツールとして使用できるのはあなただけです。",
     "readonlyDescription": "他の人は表示してツールとして使用できますが、編集できるのはあなただけです。",
-    "publicDescription": "誰でもこのワークフローを表示、編集、ツールとして使用できます。",
+    "publicDescription": "誰でもこのワークフローを表示し、ツールとして使用できます。",
     "visibilityDescription": "このワークフローにアクセスして変更できる人を制御します",
     "nodeDescriptionPlaceholder": "ノードの説明...",
     "nextNode": "次のノード",

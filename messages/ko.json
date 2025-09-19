@@ -294,7 +294,7 @@
     "public": "공개",
     "privateDescription": "나만 이 에이전트를 보고, 편집하고, 사용할 수 있습니다.",
     "readOnlyDescription": "다른 사람들이 도구로 보고 사용할 수 있지만, 편집은 나만 할 수 있습니다.",
-    "publicDescription": "누구나 이 에이전트를 보고, 편집하고, 도구로 사용할 수 있습니다."
+    "publicDescription": "누구나 이 에이전트를 보고 도구로 사용할 수 있습니다."
   },
   "KeyboardShortcuts": {
     "title": "키보드 단축키",
@@ -374,7 +374,7 @@
       "public": "공개",
       "privateDescription": "나만 이 서버를 보고, 편집하고, 사용할 수 있습니다.",
       "readonlyDescription": "다른 사람들은 도구를 보고 사용할 수 있지만, 편집은 나만 할 수 있습니다.",
-      "publicDescription": "누구나 이 서버의 도구를 보고, 편집하고, 사용할 수 있습니다."
+      "publicDescription": "누구나 이 서버의 도구를 보고 사용할 수 있습니다."
     }
   },
   "Error": {},
@@ -402,7 +402,7 @@
     "public": "공개",
     "privateDescription": "본인만 이 워크플로우를 보고, 편집하고, 도구로 사용할 수 있습니다.",
     "readonlyDescription": "다른 사람들이 보고 도구로 사용할 수 있지만, 편집은 본인만 가능합니다.",
-    "publicDescription": "누구나 이 워크플로우를 보고, 편집하고, 도구로 사용할 수 있습니다.",
+    "publicDescription": "누구나 이 워크플로우를 보고 도구로 사용할 수 있습니다.",
     "visibilityDescription": "이 워크플로우에 액세스하고 수정할 수 있는 사람을 제어합니다",
     "nodeDescriptionPlaceholder": "노드 설명...",
     "nextNode": "다음 노드",

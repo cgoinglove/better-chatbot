@@ -293,7 +293,7 @@
     "public": "Public",
     "privateDescription": "Seul vous pouvez voir, modifier et utiliser cet agent.",
     "readOnlyDescription": "Les autres peuvent voir et utiliser comme outil, mais seul vous pouvez modifier.",
-    "publicDescription": "Tout le monde peut voir, modifier et utiliser cet agent comme outil."
+    "publicDescription": "Tout le monde peut voir et utiliser cet agent comme outil."
   },
   "KeyboardShortcuts": {
     "title": "Raccourcis Clavier",
@@ -373,7 +373,7 @@
       "public": "Public",
       "privateDescription": "Seul vous pouvez voir, modifier et utiliser ce serveur.",
       "readonlyDescription": "Les autres peuvent voir et utiliser les outils, mais seul vous pouvez modifier.",
-      "publicDescription": "N'importe qui peut voir, modifier et utiliser les outils de ce serveur."
+      "publicDescription": "N'importe qui peut voir et utiliser les outils de ce serveur."
     }
   },
   "Error": {},
@@ -401,7 +401,7 @@
     "public": "Public",
     "privateDescription": "Seul vous pouvez voir, modifier et utiliser ce flux de travail comme outil.",
     "readonlyDescription": "Les autres peuvent voir et utiliser comme outil, mais seul vous pouvez modifier.",
-    "publicDescription": "N'importe qui peut voir, modifier et utiliser ce flux de travail comme outil.",
+    "publicDescription": "N'importe qui peut voir et utiliser ce flux de travail comme outil.",
     "visibilityDescription": "Contrôle qui peut accéder et modifier ce flux de travail",
     "nodeDescriptionPlaceholder": "description du nœud...",
     "nextNode": "Nœud Suivant",

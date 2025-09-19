@@ -104,7 +104,7 @@ export default function EditAgent({
     [initialAgent?.id, isBookmarkToggleLoadingFn],
   );
 
-  const { items: mcpList, isLoading: isMcpLoading } = useMcpList();
+  const { data: mcpList, isLoading: isMcpLoading } = useMcpList();
   const { data: workflowToolList, isLoading: isWorkflowLoading } =
     useWorkflowToolList();
 

@@ -23,7 +23,7 @@ import { GET } from "./route";
 describe("/api/mcp/list", () => {
   beforeEach(() => vi.resetAllMocks());
 
-  it("returns only visible servers for user and includes visibility, conditional ownerId", async () => {
+  it("returns only visible servers for user and includes visibility, conditional ownerId and isOwner", async () => {
     vi.mocked(getSession).mockResolvedValue({ user: { id: "U" } } as any);
     vi.mocked(mcpRepository.selectAll).mockResolvedValue([
       { id: "S1", name: "s1", config: { command: "x" } },
@@ -76,23 +76,25 @@ describe("/api/mcp/list", () => {
     expect(res.status).toBe(200);
     // All items should include visibility
     expect(body.every((i: any) => typeof i.visibility === "string")).toBe(true);
-    // Owned item: has visibility, no ownerId
+    // Owned item: has visibility, no ownerId, isOwner true
     const owned = body.find((v: any) => v.id === "S1");
     expect(owned).toMatchObject({
       id: "S1",
       name: "s1",
       status: "connected",
       visibility: "private",
+      isOwner: true,
     });
     expect(owned.ownerId).toBeUndefined();
 
-    // Shared item: has visibility and ownerId
+    // Shared item: has visibility and ownerId, isOwner false
     const shared = body.find((v: any) => v.id === "S2");
     expect(shared).toMatchObject({
       id: "S2",
       name: "s2",
       visibility: "public",
       ownerId: "OTHER",
+      isOwner: false,
     });
   });
 

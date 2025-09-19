@@ -45,7 +45,7 @@ export async function GET() {
     const isOwner = server.userId === session?.user?.id;
     const mcpInfo: MCPServerInfo & { id: string } & {
       visibility: "private" | "public" | "readonly";
-    } & { ownerId?: string | null } = {
+    } & { ownerId?: string | null; isOwner: boolean } = {
       id: server.id,
       name: server.name,
       config: server.config,
@@ -53,6 +53,7 @@ export async function GET() {
       error: info?.error,
       toolInfo: info?.toolInfo ?? [],
       visibility: server.visibility,
+      isOwner,
       ...(isOwner ? {} : { ownerId: server.userId }),
     };
     return mcpInfo;

@@ -51,10 +51,10 @@ export const MCPCard = memo(function MCPCard({
   name,
   toolInfo,
   visibility,
-  ownerId,
+  isOwner: isOwnerProp,
 }: MCPServerInfo & { id: string } & {
   visibility?: Visibility;
-  ownerId?: string | null;
+  isOwner?: boolean;
 }) {
   const [isProcessing, setIsProcessing] = useState(false);
   const t = useTranslations("MCP");
@@ -100,7 +100,7 @@ export const MCPCard = memo(function MCPCard({
     [id],
   );
 
-  const isOwner = !ownerId;
+  const isOwner = !!isOwnerProp;
 
   const handleVisibilityChange = useCallback(
     async (v: Visibility) => {

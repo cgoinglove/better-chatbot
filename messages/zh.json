@@ -294,7 +294,7 @@
     "public": "公开",
     "privateDescription": "只有您可以查看、编辑和使用此智能体。",
     "readOnlyDescription": "其他人可以查看并作为工具使用，但只有您可以编辑。",
-    "publicDescription": "任何人都可以查看、编辑并将此智能体用作工具。"
+    "publicDescription": "任何人都可以查看并将此智能体用作工具。"
   },
   "KeyboardShortcuts": {
     "title": "键盘快捷键",
@@ -374,7 +374,7 @@
       "public": "公开",
       "privateDescription": "只有您可以查看、编辑并使用此服务器。",
       "readonlyDescription": "其他人可以查看并使用工具，但只有您可以编辑。",
-      "publicDescription": "任何人都可以查看、编辑并使用此服务器的工具。"
+      "publicDescription": "任何人都可以查看并使用此服务器的工具。"
     }
   },
   "Error": {},
@@ -402,7 +402,7 @@
     "public": "公开",
     "privateDescription": "只有您可以查看、编辑和使用此工作流作为工具。",
     "readonlyDescription": "其他人可以查看和用作工具，但只有您可以编辑。",
-    "publicDescription": "任何人都可以查看、编辑和使用此工作流作为工具。",
+    "publicDescription": "任何人都可以查看并使用此工作流作为工具。",
     "visibilityDescription": "控制谁可以访问和修改此工作流",
     "nodeDescriptionPlaceholder": "节点描述...",
     "nextNode": "下一个节点",

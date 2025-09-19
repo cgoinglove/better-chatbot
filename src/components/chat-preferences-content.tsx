@@ -218,7 +218,7 @@ export function MCPInstructionsContent() {
     (MCPServerInfo & { id: string }) | null
   >(null);
 
-  const { isLoading, items: mcpList } = useMcpList();
+  const { isLoading, data: mcpList } = useMcpList();
 
   if (mcpServer) {
     return (

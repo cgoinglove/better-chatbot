@@ -293,7 +293,7 @@
     "public": "Público",
     "privateDescription": "Solo tú puedes ver, editar y usar este agente.",
     "readOnlyDescription": "Otros pueden ver y usar como herramienta, pero solo tú puedes editar.",
-    "publicDescription": "Cualquiera puede ver, editar y usar este agente como herramienta."
+    "publicDescription": "Cualquiera puede ver y usar este agente como herramienta."
   },
   "KeyboardShortcuts": {
     "title": "Atajos de Teclado",
@@ -373,7 +373,7 @@
       "public": "Público",
       "privateDescription": "Solo tú puedes ver, editar y usar este servidor.",
       "readonlyDescription": "Otros pueden ver y usar herramientas, pero solo tú puedes editar.",
-      "publicDescription": "Cualquiera puede ver, editar y usar las herramientas de este servidor."
+      "publicDescription": "Cualquiera puede ver y usar las herramientas de este servidor."
     }
   },
   "Error": {},
@@ -401,7 +401,7 @@
     "public": "Público",
     "privateDescription": "Solo tú puedes ver, editar y usar este flujo de trabajo como herramienta.",
     "readonlyDescription": "Otros pueden ver y usar como herramienta, pero solo tú puedes editar.",
-    "publicDescription": "Cualquiera puede ver, editar y usar este flujo de trabajo como herramienta.",
+    "publicDescription": "Cualquiera puede ver y usar este flujo de trabajo como herramienta.",
     "visibilityDescription": "Controla quién puede acceder y modificar este flujo de trabajo",
     "nodeDescriptionPlaceholder": "descripción del nodo...",
     "nextNode": "Siguiente Nodo",

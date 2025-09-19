@@ -129,19 +129,19 @@ export async function POST(request: Request) {
         logger.info(
           `mcp-server count: ${mcpClients.length}, mcp-tools count :${Object.keys(mcpTools).length}`,
         );
+        const accessible = await mcpRepository.selectAllByAccess(
+          session.user.id,
+        );
+        const accessibleIds = new Set<string>(accessible.map((s) => s.id));
         const MCP_TOOLS = await safe()
           .map(errorIf(() => !isToolCallAllowed && "Not allowed"))
-          .map(async () => {
-            const accessible = await mcpRepository.selectAllByAccess(
-              session.user.id,
-            );
-            const accessibleIds = new Set<string>(accessible.map((s) => s.id));
-            return loadMcpTools({
+          .map(() =>
+            loadMcpTools({
               mentions,
               allowedMcpServers,
               accessibleServerIds: accessibleIds,
-            });
-          })
+            }),
+          )
           .orElse({});
 
         const WORKFLOW_TOOLS = await safe()

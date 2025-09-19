@@ -31,29 +31,31 @@ const LightRays = dynamic(() => import("@/components/ui/light-rays"), {
 export default function MCPDashboard({ message }: { message?: string }) {
   const t = useTranslations("");
   const router = useRouter();
-  const { myMcps, sharedMcps, items, isLoading, isValidating } = useMcpList({
+  const { data, isLoading, isValidating } = useMcpList({
     refreshInterval: 10000,
   });
 
   const statusWeight = (s: McpListItem["status"]) =>
     s === "authorizing" ? 0 : 1;
   const sortedMy = useMemo(() => {
-    return [...myMcps].sort((a, b) => {
+    const mine = data.filter((i) => i.isOwner);
+    return mine.sort((a, b) => {
       const w = statusWeight(a.status) - statusWeight(b.status);
       return w !== 0 ? w : a.name.localeCompare(b.name);
     });
-  }, [myMcps]);
+  }, [data]);
   const sortedShared = useMemo(() => {
-    return [...sharedMcps].sort((a, b) => {
+    const shared = data.filter((i) => !i.isOwner);
+    return shared.sort((a, b) => {
       const w = statusWeight(a.status) - statusWeight(b.status);
       return w !== 0 ? w : a.name.localeCompare(b.name);
     });
-  }, [sharedMcps]);
+  }, [data]);
 
   const displayIcons = useMemo(() => {
     const shuffled = [...RECOMMENDED_MCPS].sort(() => 0.5 - Math.random());
     return shuffled.slice(0, 5);
-  }, [items.length]);
+  }, [data.length]);
 
   // Delay showing validating spinner until validating persists for 500ms
   const [showValidating, setShowValidating] = useState(false);
@@ -117,7 +119,7 @@ export default function MCPDashboard({ message }: { message?: string }) {
             <div className="flex-1" />
 
             <div className="flex gap-2">
-              {items?.length ? (
+              {data?.length ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
@@ -174,7 +176,7 @@ export default function MCPDashboard({ message }: { message?: string }) {
               <Skeleton className="h-60 w-full" />
               <Skeleton className="h-60 w-full" />
             </div>
-          ) : items?.length === 0 ? (
+          ) : data?.length === 0 ? (
             <MCPOverview />
           ) : (
             <div className="flex flex-col gap-10 mb-4 z-20">
@@ -197,7 +199,7 @@ export default function MCPDashboard({ message }: { message?: string }) {
                       error={item.error}
                       toolInfo={item.toolInfo}
                       visibility={item.visibility}
-                      ownerId={item.ownerId}
+                      isOwner={item.isOwner}
                     />
                   ))}
                   {sortedMy.length === 0 && (
@@ -229,7 +231,7 @@ export default function MCPDashboard({ message }: { message?: string }) {
                       error={item.error}
                       toolInfo={item.toolInfo}
                       visibility={item.visibility}
-                      ownerId={item.ownerId}
+                      isOwner={item.isOwner}
                     />
                   ))}
                   {sortedShared.length === 0 && (
