@@ -90,8 +90,12 @@ export class MCPClient {
       throw new Error("OAuth flow requires a remote MCP server");
 
     if (this.status != "authorizing" || this.oauthProvider?.state() != state) {
-      await this.disconnect();
-      await this.connect(state);
+      if (this.oauthProvider && this.oauthProvider.state() != state) {
+        await this.oauthProvider.adoptState(state);
+      } else {
+        await this.disconnect();
+        await this.connect(state);
+      }
     }
     const finish = (this.transport as StreamableHTTPClientTransport)
       ?.finishAuth;
