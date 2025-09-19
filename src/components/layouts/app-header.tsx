@@ -33,6 +33,10 @@ export function AppHeader() {
     }
   }, [currentPaths]);
 
+  const OPENAI_KEY_PRESENT =
+    typeof process !== "undefined" &&
+    process.env.NEXT_PUBLIC_OPENAI_API_KEY_DEFINED === "1";
+
   return (
     <header className="sticky top-0 z-50 flex items-center px-3 py-2">
       <Tooltip>
@@ -66,41 +70,43 @@ export function AppHeader() {
       <div className="flex-1" />
 
       <div className="flex items-center gap-2">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              size={"icon"}
-              variant={"ghost"}
-              className="bg-secondary/40"
-              onClick={() => {
-                appStoreMutate((state) => ({
-                  voiceChat: {
-                    ...state.voiceChat,
-                    isOpen: true,
-                    agentId: undefined,
-                  },
-                }));
-              }}
-            >
-              <AudioWaveformIcon className="size-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent align="end" side="bottom">
-            <div className="text-xs flex items-center gap-2">
-              {t("KeyboardShortcuts.toggleVoiceChat")}
-              <div className="text-xs text-muted-foreground flex items-center gap-1">
-                {getShortcutKeyList(Shortcuts.toggleVoiceChat).map((key) => (
-                  <span
-                    className="w-5 h-5 flex items-center justify-center bg-muted rounded "
-                    key={key}
-                  >
-                    {key}
-                  </span>
-                ))}
+        {OPENAI_KEY_PRESENT && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                size={"icon"}
+                variant={"ghost"}
+                className="bg-secondary/40"
+                onClick={() => {
+                  appStoreMutate((state) => ({
+                    voiceChat: {
+                      ...state.voiceChat,
+                      isOpen: true,
+                      agentId: undefined,
+                    },
+                  }));
+                }}
+              >
+                <AudioWaveformIcon className="size-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent align="end" side="bottom">
+              <div className="text-xs flex items-center gap-2">
+                {t("KeyboardShortcuts.toggleVoiceChat")}
+                <div className="text-xs text-muted-foreground flex items-center gap-1">
+                  {getShortcutKeyList(Shortcuts.toggleVoiceChat).map((key) => (
+                    <span
+                      className="w-5 h-5 flex items-center justify-center bg-muted rounded "
+                      key={key}
+                    >
+                      {key}
+                    </span>
+                  ))}
+                </div>
               </div>
-            </div>
-          </TooltipContent>
-        </Tooltip>
+            </TooltipContent>
+          </Tooltip>
+        )}
 
         <Tooltip>
           <TooltipTrigger asChild>

@@ -5,6 +5,8 @@ const BUILD_OUTPUT = process.env.NEXT_STANDALONE_OUTPUT
   ? "standalone"
   : undefined;
 
+const isOpenAIKeyPresent = !!process.env.OPENAI_API_KEY;
+
 export default () => {
   const nextConfig: NextConfig = {
     output: BUILD_OUTPUT,
@@ -14,6 +16,7 @@ export default () => {
     },
     env: {
       NO_HTTPS: process.env.NO_HTTPS,
+      NEXT_PUBLIC_OPENAI_API_KEY_DEFINED: isOpenAIKeyPresent ? "1" : "0",
     },
     experimental: {
       taint: true,

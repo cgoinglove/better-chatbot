@@ -84,6 +84,9 @@ export default function PromptInput({
       state.mutate,
     ]),
   );
+  const OPENAI_KEY_PRESENT =
+    typeof process !== "undefined" &&
+    process.env.NEXT_PUBLIC_OPENAI_API_KEY_DEFINED === "1";
 
   const mentions = useMemo<ChatMention[]>(() => {
     if (!threadId) return [];
@@ -375,7 +378,10 @@ export default function PromptInput({
                     <ChevronDown className="size-3" />
                   </Button>
                 </SelectModel>
-                {!isLoading && !input.length && !voiceDisabled ? (
+                {!isLoading &&
+                !input.length &&
+                !voiceDisabled &&
+                OPENAI_KEY_PRESENT ? (
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
