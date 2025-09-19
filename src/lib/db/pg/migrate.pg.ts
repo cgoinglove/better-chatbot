@@ -1,6 +1,7 @@
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { join } from "path";
 import { pgDb } from "lib/db/pg/db.pg";
+import "load-env";
 
 export const runMigrate = async () => {
   console.log("⏳ Running PostgreSQL migrations...");
@@ -11,7 +12,7 @@ export const runMigrate = async () => {
   }).catch((err) => {
     console.error(
       `❌ PostgreSQL migrations failed. check the postgres instance is running.`,
-      err.cause,
+      err.cause || err.message,
     );
     throw err;
   });
