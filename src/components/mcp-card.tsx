@@ -33,8 +33,14 @@ import { ToolDetailPopup } from "./tool-detail-popup";
 import { useTranslations } from "next-intl";
 import { Separator } from "ui/separator";
 import { appStore } from "@/app/store";
-import { isString } from "lib/utils";
+import { fetcher, isString } from "lib/utils";
 import { redriectMcpOauth } from "lib/ai/mcp/oauth-redirect";
+import {
+  ShareableActions,
+  type Visibility,
+} from "@/components/shareable-actions";
+import { useMutateMcps } from "@/hooks/queries/use-mcp-list";
+import { toast } from "sonner";
 
 // Main MCPCard component
 export const MCPCard = memo(function MCPCard({
@@ -44,10 +50,17 @@ export const MCPCard = memo(function MCPCard({
   status,
   name,
   toolInfo,
-}: MCPServerInfo & { id: string }) {
+  visibility,
+  ownerId,
+}: MCPServerInfo & { id: string } & {
+  visibility?: Visibility;
+  ownerId?: string | null;
+}) {
   const [isProcessing, setIsProcessing] = useState(false);
   const t = useTranslations("MCP");
+  const tGlobal = useTranslations("");
   const appStoreMutate = appStore((state) => state.mutate);
+  const mutateMcps = useMutateMcps();
 
   const isLoading = useMemo(() => {
     return isProcessing || status === "loading";
@@ -87,10 +100,32 @@ export const MCPCard = memo(function MCPCard({
     [id],
   );
 
+  const isOwner = !ownerId;
+
+  const handleVisibilityChange = useCallback(
+    async (v: Visibility) => {
+      try {
+        setIsProcessing(true);
+        await fetcher(`/api/mcp/${encodeURIComponent(id)}`, {
+          method: "PUT",
+          body: JSON.stringify({ visibility: v }),
+        });
+        mutateMcps({ id, visibility: v });
+        toast.success(tGlobal("Mcp.visibilityUpdated"));
+      } catch (e) {
+        handleErrorWithToast(e as any);
+      } finally {
+        setIsProcessing(false);
+      }
+    },
+    [id, mutateMcps, tGlobal],
+  );
+
   return (
     <Card
       key={`mcp-card-${id}-${status}`}
       className="relative hover:border-foreground/20 transition-colors bg-secondary/40"
+      data-testid="mcp-card"
     >
       {isLoading && (
         <div className="animate-pulse z-10 absolute inset-0 bg-background/50 flex items-center justify-center w-full h-full" />
@@ -105,6 +140,14 @@ export const MCPCard = memo(function MCPCard({
           {name}
         </h4>
         <div className="flex-1" />
+        <ShareableActions
+          type="mcp"
+          visibility={visibility}
+          isOwner={isOwner}
+          onVisibilityChange={isOwner ? handleVisibilityChange : undefined}
+          isVisibilityChangeLoading={isProcessing}
+          disabled={isLoading}
+        />
         {needsAuthorization && (
           <>
             <Tooltip>
@@ -195,36 +238,40 @@ export const MCPCard = memo(function MCPCard({
             <p>{t("refresh")}</p>
           </TooltipContent>
         </Tooltip>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleDelete}
-              disabled={isLoading}
-            >
-              <Trash className="size-3.5" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>{t("delete")}</p>
-          </TooltipContent>
-        </Tooltip>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Link
-              href={`/mcp/modify/${encodeURIComponent(id)}`}
-              className="cursor-pointer"
-            >
-              <Button variant="ghost" size="icon">
-                <Pencil className="size-3.5" />
+        {isOwner && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleDelete}
+                disabled={isLoading}
+              >
+                <Trash className="size-3.5" />
               </Button>
-            </Link>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>{t("edit")}</p>
-          </TooltipContent>
-        </Tooltip>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{t("delete")}</p>
+            </TooltipContent>
+          </Tooltip>
+        )}
+        {isOwner && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Link
+                href={`/mcp/modify/${encodeURIComponent(id)}`}
+                className="cursor-pointer"
+              >
+                <Button variant="ghost" size="icon">
+                  <Pencil className="size-3.5" />
+                </Button>
+              </Link>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{t("edit")}</p>
+            </TooltipContent>
+          </Tooltip>
+        )}
       </CardHeader>
 
       {errorMessage && <ErrorAlert error={errorMessage} />}

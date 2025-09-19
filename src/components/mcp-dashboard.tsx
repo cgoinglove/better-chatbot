@@ -8,16 +8,12 @@ import { Skeleton } from "ui/skeleton";
 import { ScrollArea } from "ui/scroll-area";
 import { useTranslations } from "next-intl";
 import { MCPIcon } from "ui/mcp-icon";
-import {
-  useMcpList,
-  useMutateMcps,
-  McpListItem,
-} from "@/hooks/queries/use-mcp-list";
+import { useMcpList, McpListItem } from "@/hooks/queries/use-mcp-list";
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
-import { cn, fetcher } from "lib/utils";
+import { cn } from "lib/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,11 +21,8 @@ import {
   DropdownMenuTrigger,
 } from "ui/dropdown-menu";
 import { useRouter } from "next/navigation";
-import { McpShareableCard } from "@/components/mcp-shareable-card";
-import { notify } from "lib/notify";
-import { handleErrorWithToast } from "ui/shared-toast";
-import { Visibility } from "@/components/shareable-actions";
 import { Card, CardHeader, CardTitle } from "ui/card";
+import { MCPCard } from "@/components/mcp-card";
 
 const LightRays = dynamic(() => import("@/components/ui/light-rays"), {
   ssr: false,
@@ -41,7 +34,6 @@ export default function MCPDashboard({ message }: { message?: string }) {
   const { myMcps, sharedMcps, items, isLoading, isValidating } = useMcpList({
     refreshInterval: 10000,
   });
-  const mutateMcps = useMutateMcps();
 
   const statusWeight = (s: McpListItem["status"]) =>
     s === "authorizing" ? 0 : 1;
@@ -194,56 +186,22 @@ export default function MCPDashboard({ message }: { message?: string }) {
                   </h2>
                   <div className="flex-1 h-px bg-border" />
                 </div>
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {/* Create tile */}
-                  <Link href="/mcp/create">
-                    <Card className="relative bg-secondary overflow-hidden cursor-pointer hover:bg-input transition-colors h-[196px]">
-                      <div className="absolute inset-0 w-full h-full opacity-50" />
-                      <CardHeader>
-                        <CardTitle>
-                          <h1 className="text-lg font-bold">
-                            {t("Mcp.newServer")}
-                          </h1>
-                        </CardTitle>
-                      </CardHeader>
-                    </Card>
-                  </Link>
+                <div className="flex flex-col gap-6">
                   {sortedMy.map((item) => (
-                    <McpShareableCard
+                    <MCPCard
                       key={item.id}
-                      item={item as McpListItem}
-                      isOwner
-                      onVisibilityChange={async (visibility: Visibility) => {
-                        try {
-                          await fetcher(`/api/mcp/${item.id}`, {
-                            method: "PUT",
-                            body: JSON.stringify({ visibility }),
-                          });
-                          mutateMcps({ id: item.id, visibility });
-                          toast.success(t("Mcp.visibilityUpdated"));
-                        } catch (e) {
-                          handleErrorWithToast(e as any);
-                        }
-                      }}
-                      onDelete={async () => {
-                        const ok = await notify.confirm({
-                          description: t("Common.delete") + "?",
-                        });
-                        if (!ok) return;
-                        try {
-                          await fetcher(`/api/mcp/${item.id}`, {
-                            method: "DELETE",
-                          });
-                          mutateMcps({ id: item.id }, true);
-                          toast.success(t("Mcp.deleted"));
-                        } catch (e) {
-                          handleErrorWithToast(e as any);
-                        }
-                      }}
+                      id={item.id}
+                      name={item.name}
+                      config={item.config}
+                      status={item.status}
+                      error={item.error}
+                      toolInfo={item.toolInfo}
+                      visibility={item.visibility}
+                      ownerId={item.ownerId}
                     />
                   ))}
                   {sortedMy.length === 0 && (
-                    <Card className="col-span-full bg-transparent border-none">
+                    <Card className="bg-transparent border-none">
                       <CardHeader className="text-center py-12">
                         <CardTitle>{t("Mcp.noMyServers")}</CardTitle>
                       </CardHeader>
@@ -260,16 +218,22 @@ export default function MCPDashboard({ message }: { message?: string }) {
                   </h2>
                   <div className="flex-1 h-px bg-border" />
                 </div>
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <div className="flex flex-col gap-6">
                   {sortedShared.map((item) => (
-                    <McpShareableCard
+                    <MCPCard
                       key={item.id}
-                      item={item as McpListItem}
-                      isOwner={false}
+                      id={item.id}
+                      name={item.name}
+                      config={item.config}
+                      status={item.status}
+                      error={item.error}
+                      toolInfo={item.toolInfo}
+                      visibility={item.visibility}
+                      ownerId={item.ownerId}
                     />
                   ))}
                   {sortedShared.length === 0 && (
-                    <Card className="col-span-full bg-transparent border-none">
+                    <Card className="bg-transparent border-none">
                       <CardHeader className="text-center py-12">
                         <CardTitle>{t("Mcp.noSharedServers")}</CardTitle>
                       </CardHeader>
