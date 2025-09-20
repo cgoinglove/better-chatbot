@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.22.0](https://github.com/cgoinglove/better-chatbot/compare/v1.21.0...v1.22.0) (2025-09-20)
+
+
+### Features
+
+* groq provider ([#268](https://github.com/cgoinglove/better-chatbot/issues/268)) ([aef213d](https://github.com/cgoinglove/better-chatbot/commit/aef213d2f9dd0255996cc4184b03425db243cd7b))
+* hide LLM providers without API keys in model selection ([#269](https://github.com/cgoinglove/better-chatbot/issues/269)) ([63c15dd](https://github.com/cgoinglove/better-chatbot/commit/63c15dd386ea99b8fa56f7b6cb1e58e5779b525d))
+* Implementation of PWA for much better UI on mobile  ([#252](https://github.com/cgoinglove/better-chatbot/issues/252)) ([51e6eab](https://github.com/cgoinglove/better-chatbot/commit/51e6eabcc34e1238a7536b5fffa433ba4ae4827a))
+
+
+### Bug Fixes
+
+* ensure PKCE works for MCP Server auth ([#256](https://github.com/cgoinglove/better-chatbot/issues/256)) ([09b938f](https://github.com/cgoinglove/better-chatbot/commit/09b938f17ca78993a1c7b84c5a702b95159542b2))
+
 ## [1.21.0](https://github.com/cgoinglove/better-chatbot/compare/v1.20.2...v1.21.0) (2025-08-24)
 
 
