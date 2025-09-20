@@ -70,3 +70,19 @@ Then, create a `.mcp-config.json` file in the project root and define your serve
 ```
 
 Simply paste your configuration in the MCP Configuration form (or .mcp-config.json) to register a new tool.
+
+## 🔐 Visibility & Ownership
+
+- owner: the user who created the MCP server (`user_id`).
+- visibility values:
+  - private: only the owner can list, use, update and delete.
+  - public/readonly: any authenticated user can list and use; only the owner can update/delete. Note: both are treated the same for read access today.
+- defaults: new servers default to `private` across all storages.
+- unauthenticated users: `GET /api/mcp/list` returns an empty list.
+
+API rules:
+- POST `/api/mcp` → `{ name, config, visibility? }` (defaults to `private`).
+- GET `/api/mcp/list` → returns only servers the current user can access.
+- GET `/api/mcp/[id]` → allowed if owner or `public`/`readonly`.
+- PUT `/api/mcp/[id]` → owner-only (visibility updates are considered destructive).
+- DELETE `/api/mcp/[id]` → owner-only.

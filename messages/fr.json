@@ -41,7 +41,8 @@
     "createWithExample": "Créer avec Exemple",
     "resultsFound": "{count} résultats trouvés",
     "youAreAnExpertIn": "Vous êtes un expert en {role}",
-    "sharedBy": "Partagé par {userName}"
+    "sharedBy": "Partagé par {userName}",
+    "changeVisibility": "Modifier la visibilité"
   },
   "Auth": {
     "SignIn": {
@@ -139,7 +140,6 @@
     },
     "Thread": {
       "chat": "Chat",
-
       "renameChat": "Renommer",
       "deleteChat": "Supprimer le Chat",
       "deleteUnarchivedChats": "Supprimer Tous les Chats Non Archivés",
@@ -154,7 +154,6 @@
       "threadUpdated": "Fil mis à jour",
       "areYouSureYouWantToDeleteThisChatThread": "Êtes-vous sûr de vouloir supprimer ce fil de chat ?"
     },
-
     "ChatPreferences": {
       "title": "Préférences de Chat",
       "whatShouldWeCallYou": "Comment devrions-nous vous appeler ?",
@@ -221,7 +220,6 @@
     "theme": "Thème",
     "signOut": "Se déconnecter",
     "language": "Langue",
-
     "showAllChats": "Voir Tous les Chats",
     "showLessChats": "Afficher moins",
     "reportAnIssue": "Signaler un problème",
@@ -295,7 +293,7 @@
     "public": "Public",
     "privateDescription": "Seul vous pouvez voir, modifier et utiliser cet agent.",
     "readOnlyDescription": "Les autres peuvent voir et utiliser comme outil, mais seul vous pouvez modifier.",
-    "publicDescription": "Tout le monde peut voir, modifier et utiliser cet agent comme outil."
+    "publicDescription": "Tout le monde peut voir et utiliser cet agent comme outil."
   },
   "KeyboardShortcuts": {
     "title": "Raccourcis Clavier",
@@ -346,6 +344,38 @@
     "toolCustomizationInstructionsPlaceholder": "Les instructions de personnalisation d'outils ne sont pas disponibles.",
     "mcpServerCustomizationPlaceholder": "ex. Si la valeur d'entrée est un email, toujours entrer l'email au format exemple@exemple.com."
   },
+  "Mcp": {
+    "title": "Serveurs MCP",
+    "myServers": "Mes serveurs MCP",
+    "sharedServers": "Serveurs MCP partagés",
+    "newServer": "Créer MCP",
+    "noSharedServers": "Aucun serveur partagé",
+    "noMyServers": "Aucun serveur pour l'instant",
+    "create": "Créer",
+    "authorize": "Autoriser",
+    "toolsTest": "Test des Outils",
+    "toolsCount": "{count, plural, one {# outil} other {# outils}}",
+    "visibilityUpdated": "Visibilité mise à jour avec succès",
+    "deleted": "Serveur supprimé",
+    "kind": {
+      "remote": "Distant",
+      "stdio": "Stdio"
+    },
+    "status": {
+      "connected": "Connecté",
+      "disconnected": "Déconnecté",
+      "loading": "Chargement",
+      "authorizing": "Autorisation en cours"
+    },
+    "visibility": {
+      "private": "Privé",
+      "readonly": "Lecture Seule",
+      "public": "Public",
+      "privateDescription": "Seul vous pouvez voir, modifier et utiliser ce serveur.",
+      "readonlyDescription": "Les autres peuvent voir et utiliser les outils, mais seul vous pouvez modifier.",
+      "publicDescription": "N'importe qui peut voir et utiliser les outils de ce serveur."
+    }
+  },
   "Error": {},
   "Info": {
     "mcpAddingDisabled": "L'ajout de serveurs MCP a été désactivé par l'administrateur.",
@@ -371,7 +401,7 @@
     "public": "Public",
     "privateDescription": "Seul vous pouvez voir, modifier et utiliser ce flux de travail comme outil.",
     "readonlyDescription": "Les autres peuvent voir et utiliser comme outil, mais seul vous pouvez modifier.",
-    "publicDescription": "N'importe qui peut voir, modifier et utiliser ce flux de travail comme outil.",
+    "publicDescription": "N'importe qui peut voir et utiliser ce flux de travail comme outil.",
     "visibilityDescription": "Contrôle qui peut accéder et modifier ce flux de travail",
     "nodeDescriptionPlaceholder": "description du nœud...",
     "nextNode": "Nœud Suivant",

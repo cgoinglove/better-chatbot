@@ -27,6 +27,8 @@ export class MemoryMCPConfigStorage implements MCPConfigStorage {
       id,
       name: server.name,
       config: server.config,
+      visibility: server.visibility ?? "private",
+      userId: server.userId ?? null,
     };
     this.configs.set(id, savedServer);
     return savedServer;

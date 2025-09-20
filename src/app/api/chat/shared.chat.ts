@@ -28,7 +28,7 @@ import { MANUAL_REJECT_RESPONSE_PROMPT } from "lib/ai/prompts";
 
 import { ObjectJsonSchema7 } from "app-types/util";
 import { safe } from "ts-safe";
-import { workflowRepository } from "lib/db/repository";
+import { mcpRepository, workflowRepository } from "lib/db/repository";
 
 import {
   VercelAIWorkflowTool,
@@ -393,18 +393,70 @@ export const workflowToVercelAITools = (
     );
 };
 
-export const loadMcpTools = (opt?: {
+export type LoadMcpToolsOptions = {
+  userId?: string;
   mentions?: ChatMention[];
   allowedMcpServers?: Record<string, AllowedMCPServer>;
-}) =>
-  safe(() => mcpClientsManager.tools())
-    .map((tools) => {
-      if (opt?.mentions?.length) {
-        return filterMCPToolsByMentions(tools, opt.mentions);
+  accessibleServerIds?: Set<string>;
+  allTools?: Record<string, VercelAIMcpTool>;
+};
+
+export const loadMcpTools = async (
+  opt?: LoadMcpToolsOptions,
+): Promise<Record<string, VercelAIMcpTool>> => {
+  try {
+    const hasMentions = (opt?.mentions?.length ?? 0) > 0;
+    const hasAllow = Object.keys(opt?.allowedMcpServers ?? {}).length > 0;
+    if (!hasMentions && !hasAllow) return {} as Record<string, VercelAIMcpTool>;
+
+    const candidateIds = new Set<string>();
+    for (const m of opt?.mentions ?? []) {
+      if (m.type === "mcpServer" || m.type === "mcpTool") {
+        candidateIds.add(m.serverId);
       }
-      return filterMCPToolsByAllowedMCPServers(tools, opt?.allowedMcpServers);
-    })
-    .orElse({} as Record<string, VercelAIMcpTool>);
+    }
+    for (const id of Object.keys(opt?.allowedMcpServers ?? {})) {
+      candidateIds.add(id);
+    }
+    if (candidateIds.size === 0) return {} as Record<string, VercelAIMcpTool>;
+
+    const allTools = opt?.allTools ?? (await mcpClientsManager.tools());
+    const toolsByCandidate = objectFlow(allTools).filter((t) =>
+      candidateIds.has(t._mcpServerId),
+    );
+
+    const toolsByAccess = await (async () => {
+      if (opt?.accessibleServerIds?.size) {
+        const idsFromOpt = opt.accessibleServerIds;
+        return objectFlow(toolsByCandidate).filter((t) =>
+          idsFromOpt.has(t._mcpServerId),
+        );
+      }
+      if (!opt?.userId) return toolsByCandidate;
+      const accessible = await mcpRepository.selectByAccessForIds(
+        opt.userId,
+        Array.from(candidateIds),
+      );
+      const ids = new Set(accessible.map((s) => s.id));
+      return objectFlow(toolsByCandidate).filter((t) =>
+        ids.has(t._mcpServerId),
+      );
+    })();
+
+    const byMentions = hasMentions
+      ? filterMCPToolsByMentions(toolsByAccess, opt?.mentions ?? [])
+      : filterMCPToolsByAllowedMCPServers(
+          toolsByAccess,
+          opt?.allowedMcpServers,
+        );
+
+    return byMentions as Record<string, VercelAIMcpTool>;
+  } catch (e) {
+    logger.error("loadMcpTools failed");
+    logger.error(e);
+    return {} as Record<string, VercelAIMcpTool>;
+  }
+};
 
 export const loadWorkFlowTools = (opt: {
   mentions?: ChatMention[];
