@@ -1,10 +1,17 @@
 import { MCPServerInfo } from "app-types/mcp";
 import { mcpClientsManager } from "lib/ai/mcp/mcp-manager";
 import { mcpRepository } from "lib/db/repository";
+import { getCurrentUser } from "lib/auth/permissions";
 
 export async function GET() {
+  const currentUser = await getCurrentUser();
+
+  if (!currentUser || !currentUser.id) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const [servers, memoryClients] = await Promise.all([
-    mcpRepository.selectAll(),
+    mcpRepository.selectAllForUser(currentUser.id),
     mcpClientsManager.getClients(),
   ]);
 
@@ -35,11 +42,10 @@ export async function GET() {
   const result = servers.map((server) => {
     const mem = memoryMap.get(server.id);
     const info = mem?.getInfo();
-    const mcpInfo: MCPServerInfo & { id: string } = {
-      id: server.id,
-      name: server.name,
-      config: server.config,
-      status: info?.status ?? "loading",
+    const mcpInfo: MCPServerInfo = {
+      ...server,
+      enabled: info?.enabled ?? true,
+      status: info?.status ?? "connected",
       error: info?.error,
       toolInfo: info?.toolInfo ?? [],
     };

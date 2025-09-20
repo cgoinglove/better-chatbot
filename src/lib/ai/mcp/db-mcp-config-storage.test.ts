@@ -40,6 +40,8 @@ describe("DB-based MCP Config Storage", () => {
     name: "test-server",
     config: { command: "python", args: ["test.py"] } as MCPServerConfig,
     enabled: true,
+    userId: "test-user-id",
+    visibility: "private" as const,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -100,11 +102,18 @@ describe("DB-based MCP Config Storage", () => {
 
       vi.mocked(mockMcpRepository.save).mockResolvedValue({
         ...serverToSave,
+        userId: "test-user-id",
+        visibility: "private" as const,
       });
 
-      const result = await storage.save(serverToSave);
+      const serverWithUserId = {
+        ...serverToSave,
+        userId: "test-user-id",
+      };
 
-      expect(mockMcpRepository.save).toHaveBeenCalledWith(serverToSave);
+      const result = await storage.save(serverWithUserId);
+
+      expect(mockMcpRepository.save).toHaveBeenCalledWith(serverWithUserId);
       expect(result).toEqual(expect.objectContaining(serverToSave));
     });
 
@@ -119,7 +128,12 @@ describe("DB-based MCP Config Storage", () => {
         new Error("Save failed"),
       );
 
-      await expect(storage.save(serverToSave)).rejects.toThrow("Save failed");
+      await expect(
+        storage.save({
+          ...serverToSave,
+          userId: "test-user-id",
+        }),
+      ).rejects.toThrow("Save failed");
     });
   });
 

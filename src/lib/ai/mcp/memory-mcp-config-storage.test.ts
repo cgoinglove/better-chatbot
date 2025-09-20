@@ -11,6 +11,7 @@ describe("MemoryMCPConfigStorage", () => {
 
   const createTestServer = (name: string): McpServerInsert => ({
     name,
+    userId: "test-user-id",
     config: {
       command: "test-command",
       args: ["--test"],

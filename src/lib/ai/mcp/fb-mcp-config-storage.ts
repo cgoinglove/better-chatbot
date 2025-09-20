@@ -194,6 +194,8 @@ function fillMcpServerSchema(
   return {
     ...server,
     id: server.name,
+    userId: server.userId || "file-based-user",
+    visibility: server.visibility || "private",
     enabled: true,
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -208,6 +210,8 @@ function toMcpServerArray(
       id: name,
       name,
       config,
+      userId: "file-based-user",
+      visibility: "private",
     }),
   );
 }

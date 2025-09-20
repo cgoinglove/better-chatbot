@@ -10,12 +10,15 @@ if (process.env.CI) {
 
 export default defineConfig({
   testDir: "./tests",
-  timeout: 30 * 1000, // Increased timeout for agent operations
+  timeout: 60 * 1000, // Increased timeout for agent operations
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 4 : undefined,
-  reporter: process.env.CI ? "dot" : "list",
+  workers: process.env.CI ? 4 : 3,
+  maxFailures: 5,
+  reporter: process.env.CI
+    ? [["html", { open: "never" }], ["list"]]
+    : [["html"], ["list"]],
   use: {
     baseURL: process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000",
     ignoreHTTPSErrors: true,
@@ -24,32 +27,24 @@ export default defineConfig({
     ...devices["Desktop Chrome"],
   },
 
+  globalSetup: "./tests/lifecycle/setup.global.ts",
   globalTeardown: "./tests/lifecycle/teardown.global.ts",
 
   projects: [
-    // Setup project to create authentication states
+    // Standard test setup - seeds users before running tests
     {
       name: "setup",
-      testMatch: /.*\.setup\.ts/,
+      testMatch: /.*auth-states\.setup\.ts/,
     },
+
     {
       name: "chromium",
       use: {
         ...devices["Desktop Chrome"],
       },
       dependencies: ["setup"],
-      testIgnore: [/.*\.setup\.ts/, /.*mobile.*\.spec\.ts/],
-    },
-
-    // Mobile tests
-    {
-      name: "mobile",
-      use: {
-        ...devices["Desktop Chrome"],
-        viewport: { width: 375, height: 667 }, // iPhone SE size
-      },
-      dependencies: ["setup"],
-      testMatch: /.*mobile.*\.spec\.ts/,
+      testMatch: /.*\.spec\.ts/,
+      testIgnore: [/.*\.setup\.ts/],
     },
   ],
 

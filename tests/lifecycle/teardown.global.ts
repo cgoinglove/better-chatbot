@@ -17,8 +17,13 @@ async function cleanup() {
   console.log("Cleaning up test data...");
 
   try {
-    // Clean up test users created during tests (those with test emails)
-    const testEmailPatterns = ["%playwright%", "%test%", "%example.com%"];
+    // Clean up only dynamically created test users (not seeded ones)
+    // Preserve our seeded test users in @test-seed.local domain
+    const testEmailPatterns = [
+      "%playwright%", // Dynamically created playwright users
+      "%@example.com%", // Test signup users
+      "%@temp-test.%", // Temporary test users
+    ];
 
     // First, get all test users
     const testUsers = await db

@@ -1,7 +1,6 @@
 import { NextRequest } from "next/server";
 import { getSession } from "auth/server";
 import { AllowedMCPServer, VercelAIMcpTool } from "app-types/mcp";
-import { userRepository } from "lib/db/repository";
 import {
   filterMcpServerCustomizations,
   filterMCPToolsByAllowedMCPServers,
@@ -20,6 +19,7 @@ import {
 } from "../actions";
 import globalLogger from "lib/logger";
 import { colorize } from "consola/utils";
+import { getUserPreferences } from "lib/user/server";
 
 const logger = globalLogger.withDefaults({
   message: colorize("blackBright", `OpenAI Realtime API: `),
@@ -69,9 +69,7 @@ export async function POST(request: NextRequest) {
       logger.info(`No tools found`);
     }
 
-    const userPreferences = await userRepository.getPreferences(
-      session.user.id,
-    );
+    const userPreferences = await getUserPreferences(session.user.id);
 
     const mcpServerCustomizations = await safe()
       .map(() => {

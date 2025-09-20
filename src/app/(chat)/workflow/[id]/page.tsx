@@ -5,7 +5,7 @@ import {
 import Workflow from "@/components/workflow/workflow";
 import { getSession } from "auth/server";
 import { workflowRepository } from "lib/db/repository";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 export default async function WorkflowPage({
   params,
@@ -14,13 +14,19 @@ export default async function WorkflowPage({
 }) {
   const { id } = await params;
   const session = await getSession();
+
+  if (!session) {
+    redirect("/sign-in");
+  }
+
   const hasAccess = await workflowRepository.checkAccess(id, session.user.id);
   if (!hasAccess) {
-    return new Response("Unauthorized", { status: 401 });
+    notFound();
   }
+
   const workflow = await workflowRepository.selectStructureById(id);
   if (!workflow) {
-    return notFound();
+    notFound();
   }
   const hasEditAccess = await workflowRepository.checkAccess(
     id,

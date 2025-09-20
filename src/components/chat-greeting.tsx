@@ -1,10 +1,12 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { authClient } from "auth/client";
 import { useMemo } from "react";
 import { FlipWords } from "ui/flip-words";
 import { useTranslations } from "next-intl";
+import useSWR from "swr";
+import { BasicUser } from "app-types/user";
+import { fetcher } from "lib/utils";
 
 function getGreetingByTime() {
   const hour = new Date().getHours();
@@ -14,11 +16,10 @@ function getGreetingByTime() {
 }
 
 export const ChatGreeting = () => {
-  const { data: session } = authClient.useSession();
-
+  const { data: user } = useSWR<BasicUser>(`/api/user/details`, fetcher, {
+    revalidateOnMount: false,
+  });
   const t = useTranslations("Chat.Greeting");
-
-  const user = session?.user;
 
   const word = useMemo(() => {
     if (!user?.name) return "";

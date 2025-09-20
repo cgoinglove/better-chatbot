@@ -30,6 +30,7 @@ export default async function AgentsPage() {
       initialMyAgents={myAgents}
       initialSharedAgents={sharedAgents}
       userId={session.user.id}
+      userRole={session.user.role}
     />
   );
 }

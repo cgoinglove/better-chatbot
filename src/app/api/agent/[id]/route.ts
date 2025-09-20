@@ -4,6 +4,7 @@ import { z } from "zod";
 import { AgentUpdateSchema } from "app-types/agent";
 import { serverCache } from "lib/cache";
 import { CacheKeys } from "lib/cache/cache-keys";
+import { canEditAgent, canDeleteAgent } from "lib/auth/permissions";
 
 export async function GET(
   _request: Request,
@@ -34,6 +35,15 @@ export async function PUT(
 
   if (!session?.user.id) {
     return new Response("Unauthorized", { status: 401 });
+  }
+
+  // Check if user has permission to edit agents
+  const canEdit = await canEditAgent();
+  if (!canEdit) {
+    return Response.json(
+      { error: "Only editors and admins can edit agents" },
+      { status: 403 },
+    );
   }
 
   try {
@@ -81,6 +91,15 @@ export async function DELETE(
 
   if (!session?.user.id) {
     return new Response("Unauthorized", { status: 401 });
+  }
+
+  // Check if user has permission to delete agents
+  const canDelete = await canDeleteAgent();
+  if (!canDelete) {
+    return Response.json(
+      { error: "Only editors and admins can delete agents" },
+      { status: 403 },
+    );
   }
 
   try {

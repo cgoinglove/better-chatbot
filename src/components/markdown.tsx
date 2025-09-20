@@ -105,7 +105,7 @@ const components: Partial<Components> = {
   },
   ul: ({ node, children, ...props }) => {
     return (
-      <ul className="px-8 list-decimal list-outside" {...props}>
+      <ul className="px-8 list-outside list-disc" {...props}>
         {children}
       </ul>
     );

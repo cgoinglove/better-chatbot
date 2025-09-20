@@ -18,10 +18,10 @@ pnpm test:e2e
 pnpm test:e2e:ui
 
 # Run specific test file
-pnpm test:e2e -- tests/agents/agent-creation.spec.ts
+npx playwright test tests/agents/agent-creation.spec.ts
 
 # Run tests in debug mode
-pnpm test:e2e -- --debug
+npx playwright test --debug
 ```
 
 ## 🏗️ Test Architecture
@@ -83,19 +83,15 @@ We recommend using the [Playwright](https://marketplace.visualstudio.com/items?i
 
 ### Test Database
 
-For safety, always use a **separate test, local database**. If you run this against a production database, it can **severely impact your data**.
-
-The easiest database to use the local postgres database setup through the included docker compose file.
+For safety, always use a **separate test database**:
 
 ```bash
-# Use Docker (recommended)
+# Option 1: Use Docker (recommended)
 pnpm docker:pg
-```
 
-Set the `POSTGRES_URL` environment variable in your .env to the test database URL.
-
-```text
-POSTGRES_URL="postgres://user:password@localhost:5432/better_chatbot"
+# Option 2: Create dedicated test database
+createdb better_chatbot_test
+export POSTGRES_URL="postgres://user:password@localhost:5432/better_chatbot_test"
 ```
 
 ## 🎯 Authentication Strategy
@@ -213,29 +209,19 @@ const agentName = `Test Agent ${testSuffix}`;
 
 ### Debug Commands
 
-See [https://playwright.dev/docs/test-cli](https://playwright.dev/docs/test-cli) for more information.
-
-Some useful commands to help you debug your tests:
-
 ```bash
 # Run specific test with browser visible
-pnpm test:e2e -- tests/agents/agent-creation.spec.ts --headed
+npx playwright test tests/agents/agent-creation.spec.ts --headed
 
 # Debug mode with breakpoints
-pnpm test:e2e:debug -- --debug
+npx playwright test --debug
 
 # Run single test
-pnpm test:e2e -- -g "should create agent"
+npx playwright test -g "should create agent"
 
 # Generate test report
-pnpm test:e2e -- show-report
+npx playwright show-report
 ```
-
-### VSCode/Cursor Debugging
-
-You can use the VSCode extension to debug and help write your tests, it's a great way to get started:
-
-See [https://playwright.dev/docs/getting-started-vscode](https://playwright.dev/docs/getting-started-vscode) for more information.
 
 ### Debug Helpers
 

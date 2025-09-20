@@ -8,7 +8,18 @@ import {
   AuthConfig,
   AuthConfigSchema,
 } from "app-types/authentication";
-import { experimental_taintUniqueValue } from "react";
+// Conditionally import React taint
+let experimental_taintUniqueValue: any = () => {};
+try {
+  // Only use taint in Next.js runtime
+  if (typeof window !== "undefined" || process.env.NEXT_RUNTIME) {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const react = require("react");
+    experimental_taintUniqueValue = react.experimental_taintUniqueValue;
+  }
+} catch (_e) {
+  // No-op for non-React contexts
+}
 import { parseEnvBoolean } from "../utils";
 
 function parseSocialAuthConfigs() {

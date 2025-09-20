@@ -28,10 +28,12 @@ export default function SignIn({
   emailAndPasswordEnabled,
   signUpEnabled,
   socialAuthenticationProviders,
+  isFirstUser,
 }: {
   emailAndPasswordEnabled: boolean;
   signUpEnabled: boolean;
   socialAuthenticationProviders: SocialAuthenticationProvider[];
+  isFirstUser: boolean;
 }) {
   const t = useTranslations("Auth.SignIn");
 
@@ -79,7 +81,7 @@ export default function SignIn({
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col">
-          {emailAndPasswordEnabled && (
+          {emailAndPasswordEnabled && !isFirstUser && (
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
@@ -117,6 +119,7 @@ export default function SignIn({
                 className="w-full"
                 onClick={emailAndPasswordSignIn}
                 disabled={loading}
+                data-testid="signin-submit-button"
               >
                 {loading ? (
                   <Loader className="size-4 animate-spin ml-1" />

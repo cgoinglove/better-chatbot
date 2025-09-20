@@ -1,7 +1,9 @@
-import SignIn from "@/components/sign-in";
+import SignIn from "@/components/auth/sign-in";
 import { getAuthConfig } from "lib/auth/config";
+import { getIsFirstUser } from "lib/auth/server";
 
-export default function SignInPage() {
+export default async function SignInPage() {
+  const isFirstUser = await getIsFirstUser();
   const {
     emailAndPasswordEnabled,
     signUpEnabled,
@@ -17,6 +19,7 @@ export default function SignInPage() {
       emailAndPasswordEnabled={emailAndPasswordEnabled}
       signUpEnabled={signUpEnabled}
       socialAuthenticationProviders={enabledProviders}
+      isFirstUser={isFirstUser}
     />
   );
 }

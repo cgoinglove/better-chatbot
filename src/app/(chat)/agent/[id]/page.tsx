@@ -1,7 +1,7 @@
 import EditAgent from "@/components/agent/edit-agent";
 import { agentRepository } from "lib/db/repository";
 import { getSession } from "auth/server";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 export default async function AgentPage({
   params,
@@ -12,7 +12,7 @@ export default async function AgentPage({
   const session = await getSession();
 
   if (!session?.user.id) {
-    notFound();
+    redirect("/sign-in");
   }
 
   // For new agents, pass no initial data

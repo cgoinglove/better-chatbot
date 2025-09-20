@@ -1,5 +1,6 @@
 "use client";
 import { MCPCard } from "@/components/mcp-card";
+import { canCreateMCP } from "lib/auth/client-permissions";
 
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -13,7 +14,6 @@ import { MCPIcon } from "ui/mcp-icon";
 import { useMcpList } from "@/hooks/queries/use-mcp-list";
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
-import { MCPServerInfo } from "app-types/mcp";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { cn } from "lib/utils";
@@ -24,14 +24,24 @@ import {
   DropdownMenuTrigger,
 } from "ui/dropdown-menu";
 import { useRouter } from "next/navigation";
+import { BasicUser } from "app-types/user";
 
 const LightRays = dynamic(() => import("@/components/ui/light-rays"), {
   ssr: false,
 });
 
-export default function MCPDashboard({ message }: { message?: string }) {
+interface MCPDashboardProps {
+  message?: string;
+  user: BasicUser;
+}
+
+export default function MCPDashboard({ message, user }: MCPDashboardProps) {
   const t = useTranslations("MCP");
   const router = useRouter();
+
+  // Check if user can create MCP connections using Better Auth permissions
+  const canCreate = canCreateMCP(user?.role);
+
   const {
     data: mcpList,
     isLoading,
@@ -40,13 +50,22 @@ export default function MCPDashboard({ message }: { message?: string }) {
     refreshInterval: 10000,
   });
 
-  const sortedMcpList = useMemo(() => {
-    return (mcpList as (MCPServerInfo & { id: string })[])?.sort((a, b) => {
+  const { myServers, featuredServers } = useMemo(() => {
+    if (!mcpList) return { myServers: [], featuredServers: [] };
+
+    const sortFn = (a: any, b: any) => {
       if (a.status === b.status) return 0;
       if (a.status === "authorizing") return -1;
       if (b.status === "authorizing") return 1;
       return 0;
-    });
+    };
+
+    const owned = mcpList.filter((s) => s.userId === user?.id).sort(sortFn);
+    const featured = mcpList
+      .filter((s) => s.userId !== user?.id && s.visibility === "public")
+      .sort(sortFn);
+
+    return { myServers: owned, featuredServers: featured };
   }, [mcpList]);
 
   const displayIcons = useMemo(() => {
@@ -82,7 +101,7 @@ export default function MCPDashboard({ message }: { message?: string }) {
         </div>
       </>
     );
-  }, [mcpList.length]);
+  }, [isLoading, mcpList?.length]);
 
   useEffect(() => {
     if (isValidating) {
@@ -108,7 +127,7 @@ export default function MCPDashboard({ message }: { message?: string }) {
         <div className="pt-8 flex-1 relative flex flex-col gap-4 px-8 max-w-3xl h-full mx-auto pb-8">
           <div className={cn("flex items-center  pb-8")}>
             <h1 className="text-2xl font-bold flex items-center gap-2">
-              MCP Servers
+              {canCreate ? t("mcpServers") : t("availableMcpServers")}
               {showValidating && isValidating && !isLoading && (
                 <Loader2 className="size-4 animate-spin" />
               )}
@@ -116,7 +135,7 @@ export default function MCPDashboard({ message }: { message?: string }) {
             <div className="flex-1" />
 
             <div className="flex gap-2">
-              {mcpList?.length ? (
+              {canCreate && mcpList?.length ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
@@ -159,12 +178,29 @@ export default function MCPDashboard({ message }: { message?: string }) {
                 </DropdownMenu>
               ) : null}
 
-              <Link href="/mcp/create">
-                <Button className="font-semibold" variant="outline">
-                  <MCPIcon className="fill-foreground size-3.5" />
-                  {t("addMcpServer")}
-                </Button>
-              </Link>
+              {canCreate && (
+                <Link
+                  href="https://smithery.ai/"
+                  target="_blank"
+                  className="hidden sm:block"
+                >
+                  <Button className="font-semibold" variant={"ghost"}>
+                    {t("marketplace")}
+                  </Button>
+                </Link>
+              )}
+              {canCreate && (
+                <Link href="/mcp/create">
+                  <Button
+                    className="font-semibold bg-input/20"
+                    variant="outline"
+                    data-testid="add-mcp-server-button"
+                  >
+                    <MCPIcon className="fill-foreground size-3.5" />
+                    {t("addMcpServer")}
+                  </Button>
+                </Link>
+              )}
             </div>
           </div>
           {isLoading ? (
@@ -173,15 +209,54 @@ export default function MCPDashboard({ message }: { message?: string }) {
               <Skeleton className="h-60 w-full" />
               <Skeleton className="h-60 w-full" />
             </div>
-          ) : sortedMcpList?.length ? (
-            <div className="flex flex-col gap-6 mb-4 z-20">
-              {sortedMcpList.map((mcp) => (
-                <MCPCard key={mcp.id} {...mcp} />
-              ))}
+          ) : myServers?.length || featuredServers?.length ? (
+            <div
+              className="flex flex-col gap-8 mb-4"
+              data-testid="mcp-servers-section"
+            >
+              {myServers?.length > 0 && (
+                <div className="flex flex-col gap-4">
+                  <h2 className="text-lg font-semibold text-muted-foreground">
+                    {t("myMcpServers")}
+                  </h2>
+                  <div
+                    className="flex flex-col gap-6"
+                    data-testid="my-mcp-servers-section"
+                  >
+                    {myServers.map((mcp) => (
+                      <MCPCard key={mcp.id} {...mcp} user={user} />
+                    ))}
+                  </div>
+                </div>
+              )}
+              {featuredServers?.length > 0 && (
+                <div className="flex flex-col gap-4">
+                  <h2 className="text-lg font-semibold text-muted-foreground">
+                    {t("featuredMcpServers")}
+                  </h2>
+                  <div
+                    className="flex flex-col gap-6"
+                    data-testid="featured-mcp-servers-section"
+                  >
+                    {featuredServers.map((mcp) => (
+                      <MCPCard key={mcp.id} {...mcp} user={user} />
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
-          ) : (
-            // When MCP list is empty
+          ) : // When MCP list is empty
+          canCreate ? (
             <MCPOverview />
+          ) : (
+            <div className="flex flex-col items-center justify-center space-y-4 my-20 text-center">
+              <h3 className="text-2xl md:text-4xl font-semibold">
+                {t("noMcpServersAvailable")}
+              </h3>
+              <p className="text-muted-foreground max-w-md">
+                {t("noMcpServersAvailableDescription")}
+              </p>
+            </div>
           )}
         </div>
       </ScrollArea>

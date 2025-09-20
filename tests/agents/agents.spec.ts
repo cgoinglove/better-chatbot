@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("Agent Access Spec", () => {
-  test.use({ storageState: "tests/.auth/user1.json" });
+  test.use({ storageState: "tests/.auth/admin.json" });
 
   test("should access agents page when authenticated", async ({ page }) => {
     await page.goto("/agents");

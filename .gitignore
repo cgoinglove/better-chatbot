@@ -59,3 +59,7 @@ local-data
 .mcp-config.json
 openai-compatible.config.ts
 certificates
+
+/screenshots
+PR-DESCRIPTION.md
+/tests/screenshot-capture

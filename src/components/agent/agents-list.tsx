@@ -18,17 +18,20 @@ import { notify } from "lib/notify";
 import { useState } from "react";
 import { handleErrorWithToast } from "ui/shared-toast";
 import { safe } from "ts-safe";
+import { canCreateAgent } from "lib/auth/client-permissions";
 
 interface AgentsListProps {
   initialMyAgents: AgentSummary[];
   initialSharedAgents: AgentSummary[];
   userId: string;
+  userRole?: string | null;
 }
 
 export function AgentsList({
   initialMyAgents,
   initialSharedAgents,
   userId,
+  userRole,
 }: AgentsListProps) {
   const t = useTranslations();
   const mutateAgents = useMutateAgents();
@@ -107,69 +110,85 @@ export function AgentsList({
       .watch(() => setDeletingAgentLoading(null));
   };
 
+  // Check if user can create agents using Better Auth permissions
+  const canCreate = canCreateAgent(userRole);
+
   return (
     <div className="w-full flex flex-col gap-4 p-8">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold" data-testid="agents-title">
           {t("Layout.agents")}
         </h1>
-        <Link href="/agent/new">
-          <Button variant="ghost">
-            <Plus />
-            {t("Agent.newAgent")}
-          </Button>
-        </Link>
+        {canCreate && (
+          <Link href="/agent/new">
+            <Button variant="ghost" data-testid="create-agent-button">
+              <Plus />
+              {t("Agent.newAgent")}
+            </Button>
+          </Link>
+        )}
       </div>
 
       {/* My Agents Section */}
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center gap-2">
-          <h2 className="text-lg font-semibold">{t("Agent.myAgents")}</h2>
-          <div className="flex-1 h-px bg-border" />
+      {canCreate && (
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-semibold">{t("Agent.myAgents")}</h2>
+            <div className="flex-1 h-px bg-border" />
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {canCreate && (
+              <Link href="/agent/new">
+                <Card
+                  className="relative bg-secondary overflow-hidden cursor-pointer hover:bg-input transition-colors h-[196px]"
+                  data-testid="create-agent-card"
+                >
+                  <div className="absolute inset-0 w-full h-full opacity-50">
+                    <BackgroundPaths />
+                  </div>
+                  <CardHeader>
+                    <CardTitle>
+                      <h1 className="text-lg font-bold">
+                        {t("Agent.newAgent")}
+                      </h1>
+                    </CardTitle>
+                    <CardDescription className="mt-2">
+                      <p>{t("Layout.createYourOwnAgent")}</p>
+                    </CardDescription>
+                    <div className="mt-auto ml-auto flex-1">
+                      <Button variant="ghost" size="lg">
+                        {t("Common.create")}
+                        <ArrowUpRight className="size-3.5" />
+                      </Button>
+                    </div>
+                  </CardHeader>
+                </Card>
+              </Link>
+            )}
+
+            {myAgents.map((agent) => (
+              <ShareableCard
+                key={agent.id}
+                type="agent"
+                item={agent}
+                href={`/agent/${agent.id}`}
+                onVisibilityChange={updateVisibility}
+                isVisibilityChangeLoading={visibilityChangeLoading === agent.id}
+                isDeleteLoading={deletingAgentLoading === agent.id}
+                onDelete={deleteAgent}
+              />
+            ))}
+          </div>
         </div>
+      )}
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <Link href="/agent/new">
-            <Card className="relative bg-secondary overflow-hidden cursor-pointer hover:bg-input transition-colors h-[196px]">
-              <div className="absolute inset-0 w-full h-full opacity-50">
-                <BackgroundPaths />
-              </div>
-              <CardHeader>
-                <CardTitle>
-                  <h1 className="text-lg font-bold">{t("Agent.newAgent")}</h1>
-                </CardTitle>
-                <CardDescription className="mt-2">
-                  <p>{t("Layout.createYourOwnAgent")}</p>
-                </CardDescription>
-                <div className="mt-auto ml-auto flex-1">
-                  <Button variant="ghost" size="lg">
-                    {t("Common.create")}
-                    <ArrowUpRight className="size-3.5" />
-                  </Button>
-                </div>
-              </CardHeader>
-            </Card>
-          </Link>
-
-          {myAgents.map((agent) => (
-            <ShareableCard
-              key={agent.id}
-              type="agent"
-              item={agent}
-              href={`/agent/${agent.id}`}
-              onVisibilityChange={updateVisibility}
-              isVisibilityChangeLoading={visibilityChangeLoading === agent.id}
-              isDeleteLoading={deletingAgentLoading === agent.id}
-              onDelete={deleteAgent}
-            />
-          ))}
-        </div>
-      </div>
-
-      {/* Shared Agents Section */}
+      {/* Shared/Available Agents Section */}
       <div className="flex flex-col gap-4 mt-8">
         <div className="flex items-center gap-2">
-          <h2 className="text-lg font-semibold">{t("Agent.sharedAgents")}</h2>
+          <h2 className="text-lg font-semibold">
+            {canCreate ? t("Agent.sharedAgents") : t("Agent.availableAgents")}
+          </h2>
           <div className="flex-1 h-px bg-border" />
         </div>
 
@@ -188,9 +207,15 @@ export function AgentsList({
           {sharedAgents.length === 0 && (
             <Card className="col-span-full bg-transparent border-none">
               <CardHeader className="text-center py-12">
-                <CardTitle>{t("Agent.noSharedAgents")}</CardTitle>
+                <CardTitle>
+                  {canCreate
+                    ? t("Agent.noSharedAgents")
+                    : t("Agent.noAvailableAgents")}
+                </CardTitle>
                 <CardDescription>
-                  {t("Agent.noSharedAgentsDescription")}
+                  {canCreate
+                    ? t("Agent.noSharedAgentsDescription")
+                    : t("Agent.noAvailableAgentsDescription")}
                 </CardDescription>
               </CardHeader>
             </Card>

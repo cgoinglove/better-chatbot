@@ -11,6 +11,11 @@ export async function middleware(request: NextRequest) {
   if (pathname.startsWith("/ping")) {
     return new Response("pong", { status: 200 });
   }
+
+  if (pathname === "/admin") {
+    return NextResponse.redirect(new URL("/admin/users", request.url));
+  }
+
   const sessionCookie = getSessionCookie(request);
 
   if (!sessionCookie) {
