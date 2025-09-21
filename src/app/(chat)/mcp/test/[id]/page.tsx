@@ -12,6 +12,11 @@ import {
   Loader,
   Search,
   WandSparkles,
+  TestTube,
+  Save,
+  X,
+  Trash2,
+  Play,
 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -48,6 +53,7 @@ import {
   DialogTrigger,
 } from "ui/dialog";
 import { Badge } from "ui/badge";
+import { Switch } from "ui/switch";
 import { handleErrorWithToast } from "ui/shared-toast";
 import { generateExampleToolSchemaAction } from "@/app/api/chat/actions";
 import { appStore } from "@/app/store";
@@ -82,6 +88,13 @@ type ToolInfo = {
   name: string;
   description: string;
   inputSchema?: any;
+};
+
+type SavedTestResult = {
+  input: string;
+  result: CallResult;
+  timestamp: number;
+  toolName: string;
 };
 
 type CallResult = {
@@ -184,7 +197,7 @@ const SchemaProperty = ({
             <SchemaProperty
               key={key}
               name={key}
-              schema={value}
+              schema={value as SchemaProperty}
               level={level + 1}
             />
           ))}
@@ -397,8 +410,9 @@ export default function Page() {
   
   // Test mode state
   const [isTestMode, setIsTestMode] = useState(false);
-  const [savedTestResults, setSavedTestResults] = useState<Record<string, { input: string; result: CallResult }>>({});
+  const [savedTestResults, setSavedTestResults] = useState<Record<string, SavedTestResult>>({});
   const [currentTestInput, setCurrentTestInput] = useState("");
+  const [testModeEnabled, setTestModeEnabled] = useState(false);
 
   const { data: client, isLoading } = useSWR(`/mcp/${id}`, () =>
     selectMcpClientAction(id as string),
@@ -483,6 +497,7 @@ export default function Page() {
 
     setIsCallLoading(true);
     setCurrentTestInput(jsonInput);
+    setTestModeEnabled(true);
     try {
       const result = await callMcpToolAction(
         id,
@@ -516,7 +531,9 @@ export default function Page() {
       ...prev,
       [testKey]: {
         input: currentTestInput,
-        result: callResult
+        result: callResult,
+        timestamp: Date.now(),
+        toolName: selectedTool.name
       }
     }));
     setIsTestMode(false);
@@ -528,6 +545,7 @@ export default function Page() {
     setIsTestMode(false);
     setCallResult(null);
     setCurrentTestInput("");
+    setTestModeEnabled(false);
   };
 
   const handleLoadSavedTest = (testKey: string) => {
@@ -536,7 +554,16 @@ export default function Page() {
       setJsonInput(savedTest.input);
       setCallResult(savedTest.result);
       setIsTestMode(false);
+      setTestModeEnabled(true);
     }
+  };
+
+  const handleDeleteSavedTest = (testKey: string) => {
+    setSavedTestResults(prev => {
+      const newResults = { ...prev };
+      delete newResults[testKey];
+      return newResults;
+    });
   };
 
   // Skeleton loader for tool list
@@ -564,6 +591,7 @@ export default function Page() {
     setShowFullDescription(false);
     setIsTestMode(false);
     setCurrentTestInput("");
+    setTestModeEnabled(false);
   }, [selectedToolIndex]);
 
   useEffect(() => {
@@ -583,9 +611,22 @@ export default function Page() {
           {t("Common.back")}
         </Link>
         <header>
-          <h2 className="text-3xl font-semibold my-2">
-            {decodeURIComponent(client?.name ?? "")}
-          </h2>
+          <div className="flex items-center justify-between my-2">
+            <h2 className="text-3xl font-semibold">
+              {decodeURIComponent(client?.name ?? "")}
+            </h2>
+            <div className="flex items-center gap-2">
+              <TestTube className="size-4 text-muted-foreground" />
+              <Label htmlFor="test-mode" className="text-sm font-medium">
+                Test Mode
+              </Label>
+              <Switch
+                id="test-mode"
+                checked={testModeEnabled}
+                onCheckedChange={setTestModeEnabled}
+              />
+            </div>
+          </div>
         </header>
       </div>
 
@@ -698,7 +739,7 @@ export default function Page() {
                                     <SchemaProperty
                                       key={key}
                                       name={key}
-                                      schema={value}
+                                      schema={value as SchemaProperty}
                                     />
                                   ),
                                 )}
@@ -752,48 +793,69 @@ export default function Page() {
                       </div>
 
                       {/* Call and Test Buttons */}
-                      <div className="space-y-2">
+                      <div className="space-y-3">
                         <div className="flex gap-2">
                           <Button
                             onClick={handleToolCall}
-                            disabled={!!jsonError || isCallLoading || isTestMode}
+                            disabled={!!jsonError || isCallLoading || isTestMode || testModeEnabled}
                             className="flex-1"
                           >
                             {isCallLoading && !isTestMode && (
                               <Loader className="size-4 animate-spin mr-2" />
                             )}
+                            <Play className="size-4 mr-2" />
                             {t("MCP.callTool")}
                           </Button>
                           <Button
                             onClick={handleTestCall}
-                            disabled={!!jsonError || isCallLoading || isTestMode}
-                            variant="outline"
+                            disabled={!!jsonError || isCallLoading || isTestMode || !testModeEnabled}
+                            variant={testModeEnabled ? "default" : "outline"}
                             className="flex-1"
                           >
                             {isCallLoading && isTestMode && (
                               <Loader className="size-4 animate-spin mr-2" />
                             )}
+                            <TestTube className="size-4 mr-2" />
                             Test
                           </Button>
                         </div>
                         
+                        {/* Test Mode Status */}
+                        {testModeEnabled && (
+                          <div className="flex items-center gap-2 p-2 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-md">
+                            <TestTube className="size-4 text-blue-600 dark:text-blue-400" />
+                            <span className="text-sm text-blue-700 dark:text-blue-300">
+                              Test mode is enabled. Use the Test button to run tests and save results.
+                            </span>
+                          </div>
+                        )}
+                        
                         {/* Test Mode Actions */}
                         {isTestMode && (
-                          <div className="flex gap-2">
-                            <Button
-                              onClick={handleSaveTest}
-                              className="flex-1"
-                              variant="default"
-                            >
-                              Save Test
-                            </Button>
-                            <Button
-                              onClick={handleCancelTest}
-                              className="flex-1"
-                              variant="outline"
-                            >
-                              Cancel
-                            </Button>
+                          <div className="flex gap-2 p-3 bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-800 rounded-md">
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-orange-800 dark:text-orange-200 mb-2">
+                                Test completed! Save this test result or cancel to discard.
+                              </p>
+                              <div className="flex gap-2">
+                                <Button
+                                  onClick={handleSaveTest}
+                                  className="flex-1"
+                                  variant="default"
+                                >
+                                  <Save className="size-4 mr-2" />
+                                  Save Test
+                                </Button>
+                                <Button
+                                  onClick={handleCancelTest}
+                                  className="flex-1"
+                                  variant="outline"
+                                >
+                                  <X className="size-4 mr-2" />
+                                  Cancel
+                                </Button>
+                              </div>
+                            </div>
                           </div>
                         )}
                       </div>
@@ -832,36 +894,60 @@ export default function Page() {
                       {/* Saved Tests */}
                       {Object.keys(savedTestResults).length > 0 && (
                         <div className="space-y-2">
-                          <h5 className="text-xs font-medium">Saved Tests</h5>
+                          <div className="flex items-center justify-between">
+                            <h5 className="text-sm font-medium flex items-center gap-2">
+                              <TestTube className="size-4" />
+                              Saved Tests ({Object.entries(savedTestResults).filter(([key]) => key.startsWith(selectedTool?.name || "")).length})
+                            </h5>
+                          </div>
                           <div className="space-y-2 max-h-[200px] overflow-y-auto">
                             {Object.entries(savedTestResults)
                               .filter(([key]) => key.startsWith(selectedTool?.name || ""))
-                              .map(([key, test]) => (
+                              .sort(([,a], [,b]) => (b as SavedTestResult).timestamp - (a as SavedTestResult).timestamp)
+                              .map(([key, test]) => {
+                                const testResult = test as SavedTestResult;
+                                return (
                                 <div
                                   key={key}
-                                  className="border border-input rounded-md p-3 cursor-pointer hover:bg-secondary/50 transition-colors"
-                                  onClick={() => handleLoadSavedTest(key)}
+                                  className="border border-input rounded-md p-3 hover:bg-secondary/50 transition-colors group"
                                 >
                                   <div className="flex items-center justify-between">
-                                    <div className="flex-1 min-w-0">
+                                    <div 
+                                      className="flex-1 min-w-0 cursor-pointer"
+                                      onClick={() => handleLoadSavedTest(key)}
+                                    >
                                       <p className="text-xs font-medium truncate">
-                                        {new Date(parseInt(key.split('_').pop() || '0')).toLocaleString()}
+                                        {new Date(testResult.timestamp).toLocaleString()}
                                       </p>
                                       <p className="text-xs text-muted-foreground truncate">
-                                        {test.input.length > 50 
-                                          ? `${test.input.substring(0, 50)}...` 
-                                          : test.input}
+                                        {testResult.input.length > 50 
+                                          ? `${testResult.input.substring(0, 50)}...` 
+                                          : testResult.input}
                                       </p>
                                     </div>
-                                    <Badge 
-                                      variant={test.result.success ? "default" : "destructive"}
-                                      className="text-[10px] ml-2"
-                                    >
-                                      {test.result.success ? "Success" : "Error"}
-                                    </Badge>
+                                    <div className="flex items-center gap-2">
+                                      <Badge 
+                                        variant={testResult.result.success ? "default" : "destructive"}
+                                        className="text-[10px]"
+                                      >
+                                        {testResult.result.success ? "Success" : "Error"}
+                                      </Badge>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleDeleteSavedTest(key);
+                                        }}
+                                      >
+                                        <Trash2 className="size-3" />
+                                      </Button>
+                                    </div>
                                   </div>
                                 </div>
-                              ))}
+                                );
+                              })}
                           </div>
                         </div>
                       )}
