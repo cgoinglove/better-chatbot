@@ -22,7 +22,6 @@ export function decrypt(encryptedText: string): string {
     throw new Error("Invalid encrypted text format");
   }
 
-  const _iv = Buffer.from(parts[0], "hex");
   const authTag = Buffer.from(parts[1], "hex");
   const encrypted = parts[2];
 
