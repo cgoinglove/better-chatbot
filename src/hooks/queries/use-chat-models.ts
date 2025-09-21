@@ -7,6 +7,7 @@ export const useChatModels = () => {
     {
       provider: string;
       hasAPIKey: boolean;
+      userHasAPIKey?: boolean;
       models: {
         name: string;
         isToolCallUnsupported: boolean;
