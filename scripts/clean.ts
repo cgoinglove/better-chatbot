@@ -5,7 +5,7 @@ async function clean(dirsToClean?: string[]) {
     console.log("🧹 Cleaning up...");
 
     // Default directories to clean if none provided
-    const defaultDirs = [".next", "node_modules"];
+    const defaultDirs = [".next", "node_modules", "tsconfig.tsbuildinfo"];
     const dirs =
       dirsToClean && dirsToClean.length > 0 ? dirsToClean : defaultDirs;
 
