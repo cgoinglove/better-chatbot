@@ -4,7 +4,7 @@ import { appStore } from "@/app/store";
 import { useChatModels } from "@/hooks/queries/use-chat-models";
 import { ChatModel } from "app-types/chat";
 import { cn } from "lib/utils";
-import { CheckIcon, ChevronDown } from "lucide-react";
+import { CheckIcon, ChevronDown, Key } from "lucide-react";
 import { Fragment, memo, PropsWithChildren, useEffect, useState } from "react";
 import { Button } from "ui/button";
 
@@ -31,6 +31,7 @@ export const SelectModel = (props: PropsWithChildren<SelectModelProps>) => {
   const [open, setOpen] = useState(false);
   const { data: providers } = useChatModels();
   const [model, setModel] = useState(props.currentModel);
+  const appStoreMutate = appStore((state) => state.mutate);
 
   useEffect(() => {
     const modelToUse = props.currentModel ?? appStore.getState().chatModel;
@@ -86,6 +87,10 @@ export const SelectModel = (props: PropsWithChildren<SelectModelProps>) => {
                     <ProviderHeader
                       provider={provider.provider}
                       hasAPIKey={provider.hasAPIKey}
+                      userHasAPIKey={provider.userHasAPIKey}
+                      onOpenPreferences={() =>
+                        appStoreMutate({ openChatPreferences: true })
+                      }
                     />
                   }
                   className={cn(
@@ -147,7 +152,14 @@ export const SelectModel = (props: PropsWithChildren<SelectModelProps>) => {
 const ProviderHeader = memo(function ProviderHeader({
   provider,
   hasAPIKey,
-}: { provider: string; hasAPIKey: boolean }) {
+  userHasAPIKey,
+  onOpenPreferences,
+}: {
+  provider: string;
+  hasAPIKey: boolean;
+  userHasAPIKey?: boolean;
+  onOpenPreferences: () => void;
+}) {
   return (
     <div className="text-sm text-muted-foreground flex items-center gap-1.5 group-hover:text-foreground transition-colors duration-300">
       {provider === "openai" ? (
@@ -160,11 +172,23 @@ const ProviderHeader = memo(function ProviderHeader({
       )}
       {provider}
       {!hasAPIKey && (
-        <>
-          <span className="text-xs ml-auto text-muted-foreground">
-            No API Key
-          </span>
-        </>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpenPreferences();
+          }}
+          className="text-xs ml-auto text-red-500 flex items-center gap-1 hover:text-red-600 transition-colors"
+        >
+          <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+          <Key className="w-3 h-3" />
+          Add API Key
+        </button>
+      )}
+      {hasAPIKey && userHasAPIKey && (
+        <span className="text-xs ml-auto text-green-500 flex items-center gap-1">
+          <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+          Configured
+        </span>
       )}
     </div>
   );
