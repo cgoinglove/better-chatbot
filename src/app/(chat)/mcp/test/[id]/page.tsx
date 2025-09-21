@@ -394,6 +394,11 @@ export default function Page() {
   const [callResult, setCallResult] = useState<CallResult | null>(null);
   const [isCallLoading, setIsCallLoading] = useState(false);
   const [showInputSchema, setShowInputSchema] = useState(false);
+  
+  // Test mode state
+  const [isTestMode, setIsTestMode] = useState(false);
+  const [savedTestResults, setSavedTestResults] = useState<Record<string, { input: string; result: CallResult }>>({});
+  const [currentTestInput, setCurrentTestInput] = useState("");
 
   const { data: client, isLoading } = useSWR(`/mcp/${id}`, () =>
     selectMcpClientAction(id as string),
@@ -469,6 +474,71 @@ export default function Page() {
     }
   };
 
+  const handleTestCall = async () => {
+    if (!selectedTool) return;
+
+    const parsedInput = safeJSONParse(jsonInput || "{}");
+    if (!parsedInput.success)
+      return handleErrorWithToast(parsedInput.error as Error);
+
+    setIsCallLoading(true);
+    setCurrentTestInput(jsonInput);
+    try {
+      const result = await callMcpToolAction(
+        id,
+        selectedTool.name,
+        parsedInput.value,
+      );
+
+      const testResult = {
+        success: true,
+        data: result,
+      };
+      setCallResult(testResult);
+      setIsTestMode(true);
+    } catch (error) {
+      const testResult = {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+      setCallResult(testResult);
+      setIsTestMode(true);
+    } finally {
+      setIsCallLoading(false);
+    }
+  };
+
+  const handleSaveTest = () => {
+    if (!selectedTool || !callResult) return;
+    
+    const testKey = `${selectedTool.name}_${Date.now()}`;
+    setSavedTestResults(prev => ({
+      ...prev,
+      [testKey]: {
+        input: currentTestInput,
+        result: callResult
+      }
+    }));
+    setIsTestMode(false);
+    setCallResult(null);
+    setCurrentTestInput("");
+  };
+
+  const handleCancelTest = () => {
+    setIsTestMode(false);
+    setCallResult(null);
+    setCurrentTestInput("");
+  };
+
+  const handleLoadSavedTest = (testKey: string) => {
+    const savedTest = savedTestResults[testKey];
+    if (savedTest) {
+      setJsonInput(savedTest.input);
+      setCallResult(savedTest.result);
+      setIsTestMode(false);
+    }
+  };
+
   // Skeleton loader for tool list
   const renderSkeletons = () => (
     <>
@@ -492,6 +562,8 @@ export default function Page() {
     setJsonInput("");
     setShowInputSchema(false);
     setShowFullDescription(false);
+    setIsTestMode(false);
+    setCurrentTestInput("");
   }, [selectedToolIndex]);
 
   useEffect(() => {
@@ -679,18 +751,51 @@ export default function Page() {
                         </div>
                       </div>
 
-                      {/* Call Button */}
-                      <div>
-                        <Button
-                          onClick={handleToolCall}
-                          disabled={!!jsonError || isCallLoading}
-                          className="w-full"
-                        >
-                          {isCallLoading && (
-                            <Loader className="size-4 animate-spin mr-2" />
-                          )}
-                          {t("MCP.callTool")}
-                        </Button>
+                      {/* Call and Test Buttons */}
+                      <div className="space-y-2">
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={handleToolCall}
+                            disabled={!!jsonError || isCallLoading || isTestMode}
+                            className="flex-1"
+                          >
+                            {isCallLoading && !isTestMode && (
+                              <Loader className="size-4 animate-spin mr-2" />
+                            )}
+                            {t("MCP.callTool")}
+                          </Button>
+                          <Button
+                            onClick={handleTestCall}
+                            disabled={!!jsonError || isCallLoading || isTestMode}
+                            variant="outline"
+                            className="flex-1"
+                          >
+                            {isCallLoading && isTestMode && (
+                              <Loader className="size-4 animate-spin mr-2" />
+                            )}
+                            Test
+                          </Button>
+                        </div>
+                        
+                        {/* Test Mode Actions */}
+                        {isTestMode && (
+                          <div className="flex gap-2">
+                            <Button
+                              onClick={handleSaveTest}
+                              className="flex-1"
+                              variant="default"
+                            >
+                              Save Test
+                            </Button>
+                            <Button
+                              onClick={handleCancelTest}
+                              className="flex-1"
+                              variant="outline"
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        )}
                       </div>
 
                       {/* Results Display */}
@@ -721,6 +826,43 @@ export default function Page() {
                               </AlertDescription>
                             </Alert>
                           )}
+                        </div>
+                      )}
+
+                      {/* Saved Tests */}
+                      {Object.keys(savedTestResults).length > 0 && (
+                        <div className="space-y-2">
+                          <h5 className="text-xs font-medium">Saved Tests</h5>
+                          <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                            {Object.entries(savedTestResults)
+                              .filter(([key]) => key.startsWith(selectedTool?.name || ""))
+                              .map(([key, test]) => (
+                                <div
+                                  key={key}
+                                  className="border border-input rounded-md p-3 cursor-pointer hover:bg-secondary/50 transition-colors"
+                                  onClick={() => handleLoadSavedTest(key)}
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-xs font-medium truncate">
+                                        {new Date(parseInt(key.split('_').pop() || '0')).toLocaleString()}
+                                      </p>
+                                      <p className="text-xs text-muted-foreground truncate">
+                                        {test.input.length > 50 
+                                          ? `${test.input.substring(0, 50)}...` 
+                                          : test.input}
+                                      </p>
+                                    </div>
+                                    <Badge 
+                                      variant={test.result.success ? "default" : "destructive"}
+                                      className="text-[10px] ml-2"
+                                    >
+                                      {test.result.success ? "Success" : "Error"}
+                                    </Badge>
+                                  </div>
+                                </div>
+                              ))}
+                          </div>
                         </div>
                       )}
                     </div>
