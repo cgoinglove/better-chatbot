@@ -24,6 +24,7 @@ export default function BuildFromPromptPage() {
   const [prompt, setPrompt] = useState("");
   const [running, setRunning] = useState(false);
   const [logs, setLogs] = useState<string>("");
+  const [useOrchestrator, setUseOrchestrator] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
@@ -42,6 +43,24 @@ export default function BuildFromPromptPage() {
     try {
       const preset = presets.find((p) => p.id === selectedPreset) || presets[0];
       if (!preset) throw new Error("No preset available");
+
+      if (useOrchestrator) {
+        const res = await fetch("/api/orchestrator/run", {
+          method: "POST",
+          body: JSON.stringify({ prompt }),
+          signal: abortRef.current.signal,
+        });
+        if (!res.ok || !res.body) throw new Error("Failed to run orchestrator");
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          const chunk = decoder.decode(value);
+          setLogs((prev) => prev + chunk);
+        }
+        return;
+      }
 
       // 1) create workflow
       const createRes = await fetch("/api/workflow", {
@@ -124,6 +143,14 @@ export default function BuildFromPromptPage() {
             <Button variant="outline" onClick={stop} disabled={!running}>
               Stop
             </Button>
+            <label className="ml-2 text-sm flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={useOrchestrator}
+                onChange={(e) => setUseOrchestrator(e.target.checked)}
+              />
+              Use Orchestrator
+            </label>
           </div>
           <Separator />
           <div>
