@@ -20,6 +20,7 @@ import {
 } from "../actions";
 import globalLogger from "lib/logger";
 import { colorize } from "consola/utils";
+import { z } from "zod";
 
 const logger = globalLogger.withDefaults({
   message: colorize("blackBright", `OpenAI Realtime API: `),
@@ -42,12 +43,15 @@ export async function POST(request: NextRequest) {
       return new Response("Unauthorized", { status: 401 });
     }
 
-    const { voice, allowedMcpServers, agentId } = (await request.json()) as {
-      model: string;
-      voice: string;
-      agentId?: string;
-      allowedMcpServers: Record<string, AllowedMCPServer>;
-    };
+    const BodySchema = z.object({
+      model: z.string().optional(),
+      voice: z.string().default("alloy"),
+      agentId: z.string().optional(),
+      allowedMcpServers: z.record(z.any()).default({}),
+    });
+    const { voice, allowedMcpServers, agentId } = BodySchema.parse(
+      await request.json(),
+    );
 
     const mcpTools = await mcpClientsManager.tools();
 
@@ -116,6 +120,15 @@ export async function POST(request: NextRequest) {
         tools: bindingTools,
       }),
     });
+
+    if (!r.ok) {
+      const text = await r.text();
+      logger.error(`OpenAI realtime session error: ${r.status} ${text}`);
+      return new Response(
+        JSON.stringify({ error: "Failed to create realtime session" }),
+        { status: 502 },
+      );
+    }
 
     return new Response(r.body, {
       status: 200,

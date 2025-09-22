@@ -12,9 +12,6 @@ export default () => {
     devIndicators: {
       position: "bottom-right",
     },
-    env: {
-      NO_HTTPS: process.env.NO_HTTPS,
-    },
     experimental: {
       taint: true,
     },
