@@ -276,6 +276,45 @@ export async function POST(request: Request) {
             updatedAt: new Date(),
           } as any);
         }
+
+        // Auto-build: detect if the user message is a build intent and trigger studio/orchestrator
+        try {
+          const lastUserText = (message.parts || [])
+            .map((p: any) =>
+              typeof p.text === "string" ? p.text : p.content || "",
+            )
+            .join(" ")
+            .toLowerCase();
+          const isBuildIntent =
+            /\b(build|create|scaffold|generate)\b/.test(lastUserText) ||
+            /\bapp|website|project\b/.test(lastUserText) ||
+            /\bانشئ|ابن|موقع|تطبيق\b/.test(lastUserText);
+          if (isBuildIntent) {
+            const projectId = thread!.id;
+            // Seed index.html quickly for live preview
+            const html = `<!doctype html><html><head><meta charset="utf-8"><title>Preview</title></head><body><pre>${lastUserText.replaceAll("<", "&lt;")}</pre></body></html>`;
+            Promise.resolve()
+              .then(() =>
+                fetch(
+                  `${process.env.NEXT_PUBLIC_BASE_URL ?? ""}/api/studio/files`,
+                  {
+                    method: "PUT",
+                    body: JSON.stringify({ path: "index.html", content: html }),
+                  },
+                ),
+              )
+              .then(() =>
+                fetch(
+                  `${process.env.NEXT_PUBLIC_BASE_URL ?? ""}/api/orchestrator/run`,
+                  {
+                    method: "POST",
+                    body: JSON.stringify({ prompt: lastUserText, projectId }),
+                  },
+                ).catch(() => undefined),
+              )
+              .catch(() => undefined);
+          }
+        } catch {}
       },
       onError: handleError,
       originalMessages: messages,
