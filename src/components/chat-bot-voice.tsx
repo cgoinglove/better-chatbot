@@ -55,6 +55,7 @@ import JsonView from "ui/json-view";
 import { isShortcutEvent, Shortcuts } from "lib/keyboard-shortcuts";
 import { useAgent } from "@/hooks/queries/use-agent";
 import { ChatMention } from "app-types/chat";
+import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 
 const prependTools: EnabledTools[] = [
   {
@@ -282,36 +283,57 @@ export function ChatBotVoice() {
                 userSelect: "text",
               }}
             >
-              <div className="flex items-center ">
+              {agent && (
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button
-                      variant={"secondary"}
-                      size={"icon"}
-                      onClick={() => setUseCompactView(!useCompactView)}
+                    <div
+                      style={agent.icon?.style}
+                      className="size-9 items-center justify-center flex rounded-lg ring ring-secondary"
                     >
-                      {useCompactView ? (
-                        <MessageSquareMoreIcon />
-                      ) : (
-                        <MessagesSquareIcon />
-                      )}
-                    </Button>
+                      <Avatar className="size-6">
+                        <AvatarImage src={agent.icon?.value} />
+                        <AvatarFallback>
+                          {agent.name.slice(0, 1)}
+                        </AvatarFallback>
+                      </Avatar>
+                    </div>
                   </TooltipTrigger>
-                  <TooltipContent>
-                    {useCompactView
-                      ? t("VoiceChat.compactDisplayMode")
-                      : t("VoiceChat.conversationDisplayMode")}
+                  <TooltipContent side="bottom" className="p-3 max-w-xs">
+                    <div className="space-y-2">
+                      <div className="font-semibold text-sm">{agent.name}</div>
+                      {agent.description && (
+                        <div className="text-xs text-muted-foreground leading-relaxed">
+                          {agent.description}
+                        </div>
+                      )}
+                    </div>
                   </TooltipContent>
                 </Tooltip>
-              </div>
-              <DrawerTitle className="flex items-center gap-2 w-full">
-                <EnabledToolsDropdown
-                  align="start"
-                  side="bottom"
-                  tools={tools}
-                />
+              )}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant={"secondary"}
+                    size={"icon"}
+                    onClick={() => setUseCompactView(!useCompactView)}
+                  >
+                    {useCompactView ? (
+                      <MessageSquareMoreIcon />
+                    ) : (
+                      <MessagesSquareIcon />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {useCompactView
+                    ? t("VoiceChat.compactDisplayMode")
+                    : t("VoiceChat.conversationDisplayMode")}
+                </TooltipContent>
+              </Tooltip>
 
-                <div className="flex-1" />
+              <EnabledToolsDropdown align="start" side="bottom" tools={tools} />
+
+              <DrawerTitle className="ml-auto">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant={"ghost"} size={"icon"}>
