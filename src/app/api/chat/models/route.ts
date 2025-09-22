@@ -14,7 +14,7 @@ export const GET = async () => {
     }
 
     // Get the base model info
-    const baseModelsInfo = customModelProvider.modelsInfo;
+    const baseModelsInfo = await customModelProvider.modelsInfo;
 
     // Enhance with user API key status
     const enhancedModelsInfo = baseModelsInfo.map((provider) => ({
@@ -33,8 +33,9 @@ export const GET = async () => {
   } catch (error) {
     console.error("Error fetching models:", error);
     // Fallback to original behavior
+    const baseModelsInfo = await customModelProvider.modelsInfo;
     return Response.json(
-      customModelProvider.modelsInfo.sort((a, b) => {
+      baseModelsInfo.sort((a, b) => {
         if (a.hasAPIKey && !b.hasAPIKey) return -1;
         if (!a.hasAPIKey && b.hasAPIKey) return 1;
         return 0;

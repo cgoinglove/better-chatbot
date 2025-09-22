@@ -30,7 +30,8 @@ type OpenRouterModelResp = {
 
 const fetchAllOpenRouterModels = cache(async () => {
   try {
-    if (!process.env.OPENROUTER_API_KEY) return {} as Record<string, LanguageModel>;
+    if (!process.env.OPENROUTER_API_KEY)
+      return {} as Record<string, LanguageModel>;
     const resp = await fetch("https://openrouter.ai/api/v1/models", {
       headers: {
         Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
@@ -42,7 +43,7 @@ const fetchAllOpenRouterModels = cache(async () => {
     const json = (await resp.json()) as { data?: OpenRouterModelResp[] };
     const models = json.data ?? [];
     const entries = Object.fromEntries(
-      models.map((m) => [m.id, openrouter(m.id)])
+      models.map((m) => [m.id, openrouter(m.id)]),
     );
     return entries as Record<string, LanguageModel>;
   } catch {
@@ -152,7 +153,6 @@ export const customModelProvider = {
     // This keeps API stable for existing callers.
     if (!model) return fallbackModel;
     // We cannot await here; try static first
-    // @ts-expect-error dynamic map may not be ready yet
     const maybeAllModels = (global as any).__ALL_MODELS_CACHE as
       | (typeof staticModels & Record<string, Record<string, LanguageModel>>)
       | undefined;
@@ -166,7 +166,6 @@ export const customModelProvider = {
 // Populate global cache once per process to support synchronous getModel lookups
 (async () => {
   try {
-    // @ts-expect-error attach cache on global
     (global as any).__ALL_MODELS_CACHE = await allModelsPromise;
   } catch {}
 })();
