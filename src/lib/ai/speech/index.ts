@@ -1,4 +1,5 @@
 import { UIMessage } from "ai";
+import { ChatMention } from "app-types/chat";
 
 export type UIMessageWithCompleted = UIMessage & { completed: boolean };
 
@@ -15,6 +16,13 @@ export interface VoiceChatSession {
   startListening: () => Promise<void>;
   stopListening: () => Promise<void>;
 }
+
+export type VoiceChatOptions = {
+  toolMentions?: ChatMention[];
+  agentId?: string;
+  model?: string;
+  voice?: string;
+};
 
 export type VoiceChatHook = (props?: {
   [key: string]: any;
@@ -34,6 +42,17 @@ export const DEFAULT_VOICE_TOOLS = [
         },
       },
       required: ["theme"],
+    },
+  },
+  {
+    type: "function",
+    name: "endConversation",
+    description:
+      "End the current voice conversation, similar to hanging up a call. This tool should be invoked when the user clearly expresses a desire to finish, exit, or end the dialogue.",
+    parameters: {
+      type: "object",
+      properties: {},
+      required: [],
     },
   },
 ];

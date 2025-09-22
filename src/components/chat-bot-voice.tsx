@@ -7,7 +7,7 @@ import {
   OPENAI_VOICE,
   useOpenAIVoiceChat as OpenAIVoiceChat,
 } from "lib/ai/speech/open-ai/use-voice-chat.openai";
-import { cn } from "lib/utils";
+import { cn, groupBy } from "lib/utils";
 import {
   CheckIcon,
   Loader,
@@ -46,18 +46,20 @@ import { OpenAIIcon } from "ui/openai-icon";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { ToolMessagePart } from "./message-parts";
 
-import { EnabledMcpToolsDropdown } from "./enabled-mcp-tools-dropdown";
+import { EnabledTools, EnabledToolsDropdown } from "./enabled-tools-dropdown";
 import { appStore } from "@/app/store";
 import { useShallow } from "zustand/shallow";
 import { useTranslations } from "next-intl";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "ui/dialog";
 import JsonView from "ui/json-view";
 import { isShortcutEvent, Shortcuts } from "lib/keyboard-shortcuts";
+import { useAgent } from "@/hooks/queries/use-agent";
+import { ChatMention } from "app-types/chat";
+import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 
-const prependTools = [
+const prependTools: EnabledTools[] = [
   {
-    id: "Browser",
-    name: "Browser",
+    groupName: "Browser",
     tools: DEFAULT_VOICE_TOOLS.map((tool) => ({
       name: tool.name,
       description: tool.description,
@@ -67,13 +69,58 @@ const prependTools = [
 
 export function ChatBotVoice() {
   const t = useTranslations("Chat");
-  const [appStoreMutate, voiceChat, model] = appStore(
-    useShallow((state) => [state.mutate, state.voiceChat, state.chatModel]),
+  const [
+    agentId,
+    appStoreMutate,
+    voiceChat,
+    model,
+    allowedMcpServers,
+    mcpList,
+  ] = appStore(
+    useShallow((state) => [
+      state.voiceChat.agentId,
+      state.mutate,
+      state.voiceChat,
+      state.chatModel,
+      state.allowedMcpServers,
+      state.mcpList,
+    ]),
   );
+
+  const { agent } = useAgent(agentId);
 
   const [isClosing, setIsClosing] = useState(false);
   const startAudio = useRef<HTMLAudioElement>(null);
   const [useCompactView, setUseCompactView] = useState(true);
+
+  const toolMentions = useMemo<ChatMention[]>(() => {
+    if (!agentId) {
+      if (!allowedMcpServers) return [];
+      return mcpList
+        .filter((v) => {
+          return (
+            v.id in allowedMcpServers && allowedMcpServers[v.id]?.tools?.length
+          );
+        })
+        .flatMap((v) => {
+          const tools = allowedMcpServers[v.id].tools;
+          return tools.map((tool) => {
+            const toolInfo = v.toolInfo.find((t) => t.name === tool);
+            const mention: ChatMention = {
+              type: "mcpTool",
+              serverName: v.name,
+              serverId: v.id,
+              name: tool,
+              description: toolInfo?.description ?? "",
+            };
+            return mention;
+          });
+        });
+    }
+    return (
+      agent?.instructions.mentions?.filter((v) => v.type === "mcpTool") ?? []
+    );
+  }, [agentId, agent, mcpList, allowedMcpServers]);
 
   const {
     isListening,
@@ -87,7 +134,11 @@ export function ChatBotVoice() {
     startListening,
     stop,
     stopListening,
-  } = OpenAIVoiceChat(voiceChat.options.providerOptions);
+  } = OpenAIVoiceChat({
+    toolMentions,
+    agentId,
+    ...voiceChat.options.providerOptions,
+  });
 
   const startWithSound = useCallback(() => {
     if (!startAudio.current) {
@@ -157,6 +208,27 @@ export function ChatBotVoice() {
     useCompactView,
   ]);
 
+  const mcpTools = useMemo<EnabledTools[]>(() => {
+    const mcpMentions = toolMentions.filter(
+      (v) => v.type === "mcpTool",
+    ) as Extract<ChatMention, { type: "mcpTool" }>[];
+
+    const groupByServer = groupBy(mcpMentions, "serverName");
+    return Object.entries(groupByServer).map(([serverName, tools]) => {
+      return {
+        groupName: serverName,
+        tools: tools.map((v) => ({
+          name: v.name,
+          description: v.description,
+        })),
+      };
+    });
+  }, [toolMentions]);
+
+  const tools = useMemo<EnabledTools[]>(() => {
+    return [...prependTools, ...mcpTools];
+  }, [prependTools, mcpTools]);
+
   useEffect(() => {
     return () => {
       if (isActive) {
@@ -167,7 +239,7 @@ export function ChatBotVoice() {
 
   useEffect(() => {
     if (voiceChat.isOpen) {
-      startWithSound();
+      // startWithSound();
     } else if (isActive) {
       stop();
     }
@@ -211,36 +283,57 @@ export function ChatBotVoice() {
                 userSelect: "text",
               }}
             >
-              <div className="flex items-center ">
+              {agent && (
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button
-                      variant={"secondary"}
-                      size={"icon"}
-                      onClick={() => setUseCompactView(!useCompactView)}
+                    <div
+                      style={agent.icon?.style}
+                      className="size-9 items-center justify-center flex rounded-lg ring ring-secondary"
                     >
-                      {useCompactView ? (
-                        <MessageSquareMoreIcon />
-                      ) : (
-                        <MessagesSquareIcon />
-                      )}
-                    </Button>
+                      <Avatar className="size-6">
+                        <AvatarImage src={agent.icon?.value} />
+                        <AvatarFallback>
+                          {agent.name.slice(0, 1)}
+                        </AvatarFallback>
+                      </Avatar>
+                    </div>
                   </TooltipTrigger>
-                  <TooltipContent>
-                    {useCompactView
-                      ? t("VoiceChat.compactDisplayMode")
-                      : t("VoiceChat.conversationDisplayMode")}
+                  <TooltipContent side="bottom" className="p-3 max-w-xs">
+                    <div className="space-y-2">
+                      <div className="font-semibold text-sm">{agent.name}</div>
+                      {agent.description && (
+                        <div className="text-xs text-muted-foreground leading-relaxed">
+                          {agent.description}
+                        </div>
+                      )}
+                    </div>
                   </TooltipContent>
                 </Tooltip>
-              </div>
-              <DrawerTitle className="flex items-center gap-2 w-full">
-                <EnabledMcpToolsDropdown
-                  align="start"
-                  side="bottom"
-                  prependTools={prependTools}
-                />
+              )}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant={"secondary"}
+                    size={"icon"}
+                    onClick={() => setUseCompactView(!useCompactView)}
+                  >
+                    {useCompactView ? (
+                      <MessageSquareMoreIcon />
+                    ) : (
+                      <MessagesSquareIcon />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {useCompactView
+                    ? t("VoiceChat.compactDisplayMode")
+                    : t("VoiceChat.conversationDisplayMode")}
+                </TooltipContent>
+              </Tooltip>
 
-                <div className="flex-1" />
+              <EnabledToolsDropdown align="start" side="bottom" tools={tools} />
+
+              <DrawerTitle className="ml-auto">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant={"ghost"} size={"icon"}>

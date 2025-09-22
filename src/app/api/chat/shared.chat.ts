@@ -51,7 +51,7 @@ export function filterMCPToolsByMentions(
   }
   const toolMentions = mentions.filter(
     (mention) => mention.type == "mcpTool" || mention.type == "mcpServer",
-  );
+  ) as Extract<ChatMention, { type: "mcpTool" | "mcpServer" }>[];
 
   const metionsByServer = toolMentions.reduce(
     (acc, mention) => {
@@ -415,7 +415,10 @@ export const loadWorkFlowTools = (opt: {
       ? workflowRepository.selectToolByIds(
           opt?.mentions
             ?.filter((m) => m.type == "workflow")
-            .map((v) => v.workflowId),
+            .map(
+              (v) =>
+                (v as Extract<ChatMention, { type: "workflow" }>).workflowId,
+            ),
         )
       : [],
   )
