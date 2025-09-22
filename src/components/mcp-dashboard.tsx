@@ -49,10 +49,32 @@ export default function MCPDashboard({ message }: { message?: string }) {
     });
   }, [mcpList]);
 
-  const displayIcons = useMemo(() => {
-    const shuffled = [...RECOMMENDED_MCPS].sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, 5);
+  const [presetIcons, setPresetIcons] = useState<typeof RECOMMENDED_MCPS>([]);
+
+  useEffect(() => {
+    fetch("/mcp-presets.json")
+      .then((r) => r.json())
+      .then((data) => {
+        try {
+          const normalized = (data || []).map((p: any) => ({
+            name: p.name,
+            label: p.label ?? p.name,
+            config: p.config,
+            icon: MCPIcon,
+          }));
+          setPresetIcons(normalized);
+        } catch {
+          setPresetIcons([]);
+        }
+      })
+      .catch(() => setPresetIcons([]));
   }, []);
+
+  const displayIcons = useMemo(() => {
+    const list = presetIcons.length ? presetIcons : RECOMMENDED_MCPS;
+    const shuffled = [...list].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, 5);
+  }, [presetIcons]);
 
   // Delay showing validating spinner until validating persists for 500ms
   const [showValidating, setShowValidating] = useState(false);
