@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
       model: z.string().optional(),
       voice: z.string().default("alloy"),
       agentId: z.string().optional(),
-      allowedMcpServers: z.record(z.any()).default({}),
+      allowedMcpServers: z.record(z.string(), z.any()).default({}),
     });
     const { voice, allowedMcpServers, agentId } = BodySchema.parse(
       await request.json(),
