@@ -12,6 +12,7 @@ import { StripeIcon } from "ui/stripe-icon";
 import { CanvaIcon } from "ui/canva-icon";
 import { PaypalIcon } from "ui/paypal-icon";
 import { Button } from "ui/button";
+import { useEffect, useState } from "react";
 import { AtlassianIcon } from "ui/atlassian-icon";
 import { AsanaIcon } from "ui/asana-icon";
 import { GithubIcon } from "ui/github-icon";
@@ -106,6 +107,26 @@ export const RECOMMENDED_MCPS = [
 
 export function MCPOverview() {
   const t = useTranslations("MCP");
+  const [presets, setPresets] = useState<typeof RECOMMENDED_MCPS>([]);
+
+  useEffect(() => {
+    fetch("/mcp-presets.json")
+      .then((r) => r.json())
+      .then((data) => {
+        try {
+          const normalized = (data || []).map((p: any) => ({
+            name: p.name,
+            label: p.label ?? p.name,
+            config: p.config,
+            icon: MCPIcon,
+          }));
+          setPresets(normalized);
+        } catch {
+          setPresets([]);
+        }
+      })
+      .catch(() => setPresets([]));
+  }, []);
 
   const handleMcpClick = (
     e: React.MouseEvent,
@@ -143,7 +164,7 @@ export function MCPOverview() {
           </div>
         </div>
         <div className="flex gap-2 flex-wrap">
-          {RECOMMENDED_MCPS.map((mcp) => (
+          {(presets.length ? presets : RECOMMENDED_MCPS).map((mcp) => (
             <Button
               key={mcp.name}
               variant={"secondary"}

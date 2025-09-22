@@ -1,0 +1,20 @@
+[
+  {
+    "name": "playwright",
+    "label": "Playwright (npx)",
+    "config": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest"]
+    }
+  },
+  {
+    "name": "openrouter-tools",
+    "label": "OpenRouter Tools (requires API key)",
+    "config": {
+      "url": "https://openrouter.ai/api/v1/mcp",
+      "headers": {
+        "Authorization": "Bearer ${env:OPENROUTER_API_KEY}"
+      }
+    }
+  }
+]

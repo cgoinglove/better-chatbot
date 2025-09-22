@@ -12,6 +12,11 @@ import {
   Loader,
   Search,
   WandSparkles,
+  TestTube,
+  Save,
+  X,
+  Trash2,
+  Play,
 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -48,6 +53,7 @@ import {
   DialogTrigger,
 } from "ui/dialog";
 import { Badge } from "ui/badge";
+import { Switch } from "ui/switch";
 import { handleErrorWithToast } from "ui/shared-toast";
 import { generateExampleToolSchemaAction } from "@/app/api/chat/actions";
 import { appStore } from "@/app/store";
@@ -82,6 +88,13 @@ type ToolInfo = {
   name: string;
   description: string;
   inputSchema?: any;
+};
+
+type SavedTestResult = {
+  input: string;
+  result: CallResult;
+  timestamp: number;
+  toolName: string;
 };
 
 type CallResult = {
@@ -184,7 +197,7 @@ const SchemaProperty = ({
             <SchemaProperty
               key={key}
               name={key}
-              schema={value}
+              schema={value as SchemaProperty}
               level={level + 1}
             />
           ))}
@@ -394,10 +407,38 @@ export default function Page() {
   const [callResult, setCallResult] = useState<CallResult | null>(null);
   const [isCallLoading, setIsCallLoading] = useState(false);
   const [showInputSchema, setShowInputSchema] = useState(false);
+  
+  // Test mode state
+  const [isTestMode, setIsTestMode] = useState(false);
+  const [savedTestResults, setSavedTestResults] = useState<Record<string, SavedTestResult>>({});
+  const [currentTestInput, setCurrentTestInput] = useState("");
+  const [testModeEnabled, setTestModeEnabled] = useState(false);
 
   const { data: client, isLoading } = useSWR(`/mcp/${id}`, () =>
     selectMcpClientAction(id as string),
   );
+
+  // Persist saved tests per MCP id in localStorage
+  useEffect(() => {
+    try {
+      const key = `mcp_test_results_${id}`;
+      const raw = typeof window !== "undefined" ? localStorage.getItem(key) : null;
+      if (raw) {
+        const parsed = JSON.parse(raw) as Record<string, SavedTestResult>;
+        setSavedTestResults(parsed || {});
+      }
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
+
+  useEffect(() => {
+    try {
+      const key = `mcp_test_results_${id}`;
+      if (typeof window !== "undefined") {
+        localStorage.setItem(key, JSON.stringify(savedTestResults));
+      }
+    } catch {}
+  }, [id, savedTestResults]);
 
   const filteredTools = useMemo(() => {
     const trimmedQuery = searchQuery.trim().toLowerCase();
@@ -469,6 +510,96 @@ export default function Page() {
     }
   };
 
+  const handleTestCall = async () => {
+    if (!selectedTool) return;
+
+    const parsedInput = safeJSONParse(jsonInput || "{}");
+    if (!parsedInput.success)
+      return handleErrorWithToast(parsedInput.error as Error);
+
+    setIsCallLoading(true);
+    setCurrentTestInput(jsonInput);
+    setTestModeEnabled(true);
+    try {
+      const result = await callMcpToolAction(
+        id,
+        selectedTool.name,
+        parsedInput.value,
+      );
+
+      const testResult = {
+        success: true,
+        data: result,
+      };
+      setCallResult(testResult);
+      setIsTestMode(true);
+    } catch (error) {
+      const testResult = {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+      setCallResult(testResult);
+      setIsTestMode(true);
+    } finally {
+      setIsCallLoading(false);
+    }
+  };
+
+  const handleSaveTest = () => {
+    if (!selectedTool || !callResult) return;
+    
+    const testKey = `${selectedTool.name}_${Date.now()}`;
+    setSavedTestResults(prev => ({
+      ...prev,
+      [testKey]: {
+        input: currentTestInput,
+        result: callResult,
+        timestamp: Date.now(),
+        toolName: selectedTool.name
+      }
+    }));
+    setIsTestMode(false);
+    setCallResult(null);
+    setCurrentTestInput("");
+  };
+
+  const handleCancelTest = () => {
+    setIsTestMode(false);
+    setCallResult(null);
+    setCurrentTestInput("");
+    setTestModeEnabled(false);
+  };
+
+  const handleLoadSavedTest = (testKey: string) => {
+    const savedTest = savedTestResults[testKey];
+    if (savedTest) {
+      setJsonInput(savedTest.input);
+      setCallResult(savedTest.result);
+      setIsTestMode(false);
+      setTestModeEnabled(true);
+    }
+  };
+
+  const handleDeleteSavedTest = (testKey: string) => {
+    setSavedTestResults(prev => {
+      const newResults = { ...prev };
+      delete newResults[testKey];
+      return newResults;
+    });
+  };
+
+  const handleClearSavedTestsForTool = () => {
+    if (!selectedTool) return;
+    const toolPrefix = `${selectedTool.name}`;
+    setSavedTestResults(prev => {
+      const next: Record<string, SavedTestResult> = {};
+      Object.entries(prev).forEach(([key, value]) => {
+        if (!key.startsWith(toolPrefix)) next[key] = value as SavedTestResult;
+      });
+      return next;
+    });
+  };
+
   // Skeleton loader for tool list
   const renderSkeletons = () => (
     <>
@@ -492,6 +623,9 @@ export default function Page() {
     setJsonInput("");
     setShowInputSchema(false);
     setShowFullDescription(false);
+    setIsTestMode(false);
+    setCurrentTestInput("");
+    setTestModeEnabled(false);
   }, [selectedToolIndex]);
 
   useEffect(() => {
@@ -511,9 +645,22 @@ export default function Page() {
           {t("Common.back")}
         </Link>
         <header>
-          <h2 className="text-3xl font-semibold my-2">
-            {decodeURIComponent(client?.name ?? "")}
-          </h2>
+          <div className="flex items-center justify-between my-2">
+            <h2 className="text-3xl font-semibold">
+              {decodeURIComponent(client?.name ?? "")}
+            </h2>
+            <div className="flex items-center gap-2">
+              <TestTube className="size-4 text-muted-foreground" />
+              <Label htmlFor="test-mode" className="text-sm font-medium">
+                Test Mode
+              </Label>
+              <Switch
+                id="test-mode"
+                checked={testModeEnabled}
+                onCheckedChange={setTestModeEnabled}
+              />
+            </div>
+          </div>
         </header>
       </div>
 
@@ -626,7 +773,7 @@ export default function Page() {
                                     <SchemaProperty
                                       key={key}
                                       name={key}
-                                      schema={value}
+                                      schema={value as SchemaProperty}
                                     />
                                   ),
                                 )}
@@ -679,18 +826,72 @@ export default function Page() {
                         </div>
                       </div>
 
-                      {/* Call Button */}
-                      <div>
-                        <Button
-                          onClick={handleToolCall}
-                          disabled={!!jsonError || isCallLoading}
-                          className="w-full"
-                        >
-                          {isCallLoading && (
-                            <Loader className="size-4 animate-spin mr-2" />
-                          )}
-                          {t("MCP.callTool")}
-                        </Button>
+                      {/* Call and Test Buttons */}
+                      <div className="space-y-3">
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={handleToolCall}
+                            disabled={!!jsonError || isCallLoading || isTestMode || testModeEnabled}
+                            className="flex-1"
+                          >
+                            {isCallLoading && !isTestMode && (
+                              <Loader className="size-4 animate-spin mr-2" />
+                            )}
+                            <Play className="size-4 mr-2" />
+                            {t("MCP.callTool")}
+                          </Button>
+                          <Button
+                            onClick={handleTestCall}
+                            disabled={!!jsonError || isCallLoading || isTestMode || !testModeEnabled}
+                            variant={testModeEnabled ? "default" : "outline"}
+                            className="flex-1"
+                          >
+                            {isCallLoading && isTestMode && (
+                              <Loader className="size-4 animate-spin mr-2" />
+                            )}
+                            <TestTube className="size-4 mr-2" />
+                            Test
+                          </Button>
+                        </div>
+                        
+                        {/* Test Mode Status */}
+                        {testModeEnabled && (
+                          <div className="flex items-center gap-2 p-2 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-md">
+                            <TestTube className="size-4 text-blue-600 dark:text-blue-400" />
+                            <span className="text-sm text-blue-700 dark:text-blue-300">
+                              Test mode is enabled. Use the Test button to run tests and save results.
+                            </span>
+                          </div>
+                        )}
+                        
+                        {/* Test Mode Actions */}
+                        {isTestMode && (
+                          <div className="flex gap-2 p-3 bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-800 rounded-md">
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-orange-800 dark:text-orange-200 mb-2">
+                                Test completed! Save this test result or cancel to discard.
+                              </p>
+                              <div className="flex gap-2">
+                                <Button
+                                  onClick={handleSaveTest}
+                                  className="flex-1"
+                                  variant="default"
+                                >
+                                  <Save className="size-4 mr-2" />
+                                  Save Test
+                                </Button>
+                                <Button
+                                  onClick={handleCancelTest}
+                                  className="flex-1"
+                                  variant="outline"
+                                >
+                                  <X className="size-4 mr-2" />
+                                  Cancel
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                       {/* Results Display */}
@@ -721,6 +922,77 @@ export default function Page() {
                               </AlertDescription>
                             </Alert>
                           )}
+                        </div>
+                      )}
+
+                      {/* Saved Tests */}
+                      {Object.keys(savedTestResults).length > 0 && (
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <h5 className="text-sm font-medium flex items-center gap-2">
+                              <TestTube className="size-4" />
+                              Saved Tests ({Object.entries(savedTestResults).filter(([key]) => key.startsWith(selectedTool?.name || "")).length})
+                            </h5>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 px-2 text-xs"
+                                onClick={handleClearSavedTestsForTool}
+                              >
+                                Clear for this tool
+                              </Button>
+                            </div>
+                          </div>
+                          <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                            {Object.entries(savedTestResults)
+                              .filter(([key]) => key.startsWith(selectedTool?.name || ""))
+                              .sort(([,a], [,b]) => (b as SavedTestResult).timestamp - (a as SavedTestResult).timestamp)
+                              .map(([key, test]) => {
+                                const testResult = test as SavedTestResult;
+                                return (
+                                <div
+                                  key={key}
+                                  className="border border-input rounded-md p-3 hover:bg-secondary/50 transition-colors group"
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <div 
+                                      className="flex-1 min-w-0 cursor-pointer"
+                                      onClick={() => handleLoadSavedTest(key)}
+                                    >
+                                      <p className="text-xs font-medium truncate">
+                                        {new Date(testResult.timestamp).toLocaleString()}
+                                      </p>
+                                      <p className="text-xs text-muted-foreground truncate">
+                                        {testResult.input.length > 50 
+                                          ? `${testResult.input.substring(0, 50)}...` 
+                                          : testResult.input}
+                                      </p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <Badge 
+                                        variant={testResult.result.success ? "default" : "destructive"}
+                                        className="text-[10px]"
+                                      >
+                                        {testResult.result.success ? "Success" : "Error"}
+                                      </Badge>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleDeleteSavedTest(key);
+                                        }}
+                                      >
+                                        <Trash2 className="size-3" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </div>
+                                );
+                              })}
+                          </div>
                         </div>
                       )}
                     </div>
