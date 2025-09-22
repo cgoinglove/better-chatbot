@@ -150,8 +150,7 @@ export const buildSpeechSystemPrompt = (
 
   // Agent-specific instructions as primary core
   if (agent?.instructions?.systemPrompt) {
-    prompt += `
-    # Core Instructions
+    prompt += `# Core Instructions
     <core_capabilities>
     ${agent.instructions.systemPrompt}
     </core_capabilities>`;
