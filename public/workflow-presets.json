@@ -1,0 +1,26 @@
+[
+  {
+    "id": "codegen-webapp",
+    "name": "Codegen Web App",
+    "description": "Generate a starter full-stack Next.js app from a prompt, run tests, and prepare for deploy.",
+    "nodes": [
+      { "id": "start", "type": "start", "label": "Start" },
+      { "id": "plan", "type": "ai", "label": "Plan from Prompt" },
+      { "id": "scaffold", "type": "ai", "label": "Scaffold Project" },
+      { "id": "test", "type": "exec", "label": "Run Tests" },
+      { "id": "fix", "type": "ai", "label": "Fix Failures" },
+      { "id": "end", "type": "end", "label": "End" }
+    ],
+    "edges": [
+      { "from": "start", "to": "plan" },
+      { "from": "plan", "to": "scaffold" },
+      { "from": "scaffold", "to": "test" },
+      { "from": "test", "to": "fix", "condition": "onFailure" },
+      { "from": "fix", "to": "test" },
+      { "from": "test", "to": "end", "condition": "onSuccess" }
+    ],
+    "inputs": {
+      "prompt": "A simple CRUD web app for tasks with auth"
+    }
+  }
+]

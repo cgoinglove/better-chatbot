@@ -31,6 +31,7 @@ import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "ui/dialog";
 import { WorkflowGreeting } from "@/components/workflow/workflow-greeting";
 import { notify } from "lib/notify";
 import { useState } from "react";
+import Link from "next/link";
 
 const createWithExample = async (exampleWorkflow: {
   workflow: Partial<DBWorkflow>;
@@ -176,6 +177,11 @@ export default function WorkflowPage() {
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => createExample(GetWeather())}>
               🌤️ {t("Workflow.example.getWeather")}
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/workflow?importPreset=true">
+                📦 Import from Presets
+              </Link>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
