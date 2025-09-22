@@ -18,6 +18,7 @@ import { notify } from "lib/notify";
 import { useState } from "react";
 import { handleErrorWithToast } from "ui/shared-toast";
 import { safe } from "ts-safe";
+import { DeployTargetSelector } from "@/components/deploy-target-selector";
 
 interface AgentsListProps {
   initialMyAgents: AgentSummary[];
@@ -113,12 +114,15 @@ export function AgentsList({
         <h1 className="text-2xl font-bold" data-testid="agents-title">
           {t("Layout.agents")}
         </h1>
-        <Link href="/agent/new">
-          <Button variant="ghost">
-            <Plus />
-            {t("Agent.newAgent")}
-          </Button>
-        </Link>
+        <div className="flex items-center gap-2">
+          <DeployTargetSelector />
+          <Link href="/agent/new">
+            <Button variant="ghost">
+              <Plus />
+              {t("Agent.newAgent")}
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* My Agents Section */}
