@@ -418,6 +418,28 @@ export default function Page() {
     selectMcpClientAction(id as string),
   );
 
+  // Persist saved tests per MCP id in localStorage
+  useEffect(() => {
+    try {
+      const key = `mcp_test_results_${id}`;
+      const raw = typeof window !== "undefined" ? localStorage.getItem(key) : null;
+      if (raw) {
+        const parsed = JSON.parse(raw) as Record<string, SavedTestResult>;
+        setSavedTestResults(parsed || {});
+      }
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
+
+  useEffect(() => {
+    try {
+      const key = `mcp_test_results_${id}`;
+      if (typeof window !== "undefined") {
+        localStorage.setItem(key, JSON.stringify(savedTestResults));
+      }
+    } catch {}
+  }, [id, savedTestResults]);
+
   const filteredTools = useMemo(() => {
     const trimmedQuery = searchQuery.trim().toLowerCase();
     return (
@@ -563,6 +585,18 @@ export default function Page() {
       const newResults = { ...prev };
       delete newResults[testKey];
       return newResults;
+    });
+  };
+
+  const handleClearSavedTestsForTool = () => {
+    if (!selectedTool) return;
+    const toolPrefix = `${selectedTool.name}`;
+    setSavedTestResults(prev => {
+      const next: Record<string, SavedTestResult> = {};
+      Object.entries(prev).forEach(([key, value]) => {
+        if (!key.startsWith(toolPrefix)) next[key] = value as SavedTestResult;
+      });
+      return next;
     });
   };
 
@@ -899,6 +933,16 @@ export default function Page() {
                               <TestTube className="size-4" />
                               Saved Tests ({Object.entries(savedTestResults).filter(([key]) => key.startsWith(selectedTool?.name || "")).length})
                             </h5>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 px-2 text-xs"
+                                onClick={handleClearSavedTestsForTool}
+                              >
+                                Clear for this tool
+                              </Button>
+                            </div>
                           </div>
                           <div className="space-y-2 max-h-[200px] overflow-y-auto">
                             {Object.entries(savedTestResults)
