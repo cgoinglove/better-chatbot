@@ -1,4 +1,5 @@
 import { archiveRepository } from "lib/db/repository";
+export const runtime = "nodejs";
 import { getSession } from "auth/server";
 import { z } from "zod";
 import { ArchiveCreateSchema } from "app-types/archive";

@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+export const runtime = "nodejs";
 import { getSession } from "auth/server";
 import {
   UIMessage,

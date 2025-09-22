@@ -1,3 +1,4 @@
+export const runtime = "nodejs";
 import { auth } from "auth/server";
 import { toNextJsHandler } from "better-auth/next-js";
 

@@ -1,6 +1,7 @@
+export const runtime = "nodejs";
 import { NextRequest } from "next/server";
 import { getSession } from "auth/server";
-import { AllowedMCPServer, VercelAIMcpTool } from "app-types/mcp";
+import { VercelAIMcpTool } from "app-types/mcp";
 import { userRepository } from "lib/db/repository";
 import {
   filterMcpServerCustomizations,

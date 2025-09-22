@@ -1,3 +1,4 @@
+export const runtime = "nodejs";
 import { smoothStream, streamText } from "ai";
 
 import { customModelProvider } from "lib/ai/models";

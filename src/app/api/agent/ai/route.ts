@@ -5,6 +5,7 @@ import { buildAgentGenerationPrompt } from "lib/ai/prompts";
 import globalLogger from "logger";
 import { ChatModel } from "app-types/chat";
 
+export const runtime = "nodejs";
 import { getSession } from "auth/server";
 import { colorize } from "consola/utils";
 import { AgentGenerateSchema } from "app-types/agent";

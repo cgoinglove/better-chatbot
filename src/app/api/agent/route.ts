@@ -1,4 +1,5 @@
 import { agentRepository } from "lib/db/repository";
+export const runtime = "nodejs";
 import { getSession } from "auth/server";
 import { z } from "zod";
 import { serverCache } from "lib/cache";

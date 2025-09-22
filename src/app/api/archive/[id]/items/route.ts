@@ -1,3 +1,4 @@
+export const runtime = "nodejs";
 import { archiveRepository } from "lib/db/repository";
 import { getSession } from "auth/server";
 import { z } from "zod";
@@ -7,9 +8,10 @@ const AddItemSchema = z.object({
 });
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  void request;
   const session = await getSession();
 
   if (!session?.user.id) {

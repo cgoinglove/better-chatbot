@@ -1,12 +1,14 @@
+export const runtime = "nodejs";
 import { archiveRepository } from "lib/db/repository";
 import { getSession } from "auth/server";
 import { z } from "zod";
 import { ArchiveUpdateSchema } from "app-types/archive";
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  void request;
   const session = await getSession();
 
   if (!session?.user.id) {
@@ -87,9 +89,10 @@ export async function PUT(
 }
 
 export async function DELETE(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  void request;
   const session = await getSession();
 
   if (!session?.user.id) {

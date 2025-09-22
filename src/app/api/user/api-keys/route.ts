@@ -1,3 +1,4 @@
+export const runtime = "nodejs";
 import { getSession } from "auth/server";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";

@@ -1,3 +1,4 @@
+export const runtime = "nodejs";
 import { getSession } from "auth/server";
 import { McpServerSchema } from "lib/db/pg/schema.pg";
 import { NextResponse } from "next/server";

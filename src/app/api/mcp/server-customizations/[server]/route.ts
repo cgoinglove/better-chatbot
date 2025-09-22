@@ -1,3 +1,4 @@
+export const runtime = "nodejs";
 import { McpServerCustomizationZodSchema } from "app-types/mcp";
 import { getSession } from "auth/server";
 import { serverCache } from "lib/cache";

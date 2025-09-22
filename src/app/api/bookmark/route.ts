@@ -1,3 +1,4 @@
+export const runtime = "nodejs";
 import { getSession } from "auth/server";
 import { bookmarkRepository } from "lib/db/repository";
 import { z } from "zod";

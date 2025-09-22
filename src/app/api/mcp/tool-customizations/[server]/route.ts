@@ -1,3 +1,4 @@
+export const runtime = "nodejs";
 import { getSession } from "auth/server";
 import { mcpMcpToolCustomizationRepository } from "lib/db/repository";
 

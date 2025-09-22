@@ -17,7 +17,7 @@
     "experimentalDecorators": true,
     "noUnusedLocals": true,
     "strictPropertyInitialization": false,
-    "noUnusedParameters": false,
+    "noUnusedParameters": true,
     "noImplicitAny": false,
     "plugins": [
       {

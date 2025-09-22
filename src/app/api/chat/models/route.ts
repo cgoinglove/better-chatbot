@@ -1,3 +1,4 @@
+export const runtime = "nodejs";
 import { customModelProvider } from "lib/ai/models";
 import { getSession } from "auth/server";
 
