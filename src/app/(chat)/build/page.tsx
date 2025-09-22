@@ -25,6 +25,7 @@ export default function BuildFromPromptPage() {
   const [running, setRunning] = useState(false);
   const [logs, setLogs] = useState<string>("");
   const [useOrchestrator, setUseOrchestrator] = useState(false);
+  const [projectId, setProjectId] = useState("");
   const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
@@ -47,7 +48,7 @@ export default function BuildFromPromptPage() {
       if (useOrchestrator) {
         const res = await fetch("/api/orchestrator/run", {
           method: "POST",
-          body: JSON.stringify({ prompt }),
+          body: JSON.stringify({ prompt, projectId: projectId || "default" }),
           signal: abortRef.current.signal,
         });
         if (!res.ok || !res.body) throw new Error("Failed to run orchestrator");
@@ -133,6 +134,14 @@ export default function BuildFromPromptPage() {
                 placeholder="Describe what to build..."
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2 md:col-span-1">
+              <Label>Project ID</Label>
+              <Input
+                placeholder="my-project"
+                value={projectId}
+                onChange={(e) => setProjectId(e.target.value)}
               />
             </div>
           </div>
