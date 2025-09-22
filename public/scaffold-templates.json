@@ -1,0 +1,6 @@
+[
+  { "id": "nextjs", "name": "Next.js (TypeScript)", "stack": "node" },
+  { "id": "express", "name": "Express (TypeScript)", "stack": "node" },
+  { "id": "fastapi", "name": "FastAPI (Python)", "stack": "python" },
+  { "id": "flutter", "name": "Flutter (Dart)", "stack": "dart" }
+]
