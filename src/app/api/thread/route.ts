@@ -1,3 +1,4 @@
+export const runtime = "nodejs";
 import { getSession } from "auth/server";
 import { chatRepository } from "lib/db/repository";
 

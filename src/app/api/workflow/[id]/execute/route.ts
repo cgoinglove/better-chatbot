@@ -1,3 +1,4 @@
+export const runtime = "nodejs";
 import { getSession } from "auth/server";
 import { createWorkflowExecutor } from "lib/ai/workflow/executor/workflow-executor";
 import { workflowRepository } from "lib/db/repository";

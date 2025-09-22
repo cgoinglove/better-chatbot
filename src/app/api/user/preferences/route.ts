@@ -1,3 +1,4 @@
+export const runtime = "nodejs";
 import { getSession } from "auth/server";
 import { UserPreferencesZodSchema } from "app-types/user";
 import { userRepository } from "lib/db/repository";

@@ -1,4 +1,5 @@
 import { getSession } from "auth/server";
+export const runtime = "nodejs";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { decrypt } from "lib/encryption";

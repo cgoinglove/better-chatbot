@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+export const runtime = "nodejs";
 import { spawn } from "node:child_process";
 
 export const POST = async (req: NextRequest) => {

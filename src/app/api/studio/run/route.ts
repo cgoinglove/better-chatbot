@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+export const runtime = "nodejs";
 import { getSession } from "auth/server";
 import { getWorkspacePath } from "lib/studio/workspace";
 import { spawn } from "node:child_process";
