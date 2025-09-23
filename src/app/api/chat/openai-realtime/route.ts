@@ -1,17 +1,17 @@
 import { NextRequest } from "next/server";
 import { getSession } from "auth/server";
-import { AllowedMCPServer, VercelAIMcpTool } from "app-types/mcp";
+import { VercelAIMcpTool } from "app-types/mcp";
 import { userRepository } from "lib/db/repository";
 import {
   filterMcpServerCustomizations,
-  filterMCPToolsByAllowedMCPServers,
+  loadMcpTools,
   mergeSystemPrompt,
 } from "../shared.chat";
 import {
   buildMcpServerCustomizationsSystemPrompt,
   buildSpeechSystemPrompt,
 } from "lib/ai/prompts";
-import { mcpClientsManager } from "lib/ai/mcp/mcp-manager";
+
 import { safe } from "ts-safe";
 import { DEFAULT_VOICE_TOOLS } from "lib/ai/speech";
 import {
@@ -20,6 +20,7 @@ import {
 } from "../actions";
 import globalLogger from "lib/logger";
 import { colorize } from "consola/utils";
+import { ChatMention } from "app-types/chat";
 
 const logger = globalLogger.withDefaults({
   message: colorize("blackBright", `OpenAI Realtime API: `),
@@ -42,24 +43,20 @@ export async function POST(request: NextRequest) {
       return new Response("Unauthorized", { status: 401 });
     }
 
-    const { voice, allowedMcpServers, agentId } = (await request.json()) as {
+    const { voice, mentions, agentId } = (await request.json()) as {
       model: string;
       voice: string;
       agentId?: string;
-      allowedMcpServers: Record<string, AllowedMCPServer>;
+      mentions: ChatMention[];
     };
-
-    const mcpTools = await mcpClientsManager.tools();
 
     const agent = await rememberAgentAction(agentId, session.user.id);
 
-    agent && logger.info(`Agent: ${agent.name}`);
+    agentId && logger.info(`[${agentId}] Agent: ${agent?.name}`);
 
-    const allowedMcpTools = safe(mcpTools)
-      .map((tools) => {
-        return filterMCPToolsByAllowedMCPServers(tools, allowedMcpServers);
-      })
-      .orElse(undefined);
+    const enabledMentions = agent ? agent.instructions.mentions : mentions;
+
+    const allowedMcpTools = await loadMcpTools({ mentions: enabledMentions });
 
     const toolNames = Object.keys(allowedMcpTools ?? {});
 

@@ -4,6 +4,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import {
   DEFAULT_VOICE_TOOLS,
   UIMessageWithCompleted,
+  VoiceChatOptions,
   VoiceChatSession,
 } from "..";
 import { generateUUID } from "lib/utils";
@@ -13,11 +14,10 @@ import {
   OpenAIRealtimeSession,
 } from "./openai-realtime-event";
 
-import { appStore } from "@/app/store";
-import { useShallow } from "zustand/shallow";
 import { useTheme } from "next-themes";
 import { extractMCPToolId } from "lib/ai/mcp/mcp-tool-id";
 import { callMcpToolByServerNameAction } from "@/app/api/mcp/actions";
+import { appStore } from "@/app/store";
 
 export const OPENAI_VOICE = {
   Alloy: "alloy",
@@ -29,11 +29,6 @@ export const OPENAI_VOICE = {
   Coral: "coral",
   Ash: "ash",
 };
-
-interface UseOpenAIVoiceChatProps {
-  model?: string;
-  voice?: string;
-}
 
 type Content =
   | {
@@ -81,19 +76,9 @@ const createUIMessage = (m: {
   };
 };
 
-export function useOpenAIVoiceChat(
-  props?: UseOpenAIVoiceChatProps,
-): VoiceChatSession {
+export function useOpenAIVoiceChat(props?: VoiceChatOptions): VoiceChatSession {
   const { model = "gpt-4o-realtime-preview", voice = OPENAI_VOICE.Ash } =
     props || {};
-
-  const [agentId, allowedAppDefaultToolkit, allowedMcpServers] = appStore(
-    useShallow((state) => [
-      state.voiceChat.agentId,
-      state.allowedAppDefaultToolkit,
-      state.allowedMcpServers,
-    ]),
-  );
 
   const [isUserSpeaking, setIsUserSpeaking] = useState(false);
   const [isAssistantSpeaking, setIsAssistantSpeaking] = useState(false);
@@ -159,9 +144,8 @@ export function useOpenAIVoiceChat(
           body: JSON.stringify({
             model,
             voice,
-            allowedAppDefaultToolkit,
-            allowedMcpServers,
-            agentId,
+            agentId: props?.agentId,
+            mentions: props?.toolMentions,
           }),
         },
       );
@@ -174,7 +158,7 @@ export function useOpenAIVoiceChat(
       }
 
       return session;
-    }, [model, voice, allowedAppDefaultToolkit, allowedMcpServers, agentId]);
+    }, [model, voice, props?.toolMentions, props?.agentId]);
 
   const updateUIMessage = useCallback(
     (
@@ -214,6 +198,18 @@ export function useOpenAIVoiceChat(
         switch (toolName) {
           case "changeBrowserTheme":
             setTheme(toolArgs?.theme);
+            break;
+          case "endConversation":
+            await stop();
+            setError(null);
+            setMessages([]);
+            appStore.setState((prev) => ({
+              voiceChat: {
+                ...prev.voiceChat,
+                agentId: undefined,
+                isOpen: false,
+              },
+            }));
             break;
         }
       } else {
@@ -338,7 +334,7 @@ export function useOpenAIVoiceChat(
           updateUIMessage(event.item_id, (prev) => {
             const textPart = prev.parts.find((p) => p.type == "text");
             if (!textPart) return prev;
-            textPart.text = event.transcript || "";
+            (textPart as TextPart).text = event.transcript || "";
             return {
               ...prev,
               completed: true,
@@ -436,7 +432,11 @@ export function useOpenAIVoiceChat(
       });
       dc.addEventListener("error", (errorEvent) => {
         console.error(errorEvent);
-        setError(errorEvent.error);
+        setError(
+          errorEvent instanceof Error
+            ? errorEvent
+            : new Error(String(errorEvent)),
+        );
         setIsActive(false);
         setIsListening(false);
       });

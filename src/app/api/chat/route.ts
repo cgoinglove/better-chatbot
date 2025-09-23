@@ -19,7 +19,11 @@ import {
   buildUserSystemPrompt,
   buildToolCallUnsupportedModelSystemPrompt,
 } from "lib/ai/prompts";
-import { chatApiSchemaRequestBodySchema, ChatMetadata } from "app-types/chat";
+import {
+  chatApiSchemaRequestBodySchema,
+  ChatMention,
+  ChatMetadata,
+} from "app-types/chat";
 
 import { errorIf, safe } from "ts-safe";
 
@@ -100,7 +104,12 @@ export async function POST(request: Request) {
 
     const supportToolCall = !isToolCallUnsupportedModel(model);
 
-    const agentId = mentions.find((m) => m.type === "agent")?.agentId;
+    const agentId = (
+      mentions.find((m) => m.type === "agent") as Extract<
+        ChatMention,
+        { type: "agent" }
+      >
+    )?.agentId;
 
     const agent = await rememberAgentAction(agentId, session.user.id);
 

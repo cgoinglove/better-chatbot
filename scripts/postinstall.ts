@@ -48,7 +48,6 @@ async function main() {
       "pnpm openai-compatiable:init",
       "Initial openAI compatiable config setup",
     );
-    await runCommand("pnpm clean .next", "Clean up .next directory");
   }
 }
 
