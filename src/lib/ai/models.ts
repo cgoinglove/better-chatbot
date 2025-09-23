@@ -44,6 +44,8 @@ const staticModels = {
   },
   xai: {
     "grok-4": xai("grok-4"),
+    "grok-4-fast-reasoning": xai("grok-4-fast-reasoning"),
+    "grok-4-fast": xai("grok-4-fast-non-reasoning"),
     "grok-3": xai("grok-3"),
     "grok-3-mini": xai("grok-3-mini"),
   },
