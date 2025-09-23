@@ -83,6 +83,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to get start
     - [🔌 MCP Server Setup \& Tool Testing](#-mcp-server-setup--tool-testing)
     - [🐳 Docker Hosting Guide](#-docker-hosting-guide)
     - [▲ Vercel Hosting Guide](#-vercel-hosting-guide)
+    - [🗂️ File Storage Drivers](#️-file-storage-drivers)
     - [🎯 System Prompts \& Chat Customization](#-system-prompts--chat-customization)
     - [🔐 OAuth Sign-In Setup](#-oauth-sign-in-setup)
     - [🕵🏿 Adding openAI like providers](#-adding-openai-like-providers)
@@ -317,6 +318,27 @@ EXA_API_KEY=your_exa_api_key_here
 # Whether to use file-based MCP config (default: false)
 FILE_BASED_MCP_CONFIG=false
 
+# === File Storage ===
+# Defaults already work out of the box. Uncomment these examples only when you need to override them.
+# Vercel deployments automatically use Vercel Blob; other environments fall back to local disk storage.
+
+# -- Vercel Blob example --
+# Pull the token locally with `vercel env pull` when testing against Vercel Blob.
+# FILE_STORAGE_TYPE=vercel-blob
+# FILE_STORAGE_PREFIX=uploads
+# BLOB_READ_WRITE_TOKEN=
+
+# -- Local filesystem example --
+# FILE_STORAGE_TYPE=local
+# FILE_STORAGE_PREFIX=uploads
+# FILE_STORAGE_LOCAL_PUBLIC_ROOT=./public
+
+# -- S3 (planned driver) --
+# FILE_STORAGE_TYPE=s3
+# FILE_STORAGE_PREFIX=uploads
+# FILE_STORAGE_S3_BUCKET=
+# FILE_STORAGE_S3_REGION=
+
 # (Optional)
 # === OAuth Settings ===
 # Fill in these values only if you want to enable Google/GitHub/Microsoft login
@@ -364,6 +386,10 @@ Step-by-step setup guides for running and configuring better-chatbot.
 #### [▲ Vercel Hosting Guide](./docs/tips-guides/vercel.md)
 
 - Deploy the chatbot to Vercel with simple setup steps for production use.
+
+#### [🗂️ File Storage Drivers](./docs/tips-guides/file-storage.md)
+
+- Configure local disk storage for dev, Vercel Blob in production, and prep for upcoming S3 support with the shared `FileStorage` adapter.
 
 #### [🎯 System Prompts & Chat Customization](./docs/tips-guides/system-prompts-and-customization.md)
 
