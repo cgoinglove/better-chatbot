@@ -73,3 +73,10 @@ export class UnsupportedFileTypeError extends FileStorageError {
     this.name = "UnsupportedFileTypeError";
   }
 }
+
+export class NotImplementedError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "NotImplementedError";
+  }
+}
