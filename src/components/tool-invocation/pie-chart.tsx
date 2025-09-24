@@ -33,6 +33,8 @@ export interface PieChartProps {
   unit?: string;
   // Chart description (optional)
   description?: string;
+  prefix?: string;
+  jsonView?: boolean;
 }
 
 // Color variable names (chart-1 ~ chart-5)
@@ -45,7 +47,7 @@ const chartColors = [
 ];
 
 export function PieChart(props: PieChartProps) {
-  const { title, data, unit, description } = props;
+  const { title, data, unit, description, prefix, jsonView = true } = props;
   // Calculate total value
   const total = React.useMemo(() => {
     return data.reduce((acc, curr) => acc + curr.value, 0);
@@ -90,10 +92,13 @@ export function PieChart(props: PieChartProps) {
     <Card className="flex flex-col bg-card">
       <CardHeader className="items-center pb-0 flex flex-col gap-2 relative">
         <CardTitle className="flex items-center">
-          Pie Chart - {title}
-          <div className="absolute right-4 top-">
-            <JsonViewPopup data={props} />
-          </div>
+          {prefix ?? "Pie Chart - "}
+          {title}
+          {jsonView && (
+            <div className="absolute right-4 top-0">
+              <JsonViewPopup data={props} />
+            </div>
+          )}
         </CardTitle>
         {description && <CardDescription>{description}</CardDescription>}
       </CardHeader>

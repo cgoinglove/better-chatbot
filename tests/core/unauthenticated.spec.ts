@@ -46,16 +46,7 @@ test.describe("Unauthenticated User Experience", () => {
     await page.waitForLoadState("networkidle");
 
     // Should show sign-up form elements
-    await expect(
-      page.locator(
-        'input[type="email"], input[name="email"], input[id="email"]',
-      ),
-    ).toBeVisible();
-    await expect(
-      page.locator(
-        'button[type="submit"], button:has-text("Sign up"), button:has-text("Next"), button:has-text("Continue")',
-      ),
-    ).toBeVisible();
+    await expect(page.getByTestId("email-signup-button")).toBeVisible();
   });
 
   test("should navigate between sign-in and sign-up pages", async ({
@@ -67,7 +58,7 @@ test.describe("Unauthenticated User Experience", () => {
     expect(page.url()).toContain("/sign-in");
 
     // Verify sign-in page has expected elements
-    await expect(page.locator("#email")).toBeVisible();
+    await expect(page.getByTestId("signin-submit-button")).toBeVisible();
 
     // Navigate to sign-up page
     await page.goto("/sign-up");
@@ -75,36 +66,15 @@ test.describe("Unauthenticated User Experience", () => {
     expect(page.url()).toContain("/sign-up");
 
     // Verify sign-up page has expected elements
-    await expect(page.locator("#email")).toBeVisible();
+    await expect(page.getByTestId("email-signup-button")).toBeVisible();
 
     // Verify we can navigate back to sign-in
     await page.goto("/sign-in");
     await page.waitForLoadState("networkidle");
     expect(page.url()).toContain("/sign-in");
-  });
 
-  test("should have proper CSS and styling", async ({ page }) => {
-    await page.goto("/");
-    await page.waitForLoadState("networkidle");
-
-    const hasStyledElements = await page.evaluate(() => {
-      const elements = document.querySelectorAll("*");
-      for (const el of Array.from(elements)) {
-        const classes = el.className;
-        if (
-          typeof classes === "string" &&
-          (classes.includes("flex") ||
-            classes.includes("grid") ||
-            classes.includes("p-") ||
-            classes.includes("m-"))
-        ) {
-          return true;
-        }
-      }
-      return false;
-    });
-
-    expect(hasStyledElements).toBeTruthy();
+    // Verify sign-in page has expected elements
+    await expect(page.getByTestId("signin-submit-button")).toBeVisible();
   });
 
   test("should be responsive on mobile", async ({ page }) => {

@@ -23,7 +23,7 @@ export const ChatThreadSchema = pgTable("chat_thread", {
   title: text("title").notNull(),
   userId: uuid("user_id")
     .notNull()
-    .references(() => UserSchema.id),
+    .references(() => UserSchema.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
@@ -31,7 +31,7 @@ export const ChatMessageSchema = pgTable("chat_message", {
   id: text("id").primaryKey().notNull(),
   threadId: uuid("thread_id")
     .notNull()
-    .references(() => ChatThreadSchema.id),
+    .references(() => ChatThreadSchema.id, { onDelete: "cascade" }),
   role: text("role").notNull().$type<UIMessage["role"]>(),
   parts: json("parts").notNull().array().$type<UIMessage["parts"]>(),
   metadata: json("metadata").$type<ChatMetadata>(),
@@ -45,7 +45,7 @@ export const AgentSchema = pgTable("agent", {
   icon: json("icon").$type<Agent["icon"]>(),
   userId: uuid("user_id")
     .notNull()
-    .references(() => UserSchema.id),
+    .references(() => UserSchema.id, { onDelete: "cascade" }),
   instructions: json("instructions").$type<Agent["instructions"]>(),
   visibility: varchar("visibility", {
     enum: ["public", "private", "readonly"],
@@ -65,7 +65,7 @@ export const BookmarkSchema = pgTable(
       .references(() => UserSchema.id, { onDelete: "cascade" }),
     itemId: uuid("item_id").notNull(),
     itemType: varchar("item_type", {
-      enum: ["agent", "workflow"],
+      enum: ["agent", "workflow", "mcp"],
     }).notNull(),
     createdAt: timestamp("created_at")
       .notNull()
@@ -83,6 +83,14 @@ export const McpServerSchema = pgTable("mcp_server", {
   name: text("name").notNull(),
   config: json("config").notNull().$type<MCPServerConfig>(),
   enabled: boolean("enabled").notNull().default(true),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => UserSchema.id, { onDelete: "cascade" }),
+  visibility: varchar("visibility", {
+    enum: ["public", "private"],
+  })
+    .notNull()
+    .default("private"),
   createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
@@ -97,19 +105,28 @@ export const UserSchema = pgTable("user", {
   preferences: json("preferences").default({}).$type<UserPreferences>(),
   createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  banned: boolean("banned"),
+  banReason: text("ban_reason"),
+  banExpires: timestamp("ban_expires"),
+  role: text("role").notNull().default("user"),
 });
+
+// Role tables removed - using Better Auth's built-in role system
+// Roles are now managed via the 'role' field on UserSchema
 
 export const SessionSchema = pgTable("session", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
   expiresAt: timestamp("expires_at").notNull(),
   token: text("token").notNull().unique(),
-  createdAt: timestamp("created_at").notNull(),
-  updatedAt: timestamp("updated_at").notNull(),
+  createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   ipAddress: text("ip_address"),
   userAgent: text("user_agent"),
   userId: uuid("user_id")
     .notNull()
     .references(() => UserSchema.id, { onDelete: "cascade" }),
+  // Admin plugin field (from better-auth generated schema)
+  impersonatedBy: text("impersonated_by"),
 });
 
 export const AccountSchema = pgTable("account", {
@@ -126,8 +143,8 @@ export const AccountSchema = pgTable("account", {
   refreshTokenExpiresAt: timestamp("refresh_token_expires_at"),
   scope: text("scope"),
   password: text("password"),
-  createdAt: timestamp("created_at").notNull(),
-  updatedAt: timestamp("updated_at").notNull(),
+  createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
 export const VerificationSchema = pgTable("verification", {
@@ -309,6 +326,8 @@ export type ChatMessageEntity = typeof ChatMessageSchema.$inferSelect;
 
 export type AgentEntity = typeof AgentSchema.$inferSelect;
 export type UserEntity = typeof UserSchema.$inferSelect;
+export type SessionEntity = typeof SessionSchema.$inferSelect;
+
 export type ToolCustomizationEntity =
   typeof McpToolCustomizationSchema.$inferSelect;
 export type McpServerCustomizationEntity =

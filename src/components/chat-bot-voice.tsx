@@ -7,7 +7,7 @@ import {
   OPENAI_VOICE,
   useOpenAIVoiceChat as OpenAIVoiceChat,
 } from "lib/ai/speech/open-ai/use-voice-chat.openai";
-import { cn, groupBy } from "lib/utils";
+import { cn, groupBy, isNull } from "lib/utils";
 import {
   CheckIcon,
   Loader,
@@ -246,6 +246,17 @@ export function ChatBotVoice() {
   }, [voiceChat.isOpen]);
 
   useEffect(() => {
+    if (!voiceChat.isOpen && !isNull(voiceChat.agentId)) {
+      appStoreMutate((prev) => ({
+        voiceChat: {
+          ...prev.voiceChat,
+          agentId: undefined,
+        },
+      }));
+    }
+  }, [voiceChat.isOpen]);
+
+  useEffect(() => {
     if (error && isActive) {
       toast.error(error.message);
       stop();
@@ -254,6 +265,7 @@ export function ChatBotVoice() {
 
   useEffect(() => {
     if (voiceChat.isOpen) return;
+
     const handleKeyDown = (e: KeyboardEvent) => {
       const isVoiceChatEvent = isShortcutEvent(e, Shortcuts.toggleVoiceChat);
       if (isVoiceChatEvent) {

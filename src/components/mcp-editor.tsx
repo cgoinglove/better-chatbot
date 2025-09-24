@@ -208,6 +208,7 @@ export default function MCPEditor({
                 id="config-editor"
                 value={jsonString}
                 onChange={(e) => handleConfigChange(e.target.value)}
+                data-testid="mcp-config-editor"
                 className="font-mono h-[40vh] resize-none overflow-y-auto"
                 placeholder={STDIO_ARGS_ENV_PLACEHOLDER}
               />
@@ -222,7 +223,11 @@ export default function MCPEditor({
                 >
                   preview
                 </Label>
-                <JsonView data={config} initialExpandDepth={3} />
+                <JsonView
+                  data={config}
+                  initialExpandDepth={3}
+                  data-testid="mcp-config-view"
+                />
                 {jsonError && jsonString && (
                   <div className="absolute w-full bottom-0 right-0 px-2 pb-2 animate-in fade-in-0 duration-300">
                     <Alert variant="destructive" className="border-destructive">

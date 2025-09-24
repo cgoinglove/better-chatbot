@@ -1,6 +1,6 @@
 import { pgDb as db } from "../db.pg";
-import { McpServerSchema } from "../schema.pg";
-import { eq } from "drizzle-orm";
+import { McpServerSchema, UserSchema } from "../schema.pg";
+import { eq, or, desc } from "drizzle-orm";
 import { generateUUID } from "lib/utils";
 import type { MCPRepository } from "app-types/mcp";
 
@@ -12,6 +12,8 @@ export const pgMcpRepository: MCPRepository = {
         id: server.id ?? generateUUID(),
         name: server.name,
         config: server.config,
+        userId: server.userId,
+        visibility: server.visibility ?? "private",
         enabled: true,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -39,6 +41,40 @@ export const pgMcpRepository: MCPRepository = {
   async selectAll() {
     const results = await db.select().from(McpServerSchema);
     return results;
+  },
+
+  async selectAllForUser(userId) {
+    // Get user's own MCP servers and featured ones
+    const results = await db
+      .select({
+        id: McpServerSchema.id,
+        name: McpServerSchema.name,
+        config: McpServerSchema.config,
+        enabled: McpServerSchema.enabled,
+        userId: McpServerSchema.userId,
+        visibility: McpServerSchema.visibility,
+        createdAt: McpServerSchema.createdAt,
+        updatedAt: McpServerSchema.updatedAt,
+        userName: UserSchema.name,
+        userAvatar: UserSchema.image,
+      })
+      .from(McpServerSchema)
+      .leftJoin(UserSchema, eq(McpServerSchema.userId, UserSchema.id))
+      .where(
+        or(
+          eq(McpServerSchema.userId, userId),
+          eq(McpServerSchema.visibility, "public"),
+        ),
+      )
+      .orderBy(desc(McpServerSchema.createdAt));
+    return results;
+  },
+
+  async updateVisibility(id, visibility) {
+    await db
+      .update(McpServerSchema)
+      .set({ visibility, updatedAt: new Date() })
+      .where(eq(McpServerSchema.id, id));
   },
 
   async deleteById(id) {

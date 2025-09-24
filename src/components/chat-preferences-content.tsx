@@ -264,7 +264,7 @@ export function MCPInstructionsContent() {
             Array.from({ length: 10 }).map((_, index) => (
               <Skeleton key={index} className="h-14" />
             ))
-          ) : mcpList.length === 0 ? (
+          ) : mcpList?.length === 0 ? (
             <div className="flex flex-col gap-2 text-foreground flex-1">
               <p className="text-center py-8 text-muted-foreground">
                 {t("MCP.configureYourMcpServerConnectionSettings")}
@@ -272,7 +272,7 @@ export function MCPInstructionsContent() {
             </div>
           ) : (
             <div className="flex gap-2">
-              {mcpList.map((mcp) => (
+              {mcpList?.map((mcp) => (
                 <Button
                   onClick={() => setMcpServer({ ...mcp, id: mcp.id })}
                   variant={"outline"}

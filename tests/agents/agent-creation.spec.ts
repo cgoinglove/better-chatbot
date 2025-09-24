@@ -5,6 +5,7 @@ import {
   openDropdown,
   selectDropdownOption,
 } from "../utils/test-helpers";
+import { TEST_USERS } from "../constants/test-users";
 
 async function createAgent(
   page: Page,
@@ -20,7 +21,7 @@ async function createAgent(
 }
 
 test.describe("Agent Creation and Sharing Workflow", () => {
-  test.use({ storageState: "tests/.auth/user1.json" });
+  test.use({ storageState: TEST_USERS.editor.authFile });
 
   test("should create a new agent successfully", async ({ page }) => {
     await page.goto("/agent/new");
@@ -74,13 +75,14 @@ test.describe("Agent Creation and Sharing Workflow", () => {
   test("should edit an existing agent", async ({ page }) => {
     // Create an agent first
     const originalName = uniqueTestName("Original Agent");
+    const updatedName = uniqueTestName("Updated Agent");
     await createAgent(page, originalName, "Will be edited");
 
     // Click on the agent from the list using a simpler selector
     await page.locator(`main a:has-text("${originalName}")`).first().click();
 
-    // Edit the name
-    await page.getByTestId("agent-name-input").fill("Updated Agent Name");
+    // Edit the name with a unique name
+    await page.getByTestId("agent-name-input").fill(updatedName);
 
     // Edit the description
     await page
@@ -90,15 +92,17 @@ test.describe("Agent Creation and Sharing Workflow", () => {
     // Save changes
     await clickAndWaitForNavigation(page, "agent-save-button", "**/agents");
 
-    // Check the updated agent appears using specific selector
+    // Check the updated agent appears using the unique name
     await expect(
       page.locator(
-        `[data-testid*="agent-card-name"]:has-text("Updated Agent Name")`,
+        `[data-testid*="agent-card-name"]:has-text("${updatedName}")`,
       ),
     ).toBeVisible({ timeout: 5000 });
   });
 
-  test("should generate an agent with AI", async ({ page }) => {
+  // Commenting out due to rate limiting issues with free OpenRouter API
+  // This test is flaky in CI due to 429 errors from the free tier
+  test.skip("should generate an agent with AI", async ({ page }) => {
     await page.goto("/agent/new");
 
     // Click Generate With AI button

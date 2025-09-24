@@ -47,7 +47,10 @@ export async function generateTitleFromUserMessageAction({
   message,
   model,
 }: { message: UIMessage; model: LanguageModel }) {
-  await getSession();
+  const session = await getSession();
+  if (!session) {
+    throw new Error("Unauthorized");
+  }
   const prompt = toAny(message.parts?.at(-1))?.text || "unknown";
 
   const { text: title } = await generateText({
@@ -61,6 +64,9 @@ export async function generateTitleFromUserMessageAction({
 
 export async function selectThreadWithMessagesAction(threadId: string) {
   const session = await getSession();
+  if (!session) {
+    throw new Error("Unauthorized");
+  }
   const thread = await chatRepository.selectThread(threadId);
 
   if (!thread) {
