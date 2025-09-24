@@ -39,19 +39,20 @@ export const updateUserDetailsAction = validatedActionWithUserManagePermission(
         };
       }
 
+      const isDifferentEmail = email && email !== userSession.user.email;
+      const isDifferentName = name && name !== userSession.user.name;
+      const isDifferentImage = image && image !== userSession.user.image;
+
       // this forces a session update for the current user, getting the latest data
       if (isOwnResource) {
-        if (
-          (name && name !== userSession.user.name) ||
-          (image && image !== userSession.user.image)
-        ) {
+        if (isDifferentName || isDifferentImage) {
           await auth.api.updateUser({
             returnHeaders: true,
             body: { name, ...(image && { image }) },
             headers: await headers(),
           });
         }
-        if (email && email !== userSession.user.email) {
+        if (isDifferentEmail) {
           await auth.api.changeEmail({
             returnHeaders: true,
             body: { newEmail: email },
@@ -61,6 +62,11 @@ export const updateUserDetailsAction = validatedActionWithUserManagePermission(
       } else {
         await updateUserDetails(userId, name, email);
       }
+
+      if (isDifferentEmail) user.email = email;
+      if (isDifferentName) user.name = name;
+      if (isDifferentImage) user.image = image;
+
       return {
         success: true,
         message: t("userDetailsUpdatedSuccessfully"),
