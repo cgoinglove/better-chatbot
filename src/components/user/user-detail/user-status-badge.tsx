@@ -76,11 +76,11 @@ export function UserStatusBadge({
         )}
       >
         {tCommon("banned")}
-        {canModify && <Edit2 className="w-2 h-2" />}
+        {canModify && <Edit2 className="size-2.5!" />}
       </Badge>
     ) : (
       <Badge
-        variant="outline"
+        variant="secondary"
         data-testid="status-badge-active"
         className={cn(
           canModify && "cursor-pointer hover:bg-muted transition-colors",
@@ -88,7 +88,7 @@ export function UserStatusBadge({
         )}
       >
         {tCommon("active")}
-        {canModify && <Edit2 className="w-2 h-2" />}
+        {canModify && <Edit2 className="size-2.5!" />}
       </Badge>
     );
 

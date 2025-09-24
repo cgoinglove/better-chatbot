@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "ui/card";
-import { MessageCircle, Zap, TrendingUp, Cpu, Calendar } from "lucide-react";
+import { MessageCircle, Zap, TrendingUp, Cpu } from "lucide-react";
 import { useProfileTranslations } from "@/hooks/use-profile-translations";
 
 import { ModelProviderIcon } from "ui/model-provider-icon";
@@ -35,7 +35,6 @@ export function UserStatisticsCard({ stats, view }: UserStatisticsCardProps) {
           {tCommon("usageStatistics")}
         </CardTitle>
         <p className="text-sm text-muted-foreground flex items-center gap-2">
-          <Calendar className="h-4 w-4" />
           {t("aiModelUsageFor", { period: stats.period })}
         </p>
       </CardHeader>
@@ -218,7 +217,7 @@ export function UserStatisticsCard({ stats, view }: UserStatisticsCardProps) {
 
             {/* Insights */}
             {stats.totalTokens > 0 && (
-              <div className="rounded-lg border-l-4 border-l-primary bg-primary/5 p-3">
+              <div className="rounded-lg p-3">
                 <p className="text-sm text-primary/80">
                   {tCommon("summaryPrefix")}
                   <strong>{tCommon("summary")}:</strong>{" "}

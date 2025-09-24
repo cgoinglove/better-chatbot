@@ -45,7 +45,7 @@ export function UserAccessCard({
       <Card className="transition-all duration-200 hover:shadow-md">
         <CardHeader className="pb-4">
           <CardTitle className="text-xl font-semibold flex items-center gap-2">
-            <Shield className="h-5 w-5 text-blue-600" />
+            <Shield className="h-5 w-5 text-primary" />
             {tCommon("accessAndAccount")}
           </CardTitle>
           <p className="text-sm text-muted-foreground">
@@ -63,7 +63,7 @@ export function UserAccessCard({
               </Label>
               {user.id !== currentUserId && view === "admin" && (
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   size="sm"
                   onClick={() => setShowRoleDialog(true)}
                   disabled={disabled}
@@ -146,7 +146,7 @@ export function UserAccessCard({
                   currentUserId={currentUserId}
                 >
                   <Button
-                    variant="outline"
+                    variant="secondary"
                     size="sm"
                     disabled={disabled || !userAccountInfo?.hasPassword}
                     className="h-8 text-xs"
@@ -162,7 +162,7 @@ export function UserAccessCard({
 
           {/* Danger Zone Section */}
           {view === "admin" && user.id !== currentUserId && (
-            <div className="space-y-3 pt-4 border-t border-destructive/20">
+            <div className="space-y-3 pt-4 border-t">
               <Label className="text-sm font-medium flex items-center gap-2 text-destructive">
                 <AlertTriangle className="h-4 w-4" />
                 {tCommon("dangerZone")}
@@ -174,7 +174,7 @@ export function UserAccessCard({
                     <p className="text-sm font-medium text-destructive">
                       {t("deleteUser")}
                     </p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-destructive/80">
                       {t("deleteUserPermanently")}
                     </p>
                   </div>

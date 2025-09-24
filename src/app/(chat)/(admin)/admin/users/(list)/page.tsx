@@ -9,6 +9,9 @@ import { requireAdminPermission } from "auth/permissions";
 import { getSession } from "lib/auth/server";
 import { redirect, unauthorized } from "next/navigation";
 
+// Force dynamic rendering to avoid static generation issues with session
+export const dynamic = "force-dynamic";
+
 interface PageProps {
   searchParams: Promise<{
     page?: string;

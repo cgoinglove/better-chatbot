@@ -66,30 +66,30 @@ export function UserDetailFormCard({
         <CardTitle className="text-xl font-semibold flex items-center gap-2">
           <User className="h-5 w-5 text-primary" />
           {tCommon("userDetailsCardTitle")}
+          {user.id === currentUserId && (
+            <Badge variant="outline" className="text-xs ml-auto">
+              {tCommon("you")}
+            </Badge>
+          )}
         </CardTitle>
         <CardDescription>{t("userDetailsCardDescription")}</CardDescription>
       </CardHeader>
 
-      <CardContent>
-        <Form action={detailsUpdateFormAction} className="space-y-6">
+      <CardContent className="h-full">
+        <Form
+          action={detailsUpdateFormAction}
+          className="space-y-6 h-full flex flex-col"
+        >
           <input type="hidden" name="userId" value={user.id} />
 
           {/* Avatar and Name Section */}
           <div className="flex items-center gap-4">
-            <Avatar className="h-16 w-16 ring-2 ring-border">
+            <Avatar className="size-26 rounded-full mx-auto my-4 ring ring-border">
               <AvatarImage src={getUserAvatar(user)} />
               <AvatarFallback className="text-lg font-semibold">
                 {user.name.slice(0, 2).toUpperCase()}
               </AvatarFallback>
             </Avatar>
-
-            <div className="flex items-center gap-2">
-              {user.id === currentUserId && (
-                <Badge variant="outline" className="text-xs">
-                  {tCommon("you")}
-                </Badge>
-              )}
-            </div>
           </div>
 
           {/* Form Fields */}
@@ -136,12 +136,6 @@ export function UserDetailFormCard({
                   </TooltipContent>
                 )}
               </Tooltip>
-
-              {!!userAccountInfo?.oauthProviders?.length && (
-                <p className="text-xs text-muted-foreground">
-                  {t("emailCannotBeModifiedOAuth")}
-                </p>
-              )}
             </div>
           </div>
 
@@ -167,7 +161,7 @@ export function UserDetailFormCard({
           </div>
 
           {/* Save Button */}
-          <div className="pt-4">
+          <div className="mt-4">
             <SubmitButton
               className="w-full"
               data-testid="save-changes-button"
