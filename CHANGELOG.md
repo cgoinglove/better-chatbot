@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.22.0](https://github.com/cgoinglove/better-chatbot/compare/v1.21.0...v1.22.0) (2025-09-25)
+
+
+### Features
+
+* admin and roles ([#270](https://github.com/cgoinglove/better-chatbot/issues/270)) ([63bddca](https://github.com/cgoinglove/better-chatbot/commit/63bddcaa4bc62bc85204a0982a06f2bed09fc5f5))
+* groq provider ([#268](https://github.com/cgoinglove/better-chatbot/issues/268)) ([aef213d](https://github.com/cgoinglove/better-chatbot/commit/aef213d2f9dd0255996cc4184b03425db243cd7b))
+* hide LLM providers without API keys in model selection ([#269](https://github.com/cgoinglove/better-chatbot/issues/269)) ([63c15dd](https://github.com/cgoinglove/better-chatbot/commit/63c15dd386ea99b8fa56f7b6cb1e58e5779b525d))
+* Implementation of PWA for much better UI on mobile  ([#252](https://github.com/cgoinglove/better-chatbot/issues/252)) ([51e6eab](https://github.com/cgoinglove/better-chatbot/commit/51e6eabcc34e1238a7536b5fffa433ba4ae4827a))
+* tsconfig.tsbuildinfo 디렉토리를 기본 정리 목록에 추가 ([62ab4d8](https://github.com/cgoinglove/better-chatbot/commit/62ab4d8d5df2e8047756d746c9d8e2b1ff8c09c4))
+* **voice-chat:** binding agent tools ([#275](https://github.com/cgoinglove/better-chatbot/issues/275)) ([ed45e82](https://github.com/cgoinglove/better-chatbot/commit/ed45e822eb36447f2a02ef3aa69eeec88009e357))
+
+
+### Bug Fixes
+
+* .next 디렉토리 정리 명령어 제거 ([3387ed5](https://github.com/cgoinglove/better-chatbot/commit/3387ed51cf24b125a9039147bf14d513d0e9c2bc))
+* Add .next cleanup to postinstall and fix db-migrate exit handling ([#272](https://github.com/cgoinglove/better-chatbot/issues/272)) ([15ff34d](https://github.com/cgoinglove/better-chatbot/commit/15ff34d6a8a4c2c968ff08f9dcd6d87b7c85f652))
+* ensure PKCE works for MCP Server auth ([#256](https://github.com/cgoinglove/better-chatbot/issues/256)) ([09b938f](https://github.com/cgoinglove/better-chatbot/commit/09b938f17ca78993a1c7b84c5a702b95159542b2))
+
 ## [1.21.0](https://github.com/cgoinglove/better-chatbot/compare/v1.20.2...v1.21.0) (2025-08-24)
 
 
