@@ -1,5 +1,5 @@
 import { getSession } from "auth/server";
-import { McpServerSchema } from "lib/db/pg/schema.pg";
+import { McpServerTable } from "lib/db/pg/schema.pg";
 import { NextResponse } from "next/server";
 import { saveMcpClientAction } from "./actions";
 import { canCreateMCP } from "lib/auth/permissions";
@@ -20,7 +20,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const json = (await request.json()) as typeof McpServerSchema.$inferInsert;
+  const json = (await request.json()) as typeof McpServerTable.$inferInsert;
 
   try {
     const result = await saveMcpClientAction(json);

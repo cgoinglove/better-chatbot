@@ -6,10 +6,10 @@ import { admin as adminPlugin } from "better-auth/plugins";
 import { pgDb } from "lib/db/pg/db.pg";
 import { headers } from "next/headers";
 import {
-  AccountSchema,
-  SessionSchema,
-  UserSchema,
-  VerificationSchema,
+  AccountTable,
+  SessionTable,
+  UserTable,
+  VerificationTable,
 } from "lib/db/pg/schema.pg";
 import { getAuthConfig } from "./config";
 import logger from "logger";
@@ -50,10 +50,10 @@ const options = {
   database: drizzleAdapter(pgDb, {
     provider: "pg",
     schema: {
-      user: UserSchema,
-      session: SessionSchema,
-      account: AccountSchema,
-      verification: VerificationSchema,
+      user: UserTable,
+      session: SessionTable,
+      account: AccountTable,
+      verification: VerificationTable,
     },
   }),
   databaseHooks: {

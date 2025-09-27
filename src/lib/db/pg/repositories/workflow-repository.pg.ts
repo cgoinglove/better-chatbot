@@ -1,10 +1,10 @@
 import { and, desc, eq, inArray, not, or, sql } from "drizzle-orm";
 import { pgDb } from "../db.pg";
 import {
-  UserSchema,
-  WorkflowEdgeSchema,
-  WorkflowNodeDataSchema,
-  WorkflowSchema,
+  UserTable,
+  WorkflowEdgeTable,
+  WorkflowNodeDataTable,
+  WorkflowTable,
 } from "../schema.pg";
 import {
   DBWorkflow,
@@ -26,23 +26,23 @@ export const pgWorkflowRepository: WorkflowRepository = {
     if (!ids.length) return [];
     const rows = await pgDb
       .select({
-        id: WorkflowSchema.id,
-        name: WorkflowSchema.name,
-        description: WorkflowSchema.description,
-        schema: WorkflowNodeDataSchema.nodeConfig,
+        id: WorkflowTable.id,
+        name: WorkflowTable.name,
+        description: WorkflowTable.description,
+        schema: WorkflowNodeDataTable.nodeConfig,
       })
-      .from(WorkflowSchema)
+      .from(WorkflowTable)
       .innerJoin(
-        WorkflowNodeDataSchema,
+        WorkflowNodeDataTable,
         and(
-          eq(WorkflowNodeDataSchema.workflowId, WorkflowSchema.id),
-          eq(WorkflowNodeDataSchema.kind, NodeKind.Input),
+          eq(WorkflowNodeDataTable.workflowId, WorkflowTable.id),
+          eq(WorkflowNodeDataTable.kind, NodeKind.Input),
         ),
       )
       .where(
         and(
-          inArray(WorkflowSchema.id, ids),
-          eq(WorkflowSchema.isPublished, true),
+          inArray(WorkflowTable.id, ids),
+          eq(WorkflowTable.isPublished, true),
         ),
       );
     return rows.map(
@@ -64,25 +64,25 @@ export const pgWorkflowRepository: WorkflowRepository = {
   async selectExecuteAbility(userId) {
     const rows = await pgDb
       .select({
-        id: WorkflowSchema.id,
-        name: WorkflowSchema.name,
-        description: WorkflowSchema.description,
-        icon: WorkflowSchema.icon,
-        visibility: WorkflowSchema.visibility,
-        isPublished: WorkflowSchema.isPublished,
-        userId: WorkflowSchema.userId,
-        userName: UserSchema.name,
-        userAvatar: UserSchema.image,
-        updatedAt: WorkflowSchema.updatedAt,
+        id: WorkflowTable.id,
+        name: WorkflowTable.name,
+        description: WorkflowTable.description,
+        icon: WorkflowTable.icon,
+        visibility: WorkflowTable.visibility,
+        isPublished: WorkflowTable.isPublished,
+        userId: WorkflowTable.userId,
+        userName: UserTable.name,
+        userAvatar: UserTable.image,
+        updatedAt: WorkflowTable.updatedAt,
       })
-      .from(WorkflowSchema)
-      .innerJoin(UserSchema, eq(WorkflowSchema.userId, UserSchema.id))
+      .from(WorkflowTable)
+      .innerJoin(UserTable, eq(WorkflowTable.userId, UserTable.id))
       .where(
         and(
-          eq(WorkflowSchema.isPublished, true),
+          eq(WorkflowTable.isPublished, true),
           or(
-            eq(WorkflowSchema.userId, userId),
-            not(eq(WorkflowSchema.visibility, "private")),
+            eq(WorkflowTable.userId, userId),
+            not(eq(WorkflowTable.visibility, "private")),
           ),
         ),
       );
@@ -91,44 +91,44 @@ export const pgWorkflowRepository: WorkflowRepository = {
   async selectAll(userId) {
     const rows = await pgDb
       .select({
-        id: WorkflowSchema.id,
-        name: WorkflowSchema.name,
-        description: WorkflowSchema.description,
-        icon: WorkflowSchema.icon,
-        visibility: WorkflowSchema.visibility,
-        isPublished: WorkflowSchema.isPublished,
-        userId: WorkflowSchema.userId,
-        userName: UserSchema.name,
-        userAvatar: UserSchema.image,
-        updatedAt: WorkflowSchema.updatedAt,
+        id: WorkflowTable.id,
+        name: WorkflowTable.name,
+        description: WorkflowTable.description,
+        icon: WorkflowTable.icon,
+        visibility: WorkflowTable.visibility,
+        isPublished: WorkflowTable.isPublished,
+        userId: WorkflowTable.userId,
+        userName: UserTable.name,
+        userAvatar: UserTable.image,
+        updatedAt: WorkflowTable.updatedAt,
       })
-      .from(WorkflowSchema)
-      .innerJoin(UserSchema, eq(WorkflowSchema.userId, UserSchema.id))
+      .from(WorkflowTable)
+      .innerJoin(UserTable, eq(WorkflowTable.userId, UserTable.id))
       .where(
         or(
-          inArray(WorkflowSchema.visibility, ["public", "readonly"]),
-          eq(WorkflowSchema.userId, userId),
+          inArray(WorkflowTable.visibility, ["public", "readonly"]),
+          eq(WorkflowTable.userId, userId),
         ),
       )
-      .orderBy(desc(WorkflowSchema.createdAt));
+      .orderBy(desc(WorkflowTable.createdAt));
     return rows as WorkflowSummary[];
   },
   async selectById(id) {
     const [workflow] = await pgDb
       .select()
-      .from(WorkflowSchema)
-      .where(eq(WorkflowSchema.id, id));
+      .from(WorkflowTable)
+      .where(eq(WorkflowTable.id, id));
     return workflow as DBWorkflow;
   },
 
   async checkAccess(workflowId, userId, readOnly = true) {
     const [workflow] = await pgDb
       .select({
-        visibility: WorkflowSchema.visibility,
-        userId: WorkflowSchema.userId,
+        visibility: WorkflowTable.visibility,
+        userId: WorkflowTable.userId,
       })
-      .from(WorkflowSchema)
-      .where(and(eq(WorkflowSchema.id, workflowId)));
+      .from(WorkflowTable)
+      .where(and(eq(WorkflowTable.id, workflowId)));
     if (!workflow) {
       return false;
     }
@@ -141,8 +141,8 @@ export const pgWorkflowRepository: WorkflowRepository = {
   },
   async delete(id) {
     const result = await pgDb
-      .delete(WorkflowSchema)
-      .where(eq(WorkflowSchema.id, id));
+      .delete(WorkflowTable)
+      .where(eq(WorkflowTable.id, id));
     if (result.rowCount === 0) {
       throw new Error("Workflow not found");
     }
@@ -150,24 +150,24 @@ export const pgWorkflowRepository: WorkflowRepository = {
   async selectByUserId(userId) {
     const rows = await pgDb
       .select()
-      .from(WorkflowSchema)
-      .where(eq(WorkflowSchema.userId, userId))
-      .orderBy(desc(WorkflowSchema.createdAt));
+      .from(WorkflowTable)
+      .where(eq(WorkflowTable.userId, userId))
+      .orderBy(desc(WorkflowTable.createdAt));
     return rows as DBWorkflow[];
   },
   async save(workflow, noGenerateInputNode = false) {
     const prev = workflow.id
       ? await pgDb
-          .select({ id: WorkflowSchema.id })
-          .from(WorkflowSchema)
-          .where(eq(WorkflowSchema.id, workflow.id))
+          .select({ id: WorkflowTable.id })
+          .from(WorkflowTable)
+          .where(eq(WorkflowTable.id, workflow.id))
       : null;
     const isNew = !prev;
     const [row] = await pgDb
-      .insert(WorkflowSchema)
+      .insert(WorkflowTable)
       .values(workflow)
       .onConflictDoUpdate({
-        target: [WorkflowSchema.id],
+        target: [WorkflowTable.id],
         set: {
           ...workflow,
           updatedAt: new Date(),
@@ -177,7 +177,7 @@ export const pgWorkflowRepository: WorkflowRepository = {
 
     if (isNew && !noGenerateInputNode) {
       const startNode = createUINode(NodeKind.Input);
-      await pgDb.insert(WorkflowNodeDataSchema).values({
+      await pgDb.insert(WorkflowNodeDataTable).values({
         ...convertUINodeToDBNode(row.id, startNode),
         name: "INPUT",
       });
@@ -190,22 +190,22 @@ export const pgWorkflowRepository: WorkflowRepository = {
       const deletePromises: Promise<any>[] = [];
       if (deleteNodes?.length) {
         const deleteNodePromises = tx
-          .delete(WorkflowNodeDataSchema)
+          .delete(WorkflowNodeDataTable)
           .where(
             and(
-              eq(WorkflowNodeDataSchema.workflowId, workflowId),
-              inArray(WorkflowNodeDataSchema.id, deleteNodes),
+              eq(WorkflowNodeDataTable.workflowId, workflowId),
+              inArray(WorkflowNodeDataTable.id, deleteNodes),
             ),
           );
         deletePromises.push(deleteNodePromises);
       }
       if (deleteEdges?.length) {
         const deleteEdgePromises = tx
-          .delete(WorkflowEdgeSchema)
+          .delete(WorkflowEdgeTable)
           .where(
             and(
-              eq(WorkflowEdgeSchema.workflowId, workflowId),
-              inArray(WorkflowEdgeSchema.id, deleteEdges),
+              eq(WorkflowEdgeTable.workflowId, workflowId),
+              inArray(WorkflowEdgeTable.id, deleteEdges),
             ),
           );
         deletePromises.push(deleteEdgePromises);
@@ -213,54 +213,54 @@ export const pgWorkflowRepository: WorkflowRepository = {
       await Promise.all(deletePromises);
       if (nodes?.length) {
         await tx
-          .insert(WorkflowNodeDataSchema)
+          .insert(WorkflowNodeDataTable)
           .values(nodes)
           .onConflictDoUpdate({
-            target: [WorkflowNodeDataSchema.id],
+            target: [WorkflowNodeDataTable.id],
             set: {
               nodeConfig: sql.raw(
-                `excluded.${WorkflowNodeDataSchema.nodeConfig.name}`,
+                `excluded.${WorkflowNodeDataTable.nodeConfig.name}`,
               ),
               uiConfig: sql.raw(
-                `excluded.${WorkflowNodeDataSchema.uiConfig.name}`,
+                `excluded.${WorkflowNodeDataTable.uiConfig.name}`,
               ),
-              name: sql.raw(`excluded.${WorkflowNodeDataSchema.name.name}`),
+              name: sql.raw(`excluded.${WorkflowNodeDataTable.name.name}`),
               description: sql.raw(
-                `excluded.${WorkflowNodeDataSchema.description.name}`,
+                `excluded.${WorkflowNodeDataTable.description.name}`,
               ),
-              kind: sql.raw(`excluded.${WorkflowNodeDataSchema.kind.name}`),
+              kind: sql.raw(`excluded.${WorkflowNodeDataTable.kind.name}`),
               updatedAt: new Date(),
             },
           });
       }
       if (edges?.length) {
-        await tx.insert(WorkflowEdgeSchema).values(edges).onConflictDoNothing();
+        await tx.insert(WorkflowEdgeTable).values(edges).onConflictDoNothing();
       }
     });
   },
   async selectStructureById(id, opt) {
     const [workflow] = await pgDb
       .select()
-      .from(WorkflowSchema)
-      .where(eq(WorkflowSchema.id, id));
+      .from(WorkflowTable)
+      .where(eq(WorkflowTable.id, id));
 
     if (!workflow) return null;
 
     const nodeWhere = opt?.ignoreNote
       ? and(
-          eq(WorkflowNodeDataSchema.workflowId, id),
-          not(eq(WorkflowNodeDataSchema.kind, NodeKind.Note)),
+          eq(WorkflowNodeDataTable.workflowId, id),
+          not(eq(WorkflowNodeDataTable.kind, NodeKind.Note)),
         )
-      : eq(WorkflowNodeDataSchema.workflowId, id);
+      : eq(WorkflowNodeDataTable.workflowId, id);
 
     const nodePromises = pgDb
       .select()
-      .from(WorkflowNodeDataSchema)
+      .from(WorkflowNodeDataTable)
       .where(nodeWhere);
     const edgePromises = pgDb
       .select()
-      .from(WorkflowEdgeSchema)
-      .where(eq(WorkflowEdgeSchema.workflowId, id));
+      .from(WorkflowEdgeTable)
+      .where(eq(WorkflowEdgeTable.workflowId, id));
     const [nodes, edges] = await Promise.all([nodePromises, edgePromises]);
     return {
       ...(workflow as DBWorkflow),

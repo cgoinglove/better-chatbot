@@ -1,5 +1,5 @@
 import { pgDb as db } from "../db.pg";
-import { McpServerSchema, McpToolCustomizationSchema } from "../schema.pg";
+import { McpServerTable, McpToolCustomizationTable } from "../schema.pg";
 import { and, eq } from "drizzle-orm";
 import type { McpToolCustomizationRepository } from "@/types/mcp";
 
@@ -8,12 +8,12 @@ export const pgMcpMcpToolCustomizationRepository: McpToolCustomizationRepository
     async select(key) {
       const [result] = await db
         .select()
-        .from(McpToolCustomizationSchema)
+        .from(McpToolCustomizationTable)
         .where(
           and(
-            eq(McpToolCustomizationSchema.userId, key.userId),
-            eq(McpToolCustomizationSchema.mcpServerId, key.mcpServerId),
-            eq(McpToolCustomizationSchema.toolName, key.toolName),
+            eq(McpToolCustomizationTable.userId, key.userId),
+            eq(McpToolCustomizationTable.mcpServerId, key.mcpServerId),
+            eq(McpToolCustomizationTable.toolName, key.toolName),
           ),
         );
       return result;
@@ -21,11 +21,11 @@ export const pgMcpMcpToolCustomizationRepository: McpToolCustomizationRepository
     async selectByUserIdAndMcpServerId(key) {
       const rows = await db
         .select()
-        .from(McpToolCustomizationSchema)
+        .from(McpToolCustomizationTable)
         .where(
           and(
-            eq(McpToolCustomizationSchema.userId, key.userId),
-            eq(McpToolCustomizationSchema.mcpServerId, key.mcpServerId),
+            eq(McpToolCustomizationTable.userId, key.userId),
+            eq(McpToolCustomizationTable.mcpServerId, key.mcpServerId),
           ),
         );
       return rows;
@@ -34,25 +34,25 @@ export const pgMcpMcpToolCustomizationRepository: McpToolCustomizationRepository
     async selectByUserId(userId) {
       return db
         .select({
-          id: McpToolCustomizationSchema.id,
-          userId: McpToolCustomizationSchema.userId,
-          toolName: McpToolCustomizationSchema.toolName,
-          mcpServerId: McpToolCustomizationSchema.mcpServerId,
-          prompt: McpToolCustomizationSchema.prompt,
-          serverName: McpServerSchema.name,
+          id: McpToolCustomizationTable.id,
+          userId: McpToolCustomizationTable.userId,
+          toolName: McpToolCustomizationTable.toolName,
+          mcpServerId: McpToolCustomizationTable.mcpServerId,
+          prompt: McpToolCustomizationTable.prompt,
+          serverName: McpServerTable.name,
         })
-        .from(McpToolCustomizationSchema)
+        .from(McpToolCustomizationTable)
         .innerJoin(
-          McpServerSchema,
-          eq(McpToolCustomizationSchema.mcpServerId, McpServerSchema.id),
+          McpServerTable,
+          eq(McpToolCustomizationTable.mcpServerId, McpServerTable.id),
         )
-        .where(and(eq(McpToolCustomizationSchema.userId, userId)));
+        .where(and(eq(McpToolCustomizationTable.userId, userId)));
     },
 
     async upsertToolCustomization(data) {
       const now = new Date();
       const [result] = await db
-        .insert(McpToolCustomizationSchema)
+        .insert(McpToolCustomizationTable)
         .values({
           userId: data.userId,
           toolName: data.toolName,
@@ -61,9 +61,9 @@ export const pgMcpMcpToolCustomizationRepository: McpToolCustomizationRepository
         })
         .onConflictDoUpdate({
           target: [
-            McpToolCustomizationSchema.userId,
-            McpToolCustomizationSchema.toolName,
-            McpToolCustomizationSchema.mcpServerId,
+            McpToolCustomizationTable.userId,
+            McpToolCustomizationTable.toolName,
+            McpToolCustomizationTable.mcpServerId,
           ],
           set: {
             prompt: data.prompt ?? null,
@@ -76,12 +76,12 @@ export const pgMcpMcpToolCustomizationRepository: McpToolCustomizationRepository
 
     async deleteToolCustomization(key) {
       await db
-        .delete(McpToolCustomizationSchema)
+        .delete(McpToolCustomizationTable)
         .where(
           and(
-            eq(McpToolCustomizationSchema.mcpServerId, key.mcpServerId),
-            eq(McpToolCustomizationSchema.toolName, key.toolName),
-            eq(McpToolCustomizationSchema.userId, key.userId),
+            eq(McpToolCustomizationTable.mcpServerId, key.mcpServerId),
+            eq(McpToolCustomizationTable.toolName, key.toolName),
+            eq(McpToolCustomizationTable.userId, key.userId),
           ),
         );
     },

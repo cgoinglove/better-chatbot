@@ -2,7 +2,7 @@ import { getSession } from "auth/server";
 import { bookmarkRepository } from "lib/db/repository";
 import { z } from "zod";
 
-const BookmarkSchema = z.object({
+const BookmarkTable = z.object({
   itemId: z.string().min(1),
   itemType: z.enum(["agent", "workflow"]),
 });
@@ -16,7 +16,7 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { itemId, itemType } = BookmarkSchema.parse(body);
+    const { itemId, itemType } = BookmarkTable.parse(body);
 
     // Check if user has access to bookmark this item
     const hasAccess = await bookmarkRepository.checkItemAccess(
@@ -61,7 +61,7 @@ export async function DELETE(request: Request) {
 
   try {
     const body = await request.json();
-    const { itemId, itemType } = BookmarkSchema.parse(body);
+    const { itemId, itemType } = BookmarkTable.parse(body);
 
     // Remove bookmark
     await bookmarkRepository.removeBookmark(session.user.id, itemId, itemType);

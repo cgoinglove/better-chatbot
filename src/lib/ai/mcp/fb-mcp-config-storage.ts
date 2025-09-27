@@ -12,7 +12,7 @@ import equal from "lib/equal";
 import defaultLogger from "logger";
 import { MCP_CONFIG_PATH } from "lib/ai/mcp/config-path";
 import { colorize } from "consola/utils";
-import { McpServerSchema } from "lib/db/pg/schema.pg";
+import { McpServerTable } from "lib/db/pg/schema.pg";
 
 const logger = defaultLogger.withDefaults({
   message: colorize("gray", `MCP File Config Storage: `),
@@ -33,7 +33,7 @@ export function createFileBasedMCPConfigsStorage(
    * Reads config from file
    */
   async function readConfigFile(): Promise<
-    (typeof McpServerSchema.$inferSelect)[]
+    (typeof McpServerTable.$inferSelect)[]
   > {
     try {
       const configText = await readFile(configPath, { encoding: "utf-8" });
@@ -167,7 +167,7 @@ export function createFileBasedMCPConfigsStorage(
       const currentConfig = await readConfigFile().then(toMcpServerRecord);
       currentConfig[server.name] = server.config;
       await writeConfigFile(currentConfig);
-      return fillMcpServerSchema(server);
+      return fillMcpServerTable(server);
     },
     // Deletes a configuration by name
     async delete(id) {
@@ -188,9 +188,9 @@ export function createFileBasedMCPConfigsStorage(
   };
 }
 
-function fillMcpServerSchema(
-  server: typeof McpServerSchema.$inferInsert,
-): typeof McpServerSchema.$inferSelect {
+function fillMcpServerTable(
+  server: typeof McpServerTable.$inferInsert,
+): typeof McpServerTable.$inferSelect {
   return {
     ...server,
     id: server.name,
@@ -204,9 +204,9 @@ function fillMcpServerSchema(
 
 function toMcpServerArray(
   config: Record<string, MCPServerConfig>,
-): (typeof McpServerSchema.$inferSelect)[] {
+): (typeof McpServerTable.$inferSelect)[] {
   return Object.entries(config).map(([name, config]) =>
-    fillMcpServerSchema({
+    fillMcpServerTable({
       id: name,
       name,
       config,
@@ -217,7 +217,7 @@ function toMcpServerArray(
 }
 
 function toMcpServerRecord(
-  servers: (typeof McpServerSchema.$inferSelect)[],
+  servers: (typeof McpServerTable.$inferSelect)[],
 ): Record<string, MCPServerConfig> {
   return servers.reduce(
     (acc, server) => {

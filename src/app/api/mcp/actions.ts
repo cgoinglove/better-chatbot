@@ -2,7 +2,7 @@
 import { mcpClientsManager } from "lib/ai/mcp/mcp-manager";
 import { z } from "zod";
 
-import { McpServerSchema } from "lib/db/pg/schema.pg";
+import { McpServerTable } from "lib/db/pg/schema.pg";
 import { mcpOAuthRepository, mcpRepository } from "lib/db/repository";
 import {
   canCreateMCP,
@@ -55,7 +55,7 @@ export async function selectMcpClientAction(id: string) {
 }
 
 export async function saveMcpClientAction(
-  server: typeof McpServerSchema.$inferInsert,
+  server: typeof McpServerTable.$inferInsert,
 ) {
   if (process.env.NOT_ALLOW_ADD_MCP_SERVERS) {
     throw new Error("Not allowed to add MCP servers");

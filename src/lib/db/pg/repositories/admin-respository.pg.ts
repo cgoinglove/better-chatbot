@@ -4,7 +4,7 @@ import {
   AdminUsersPaginated,
 } from "app-types/admin";
 import { pgDb as db } from "../db.pg";
-import { UserSchema, SessionSchema } from "../schema.pg";
+import { UserTable, SessionTable } from "../schema.pg";
 import {
   and,
   asc,
@@ -19,7 +19,7 @@ import {
 
 // Helper function to get user columns without password
 const getUserColumnsWithoutPassword = () => {
-  const { password, ...userColumns } = getTableColumns(UserSchema);
+  const { password, ...userColumns } = getTableColumns(UserTable);
   return userColumns;
 };
 
@@ -41,12 +41,12 @@ const pgAdminRepository: AdminRepository = {
       .select({
         ...getUserColumnsWithoutPassword(),
         lastLogin: sql<Date | null>`(
-          SELECT MAX(${SessionSchema.updatedAt}) 
-          FROM ${SessionSchema} 
-          WHERE ${SessionSchema.userId} = ${UserSchema.id}
+          SELECT MAX(${SessionTable.updatedAt}) 
+          FROM ${SessionTable} 
+          WHERE ${SessionTable.userId} = ${UserTable.id}
         )`.as("lastLogin"),
       })
-      .from(UserSchema);
+      .from(UserTable);
 
     // Build WHERE conditions
     const whereConditions: any[] = [];
@@ -56,8 +56,8 @@ const pgAdminRepository: AdminRepository = {
       const searchTerm = `%${searchValue.trim()}%`;
       whereConditions.push(
         or(
-          ilike(UserSchema.name, searchTerm),
-          ilike(UserSchema.email, searchTerm),
+          ilike(UserTable.name, searchTerm),
+          ilike(UserTable.email, searchTerm),
         ),
       );
     }
@@ -95,7 +95,7 @@ const pgAdminRepository: AdminRepository = {
       : await usersQueryBuilder;
 
     // Get total count with same WHERE conditions
-    const countQueryBuilder = db.select({ count: count() }).from(UserSchema);
+    const countQueryBuilder = db.select({ count: count() }).from(UserTable);
     const [totalResult] = whereClause
       ? await countQueryBuilder.where(whereClause)
       : await countQueryBuilder;
@@ -122,22 +122,22 @@ function buildFilterCondition(
   let column;
   switch (field) {
     case "name":
-      column = UserSchema.name;
+      column = UserTable.name;
       break;
     case "email":
-      column = UserSchema.email;
+      column = UserTable.email;
       break;
     case "role":
-      column = UserSchema.role;
+      column = UserTable.role;
       break;
     case "banned":
-      column = UserSchema.banned;
+      column = UserTable.banned;
       break;
     case "createdAt":
-      column = UserSchema.createdAt;
+      column = UserTable.createdAt;
       break;
     case "updatedAt":
-      column = UserSchema.updatedAt;
+      column = UserTable.updatedAt;
       break;
     default:
       return null; // Unknown field
@@ -169,23 +169,23 @@ function buildOrderBy(sortBy: string, direction: "asc" | "desc") {
   let column;
   switch (sortBy) {
     case "name":
-      column = UserSchema.name;
+      column = UserTable.name;
       break;
     case "email":
-      column = UserSchema.email;
+      column = UserTable.email;
       break;
     case "role":
-      column = UserSchema.role;
+      column = UserTable.role;
       break;
     case "createdAt":
-      column = UserSchema.createdAt;
+      column = UserTable.createdAt;
       break;
     case "updatedAt":
-      column = UserSchema.updatedAt;
+      column = UserTable.updatedAt;
       break;
     default:
       // Default to createdAt if invalid sortBy
-      column = UserSchema.createdAt;
+      column = UserTable.createdAt;
       break;
   }
   return direction === "asc" ? asc(column) : desc(column);
