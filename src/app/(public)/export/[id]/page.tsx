@@ -1,3 +1,4 @@
+import ExportError from "@/components/export/error";
 import { chatExportRepository } from "lib/db/repository";
 
 export default async function ExportPage({
@@ -8,10 +9,10 @@ export default async function ExportPage({
   const { id } = await params;
   const isExpired = await chatExportRepository.isExpired(id);
   if (isExpired) {
-    return null;
+    return <ExportError message="This export has expired" />;
   }
   const thread = await chatExportRepository.selectByIdWithUser(id);
   if (!thread) {
-    return null;
+    return <ExportError message="This export does not exist" />;
   }
 }
