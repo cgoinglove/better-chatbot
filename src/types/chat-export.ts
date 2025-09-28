@@ -37,6 +37,7 @@ export type ChatExportComment = {
   id: string;
   exportId: string;
   authorId: string;
+  parentId?: string;
   content: TipTapMentionJsonContent;
   createdAt: Date;
   updatedAt: Date;
@@ -45,6 +46,7 @@ export type ChatExportComment = {
 export const ChatExportCommentCreateSchema = z.object({
   exportId: z.string(),
   authorId: z.string(),
+  parentId: z.string().optional(),
   content: z.any() as z.ZodType<TipTapMentionJsonContent>,
 });
 
@@ -60,10 +62,11 @@ export type ChatExportWithUser = ChatExport & {
 export type ChatExportCommentWithUser = ChatExportComment & {
   authorName: string;
   authorImage?: string;
+  replies?: ChatExportCommentWithUser[];
 };
 
 export type ChatExportRepository = {
-  insert(data: z.infer<typeof ChatExportCreateSchema>): Promise<ChatExport>;
+  insert(data: z.infer<typeof ChatExportCreateSchema>): Promise<void>;
   selectById(id: string): Promise<ChatExport | null>;
   selectByIdWithUser(id: string): Promise<ChatExportWithUser | null>;
   selectByExporterId(exporterId: string): Promise<ChatExport[]>;
@@ -72,7 +75,7 @@ export type ChatExportRepository = {
   isExpired(id: string): Promise<boolean>;
   insertComment(
     data: z.infer<typeof ChatExportCommentCreateSchema>,
-  ): Promise<ChatExportComment>;
+  ): Promise<void>;
   selectCommentsByExportId(
     exportId: string,
   ): Promise<ChatExportCommentWithUser[]>;

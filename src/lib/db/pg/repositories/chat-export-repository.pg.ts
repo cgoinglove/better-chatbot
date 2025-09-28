@@ -1,6 +1,5 @@
 import {
   ChatExport,
-  ChatExportComment,
   ChatExportCommentWithUser,
   ChatExportCreateSchema,
   ChatExportRepository,
@@ -35,11 +34,7 @@ function toChatExportInsert(
 
 export const pgChatExportRepository: ChatExportRepository = {
   insert: async (data) => {
-    const [result] = await pgDb
-      .insert(ChatExportTable)
-      .values(toChatExportInsert(data))
-      .returning();
-    return toChatExport(result);
+    await pgDb.insert(ChatExportTable).values(toChatExportInsert(data));
   },
   selectById: async (id) => {
     const [result] = await pgDb
@@ -97,11 +92,7 @@ export const pgChatExportRepository: ChatExportRepository = {
     return !!result?.expiresAt && result.expiresAt < new Date();
   },
   insertComment: async (data) => {
-    const [result] = await pgDb
-      .insert(ChatExportCommentTable)
-      .values(data)
-      .returning();
-    return result as ChatExportComment;
+    await pgDb.insert(ChatExportCommentTable).values(data);
   },
   selectCommentsByExportId: async (exportId) => {
     const result = await pgDb
@@ -109,6 +100,7 @@ export const pgChatExportRepository: ChatExportRepository = {
         id: ChatExportCommentTable.id,
         exportId: ChatExportCommentTable.exportId,
         authorId: ChatExportCommentTable.authorId,
+        parentId: ChatExportCommentTable.parentId,
         content: ChatExportCommentTable.content,
         createdAt: ChatExportCommentTable.createdAt,
         updatedAt: ChatExportCommentTable.updatedAt,
@@ -117,9 +109,30 @@ export const pgChatExportRepository: ChatExportRepository = {
       })
       .from(ChatExportCommentTable)
       .leftJoin(UserTable, eq(ChatExportCommentTable.authorId, UserTable.id))
-      .where(eq(ChatExportCommentTable.exportId, exportId));
+      .where(eq(ChatExportCommentTable.exportId, exportId))
+      .orderBy(ChatExportCommentTable.createdAt);
 
-    return result as ChatExportCommentWithUser[];
+    const commentsById = new Map<string, ChatExportCommentWithUser>(
+      result.map((comment) => [
+        comment.id,
+        comment as ChatExportCommentWithUser,
+      ]),
+    );
+    result.forEach((comment) => {
+      if (comment.parentId) {
+        const parent = commentsById.get(comment.parentId);
+        if (parent) {
+          parent.replies = [
+            ...(parent.replies || []),
+            comment as ChatExportCommentWithUser,
+          ];
+        }
+      }
+    });
+
+    return result.filter(
+      (comment) => !comment.parentId,
+    ) as ChatExportCommentWithUser[];
   },
   checkCommentAccess: async (id, authorId) => {
     const result = await pgDb

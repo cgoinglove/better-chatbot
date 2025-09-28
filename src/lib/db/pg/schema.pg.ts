@@ -363,6 +363,9 @@ export const ChatExportCommentTable = pgTable("chat_export_comment", {
   authorId: uuid("author_id")
     .notNull()
     .references(() => UserTable.id, { onDelete: "cascade" }),
+  parentId: uuid("parent_id").references(() => ChatExportCommentTable.id, {
+    onDelete: "cascade",
+  }),
   content: json("content").notNull().$type<TipTapMentionJsonContent>(),
   createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
