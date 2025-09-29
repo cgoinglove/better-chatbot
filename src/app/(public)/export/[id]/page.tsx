@@ -1,5 +1,6 @@
 import ExportError from "@/components/export/error";
 import { chatExportRepository } from "lib/db/repository";
+import ChatPreview from "@/components/export/chat-preview";
 
 export default async function ExportPage({
   params,
@@ -15,4 +16,6 @@ export default async function ExportPage({
   if (!thread) {
     return <ExportError message="This export does not exist" />;
   }
+
+  return <ChatPreview thread={thread} />;
 }

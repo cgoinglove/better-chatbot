@@ -92,13 +92,3 @@ export type ChatExportRepository = {
   checkCommentAccess(id: string, authorId: string): Promise<boolean>;
   deleteComment(id: string, authorId: string): Promise<void>;
 };
-
-export const ChatExportMessageMentionSchema = z.object({
-  type: z.literal("exportMessage"),
-  messageId: z.string(),
-  partIndex: z.number().optional(),
-});
-
-export type ChatExportMessageMention = z.infer<
-  typeof ChatExportMessageMentionSchema
->;
