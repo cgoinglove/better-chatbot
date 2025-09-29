@@ -106,37 +106,15 @@ export default function SignInPage() {
       });
   };
 
-  const oktaSignIn = async () => {
+  const oktaSignIn = () => {
     if (
       !process.env.NEXT_PUBLIC_OKTA_CLIENT_ID ||
       !process.env.NEXT_PUBLIC_OKTA_DOMAIN
     )
       return toast.warning(t("oauthClientIdNotSet", { provider: "Okta" }));
 
-    try {
-      // Use fetch to POST to the OAuth2 endpoint
-      const response = await fetch("/api/auth/sign-in/oauth2", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          providerId: "okta",
-          callbackURL: window.location.origin,
-        }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.url) {
-          window.location.href = data.url;
-        }
-      } else {
-        toast.error("Failed to initiate Okta sign-in");
-      }
-    } catch (_error) {
-      toast.error("Error connecting to Okta");
-    }
+    // Redirect to our custom Okta OAuth initiation endpoint
+    window.location.href = "/api/auth/okta";
   };
 
   return (
