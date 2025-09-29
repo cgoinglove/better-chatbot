@@ -245,4 +245,16 @@ export const pgChatRepository: ChatRepository = {
       .returning();
     return result as ChatMessage[];
   },
+
+  checkAccess: async (id: string, userId: string): Promise<boolean> => {
+    const [result] = await db
+      .select({
+        userId: ChatThreadTable.userId,
+      })
+      .from(ChatThreadTable)
+      .where(
+        and(eq(ChatThreadTable.id, id), eq(ChatThreadTable.userId, userId)),
+      );
+    return Boolean(result);
+  },
 };

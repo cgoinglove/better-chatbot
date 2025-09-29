@@ -153,7 +153,12 @@
       "failedToUpdateThread": "채팅 업데이트 실패",
       "titleRequired": "제목이 필요합니다",
       "threadUpdated": "채팅이 업데이트되었습니다",
-      "areYouSureYouWantToDeleteThisChatThread": "이 채팅을 삭제하시겠습니까?"
+      "areYouSureYouWantToDeleteThisChatThread": "이 채팅을 삭제하시겠습니까?",
+      "sharePublicLink": "공개 링크 공유",
+      "sharePublicLinkDescription": "공유 후 추가되는 모든 메시지는 비공개로 유지됩니다.",
+      "creatingLink": "링크 생성 중...",
+      "createLink": "링크 만들기",
+      "linkCopied": "링크가 복사되었습니다"
     },
 
     "ChatPreferences": {

@@ -13,6 +13,7 @@ import {
 } from "../schema.pg";
 import { and, eq } from "drizzle-orm";
 import z from "zod";
+import { pgChatRepository } from "./chat-repository.pg";
 
 function toChatExport(data: typeof ChatExportTable.$inferSelect): ChatExport {
   return {
@@ -29,12 +30,40 @@ function toChatExport(data: typeof ChatExportTable.$inferSelect): ChatExport {
 function toChatExportInsert(
   data: z.infer<typeof ChatExportCreateSchema>,
 ): typeof ChatExportTable.$inferInsert {
-  return data as ChatExport;
+  return ChatExportCreateSchema.parse(data) as ChatExport;
 }
 
 export const pgChatExportRepository: ChatExportRepository = {
+  exportChat: async ({ threadId, exporterId, expiresAt }) => {
+    const [thread, messages] = await Promise.all([
+      pgChatRepository.selectThread(threadId),
+      pgChatRepository.selectMessagesByThreadId(threadId),
+    ]);
+
+    if (!thread) {
+      throw new Error("Thread not found");
+    }
+
+    return await pgChatExportRepository.insert({
+      exporterId: exporterId ?? thread.userId,
+      title: thread.title,
+      messages: messages.map((m) => ({
+        id: m.id,
+        role: m.role,
+        parts: m.parts,
+        metadata: m.metadata,
+      })),
+      originalThreadId: threadId,
+      expiresAt,
+    });
+  },
+
   insert: async (data) => {
-    await pgDb.insert(ChatExportTable).values(toChatExportInsert(data));
+    const result = await pgDb
+      .insert(ChatExportTable)
+      .values(toChatExportInsert(data))
+      .returning();
+    return result[0].id;
   },
   selectById: async (id) => {
     const [result] = await pgDb

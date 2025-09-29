@@ -152,7 +152,12 @@
       "failedToUpdateThread": "Échec de mise à jour du fil",
       "titleRequired": "Le titre est requis",
       "threadUpdated": "Fil mis à jour",
-      "areYouSureYouWantToDeleteThisChatThread": "Êtes-vous sûr de vouloir supprimer ce fil de chat ?"
+      "areYouSureYouWantToDeleteThisChatThread": "Êtes-vous sûr de vouloir supprimer ce fil de chat ?",
+      "sharePublicLink": "Partager le Lien Public",
+      "sharePublicLinkDescription": "Tous les messages ajoutés après le partage resteront privés.",
+      "creatingLink": "Création du lien...",
+      "createLink": "Créer le Lien",
+      "linkCopied": "Lien copié"
     },
 
     "ChatPreferences": {

@@ -261,6 +261,7 @@
     "Thread": {
       "chat": "Chat",
       "renameChat": "Rename",
+      "exportChat": "Share Link",
       "deleteChat": "Delete Chat",
       "deleteUnarchivedChats": "Delete All Unarchived Chats",
       "confirmDeleteUnarchivedChats": "Are you sure you want to delete all unarchived chats?",
@@ -272,7 +273,12 @@
       "failedToUpdateThread": "Failed to update thread",
       "titleRequired": "Title is required",
       "threadUpdated": "Thread updated",
-      "areYouSureYouWantToDeleteThisChatThread": "Are you sure you want to delete this Chat thread?"
+      "areYouSureYouWantToDeleteThisChatThread": "Are you sure you want to delete this Chat thread?",
+      "sharePublicLink": "Share Public Link",
+      "sharePublicLinkDescription": "All messages added after sharing will remain private.",
+      "creatingLink": "Creating link...",
+      "createLink": "Create Link",
+      "linkCopied": "Link copied"
     },
     "ChatPreferences": {
       "title": "Chat Preferences",

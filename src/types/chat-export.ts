@@ -18,6 +18,11 @@ export type ChatExport = {
   expiresAt?: Date;
 };
 
+export const ChatExportByThreadIdSchema = z.object({
+  threadId: z.string(),
+  expiresAt: z.date().nullish(),
+});
+
 export const ChatExportCreateSchema = z.object({
   title: z.string().min(1).max(200),
   exporterId: z.string(),
@@ -66,7 +71,12 @@ export type ChatExportCommentWithUser = ChatExportComment & {
 };
 
 export type ChatExportRepository = {
-  insert(data: z.infer<typeof ChatExportCreateSchema>): Promise<void>;
+  exportChat(data: {
+    threadId: string;
+    exporterId?: string;
+    expiresAt?: Date;
+  }): Promise<string>;
+  insert(data: z.infer<typeof ChatExportCreateSchema>): Promise<string>;
   selectById(id: string): Promise<ChatExport | null>;
   selectByIdWithUser(id: string): Promise<ChatExportWithUser | null>;
   selectByExporterId(exporterId: string): Promise<ChatExport[]>;
