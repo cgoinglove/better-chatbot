@@ -1,9 +1,5 @@
 import {
-  appendResponseMessages,
   createDataStreamResponse,
-  smoothStream,
-  streamText,
-  type UIMessage,
   formatDataStreamPart,
   appendClientMessage,
   Message,
@@ -30,8 +26,6 @@ import { errorIf, safe } from "ts-safe";
 import { generateUUID } from "lib/utils";
 
 import {
-  appendAnnotations,
-  excludeToolExecution,
   filterToolsByMentions,
   handleError,
   manualToolExecuteByLastMessage,
@@ -43,7 +37,6 @@ import {
   getAllowedDefaultToolkit,
   filterToolsByAllowedMCPServers,
   filterMcpServerCustomizations,
-  createResourceAwareToolDescriptions,
   createMultiPhaseResourceAwareFlow,
 } from "./helper";
 import {
@@ -194,13 +187,15 @@ export async function POST(request: Request) {
           model,
           systemPrompt,
           messages,
-          vercelAITooles || {},
+          (vercelAITooles || {}) as Record<string, any>,
           computedToolChoice,
           dataStream,
-                    async (finishResult) => {
+          async (finishResult) => {
             // CRITICAL: Handle database operations for message persistence
-            logger.info("Multi-phase flow completed, handling database operations");
-            
+            logger.info(
+              "Multi-phase flow completed, handling database operations",
+            );
+
             try {
               // Save the user message if it's a new message
               if (isLastMessageUserMessage && message) {
@@ -211,7 +206,8 @@ export async function POST(request: Request) {
                   content: message.content,
                   parts: message.parts,
                   annotations: message.annotations,
-                  attachments: message.attachments,
+                  attachments: (message as any).attachments,
+                  model: chatModel?.model || null,
                 };
                 await chatRepository.upsertMessage(userMessage);
                 logger.info(`Saved user message ${message.id} to database`);
@@ -220,7 +216,7 @@ export async function POST(request: Request) {
               // Save the assistant response
               if (finishResult) {
                 const assistantMessageParts = [];
-                
+
                 if (finishResult.text) {
                   assistantMessageParts.push({
                     type: "text" as const,
@@ -259,9 +255,11 @@ export async function POST(request: Request) {
                   annotations: annotations,
                   model: chatModel,
                 };
-                
+
                 await chatRepository.upsertMessage(assistantMessage);
-                logger.info(`Saved assistant message ${assistantMessage.id} to database`);
+                logger.info(
+                  `Saved assistant message ${assistantMessage.id} to database`,
+                );
               }
 
               logger.info("Messages successfully saved to database");

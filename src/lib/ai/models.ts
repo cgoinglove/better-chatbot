@@ -72,3 +72,42 @@ const staticUnsupportedModels = new Set([
   staticModels.openRouter["qwen3-8b:free"],
   staticModels.openRouter["qwen3-14b:free"],
 ]);
+
+const openaiCompatibleProviders = openaiCompatibleModelsSafeParse(
+  process.env.OPENAI_COMPATIBLE_DATA,
+);
+
+const {
+  providers: openaiCompatibleModels,
+  unsupportedModels: openaiCompatibleUnsupportedModels,
+} = createOpenAICompatibleModels(openaiCompatibleProviders);
+
+const allModels = { ...openaiCompatibleModels, ...staticModels };
+
+const allUnsupportedModels = new Set([
+  ...openaiCompatibleUnsupportedModels,
+  ...staticUnsupportedModels,
+]);
+
+export const isToolCallUnsupportedModel = (model: LanguageModel) => {
+  return allUnsupportedModels.has(model);
+};
+
+const firstProvider = Object.keys(allModels)[0];
+const firstModel = Object.keys(allModels[firstProvider])[0];
+
+const fallbackModel = allModels[firstProvider][firstModel];
+
+export const customModelProvider = {
+  modelsInfo: Object.entries(allModels).map(([provider, models]) => ({
+    provider,
+    models: Object.entries(models).map(([name, model]) => ({
+      name,
+      isToolCallUnsupported: isToolCallUnsupportedModel(model),
+    })),
+  })),
+  getModel: (model?: ChatModel): LanguageModel => {
+    if (!model) return fallbackModel;
+    return allModels[model.provider]?.[model.model] || fallbackModel;
+  },
+};
