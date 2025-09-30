@@ -123,7 +123,7 @@ export const pgChatExportRepository: ChatExportRepository = {
   insertComment: async (data) => {
     await pgDb.insert(ChatExportCommentTable).values(data);
   },
-  selectCommentsByExportId: async (exportId) => {
+  selectCommentsByExportId: async (exportId, userId) => {
     const result = await pgDb
       .select({
         id: ChatExportCommentTable.id,
@@ -139,7 +139,14 @@ export const pgChatExportRepository: ChatExportRepository = {
       .from(ChatExportCommentTable)
       .leftJoin(UserTable, eq(ChatExportCommentTable.authorId, UserTable.id))
       .where(eq(ChatExportCommentTable.exportId, exportId))
-      .orderBy(ChatExportCommentTable.createdAt);
+      .orderBy(ChatExportCommentTable.createdAt)
+      .then((result) => {
+        if (!userId) return result;
+        return result.map((comment) => ({
+          ...comment,
+          isOwner: comment.authorId === userId,
+        }));
+      });
 
     const commentsById = new Map<string, ChatExportCommentWithUser>(
       result.map((comment) => [

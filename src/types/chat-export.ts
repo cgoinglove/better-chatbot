@@ -67,6 +67,7 @@ export type ChatExportWithUser = ChatExport & {
 export type ChatExportCommentWithUser = ChatExportComment & {
   authorName: string;
   authorImage?: string;
+  isOwner?: boolean;
   replies?: ChatExportCommentWithUser[];
 };
 
@@ -88,6 +89,7 @@ export type ChatExportRepository = {
   ): Promise<void>;
   selectCommentsByExportId(
     exportId: string,
+    userId?: string,
   ): Promise<ChatExportCommentWithUser[]>;
   checkCommentAccess(id: string, authorId: string): Promise<boolean>;
   deleteComment(id: string, authorId: string): Promise<void>;

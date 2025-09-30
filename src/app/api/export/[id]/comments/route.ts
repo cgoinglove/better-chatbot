@@ -2,6 +2,7 @@ import { getSession } from "auth/server";
 import { chatExportRepository } from "lib/db/repository";
 import { ChatExportCommentCreateSchema } from "app-types/chat-export";
 import { NextRequest, NextResponse } from "next/server";
+import { getUserId } from "@/app/api/chat/actions";
 
 export async function GET(
   _request: NextRequest,
@@ -9,8 +10,12 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+    const userId = await getUserId().catch(() => undefined);
 
-    const comments = await chatExportRepository.selectCommentsByExportId(id);
+    const comments = await chatExportRepository.selectCommentsByExportId(
+      id,
+      userId,
+    );
     return NextResponse.json(comments);
   } catch (error: any) {
     return NextResponse.json(

@@ -1,6 +1,7 @@
 import ExportError from "@/components/export/error";
 import { chatExportRepository } from "lib/db/repository";
 import ChatPreview from "@/components/export/chat-preview";
+import { getUserId } from "@/app/api/chat/actions";
 
 export default async function ExportPage({
   params,
@@ -17,5 +18,11 @@ export default async function ExportPage({
     return <ExportError message="This export does not exist" />;
   }
 
-  return <ChatPreview thread={thread} />;
+  const userId = await getUserId().catch(() => undefined);
+
+  const comments = userId
+    ? await chatExportRepository.selectCommentsByExportId(id, userId)
+    : [];
+
+  return <ChatPreview thread={thread} comments={comments} />;
 }

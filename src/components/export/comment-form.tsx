@@ -4,30 +4,41 @@ import { useState } from "react";
 import { Button } from "ui/button";
 import MentionInput from "../mention-input";
 import { TipTapMentionJsonContent } from "app-types/util";
-import { SendIcon } from "lucide-react";
+import { LoaderIcon, SendIcon } from "lucide-react";
 import { useSWRConfig } from "swr";
 
 export default function CommentForm({
   exportId,
   parentId,
   onSubmit,
-  onCancel,
 }: {
   exportId: string;
   parentId?: string;
   onSubmit?: () => void;
-  onCancel?: () => void;
 }) {
-  const [content, setContent] = useState<TipTapMentionJsonContent | null>(null);
-  const [text, setText] = useState("");
+  const [content, setContent] = useState<
+    TipTapMentionJsonContent | undefined | string
+  >();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { mutate } = useSWRConfig();
 
   const handleSubmit = async () => {
-    if (!content || !text.trim()) return;
+    if (!content) return;
 
     try {
       setIsSubmitting(true);
+
+      const trimContent = (content as TipTapMentionJsonContent).content?.filter(
+        (item) => {
+          if (item.type == "paragraph" && !item.content) return false;
+          return true;
+        },
+      );
+
+      if ((content as TipTapMentionJsonContent).content) {
+        (content as TipTapMentionJsonContent).content = trimContent;
+      }
+
       const response = await fetch(`/api/export/${exportId}/comments`, {
         method: "POST",
         headers: {
@@ -44,9 +55,7 @@ export default function CommentForm({
       }
 
       // Reset form
-      setContent(null);
-      setText("");
-
+      setContent("");
       // Refresh comments
       mutate(`/api/export/${exportId}/comments`);
 
@@ -60,53 +69,38 @@ export default function CommentForm({
 
   const handleContentChange = ({
     json,
-    text,
   }: {
     json: TipTapMentionJsonContent;
-    text: string;
     mentions: { label: string; id: string }[];
   }) => {
     setContent(json);
-    setText(text);
   };
 
   return (
-    <div className="space-y-3">
-      <div className="border border-border rounded-lg p-3">
+    <div className="flex gap-2 items-end w-full">
+      <div className="flex-1 bg-secondary rounded-lg p-0.5">
         <MentionInput
+          className="text-sm"
           placeholder="Write a comment..."
+          content={content}
           onChange={handleContentChange}
           onEnter={handleSubmit}
-          MentionItem={({ label }) => (
-            <span className="px-1 py-0.5 bg-primary/10 text-primary rounded text-xs">
-              @{label}
-            </span>
-          )}
-          Suggestion={() => null} // Disable suggestions for now
           disabledMention={true}
         />
       </div>
 
-      <div className="flex items-center gap-2 justify-end">
-        {onCancel && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onCancel}
-            disabled={isSubmitting}
-          >
-            Cancel
-          </Button>
+      <Button
+        size="icon"
+        variant="ghost"
+        onClick={handleSubmit}
+        disabled={!content || isSubmitting}
+      >
+        {isSubmitting ? (
+          <LoaderIcon className="mr-1 animate-spin" />
+        ) : (
+          <SendIcon className="mr-1" />
         )}
-        <Button
-          size="sm"
-          onClick={handleSubmit}
-          disabled={!text.trim() || isSubmitting}
-        >
-          <SendIcon className="size-3 mr-1" />
-          {isSubmitting ? "Posting..." : "Post"}
-        </Button>
-      </div>
+      </Button>
     </div>
   );
 }
