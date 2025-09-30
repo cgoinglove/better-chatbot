@@ -3,6 +3,7 @@ import {
   ChatExportCommentWithUser,
   ChatExportCreateSchema,
   ChatExportRepository,
+  ChatExportSummary,
   ChatExportWithUser,
 } from "app-types/chat-export";
 import { pgDb } from "../db.pg";
@@ -11,7 +12,7 @@ import {
   ChatExportTable,
   UserTable,
 } from "../schema.pg";
-import { and, eq } from "drizzle-orm";
+import { and, count, eq, sql } from "drizzle-orm";
 import z from "zod";
 import { pgChatRepository } from "./chat-repository.pg";
 
@@ -96,6 +97,33 @@ export const pgChatExportRepository: ChatExportRepository = {
       .from(ChatExportTable)
       .where(eq(ChatExportTable.exporterId, exporterId));
     return result.map(toChatExport);
+  },
+  selectSummaryByExporterId: async (exporterId) => {
+    const result = await pgDb
+      .select({
+        id: ChatExportTable.id,
+        title: ChatExportTable.title,
+        exporterId: ChatExportTable.exporterId,
+        originalThreadId: ChatExportTable.originalThreadId,
+        exportedAt: ChatExportTable.exportedAt,
+        expiresAt: ChatExportTable.expiresAt,
+        commentCount: count(ChatExportCommentTable.id),
+      })
+      .from(ChatExportTable)
+      .leftJoin(
+        ChatExportCommentTable,
+        eq(ChatExportCommentTable.exportId, ChatExportTable.id),
+      )
+      .where(eq(ChatExportTable.exporterId, exporterId))
+      .groupBy(ChatExportTable.id)
+      .orderBy(sql`${ChatExportTable.exportedAt} DESC`);
+
+    return result.map((row) => ({
+      ...row,
+      originalThreadId: row.originalThreadId ?? undefined,
+      expiresAt: row.expiresAt ?? undefined,
+      commentCount: Number(row.commentCount) || 0,
+    })) as ChatExportSummary[];
   },
   checkAccess: async (id, userId) => {
     const result = await pgDb

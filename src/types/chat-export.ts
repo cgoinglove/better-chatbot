@@ -71,6 +71,16 @@ export type ChatExportCommentWithUser = ChatExportComment & {
   replies?: ChatExportCommentWithUser[];
 };
 
+export type ChatExportSummary = {
+  id: string;
+  title: string;
+  exporterId: string;
+  originalThreadId?: string;
+  commentCount: number;
+  exportedAt: Date;
+  expiresAt?: Date;
+};
+
 export type ChatExportRepository = {
   exportChat(data: {
     threadId: string;
@@ -81,6 +91,7 @@ export type ChatExportRepository = {
   selectById(id: string): Promise<ChatExport | null>;
   selectByIdWithUser(id: string): Promise<ChatExportWithUser | null>;
   selectByExporterId(exporterId: string): Promise<ChatExport[]>;
+  selectSummaryByExporterId(exporterId: string): Promise<ChatExportSummary[]>;
   checkAccess(id: string, userId: string): Promise<boolean>;
   deleteById(id: string): Promise<void>;
   isExpired(id: string): Promise<boolean>;
