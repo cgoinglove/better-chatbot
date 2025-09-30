@@ -3,7 +3,7 @@
 import CommentForm from "./comment-form";
 import Comment from "./comment";
 import { Drawer, DrawerContent, DrawerTitle, DrawerTrigger } from "ui/drawer";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { CornerDownRightIcon, MessagesSquareIcon, XIcon } from "lucide-react";
 import { Button } from "ui/button";
 import useSWR, { mutate } from "swr";
