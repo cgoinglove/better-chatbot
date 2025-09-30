@@ -77,7 +77,7 @@ export default function CommentForm({
   };
 
   return (
-    <div className="flex gap-2 items-end w-full">
+    <div className="flex gap-2 items-end w-full" data-testid="comment-form">
       <div className="flex-1 bg-secondary rounded-lg p-0.5">
         <MentionInput
           className="text-sm"
@@ -94,6 +94,7 @@ export default function CommentForm({
         variant="ghost"
         onClick={handleSubmit}
         disabled={!content || isSubmitting}
+        data-testid="comment-submit"
       >
         {isSubmitting ? (
           <LoaderIcon className="mr-1 animate-spin" />

@@ -66,6 +66,7 @@ export default function Comments({
         size="icon"
         className="relative"
         disabled={isPending}
+        data-testid="comments-trigger"
       >
         <MessagesSquareIcon />
         {commentCount > 0 && (
@@ -141,7 +142,10 @@ export default function Comments({
                 <Skeleton className="h-24 w-full" />
               </>
             ) : data?.length === 0 ? (
-              <div className="text-center py-8 h-full flex justify-center items-center">
+              <div
+                className="text-center py-8 h-full flex justify-center items-center"
+                data-testid="comments-empty"
+              >
                 <p className="text-muted-foreground">
                   Be the first to comment!
                 </p>

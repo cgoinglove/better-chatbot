@@ -15,7 +15,10 @@ export default function ChatPreview({
   comments,
 }: { thread: ChatExportWithUser; comments: ChatExportCommentWithUser[] }) {
   return (
-    <div className="flex flex-col min-w-0 h-full relative">
+    <div
+      className="flex flex-col min-w-0 h-full relative"
+      data-testid="export-preview"
+    >
       <div className="absolute top-0 left-0 w-full h-full -z-10">
         <Particles particleCount={400} particleBaseSize={10} />
       </div>
@@ -25,7 +28,9 @@ export default function ChatPreview({
 
       <div className="flex flex-col gap-2 overflow-y-auto pb-20">
         <div className="w-full mx-auto max-w-3xl px-6 py-8">
-          <h1 className="text-3xl font-bold mb-2">{thread.title}</h1>
+          <h1 className="text-3xl font-bold mb-2" data-testid="export-title">
+            {thread.title}
+          </h1>
           <div className="text-xs text-muted-foreground flex items-center gap-2">
             {formatDate(thread.exportedAt, "MMM d, yyyy")}
             <Tooltip>
