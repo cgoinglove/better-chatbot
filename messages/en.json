@@ -261,6 +261,7 @@
     "Thread": {
       "chat": "Chat",
       "renameChat": "Rename",
+      "exportChat": "Share Link",
       "deleteChat": "Delete Chat",
       "deleteUnarchivedChats": "Delete All Unarchived Chats",
       "confirmDeleteUnarchivedChats": "Are you sure you want to delete all unarchived chats?",
@@ -272,7 +273,12 @@
       "failedToUpdateThread": "Failed to update thread",
       "titleRequired": "Title is required",
       "threadUpdated": "Thread updated",
-      "areYouSureYouWantToDeleteThisChatThread": "Are you sure you want to delete this Chat thread?"
+      "areYouSureYouWantToDeleteThisChatThread": "Are you sure you want to delete this Chat thread?",
+      "sharePublicLink": "Share Public Link",
+      "sharePublicLinkDescription": "All messages added after sharing will remain private.",
+      "creatingLink": "Creating link...",
+      "createLink": "Create Link",
+      "linkCopied": "Link copied"
     },
     "ChatPreferences": {
       "title": "Chat Preferences",
@@ -295,7 +301,21 @@
       "userInstructionsDescription": "Introduce yourself and get a more personalized response.",
       "mcpInstructions": "MCP Instructions",
       "mcpInstructionsDescription": "Customize the MCP server instructions.",
-      "userSettings": "User Settings"
+      "userSettings": "User Settings",
+      "myExports": "My Exports",
+      "myExportsDescription": "Manage and organize your shared chat exports.",
+      "noExportsYet": "No exports yet",
+      "exportHint": "Share a chat thread to create your first export.",
+      "exported": "Exported",
+      "expires": "Expires",
+      "messages": "messages",
+      "comments": "comments",
+      "copyLink": "Copy Link",
+      "openInNewTab": "Open in New Tab",
+      "linkCopied": "Link copied to clipboard",
+      "confirmDeleteExport": "Are you sure you want to delete this export? This action cannot be undone.",
+      "exportDeleted": "Export deleted successfully",
+      "failedToDeleteExport": "Failed to delete export"
     }
   },
   "Layout": {

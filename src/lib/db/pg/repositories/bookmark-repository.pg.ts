@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { pgDb as db } from "../db.pg";
-import { BookmarkSchema, AgentSchema } from "../schema.pg";
+import { BookmarkTable, AgentTable } from "../schema.pg";
 
 export interface BookmarkRepository {
   createBookmark(
@@ -32,7 +32,7 @@ export interface BookmarkRepository {
 export const pgBookmarkRepository: BookmarkRepository = {
   async createBookmark(userId, itemId, itemType) {
     await db
-      .insert(BookmarkSchema)
+      .insert(BookmarkTable)
       .values({
         userId,
         itemId,
@@ -43,12 +43,12 @@ export const pgBookmarkRepository: BookmarkRepository = {
 
   async removeBookmark(userId, itemId, itemType) {
     await db
-      .delete(BookmarkSchema)
+      .delete(BookmarkTable)
       .where(
         and(
-          eq(BookmarkSchema.userId, userId),
-          eq(BookmarkSchema.itemId, itemId),
-          eq(BookmarkSchema.itemType, itemType),
+          eq(BookmarkTable.userId, userId),
+          eq(BookmarkTable.itemId, itemId),
+          eq(BookmarkTable.itemType, itemType),
         ),
       );
   },
@@ -67,8 +67,8 @@ export const pgBookmarkRepository: BookmarkRepository = {
     if (itemType === "agent") {
       const agent = await db
         .select()
-        .from(AgentSchema)
-        .where(eq(AgentSchema.id, itemId))
+        .from(AgentTable)
+        .where(eq(AgentTable.id, itemId))
         .limit(1);
 
       if (!agent[0]) return false;

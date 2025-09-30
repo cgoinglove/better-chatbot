@@ -153,7 +153,12 @@
       "failedToUpdateThread": "채팅 업데이트 실패",
       "titleRequired": "제목이 필요합니다",
       "threadUpdated": "채팅이 업데이트되었습니다",
-      "areYouSureYouWantToDeleteThisChatThread": "이 채팅을 삭제하시겠습니까?"
+      "areYouSureYouWantToDeleteThisChatThread": "이 채팅을 삭제하시겠습니까?",
+      "sharePublicLink": "공개 링크 공유",
+      "sharePublicLinkDescription": "공유 후 추가되는 모든 메시지는 비공개로 유지됩니다.",
+      "creatingLink": "링크 생성 중...",
+      "createLink": "링크 만들기",
+      "linkCopied": "링크가 복사되었습니다"
     },
 
     "ChatPreferences": {
@@ -176,7 +181,21 @@
       "userInstructions": "사용자 지침",
       "userInstructionsDescription": "자기소개를 하고 보다 내게 맞춰진 응답을 받으세요.",
       "mcpInstructions": "MCP 지침사항",
-      "mcpInstructionsDescription": "MCP 서버 지침을 설정하세요."
+      "mcpInstructionsDescription": "MCP 서버 지침을 설정하세요.",
+      "myExports": "내 공유 목록",
+      "myExportsDescription": "공유한 채팅 내용을 관리하고 정리하세요.",
+      "noExportsYet": "아직 공유한 채팅이 없습니다",
+      "exportHint": "채팅 스레드를 공유하여 첫 번째 export를 생성하세요.",
+      "exported": "공유됨",
+      "expires": "만료",
+      "messages": "메시지",
+      "comments": "댓글",
+      "copyLink": "링크 복사",
+      "openInNewTab": "새 탭에서 열기",
+      "linkCopied": "링크가 클립보드에 복사되었습니다",
+      "confirmDeleteExport": "이 공유를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
+      "exportDeleted": "공유가 성공적으로 삭제되었습니다",
+      "failedToDeleteExport": "공유 삭제에 실패했습니다"
     }
   },
   "Layout": {

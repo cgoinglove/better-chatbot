@@ -24,9 +24,9 @@ import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import {
-  UserSchema,
-  ChatMessageSchema,
-  ChatThreadSchema,
+  UserTable,
+  ChatMessageTable,
+  ChatThreadTable,
 } from "lib/db/pg/schema.pg";
 import { like, eq } from "drizzle-orm";
 
@@ -40,8 +40,8 @@ const db = drizzle(pool);
 async function getUserByEmail(email: string) {
   const [user] = await db
     .select()
-    .from(UserSchema)
-    .where(eq(UserSchema.email, email));
+    .from(UserTable)
+    .where(eq(UserTable.email, email));
   return user || null;
 }
 
@@ -62,9 +62,9 @@ async function clearExistingTestUsers() {
     const testUsers: { id: string }[] = [];
     for (const pattern of testEmailPatterns) {
       const users = await db
-        .select({ id: UserSchema.id })
-        .from(UserSchema)
-        .where(like(UserSchema.email, pattern));
+        .select({ id: UserTable.id })
+        .from(UserTable)
+        .where(like(UserTable.email, pattern));
       testUsers.push(...users);
     }
 
@@ -82,8 +82,8 @@ async function clearExistingTestUsers() {
 
     for (const email of legacyTestEmails) {
       const users = await db
-        .select({ id: UserSchema.id })
-        .from(UserSchema)
+        .select({ id: UserTable.id })
+        .from(UserTable)
         .where(sql`email = ${email}`);
       testUsers.push(...users);
     }
@@ -97,31 +97,31 @@ async function clearExistingTestUsers() {
       // Messages reference threads, not users directly
       if (userIds.length > 0) {
         const threads = await db
-          .select({ id: ChatThreadSchema.id })
-          .from(ChatThreadSchema)
-          .where(sql`${ChatThreadSchema.userId} = ANY(${userIds})`);
+          .select({ id: ChatThreadTable.id })
+          .from(ChatThreadTable)
+          .where(sql`${ChatThreadTable.userId} = ANY(${userIds})`);
         const threadIds = threads.map((t) => t.id);
         if (threadIds.length > 0) {
           await db
-            .delete(ChatMessageSchema)
-            .where(sql`${ChatMessageSchema.threadId} = ANY(${threadIds})`);
+            .delete(ChatMessageTable)
+            .where(sql`${ChatMessageTable.threadId} = ANY(${threadIds})`);
         }
       }
 
       console.log("Deleting chat threads...");
       for (const userId of userIds) {
         await db
-          .delete(ChatThreadSchema)
-          .where(sql`${ChatThreadSchema.userId} = ${userId}`);
+          .delete(ChatThreadTable)
+          .where(sql`${ChatThreadTable.userId} = ${userId}`);
       }
 
       // Now delete the users
       console.log("Deleting users...");
       for (const pattern of testEmailPatterns) {
-        await db.delete(UserSchema).where(like(UserSchema.email, pattern));
+        await db.delete(UserTable).where(like(UserTable.email, pattern));
       }
       for (const email of legacyTestEmails) {
-        await db.delete(UserSchema).where(sql`email = ${email}`);
+        await db.delete(UserTable).where(sql`email = ${email}`);
       }
     }
   } catch (error) {
@@ -175,7 +175,7 @@ async function createUserWithBetterAuth(userData: {
     // IMPORTANT: Check current role first to avoid overwriting first-user admin
     const [currentUser] = await db
       .select()
-      .from(UserSchema)
+      .from(UserTable)
       .where(sql`id = ${user.id}`);
 
     if (userData.role && currentUser) {
@@ -190,7 +190,7 @@ async function createUserWithBetterAuth(userData: {
             `  Updating role from ${currentUser.role} to ${userData.role} for ${userData.email}`,
           );
           await db
-            .update(UserSchema)
+            .update(UserTable)
             .set({ role: userData.role })
             .where(sql`id = ${user.id}`);
         } catch (error) {
@@ -207,7 +207,7 @@ async function createUserWithBetterAuth(userData: {
     if (userData.banned && userData.banReason) {
       try {
         await db
-          .update(UserSchema)
+          .update(UserTable)
           .set({
             banned: true,
             banReason: userData.banReason,
@@ -372,7 +372,7 @@ async function seedSampleUsageData(userIds: string[]) {
 
       // Create sample threads and messages for user (should have stats)
       const thread = await db
-        .insert(ChatThreadSchema)
+        .insert(ChatThreadTable)
         .values({
           userId: userId,
           title: `Test AI Conversation ${userId}`,
@@ -382,7 +382,7 @@ async function seedSampleUsageData(userIds: string[]) {
       if (thread[0]) {
         // Create sample messages with token usage
         const timestamp = Date.now();
-        await db.insert(ChatMessageSchema).values([
+        await db.insert(ChatMessageTable).values([
           {
             id: `${userId}-msg-1-${timestamp}`,
             threadId: thread[0].id,

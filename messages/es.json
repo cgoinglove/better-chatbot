@@ -152,7 +152,12 @@
       "failedToUpdateThread": "Error al actualizar el hilo",
       "titleRequired": "El título es obligatorio",
       "threadUpdated": "Hilo actualizado",
-      "areYouSureYouWantToDeleteThisChatThread": "¿Estás seguro de que quieres eliminar este hilo de chat?"
+      "areYouSureYouWantToDeleteThisChatThread": "¿Estás seguro de que quieres eliminar este hilo de chat?",
+      "sharePublicLink": "Compartir Enlace Público",
+      "sharePublicLinkDescription": "Todos los mensajes añadidos después de compartir permanecerán privados.",
+      "creatingLink": "Creando enlace...",
+      "createLink": "Crear Enlace",
+      "linkCopied": "Enlace copiado"
     },
 
     "ChatPreferences": {

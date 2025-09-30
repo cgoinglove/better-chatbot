@@ -39,12 +39,12 @@ interface MentionInputProps {
   editorRef?: RefObject<Editor | null>;
   onFocus?: () => void;
   onBlur?: () => void;
-  fullWidthSuggestion?: boolean; // 새로 추가된 옵션
-  MentionItem: FC<{
+  fullWidthSuggestion?: boolean;
+  MentionItem?: FC<{
     label: string;
     id: string;
   }>;
-  Suggestion: FC<{
+  Suggestion?: FC<{
     top: number;
     left: number;
     onClose: () => void;
@@ -104,12 +104,13 @@ export default function MentionInput({
             const el = document.createElement("div");
             el.className = "inline-flex";
             const root = createRoot(el);
-            root.render(
-              <MentionItem
-                label={props.node.attrs.label}
-                id={props.node.attrs.id}
-              />,
-            );
+            if (MentionItem)
+              root.render(
+                <MentionItem
+                  label={props.node.attrs.label}
+                  id={props.node.attrs.id}
+                />,
+              );
             return el;
           },
           suggestion: {
@@ -216,6 +217,7 @@ export default function MentionInput({
   // Memoize the DOM structure
   const suggestion = useMemo(() => {
     if (!open || disabledMention) return null;
+    if (!Suggestion) return null;
     return createPortal(
       <Suggestion
         top={position.current?.top ?? 0}

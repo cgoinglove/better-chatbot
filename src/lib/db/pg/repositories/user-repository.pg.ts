@@ -6,17 +6,17 @@ import {
 } from "app-types/user";
 import { pgDb as db, pgDb } from "../db.pg";
 import {
-  AccountSchema,
-  ChatMessageSchema,
-  ChatThreadSchema,
-  SessionSchema,
-  UserSchema,
+  AccountTable,
+  ChatMessageTable,
+  ChatThreadTable,
+  SessionTable,
+  UserTable,
 } from "../schema.pg";
 import { count, eq, getTableColumns, sql } from "drizzle-orm";
 
 // Helper function to get user columns without password
 const getUserColumnsWithoutPassword = () => {
-  const { password, ...userColumns } = getTableColumns(UserSchema);
+  const { password, ...userColumns } = getTableColumns(UserTable);
   return userColumns;
 };
 
@@ -24,8 +24,8 @@ export const pgUserRepository: UserRepository = {
   existsByEmail: async (email: string): Promise<boolean> => {
     const result = await db
       .select()
-      .from(UserSchema)
-      .where(eq(UserSchema.email, email));
+      .from(UserTable)
+      .where(eq(UserTable.email, email));
     return result.length > 0;
   },
   updateUserDetails: async ({
@@ -40,14 +40,14 @@ export const pgUserRepository: UserRepository = {
     email?: string;
   }): Promise<User> => {
     const [result] = await db
-      .update(UserSchema)
+      .update(UserTable)
       .set({
         ...(name && { name }),
         ...(image && { image }),
         ...(email && { email }),
         updatedAt: new Date(),
       })
-      .where(eq(UserSchema.id, userId))
+      .where(eq(UserTable.id, userId))
       .returning();
     return {
       ...result,
@@ -60,12 +60,12 @@ export const pgUserRepository: UserRepository = {
     preferences: UserPreferences,
   ): Promise<User> => {
     const [result] = await db
-      .update(UserSchema)
+      .update(UserTable)
       .set({
         preferences,
         updatedAt: new Date(),
       })
-      .where(eq(UserSchema.id, userId))
+      .where(eq(UserTable.id, userId))
       .returning();
     return {
       ...result,
@@ -74,9 +74,9 @@ export const pgUserRepository: UserRepository = {
   },
   getPreferences: async (userId: string) => {
     const [result] = await db
-      .select({ preferences: UserSchema.preferences })
-      .from(UserSchema)
-      .where(eq(UserSchema.id, userId));
+      .select({ preferences: UserTable.preferences })
+      .from(UserTable)
+      .where(eq(UserTable.id, userId));
     return result?.preferences ?? null;
   },
   getUserById: async (
@@ -86,19 +86,19 @@ export const pgUserRepository: UserRepository = {
       .select({
         ...getUserColumnsWithoutPassword(),
         lastLogin: sql<Date | null>`(
-          SELECT MAX(${SessionSchema.updatedAt}) 
-          FROM ${SessionSchema} 
-          WHERE ${SessionSchema.userId} = ${UserSchema.id}
+          SELECT MAX(${SessionTable.updatedAt}) 
+          FROM ${SessionTable} 
+          WHERE ${SessionTable.userId} = ${UserTable.id}
         )`.as("lastLogin"),
       })
-      .from(UserSchema)
-      .where(eq(UserSchema.id, userId));
+      .from(UserTable)
+      .where(eq(UserTable.id, userId));
 
     return result || null;
   },
 
   getUserCount: async () => {
-    const [result] = await db.select({ count: count() }).from(UserSchema);
+    const [result] = await db.select({ count: count() }).from(UserTable);
     return result?.count ?? 0;
   },
   getUserStats: async (userId: string) => {
@@ -110,39 +110,39 @@ export const pgUserRepository: UserRepository = {
     // Get thread and message counts for the same 30-day period
     const [result] = await db
       .select({
-        threadCount: sql<number>`COALESCE(COUNT(DISTINCT ${ChatThreadSchema.id}), 0)`,
-        messageCount: sql<number>`COALESCE(COUNT(${ChatMessageSchema.id}), 0)`,
+        threadCount: sql<number>`COALESCE(COUNT(DISTINCT ${ChatThreadTable.id}), 0)`,
+        messageCount: sql<number>`COALESCE(COUNT(${ChatMessageTable.id}), 0)`,
       })
-      .from(ChatThreadSchema)
+      .from(ChatThreadTable)
       .leftJoin(
-        ChatMessageSchema,
-        eq(ChatThreadSchema.id, ChatMessageSchema.threadId),
+        ChatMessageTable,
+        eq(ChatThreadTable.id, ChatMessageTable.threadId),
       )
       .where(
-        sql`${ChatThreadSchema.userId} = ${userId} AND ${ChatThreadSchema.createdAt} >= ${thirtyDaysAgo}`,
+        sql`${ChatThreadTable.userId} = ${userId} AND ${ChatThreadTable.createdAt} >= ${thirtyDaysAgo}`,
       );
 
     const modelStats = await db
       .select({
-        model: sql<string>`${ChatMessageSchema.metadata}->'chatModel'->>'model'`,
-        messageCount: count(ChatMessageSchema.id),
+        model: sql<string>`${ChatMessageTable.metadata}->'chatModel'->>'model'`,
+        messageCount: count(ChatMessageTable.id),
         // Extract usage tokens from metadata
-        totalTokens: sql<number>`COALESCE(SUM((${ChatMessageSchema.metadata}->'usage'->>'totalTokens')::numeric), 0)`,
+        totalTokens: sql<number>`COALESCE(SUM((${ChatMessageTable.metadata}->'usage'->>'totalTokens')::numeric), 0)`,
       })
-      .from(ChatMessageSchema)
+      .from(ChatMessageTable)
       .leftJoin(
-        ChatThreadSchema,
-        eq(ChatMessageSchema.threadId, ChatThreadSchema.id),
+        ChatThreadTable,
+        eq(ChatMessageTable.threadId, ChatThreadTable.id),
       )
       .where(
-        sql`${ChatThreadSchema.userId} = ${userId} 
-            AND ${ChatMessageSchema.createdAt} >= ${thirtyDaysAgo}
-            AND ${ChatMessageSchema.metadata} IS NOT NULL
-            AND ${ChatMessageSchema.metadata}->'chatModel'->>'model' IS NOT NULL`,
+        sql`${ChatThreadTable.userId} = ${userId} 
+            AND ${ChatMessageTable.createdAt} >= ${thirtyDaysAgo}
+            AND ${ChatMessageTable.metadata} IS NOT NULL
+            AND ${ChatMessageTable.metadata}->'chatModel'->>'model' IS NOT NULL`,
       )
-      .groupBy(sql`${ChatMessageSchema.metadata}->'chatModel'->>'model'`)
+      .groupBy(sql`${ChatMessageTable.metadata}->'chatModel'->>'model'`)
       .orderBy(
-        sql`SUM((${ChatMessageSchema.metadata}->'usage'->>'totalTokens')::numeric) DESC`,
+        sql`SUM((${ChatMessageTable.metadata}->'usage'->>'totalTokens')::numeric) DESC`,
       )
       .limit(10); // Get top 10 models by token usage
 
@@ -165,10 +165,10 @@ export const pgUserRepository: UserRepository = {
   getUserAuthMethods: async (userId: string) => {
     const accounts = await pgDb
       .select({
-        providerId: AccountSchema.providerId,
+        providerId: AccountTable.providerId,
       })
-      .from(AccountSchema)
-      .where(eq(AccountSchema.userId, userId));
+      .from(AccountTable)
+      .where(eq(AccountTable.userId, userId));
 
     return {
       hasPassword: accounts.some((a) => a.providerId === "credential"),

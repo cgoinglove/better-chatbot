@@ -17,35 +17,36 @@ import { isNotNull } from "drizzle-orm";
 import { DBWorkflow, DBEdge, DBNode } from "app-types/workflow";
 import { UIMessage } from "ai";
 import { ChatMetadata } from "app-types/chat";
+import { TipTapMentionJsonContent } from "@/types/util";
 
-export const ChatThreadSchema = pgTable("chat_thread", {
+export const ChatThreadTable = pgTable("chat_thread", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
   title: text("title").notNull(),
   userId: uuid("user_id")
     .notNull()
-    .references(() => UserSchema.id, { onDelete: "cascade" }),
+    .references(() => UserTable.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
-export const ChatMessageSchema = pgTable("chat_message", {
+export const ChatMessageTable = pgTable("chat_message", {
   id: text("id").primaryKey().notNull(),
   threadId: uuid("thread_id")
     .notNull()
-    .references(() => ChatThreadSchema.id, { onDelete: "cascade" }),
+    .references(() => ChatThreadTable.id, { onDelete: "cascade" }),
   role: text("role").notNull().$type<UIMessage["role"]>(),
   parts: json("parts").notNull().array().$type<UIMessage["parts"]>(),
   metadata: json("metadata").$type<ChatMetadata>(),
   createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
-export const AgentSchema = pgTable("agent", {
+export const AgentTable = pgTable("agent", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
   name: text("name").notNull(),
   description: text("description"),
   icon: json("icon").$type<Agent["icon"]>(),
   userId: uuid("user_id")
     .notNull()
-    .references(() => UserSchema.id, { onDelete: "cascade" }),
+    .references(() => UserTable.id, { onDelete: "cascade" }),
   instructions: json("instructions").$type<Agent["instructions"]>(),
   visibility: varchar("visibility", {
     enum: ["public", "private", "readonly"],
@@ -56,13 +57,13 @@ export const AgentSchema = pgTable("agent", {
   updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
-export const BookmarkSchema = pgTable(
+export const BookmarkTable = pgTable(
   "bookmark",
   {
     id: uuid("id").primaryKey().notNull().defaultRandom(),
     userId: uuid("user_id")
       .notNull()
-      .references(() => UserSchema.id, { onDelete: "cascade" }),
+      .references(() => UserTable.id, { onDelete: "cascade" }),
     itemId: uuid("item_id").notNull(),
     itemType: varchar("item_type", {
       enum: ["agent", "workflow", "mcp"],
@@ -78,14 +79,14 @@ export const BookmarkSchema = pgTable(
   ],
 );
 
-export const McpServerSchema = pgTable("mcp_server", {
+export const McpServerTable = pgTable("mcp_server", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
   name: text("name").notNull(),
   config: json("config").notNull().$type<MCPServerConfig>(),
   enabled: boolean("enabled").notNull().default(true),
   userId: uuid("user_id")
     .notNull()
-    .references(() => UserSchema.id, { onDelete: "cascade" }),
+    .references(() => UserTable.id, { onDelete: "cascade" }),
   visibility: varchar("visibility", {
     enum: ["public", "private"],
   })
@@ -95,7 +96,7 @@ export const McpServerSchema = pgTable("mcp_server", {
   updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
-export const UserSchema = pgTable("user", {
+export const UserTable = pgTable("user", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
@@ -112,9 +113,9 @@ export const UserSchema = pgTable("user", {
 });
 
 // Role tables removed - using Better Auth's built-in role system
-// Roles are now managed via the 'role' field on UserSchema
+// Roles are now managed via the 'role' field on UserTable
 
-export const SessionSchema = pgTable("session", {
+export const SessionTable = pgTable("session", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
   expiresAt: timestamp("expires_at").notNull(),
   token: text("token").notNull().unique(),
@@ -124,18 +125,18 @@ export const SessionSchema = pgTable("session", {
   userAgent: text("user_agent"),
   userId: uuid("user_id")
     .notNull()
-    .references(() => UserSchema.id, { onDelete: "cascade" }),
+    .references(() => UserTable.id, { onDelete: "cascade" }),
   // Admin plugin field (from better-auth generated schema)
   impersonatedBy: text("impersonated_by"),
 });
 
-export const AccountSchema = pgTable("account", {
+export const AccountTable = pgTable("account", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
   accountId: text("account_id").notNull(),
   providerId: text("provider_id").notNull(),
   userId: uuid("user_id")
     .notNull()
-    .references(() => UserSchema.id, { onDelete: "cascade" }),
+    .references(() => UserTable.id, { onDelete: "cascade" }),
   accessToken: text("access_token"),
   refreshToken: text("refresh_token"),
   idToken: text("id_token"),
@@ -147,7 +148,7 @@ export const AccountSchema = pgTable("account", {
   updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
-export const VerificationSchema = pgTable("verification", {
+export const VerificationTable = pgTable("verification", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
   identifier: text("identifier").notNull(),
   value: text("value").notNull(),
@@ -161,17 +162,17 @@ export const VerificationSchema = pgTable("verification", {
 });
 
 // Tool customization table for per-user additional instructions
-export const McpToolCustomizationSchema = pgTable(
+export const McpToolCustomizationTable = pgTable(
   "mcp_server_tool_custom_instructions",
   {
     id: uuid("id").primaryKey().notNull().defaultRandom(),
     userId: uuid("user_id")
       .notNull()
-      .references(() => UserSchema.id, { onDelete: "cascade" }),
+      .references(() => UserTable.id, { onDelete: "cascade" }),
     toolName: text("tool_name").notNull(),
     mcpServerId: uuid("mcp_server_id")
       .notNull()
-      .references(() => McpServerSchema.id, { onDelete: "cascade" }),
+      .references(() => McpServerTable.id, { onDelete: "cascade" }),
     prompt: text("prompt"),
     createdAt: timestamp("created_at")
       .notNull()
@@ -183,16 +184,16 @@ export const McpToolCustomizationSchema = pgTable(
   (table) => [unique().on(table.userId, table.toolName, table.mcpServerId)],
 );
 
-export const McpServerCustomizationSchema = pgTable(
+export const McpServerCustomizationTable = pgTable(
   "mcp_server_custom_instructions",
   {
     id: uuid("id").primaryKey().defaultRandom(),
     userId: uuid("user_id")
       .notNull()
-      .references(() => UserSchema.id, { onDelete: "cascade" }),
+      .references(() => UserTable.id, { onDelete: "cascade" }),
     mcpServerId: uuid("mcp_server_id")
       .notNull()
-      .references(() => McpServerSchema.id, { onDelete: "cascade" }),
+      .references(() => McpServerTable.id, { onDelete: "cascade" }),
     prompt: text("prompt"),
     createdAt: timestamp("created_at")
       .default(sql`CURRENT_TIMESTAMP`)
@@ -204,7 +205,7 @@ export const McpServerCustomizationSchema = pgTable(
   (table) => [unique().on(table.userId, table.mcpServerId)],
 );
 
-export const WorkflowSchema = pgTable("workflow", {
+export const WorkflowTable = pgTable("workflow", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
   version: text("version").notNull().default("0.1.0"),
   name: text("name").notNull(),
@@ -218,19 +219,19 @@ export const WorkflowSchema = pgTable("workflow", {
     .default("private"),
   userId: uuid("user_id")
     .notNull()
-    .references(() => UserSchema.id, { onDelete: "cascade" }),
+    .references(() => UserTable.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
-export const WorkflowNodeDataSchema = pgTable(
+export const WorkflowNodeDataTable = pgTable(
   "workflow_node",
   {
     id: uuid("id").primaryKey().notNull().defaultRandom(),
     version: text("version").notNull().default("0.1.0"),
     workflowId: uuid("workflow_id")
       .notNull()
-      .references(() => WorkflowSchema.id, { onDelete: "cascade" }),
+      .references(() => WorkflowTable.id, { onDelete: "cascade" }),
     kind: text("kind").notNull(),
     name: text("name").notNull(),
     description: text("description"),
@@ -248,56 +249,56 @@ export const WorkflowNodeDataSchema = pgTable(
   (t) => [index("workflow_node_kind_idx").on(t.kind)],
 );
 
-export const WorkflowEdgeSchema = pgTable("workflow_edge", {
+export const WorkflowEdgeTable = pgTable("workflow_edge", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
   version: text("version").notNull().default("0.1.0"),
   workflowId: uuid("workflow_id")
     .notNull()
-    .references(() => WorkflowSchema.id, { onDelete: "cascade" }),
+    .references(() => WorkflowTable.id, { onDelete: "cascade" }),
   source: uuid("source")
     .notNull()
-    .references(() => WorkflowNodeDataSchema.id, { onDelete: "cascade" }),
+    .references(() => WorkflowNodeDataTable.id, { onDelete: "cascade" }),
   target: uuid("target")
     .notNull()
-    .references(() => WorkflowNodeDataSchema.id, { onDelete: "cascade" }),
+    .references(() => WorkflowNodeDataTable.id, { onDelete: "cascade" }),
   uiConfig: json("ui_config").$type<DBEdge["uiConfig"]>().default({}),
   createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
-export const ArchiveSchema = pgTable("archive", {
+export const ArchiveTable = pgTable("archive", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
   name: text("name").notNull(),
   description: text("description"),
   userId: uuid("user_id")
     .notNull()
-    .references(() => UserSchema.id, { onDelete: "cascade" }),
+    .references(() => UserTable.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
-export const ArchiveItemSchema = pgTable(
+export const ArchiveItemTable = pgTable(
   "archive_item",
   {
     id: uuid("id").primaryKey().notNull().defaultRandom(),
     archiveId: uuid("archive_id")
       .notNull()
-      .references(() => ArchiveSchema.id, { onDelete: "cascade" }),
+      .references(() => ArchiveTable.id, { onDelete: "cascade" }),
     itemId: uuid("item_id").notNull(),
     userId: uuid("user_id")
       .notNull()
-      .references(() => UserSchema.id, { onDelete: "cascade" }),
+      .references(() => UserTable.id, { onDelete: "cascade" }),
     addedAt: timestamp("added_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },
   (t) => [index("archive_item_item_id_idx").on(t.itemId)],
 );
 
-export const McpOAuthSessionSchema = pgTable(
+export const McpOAuthSessionTable = pgTable(
   "mcp_oauth_session",
   {
     id: uuid("id").primaryKey().notNull().defaultRandom(),
     mcpServerId: uuid("mcp_server_id")
       .notNull()
-      .references(() => McpServerSchema.id, { onDelete: "cascade" }),
+      .references(() => McpServerTable.id, { onDelete: "cascade" }),
     serverUrl: text("server_url").notNull(),
     clientInfo: json("client_info"),
     tokens: json("tokens"),
@@ -320,19 +321,56 @@ export const McpOAuthSessionSchema = pgTable(
   ],
 );
 
-export type McpServerEntity = typeof McpServerSchema.$inferSelect;
-export type ChatThreadEntity = typeof ChatThreadSchema.$inferSelect;
-export type ChatMessageEntity = typeof ChatMessageSchema.$inferSelect;
+export type McpServerEntity = typeof McpServerTable.$inferSelect;
+export type ChatThreadEntity = typeof ChatThreadTable.$inferSelect;
+export type ChatMessageEntity = typeof ChatMessageTable.$inferSelect;
 
-export type AgentEntity = typeof AgentSchema.$inferSelect;
-export type UserEntity = typeof UserSchema.$inferSelect;
-export type SessionEntity = typeof SessionSchema.$inferSelect;
+export type AgentEntity = typeof AgentTable.$inferSelect;
+export type UserEntity = typeof UserTable.$inferSelect;
+export type SessionEntity = typeof SessionTable.$inferSelect;
 
 export type ToolCustomizationEntity =
-  typeof McpToolCustomizationSchema.$inferSelect;
+  typeof McpToolCustomizationTable.$inferSelect;
 export type McpServerCustomizationEntity =
-  typeof McpServerCustomizationSchema.$inferSelect;
+  typeof McpServerCustomizationTable.$inferSelect;
 
-export type ArchiveEntity = typeof ArchiveSchema.$inferSelect;
-export type ArchiveItemEntity = typeof ArchiveItemSchema.$inferSelect;
-export type BookmarkEntity = typeof BookmarkSchema.$inferSelect;
+export const ChatExportTable = pgTable("chat_export", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  title: text("title").notNull(),
+  exporterId: uuid("exporter_id")
+    .notNull()
+    .references(() => UserTable.id, { onDelete: "cascade" }),
+  originalThreadId: uuid("original_thread_id"),
+  messages: json("messages").notNull().$type<
+    Array<{
+      id: string;
+      role: UIMessage["role"];
+      parts: UIMessage["parts"];
+      metadata?: ChatMetadata;
+    }>
+  >(),
+  exportedAt: timestamp("exported_at")
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
+  expiresAt: timestamp("expires_at"),
+});
+
+export const ChatExportCommentTable = pgTable("chat_export_comment", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  exportId: uuid("export_id")
+    .notNull()
+    .references(() => ChatExportTable.id, { onDelete: "cascade" }),
+  authorId: uuid("author_id")
+    .notNull()
+    .references(() => UserTable.id, { onDelete: "cascade" }),
+  parentId: uuid("parent_id").references(() => ChatExportCommentTable.id, {
+    onDelete: "cascade",
+  }),
+  content: json("content").notNull().$type<TipTapMentionJsonContent>(),
+  createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+
+export type ArchiveEntity = typeof ArchiveTable.$inferSelect;
+export type ArchiveItemEntity = typeof ArchiveItemTable.$inferSelect;
+export type BookmarkEntity = typeof BookmarkTable.$inferSelect;

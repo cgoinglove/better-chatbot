@@ -19,7 +19,7 @@ if (process.env.CI) {
 
 import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
-import { UserSchema } from "../src/lib/db/pg/schema.pg";
+import { UserTable } from "../src/lib/db/pg/schema.pg";
 import { like } from "drizzle-orm";
 
 // Create database connection
@@ -42,7 +42,7 @@ async function cleanupAllTestData() {
     console.log("Deleting users matching ALL test patterns...");
 
     for (const pattern of allTestPatterns) {
-      await db.delete(UserSchema).where(like(UserSchema.email, pattern));
+      await db.delete(UserTable).where(like(UserTable.email, pattern));
       console.log(`  Deleted users matching pattern: ${pattern}`);
     }
 
@@ -61,14 +61,14 @@ async function cleanupAllTestData() {
     if (legacyTestEmails.length > 0) {
       console.log("Cleaning up any remaining legacy test emails...");
       for (const email of legacyTestEmails) {
-        await db.delete(UserSchema).where(sql`email = ${email}`);
+        await db.delete(UserTable).where(sql`email = ${email}`);
       }
     }
 
     console.log(`✅ Cleanup completed!`);
 
     // Check remaining user count
-    const remainingUsers = await db.$count(UserSchema);
+    const remainingUsers = await db.$count(UserTable);
     console.log(`📊 Remaining users in database: ${remainingUsers}`);
   } catch (error) {
     console.error("❌ Error during cleanup:", error);

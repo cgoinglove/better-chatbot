@@ -14,7 +14,7 @@ import {
   toAny,
 } from "lib/utils";
 import { safe } from "ts-safe";
-import { McpServerSchema } from "lib/db/pg/schema.pg";
+import { McpServerTable } from "lib/db/pg/schema.pg";
 import { createMCPToolId } from "./mcp-tool-id";
 import globalLogger from "logger";
 import { jsonSchema, ToolCallOptions } from "ai";
@@ -166,7 +166,7 @@ export class MCPClientsManager {
   /**
    * Persists a new client configuration to storage and adds the client instance to memory
    */
-  async persistClient(server: typeof McpServerSchema.$inferInsert) {
+  async persistClient(server: typeof McpServerTable.$inferInsert) {
     let id = server.name;
     if (this.storage) {
       const entity = await this.storage.save(server);

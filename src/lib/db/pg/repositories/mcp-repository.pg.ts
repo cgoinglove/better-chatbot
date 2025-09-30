@@ -1,5 +1,5 @@
 import { pgDb as db } from "../db.pg";
-import { McpServerSchema, UserSchema } from "../schema.pg";
+import { McpServerTable, UserTable } from "../schema.pg";
 import { eq, or, desc } from "drizzle-orm";
 import { generateUUID } from "lib/utils";
 import type { MCPRepository } from "app-types/mcp";
@@ -7,7 +7,7 @@ import type { MCPRepository } from "app-types/mcp";
 export const pgMcpRepository: MCPRepository = {
   async save(server) {
     const [result] = await db
-      .insert(McpServerSchema)
+      .insert(McpServerTable)
       .values({
         id: server.id ?? generateUUID(),
         name: server.name,
@@ -19,7 +19,7 @@ export const pgMcpRepository: MCPRepository = {
         updatedAt: new Date(),
       })
       .onConflictDoUpdate({
-        target: [McpServerSchema.id],
+        target: [McpServerTable.id],
         set: {
           config: server.config,
           updatedAt: new Date(),
@@ -33,13 +33,13 @@ export const pgMcpRepository: MCPRepository = {
   async selectById(id) {
     const [result] = await db
       .select()
-      .from(McpServerSchema)
-      .where(eq(McpServerSchema.id, id));
+      .from(McpServerTable)
+      .where(eq(McpServerTable.id, id));
     return result;
   },
 
   async selectAll() {
-    const results = await db.select().from(McpServerSchema);
+    const results = await db.select().from(McpServerTable);
     return results;
   },
 
@@ -47,52 +47,52 @@ export const pgMcpRepository: MCPRepository = {
     // Get user's own MCP servers and featured ones
     const results = await db
       .select({
-        id: McpServerSchema.id,
-        name: McpServerSchema.name,
-        config: McpServerSchema.config,
-        enabled: McpServerSchema.enabled,
-        userId: McpServerSchema.userId,
-        visibility: McpServerSchema.visibility,
-        createdAt: McpServerSchema.createdAt,
-        updatedAt: McpServerSchema.updatedAt,
-        userName: UserSchema.name,
-        userAvatar: UserSchema.image,
+        id: McpServerTable.id,
+        name: McpServerTable.name,
+        config: McpServerTable.config,
+        enabled: McpServerTable.enabled,
+        userId: McpServerTable.userId,
+        visibility: McpServerTable.visibility,
+        createdAt: McpServerTable.createdAt,
+        updatedAt: McpServerTable.updatedAt,
+        userName: UserTable.name,
+        userAvatar: UserTable.image,
       })
-      .from(McpServerSchema)
-      .leftJoin(UserSchema, eq(McpServerSchema.userId, UserSchema.id))
+      .from(McpServerTable)
+      .leftJoin(UserTable, eq(McpServerTable.userId, UserTable.id))
       .where(
         or(
-          eq(McpServerSchema.userId, userId),
-          eq(McpServerSchema.visibility, "public"),
+          eq(McpServerTable.userId, userId),
+          eq(McpServerTable.visibility, "public"),
         ),
       )
-      .orderBy(desc(McpServerSchema.createdAt));
+      .orderBy(desc(McpServerTable.createdAt));
     return results;
   },
 
   async updateVisibility(id, visibility) {
     await db
-      .update(McpServerSchema)
+      .update(McpServerTable)
       .set({ visibility, updatedAt: new Date() })
-      .where(eq(McpServerSchema.id, id));
+      .where(eq(McpServerTable.id, id));
   },
 
   async deleteById(id) {
-    await db.delete(McpServerSchema).where(eq(McpServerSchema.id, id));
+    await db.delete(McpServerTable).where(eq(McpServerTable.id, id));
   },
 
   async selectByServerName(name) {
     const [result] = await db
       .select()
-      .from(McpServerSchema)
-      .where(eq(McpServerSchema.name, name));
+      .from(McpServerTable)
+      .where(eq(McpServerTable.name, name));
     return result;
   },
   async existsByServerName(name) {
     const [result] = await db
-      .select({ id: McpServerSchema.id })
-      .from(McpServerSchema)
-      .where(eq(McpServerSchema.name, name));
+      .select({ id: McpServerTable.id })
+      .from(McpServerTable)
+      .where(eq(McpServerTable.name, name));
 
     return !!result;
   },

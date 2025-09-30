@@ -46,6 +46,52 @@ const chartColors = [
   "var(--chart-5)",
 ];
 
+// Function to format large numbers with k, M, B, T units
+function formatLargeNumber(num: number | null | undefined): string {
+  // Handle null, undefined, or invalid numbers
+  if (num == null || isNaN(num) || !isFinite(num)) {
+    return "0";
+  }
+
+  // Handle negative numbers
+  if (num < 0) {
+    return `-${formatLargeNumber(-num)}`;
+  }
+
+  // Handle zero
+  if (num === 0) {
+    return "0";
+  }
+
+  if (num < 1000) {
+    return num.toString();
+  }
+
+  const units = [
+    "",
+    "k",
+    "M",
+    "B",
+    "T",
+    "Qa",
+    "Qi",
+    "Sx",
+    "Sp",
+    "Oc",
+    "No",
+    "Dc",
+  ];
+  let unitIndex = 0;
+  let value = num;
+
+  while (value >= 1000 && unitIndex < units.length - 1) {
+    value /= 1000;
+    unitIndex++;
+  }
+
+  return `${value.toFixed(1)}${units[unitIndex]}`;
+}
+
 export function PieChart(props: PieChartProps) {
   const { title, data, unit, description, prefix, jsonView = true } = props;
   // Calculate total value
@@ -134,7 +180,7 @@ export function PieChart(props: PieChartProps) {
                           y={viewBox.cy}
                           className="fill-foreground text-3xl font-bold"
                         >
-                          {total.toLocaleString()}
+                          {formatLargeNumber(total)}
                         </tspan>
                         {unit && (
                           <tspan

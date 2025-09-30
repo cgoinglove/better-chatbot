@@ -62,7 +62,7 @@ export async function POST(request: Request) {
       })
       .unwrap();
 
-    const dynamicAgentSchema = AgentGenerateSchema.extend({
+    const dynamicAgentTable = AgentGenerateSchema.extend({
       tools: z
         .array(
           z.enum(
@@ -85,7 +85,7 @@ export async function POST(request: Request) {
       model: customModelProvider.getModel(chatModel),
       system,
       prompt: message,
-      schema: dynamicAgentSchema,
+      schema: dynamicAgentTable,
     });
 
     return result.toTextStreamResponse();

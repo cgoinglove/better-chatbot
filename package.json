@@ -1,6 +1,6 @@
 {
   "name": "better-chatbot",
-  "version": "1.21.0",
+  "version": "1.22.0",
   "private": true,
   "author": "cgoinglove",
   "license": "MIT",
@@ -27,6 +27,7 @@
     "openai-compatiable:parse": "tsx scripts/parse-openai-compatiable.ts",
     "postinstall": "tsx scripts/postinstall.ts",
     "clean": "tsx scripts/clean.ts",
+    "clean:next": "tsx scripts/clean.ts .next",
     "db:generate": "drizzle-kit generate",
     "db:reset": "drizzle-kit drop && drizzle-kit push",
     "db:push": "drizzle-kit push",
