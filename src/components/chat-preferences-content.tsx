@@ -6,7 +6,6 @@ import { fetcher } from "lib/utils";
 import {
   AlertCircle,
   ArrowLeft,
-  ExternalLink,
   LinkIcon,
   Loader,
   Share2,
@@ -30,7 +29,6 @@ import { useMcpList } from "@/hooks/queries/use-mcp-list";
 import { ChatExportSummary } from "app-types/chat-export";
 import { formatDistanceToNow } from "date-fns";
 import { notify } from "lib/notify";
-import Link from "next/link";
 
 export function UserInstructionsContent() {
   const t = useTranslations();
