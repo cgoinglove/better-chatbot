@@ -1,4 +1,4 @@
-import { Button } from "ui/button";
+import Link from "next/link";
 import {
   Card,
   CardContent,
@@ -39,7 +39,12 @@ export default async function ErrorPage({
           </CardDescription>
         </CardHeader>
         <CardContent className="flex justify-center">
-          <Button variant={"link"}>Go to home</Button>
+          <Link
+            className="text-sm text-muted-foreground text-center underline"
+            href="/"
+          >
+            Go to home
+          </Link>
         </CardContent>
       </Card>
     </div>
