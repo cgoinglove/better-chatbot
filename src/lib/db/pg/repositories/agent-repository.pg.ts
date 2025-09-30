@@ -1,13 +1,13 @@
 import { Agent, AgentRepository, AgentSummary } from "app-types/agent";
 import { pgDb as db } from "../db.pg";
-import { AgentSchema, BookmarkSchema, UserSchema } from "../schema.pg";
+import { AgentTable, BookmarkTable, UserTable } from "../schema.pg";
 import { and, desc, eq, ne, or, sql } from "drizzle-orm";
 import { generateUUID } from "lib/utils";
 
 export const pgAgentRepository: AgentRepository = {
   async insertAgent(agent) {
     const [result] = await db
-      .insert(AgentSchema)
+      .insert(AgentTable)
       .values({
         id: generateUUID(),
         name: agent.name,
@@ -32,33 +32,33 @@ export const pgAgentRepository: AgentRepository = {
   async selectAgentById(id, userId): Promise<Agent | null> {
     const [result] = await db
       .select({
-        id: AgentSchema.id,
-        name: AgentSchema.name,
-        description: AgentSchema.description,
-        icon: AgentSchema.icon,
-        userId: AgentSchema.userId,
-        instructions: AgentSchema.instructions,
-        visibility: AgentSchema.visibility,
-        createdAt: AgentSchema.createdAt,
-        updatedAt: AgentSchema.updatedAt,
-        isBookmarked: sql<boolean>`${BookmarkSchema.id} IS NOT NULL`,
+        id: AgentTable.id,
+        name: AgentTable.name,
+        description: AgentTable.description,
+        icon: AgentTable.icon,
+        userId: AgentTable.userId,
+        instructions: AgentTable.instructions,
+        visibility: AgentTable.visibility,
+        createdAt: AgentTable.createdAt,
+        updatedAt: AgentTable.updatedAt,
+        isBookmarked: sql<boolean>`${BookmarkTable.id} IS NOT NULL`,
       })
-      .from(AgentSchema)
+      .from(AgentTable)
       .leftJoin(
-        BookmarkSchema,
+        BookmarkTable,
         and(
-          eq(BookmarkSchema.itemId, AgentSchema.id),
-          eq(BookmarkSchema.userId, userId),
-          eq(BookmarkSchema.itemType, "agent"),
+          eq(BookmarkTable.itemId, AgentTable.id),
+          eq(BookmarkTable.userId, userId),
+          eq(BookmarkTable.itemType, "agent"),
         ),
       )
       .where(
         and(
-          eq(AgentSchema.id, id),
+          eq(AgentTable.id, id),
           or(
-            eq(AgentSchema.userId, userId), // Own agent
-            eq(AgentSchema.visibility, "public"), // Public agent
-            eq(AgentSchema.visibility, "readonly"), // Readonly agent
+            eq(AgentTable.userId, userId), // Own agent
+            eq(AgentTable.visibility, "public"), // Public agent
+            eq(AgentTable.visibility, "readonly"), // Readonly agent
           ),
         ),
       );
@@ -77,23 +77,23 @@ export const pgAgentRepository: AgentRepository = {
   async selectAgentsByUserId(userId) {
     const results = await db
       .select({
-        id: AgentSchema.id,
-        name: AgentSchema.name,
-        description: AgentSchema.description,
-        icon: AgentSchema.icon,
-        userId: AgentSchema.userId,
-        instructions: AgentSchema.instructions,
-        visibility: AgentSchema.visibility,
-        createdAt: AgentSchema.createdAt,
-        updatedAt: AgentSchema.updatedAt,
-        userName: UserSchema.name,
-        userAvatar: UserSchema.image,
+        id: AgentTable.id,
+        name: AgentTable.name,
+        description: AgentTable.description,
+        icon: AgentTable.icon,
+        userId: AgentTable.userId,
+        instructions: AgentTable.instructions,
+        visibility: AgentTable.visibility,
+        createdAt: AgentTable.createdAt,
+        updatedAt: AgentTable.updatedAt,
+        userName: UserTable.name,
+        userAvatar: UserTable.image,
         isBookmarked: sql<boolean>`false`,
       })
-      .from(AgentSchema)
-      .innerJoin(UserSchema, eq(AgentSchema.userId, UserSchema.id))
-      .where(eq(AgentSchema.userId, userId))
-      .orderBy(desc(AgentSchema.createdAt));
+      .from(AgentTable)
+      .innerJoin(UserTable, eq(AgentTable.userId, UserTable.id))
+      .where(eq(AgentTable.userId, userId))
+      .orderBy(desc(AgentTable.createdAt));
 
     // Map database nulls to undefined and set defaults for owned agents
     return results.map((result) => ({
@@ -109,7 +109,7 @@ export const pgAgentRepository: AgentRepository = {
 
   async updateAgent(id, userId, agent) {
     const [result] = await db
-      .update(AgentSchema)
+      .update(AgentTable)
       .set({
         ...agent,
         updatedAt: new Date(),
@@ -117,10 +117,10 @@ export const pgAgentRepository: AgentRepository = {
       .where(
         and(
           // Only allow updates to agents owned by the user or public agents
-          eq(AgentSchema.id, id),
+          eq(AgentTable.id, id),
           or(
-            eq(AgentSchema.userId, userId),
-            eq(AgentSchema.visibility, "public"),
+            eq(AgentTable.userId, userId),
+            eq(AgentTable.visibility, "public"),
           ),
         ),
       )
@@ -136,8 +136,8 @@ export const pgAgentRepository: AgentRepository = {
 
   async deleteAgent(id, userId) {
     await db
-      .delete(AgentSchema)
-      .where(and(eq(AgentSchema.id, id), eq(AgentSchema.userId, userId)));
+      .delete(AgentTable)
+      .where(and(eq(AgentTable.id, id), eq(AgentTable.userId, userId)));
   },
 
   async selectAgents(
@@ -150,26 +150,26 @@ export const pgAgentRepository: AgentRepository = {
     // Build OR conditions based on filters array
     for (const filter of filters) {
       if (filter === "mine") {
-        orConditions.push(eq(AgentSchema.userId, currentUserId));
+        orConditions.push(eq(AgentTable.userId, currentUserId));
       } else if (filter === "shared") {
         orConditions.push(
           and(
-            ne(AgentSchema.userId, currentUserId),
+            ne(AgentTable.userId, currentUserId),
             or(
-              eq(AgentSchema.visibility, "public"),
-              eq(AgentSchema.visibility, "readonly"),
+              eq(AgentTable.visibility, "public"),
+              eq(AgentTable.visibility, "readonly"),
             ),
           ),
         );
       } else if (filter === "bookmarked") {
         orConditions.push(
           and(
-            ne(AgentSchema.userId, currentUserId),
+            ne(AgentTable.userId, currentUserId),
             or(
-              eq(AgentSchema.visibility, "public"),
-              eq(AgentSchema.visibility, "readonly"),
+              eq(AgentTable.visibility, "public"),
+              eq(AgentTable.visibility, "readonly"),
             ),
-            sql`${BookmarkSchema.id} IS NOT NULL`,
+            sql`${BookmarkTable.id} IS NOT NULL`,
           ),
         );
       } else if (filter === "all") {
@@ -177,13 +177,13 @@ export const pgAgentRepository: AgentRepository = {
         orConditions = [
           or(
             // My agents
-            eq(AgentSchema.userId, currentUserId),
+            eq(AgentTable.userId, currentUserId),
             // Shared agents
             and(
-              ne(AgentSchema.userId, currentUserId),
+              ne(AgentTable.userId, currentUserId),
               or(
-                eq(AgentSchema.visibility, "public"),
-                eq(AgentSchema.visibility, "readonly"),
+                eq(AgentTable.visibility, "public"),
+                eq(AgentTable.visibility, "readonly"),
               ),
             ),
           ),
@@ -194,34 +194,34 @@ export const pgAgentRepository: AgentRepository = {
 
     const results = await db
       .select({
-        id: AgentSchema.id,
-        name: AgentSchema.name,
-        description: AgentSchema.description,
-        icon: AgentSchema.icon,
-        userId: AgentSchema.userId,
+        id: AgentTable.id,
+        name: AgentTable.name,
+        description: AgentTable.description,
+        icon: AgentTable.icon,
+        userId: AgentTable.userId,
         // Exclude instructions from list queries for performance
-        visibility: AgentSchema.visibility,
-        createdAt: AgentSchema.createdAt,
-        updatedAt: AgentSchema.updatedAt,
-        userName: UserSchema.name,
-        userAvatar: UserSchema.image,
-        isBookmarked: sql<boolean>`CASE WHEN ${BookmarkSchema.id} IS NOT NULL THEN true ELSE false END`,
+        visibility: AgentTable.visibility,
+        createdAt: AgentTable.createdAt,
+        updatedAt: AgentTable.updatedAt,
+        userName: UserTable.name,
+        userAvatar: UserTable.image,
+        isBookmarked: sql<boolean>`CASE WHEN ${BookmarkTable.id} IS NOT NULL THEN true ELSE false END`,
       })
-      .from(AgentSchema)
-      .innerJoin(UserSchema, eq(AgentSchema.userId, UserSchema.id))
+      .from(AgentTable)
+      .innerJoin(UserTable, eq(AgentTable.userId, UserTable.id))
       .leftJoin(
-        BookmarkSchema,
+        BookmarkTable,
         and(
-          eq(BookmarkSchema.itemId, AgentSchema.id),
-          eq(BookmarkSchema.itemType, "agent"),
-          eq(BookmarkSchema.userId, currentUserId),
+          eq(BookmarkTable.itemId, AgentTable.id),
+          eq(BookmarkTable.itemType, "agent"),
+          eq(BookmarkTable.userId, currentUserId),
         ),
       )
       .where(orConditions.length > 1 ? or(...orConditions) : orConditions[0])
       .orderBy(
         // My agents first, then other shared agents
-        sql`CASE WHEN ${AgentSchema.userId} = ${currentUserId} THEN 0 ELSE 1 END`,
-        desc(AgentSchema.createdAt),
+        sql`CASE WHEN ${AgentTable.userId} = ${currentUserId} THEN 0 ELSE 1 END`,
+        desc(AgentTable.createdAt),
       )
       .limit(limit);
 
@@ -238,11 +238,11 @@ export const pgAgentRepository: AgentRepository = {
   async checkAccess(agentId, userId, destructive = false) {
     const [agent] = await db
       .select({
-        visibility: AgentSchema.visibility,
-        userId: AgentSchema.userId,
+        visibility: AgentTable.visibility,
+        userId: AgentTable.userId,
       })
-      .from(AgentSchema)
-      .where(eq(AgentSchema.id, agentId));
+      .from(AgentTable)
+      .where(eq(AgentTable.id, agentId));
     if (!agent) {
       return false;
     }

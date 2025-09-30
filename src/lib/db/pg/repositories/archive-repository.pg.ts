@@ -5,14 +5,14 @@ import {
   ArchiveWithItemCount,
 } from "app-types/archive";
 import { pgDb as db } from "../db.pg";
-import { ArchiveSchema, ArchiveItemSchema } from "../schema.pg";
+import { ArchiveTable, ArchiveItemTable } from "../schema.pg";
 import { and, eq, count } from "drizzle-orm";
 import { generateUUID } from "lib/utils";
 
 export const pgArchiveRepository: ArchiveRepository = {
   async createArchive(archive) {
     const [result] = await db
-      .insert(ArchiveSchema)
+      .insert(ArchiveTable)
       .values({
         id: generateUUID(),
         name: archive.name,
@@ -28,22 +28,22 @@ export const pgArchiveRepository: ArchiveRepository = {
   async getArchivesByUserId(userId) {
     const result = await db
       .select({
-        id: ArchiveSchema.id,
-        name: ArchiveSchema.name,
-        description: ArchiveSchema.description,
-        userId: ArchiveSchema.userId,
-        createdAt: ArchiveSchema.createdAt,
-        updatedAt: ArchiveSchema.updatedAt,
-        itemCount: count(ArchiveItemSchema.id),
+        id: ArchiveTable.id,
+        name: ArchiveTable.name,
+        description: ArchiveTable.description,
+        userId: ArchiveTable.userId,
+        createdAt: ArchiveTable.createdAt,
+        updatedAt: ArchiveTable.updatedAt,
+        itemCount: count(ArchiveItemTable.id),
       })
-      .from(ArchiveSchema)
+      .from(ArchiveTable)
       .leftJoin(
-        ArchiveItemSchema,
-        eq(ArchiveSchema.id, ArchiveItemSchema.archiveId),
+        ArchiveItemTable,
+        eq(ArchiveTable.id, ArchiveItemTable.archiveId),
       )
-      .where(eq(ArchiveSchema.userId, userId))
-      .groupBy(ArchiveSchema.id)
-      .orderBy(ArchiveSchema.updatedAt);
+      .where(eq(ArchiveTable.userId, userId))
+      .groupBy(ArchiveTable.id)
+      .orderBy(ArchiveTable.updatedAt);
 
     return result.map((row) => ({
       ...row,
@@ -54,34 +54,32 @@ export const pgArchiveRepository: ArchiveRepository = {
   async getArchiveById(id) {
     const [result] = await db
       .select()
-      .from(ArchiveSchema)
-      .where(eq(ArchiveSchema.id, id));
+      .from(ArchiveTable)
+      .where(eq(ArchiveTable.id, id));
     return result as Archive | null;
   },
 
   async updateArchive(id, archive) {
     const [result] = await db
-      .update(ArchiveSchema)
+      .update(ArchiveTable)
       .set({
         name: archive.name,
         description: archive.description,
         updatedAt: new Date(),
       })
-      .where(eq(ArchiveSchema.id, id))
+      .where(eq(ArchiveTable.id, id))
       .returning();
     return result as Archive;
   },
 
   async deleteArchive(id) {
-    await db
-      .delete(ArchiveItemSchema)
-      .where(eq(ArchiveItemSchema.archiveId, id));
-    await db.delete(ArchiveSchema).where(eq(ArchiveSchema.id, id));
+    await db.delete(ArchiveItemTable).where(eq(ArchiveItemTable.archiveId, id));
+    await db.delete(ArchiveTable).where(eq(ArchiveTable.id, id));
   },
 
   async addItemToArchive(archiveId, itemId, userId) {
     const [result] = await db
-      .insert(ArchiveItemSchema)
+      .insert(ArchiveItemTable)
       .values({
         id: generateUUID(),
         archiveId,
@@ -96,11 +94,11 @@ export const pgArchiveRepository: ArchiveRepository = {
 
   async removeItemFromArchive(archiveId, itemId) {
     await db
-      .delete(ArchiveItemSchema)
+      .delete(ArchiveItemTable)
       .where(
         and(
-          eq(ArchiveItemSchema.archiveId, archiveId),
-          eq(ArchiveItemSchema.itemId, itemId),
+          eq(ArchiveItemTable.archiveId, archiveId),
+          eq(ArchiveItemTable.itemId, itemId),
         ),
       );
   },
@@ -108,34 +106,34 @@ export const pgArchiveRepository: ArchiveRepository = {
   async getArchiveItems(archiveId) {
     const result = await db
       .select()
-      .from(ArchiveItemSchema)
-      .where(eq(ArchiveItemSchema.archiveId, archiveId))
-      .orderBy(ArchiveItemSchema.addedAt);
+      .from(ArchiveItemTable)
+      .where(eq(ArchiveItemTable.archiveId, archiveId))
+      .orderBy(ArchiveItemTable.addedAt);
     return result as ArchiveItem[];
   },
 
   async getItemArchives(itemId, userId) {
     const result = await db
       .select({
-        id: ArchiveSchema.id,
-        name: ArchiveSchema.name,
-        description: ArchiveSchema.description,
-        userId: ArchiveSchema.userId,
-        createdAt: ArchiveSchema.createdAt,
-        updatedAt: ArchiveSchema.updatedAt,
+        id: ArchiveTable.id,
+        name: ArchiveTable.name,
+        description: ArchiveTable.description,
+        userId: ArchiveTable.userId,
+        createdAt: ArchiveTable.createdAt,
+        updatedAt: ArchiveTable.updatedAt,
       })
-      .from(ArchiveSchema)
+      .from(ArchiveTable)
       .innerJoin(
-        ArchiveItemSchema,
-        eq(ArchiveSchema.id, ArchiveItemSchema.archiveId),
+        ArchiveItemTable,
+        eq(ArchiveTable.id, ArchiveItemTable.archiveId),
       )
       .where(
         and(
-          eq(ArchiveItemSchema.itemId, itemId),
-          eq(ArchiveSchema.userId, userId),
+          eq(ArchiveItemTable.itemId, itemId),
+          eq(ArchiveTable.userId, userId),
         ),
       )
-      .orderBy(ArchiveSchema.name);
+      .orderBy(ArchiveTable.name);
     return result as Archive[];
   },
 };

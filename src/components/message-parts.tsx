@@ -70,23 +70,25 @@ interface UserMessagePartProps {
   part: TextMessagePart;
   isLast: boolean;
   message: UIMessage;
-  setMessages: UseChatHelpers<UIMessage>["setMessages"];
-  sendMessage: UseChatHelpers<UIMessage>["sendMessage"];
-  status: UseChatHelpers<UIMessage>["status"];
+  setMessages?: UseChatHelpers<UIMessage>["setMessages"];
+  sendMessage?: UseChatHelpers<UIMessage>["sendMessage"];
+  status?: UseChatHelpers<UIMessage>["status"];
   isError?: boolean;
+  readonly?: boolean;
 }
 
 interface AssistMessagePartProps {
   part: AssistMessagePart;
-  isLast: boolean;
-  isLoading: boolean;
+  isLast?: boolean;
+  isLoading?: boolean;
   message: UIMessage;
-  prevMessage: UIMessage;
+  prevMessage?: UIMessage;
   showActions: boolean;
   threadId?: string;
-  setMessages: UseChatHelpers<UIMessage>["setMessages"];
-  sendMessage: UseChatHelpers<UIMessage>["sendMessage"];
+  setMessages?: UseChatHelpers<UIMessage>["setMessages"];
+  sendMessage?: UseChatHelpers<UIMessage>["sendMessage"];
   isError?: boolean;
+  readonly?: boolean;
 }
 
 interface ToolMessagePartProps {
@@ -98,6 +100,7 @@ interface ToolMessagePartProps {
   addToolResult?: UseChatHelpers<UIMessage>["addToolResult"];
   isError?: boolean;
   setMessages?: UseChatHelpers<UIMessage>["setMessages"];
+  readonly?: boolean;
 }
 
 const MAX_TEXT_LENGTH = 600;
@@ -109,6 +112,7 @@ export const UserMessagePart = memo(
     message,
     setMessages,
     sendMessage,
+    readonly,
     isError,
   }: UserMessagePartProps) {
     const { copied, copy } = useCopy();
@@ -126,6 +130,7 @@ export const UserMessagePart = memo(
         : truncateString(part.text, MAX_TEXT_LENGTH);
 
     const deleteMessage = useCallback(async () => {
+      if (!setMessages) return;
       const ok = await notify.confirm({
         title: "Delete Message",
         description: "Are you sure you want to delete this message?",
@@ -154,7 +159,7 @@ export const UserMessagePart = memo(
       }
     }, [status]);
 
-    if (mode === "edit") {
+    if (mode === "edit" && setMessages && sendMessage) {
       return (
         <div className="flex flex-row gap-2 items-start w-full">
           <MessageEditor
@@ -220,41 +225,45 @@ export const UserMessagePart = memo(
               </TooltipTrigger>
               <TooltipContent side="bottom">Copy</TooltipContent>
             </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  data-testid="message-edit-button"
-                  variant="ghost"
-                  size="icon"
-                  className="size-3! p-4!"
-                  onClick={() => setMode("edit")}
-                >
-                  <Pencil />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">Edit</TooltipContent>
-            </Tooltip>
+            {!readonly && (
+              <>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      data-testid="message-edit-button"
+                      variant="ghost"
+                      size="icon"
+                      className="size-3! p-4!"
+                      onClick={() => setMode("edit")}
+                    >
+                      <Pencil />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">Edit</TooltipContent>
+                </Tooltip>
 
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  disabled={isDeleting}
-                  onClick={deleteMessage}
-                  variant="ghost"
-                  size="icon"
-                  className="size-3! p-4! hover:text-destructive"
-                >
-                  {isDeleting ? (
-                    <Loader className="animate-spin" />
-                  ) : (
-                    <Trash2 />
-                  )}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent className="text-destructive" side="bottom">
-                Delete Message
-              </TooltipContent>
-            </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      disabled={isDeleting}
+                      onClick={deleteMessage}
+                      variant="ghost"
+                      size="icon"
+                      className="size-3! p-4! hover:text-destructive"
+                    >
+                      {isDeleting ? (
+                        <Loader className="animate-spin" />
+                      ) : (
+                        <Trash2 />
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent className="text-destructive" side="bottom">
+                    Delete Message
+                  </TooltipContent>
+                </Tooltip>
+              </>
+            )}
           </div>
         )}
         <div ref={ref} className="min-w-0" />
@@ -281,6 +290,7 @@ export const AssistMessagePart = memo(function AssistMessagePart({
   isError,
   threadId,
   setMessages,
+  readonly,
   sendMessage,
 }: AssistMessagePartProps) {
   const { copied, copy } = useCopy();
@@ -295,6 +305,7 @@ export const AssistMessagePart = memo(function AssistMessagePart({
   }, [metadata, agentList]);
 
   const deleteMessage = useCallback(async () => {
+    if (!setMessages) return;
     const ok = await notify.confirm({
       title: "Delete Message",
       description: "Are you sure you want to delete this message?",
@@ -317,6 +328,7 @@ export const AssistMessagePart = memo(function AssistMessagePart({
   }, [message.id]);
 
   const handleModelChange = (model: ChatModel) => {
+    if (!setMessages || !sendMessage || !prevMessage) return;
     safe(() => setIsLoading(true))
       .ifOk(() =>
         threadId
@@ -375,39 +387,48 @@ export const AssistMessagePart = memo(function AssistMessagePart({
             </TooltipTrigger>
             <TooltipContent>Copy</TooltipContent>
           </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div>
-                <SelectModel onSelect={handleModelChange}>
+          {!readonly && (
+            <>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div>
+                    <SelectModel onSelect={handleModelChange}>
+                      <Button
+                        data-testid="message-edit-button data-[state=open]:bg-secondary!"
+                        variant="ghost"
+                        size="icon"
+                        className="size-3! p-4!"
+                      >
+                        {<RefreshCw />}
+                      </Button>
+                    </SelectModel>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>Change Model</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
                   <Button
-                    data-testid="message-edit-button data-[state=open]:bg-secondary!"
                     variant="ghost"
                     size="icon"
-                    className="size-3! p-4!"
+                    disabled={isDeleting}
+                    onClick={deleteMessage}
+                    className="size-3! p-4! hover:text-destructive"
                   >
-                    {<RefreshCw />}
+                    {isDeleting ? (
+                      <Loader className="animate-spin" />
+                    ) : (
+                      <Trash2 />
+                    )}
                   </Button>
-                </SelectModel>
-              </div>
-            </TooltipTrigger>
-            <TooltipContent>Change Model</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                disabled={isDeleting}
-                onClick={deleteMessage}
-                className="size-3! p-4! hover:text-destructive"
-              >
-                {isDeleting ? <Loader className="animate-spin" /> : <Trash2 />}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent className="text-destructive">
-              Delete Message
-            </TooltipContent>
-          </Tooltip>
+                </TooltipTrigger>
+                <TooltipContent className="text-destructive">
+                  Delete Message
+                </TooltipContent>
+              </Tooltip>
+            </>
+          )}
+
           {metadata && (
             <Tooltip>
               <TooltipTrigger asChild>
@@ -569,6 +590,7 @@ export const ReasoningPart = memo(function ReasoningPart({
 }: {
   reasoningText: string;
   isThinking?: boolean;
+  readonly?: boolean;
 }) {
   const [isExpanded, setIsExpanded] = useState(isThinking);
 
@@ -713,7 +735,6 @@ export const ToolMessagePart = memo(
     isLast,
     showActions,
     addToolResult,
-
     isError,
     messageId,
     setMessages,

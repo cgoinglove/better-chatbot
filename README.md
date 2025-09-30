@@ -8,6 +8,8 @@
 
 🚀 **[Live Demo](https://better-chatbot-demo.vercel.app/)** | See the experience in action in the [preview](#preview) below!
 
+[Demo Chat](https://better-chatbot-demo.vercel.app/export/a4820921-8012-496b-8a5d-13757050bafe)
+
 **Better Chatbot** - A better open-source AI chatbot for individuals and teams, inspired by ChatGPT, Claude, Grok, and Gemini.
 
 • **Multi-AI Support** - Integrates all major LLMs: OpenAI, Anthropic, Google, xAI, Ollama, and more  

@@ -1,6 +1,6 @@
 import { McpServerCustomizationRepository } from "app-types/mcp";
 import { pgDb as db } from "../db.pg";
-import { McpServerCustomizationSchema, McpServerSchema } from "../schema.pg";
+import { McpServerCustomizationTable, McpServerTable } from "../schema.pg";
 import { and, eq } from "drizzle-orm";
 
 export type McpServerCustomization = {
@@ -18,21 +18,21 @@ export const pgMcpServerCustomizationRepository: McpServerCustomizationRepositor
     async selectByUserIdAndMcpServerId({ userId, mcpServerId }) {
       const [row] = await db
         .select({
-          id: McpServerCustomizationSchema.id,
-          userId: McpServerCustomizationSchema.userId,
-          mcpServerId: McpServerCustomizationSchema.mcpServerId,
-          prompt: McpServerCustomizationSchema.prompt,
-          serverName: McpServerSchema.name,
+          id: McpServerCustomizationTable.id,
+          userId: McpServerCustomizationTable.userId,
+          mcpServerId: McpServerCustomizationTable.mcpServerId,
+          prompt: McpServerCustomizationTable.prompt,
+          serverName: McpServerTable.name,
         })
-        .from(McpServerCustomizationSchema)
+        .from(McpServerCustomizationTable)
         .innerJoin(
-          McpServerSchema,
-          eq(McpServerCustomizationSchema.mcpServerId, McpServerSchema.id),
+          McpServerTable,
+          eq(McpServerCustomizationTable.mcpServerId, McpServerTable.id),
         )
         .where(
           and(
-            eq(McpServerCustomizationSchema.userId, userId),
-            eq(McpServerCustomizationSchema.mcpServerId, mcpServerId),
+            eq(McpServerCustomizationTable.userId, userId),
+            eq(McpServerCustomizationTable.mcpServerId, mcpServerId),
           ),
         );
       return row ?? null;
@@ -41,25 +41,25 @@ export const pgMcpServerCustomizationRepository: McpServerCustomizationRepositor
     async selectByUserId(userId) {
       const rows = await db
         .select({
-          id: McpServerCustomizationSchema.id,
-          userId: McpServerCustomizationSchema.userId,
-          mcpServerId: McpServerCustomizationSchema.mcpServerId,
-          prompt: McpServerCustomizationSchema.prompt,
-          serverName: McpServerSchema.name,
+          id: McpServerCustomizationTable.id,
+          userId: McpServerCustomizationTable.userId,
+          mcpServerId: McpServerCustomizationTable.mcpServerId,
+          prompt: McpServerCustomizationTable.prompt,
+          serverName: McpServerTable.name,
         })
-        .from(McpServerCustomizationSchema)
+        .from(McpServerCustomizationTable)
         .innerJoin(
-          McpServerSchema,
-          eq(McpServerCustomizationSchema.mcpServerId, McpServerSchema.id),
+          McpServerTable,
+          eq(McpServerCustomizationTable.mcpServerId, McpServerTable.id),
         )
-        .where(and(eq(McpServerCustomizationSchema.userId, userId)));
+        .where(and(eq(McpServerCustomizationTable.userId, userId)));
       return rows;
     },
 
     async upsertMcpServerCustomization(data) {
       const now = new Date();
       const [result] = await db
-        .insert(McpServerCustomizationSchema)
+        .insert(McpServerCustomizationTable)
         .values({
           userId: data.userId,
           mcpServerId: data.mcpServerId,
@@ -67,8 +67,8 @@ export const pgMcpServerCustomizationRepository: McpServerCustomizationRepositor
         })
         .onConflictDoUpdate({
           target: [
-            McpServerCustomizationSchema.userId,
-            McpServerCustomizationSchema.mcpServerId,
+            McpServerCustomizationTable.userId,
+            McpServerCustomizationTable.mcpServerId,
           ],
           set: {
             prompt: data.prompt ?? null,
@@ -84,11 +84,11 @@ export const pgMcpServerCustomizationRepository: McpServerCustomizationRepositor
       userId: string;
     }) {
       await db
-        .delete(McpServerCustomizationSchema)
+        .delete(McpServerCustomizationTable)
         .where(
           and(
-            eq(McpServerCustomizationSchema.mcpServerId, key.mcpServerId),
-            eq(McpServerCustomizationSchema.userId, key.userId),
+            eq(McpServerCustomizationTable.mcpServerId, key.mcpServerId),
+            eq(McpServerCustomizationTable.userId, key.userId),
           ),
         );
     },

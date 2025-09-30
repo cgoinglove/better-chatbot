@@ -152,7 +152,12 @@
       "failedToUpdateThread": "スレッドの更新に失敗しました",
       "titleRequired": "タイトルが必要です",
       "threadUpdated": "スレッドが更新されました",
-      "areYouSureYouWantToDeleteThisChatThread": "このチャットスレッドを削除してもよろしいですか？"
+      "areYouSureYouWantToDeleteThisChatThread": "このチャットスレッドを削除してもよろしいですか？",
+      "sharePublicLink": "公開リンクを共有",
+      "sharePublicLinkDescription": "共有後に追加されるすべてのメッセージは非公開に保たれます。",
+      "creatingLink": "リンクを作成中...",
+      "createLink": "リンクを作成",
+      "linkCopied": "リンクがコピーされました"
     },
 
     "ChatPreferences": {

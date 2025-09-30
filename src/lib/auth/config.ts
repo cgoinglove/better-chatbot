@@ -28,11 +28,13 @@ function parseSocialAuthConfigs() {
     google?: GoogleConfig;
     microsoft?: MicrosoftConfig;
   } = {};
+  const disableSignUp = parseEnvBoolean(process.env.DISABLE_SIGN_UP);
 
   if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
     const githubResult = GitHubConfigSchema.safeParse({
       clientId: process.env.GITHUB_CLIENT_ID,
       clientSecret: process.env.GITHUB_CLIENT_SECRET,
+      disableSignUp,
     });
     if (githubResult.success) {
       configs.github = githubResult.data;
@@ -53,6 +55,7 @@ function parseSocialAuthConfigs() {
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       ...(forceAccountSelection && { prompt: "select_account" as const }),
+      disableSignUp,
     };
 
     const googleResult = GoogleConfigSchema.safeParse(googleConfig);
@@ -77,6 +80,7 @@ function parseSocialAuthConfigs() {
       clientSecret: process.env.MICROSOFT_CLIENT_SECRET,
       tenantId,
       ...(forceAccountSelection && { prompt: "select_account" as const }),
+      disableSignUp,
     };
 
     const microsoftResult = MicrosoftConfigSchema.safeParse(microsoftConfig);

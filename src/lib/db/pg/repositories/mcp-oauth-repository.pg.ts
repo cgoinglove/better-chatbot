@@ -1,6 +1,6 @@
 import { McpOAuthSession, McpOAuthRepository } from "app-types/mcp";
 import { pgDb as db } from "../db.pg";
-import { McpOAuthSessionSchema } from "../schema.pg";
+import { McpOAuthSessionTable } from "../schema.pg";
 import { eq, and, isNotNull, desc, isNull, ne } from "drizzle-orm";
 
 // OAuth repository implementation for multi-instance support
@@ -11,14 +11,14 @@ export const pgMcpOAuthRepository: McpOAuthRepository = {
   getAuthenticatedSession: async (mcpServerId) => {
     const [session] = await db
       .select()
-      .from(McpOAuthSessionSchema)
+      .from(McpOAuthSessionTable)
       .where(
         and(
-          eq(McpOAuthSessionSchema.mcpServerId, mcpServerId),
-          isNotNull(McpOAuthSessionSchema.tokens),
+          eq(McpOAuthSessionTable.mcpServerId, mcpServerId),
+          isNotNull(McpOAuthSessionTable.tokens),
         ),
       )
-      .orderBy(desc(McpOAuthSessionSchema.updatedAt))
+      .orderBy(desc(McpOAuthSessionTable.updatedAt))
       .limit(1);
 
     return session as McpOAuthSession | undefined;
@@ -30,8 +30,8 @@ export const pgMcpOAuthRepository: McpOAuthRepository = {
 
     const [session] = await db
       .select()
-      .from(McpOAuthSessionSchema)
-      .where(eq(McpOAuthSessionSchema.state, state));
+      .from(McpOAuthSessionTable)
+      .where(eq(McpOAuthSessionTable.state, state));
 
     return session as McpOAuthSession | undefined;
   },
@@ -43,7 +43,7 @@ export const pgMcpOAuthRepository: McpOAuthRepository = {
     const now = new Date();
 
     const [session] = await db
-      .insert(McpOAuthSessionSchema)
+      .insert(McpOAuthSessionTable)
       .values({
         ...(data as McpOAuthSession),
         mcpServerId,
@@ -60,12 +60,12 @@ export const pgMcpOAuthRepository: McpOAuthRepository = {
     const now = new Date();
 
     const [session] = await db
-      .update(McpOAuthSessionSchema)
+      .update(McpOAuthSessionTable)
       .set({
         ...data,
         updatedAt: now,
       })
-      .where(eq(McpOAuthSessionSchema.state, state))
+      .where(eq(McpOAuthSessionTable.state, state))
       .returning();
 
     if (!session) {
@@ -77,21 +77,21 @@ export const pgMcpOAuthRepository: McpOAuthRepository = {
 
   saveTokensAndCleanup: async (state, mcpServerId, data) => {
     const [session] = await db
-      .update(McpOAuthSessionSchema)
+      .update(McpOAuthSessionTable)
       .set({
         ...data,
         updatedAt: new Date(),
       })
-      .where(eq(McpOAuthSessionSchema.state, state))
+      .where(eq(McpOAuthSessionTable.state, state))
       .returning();
 
     await db
-      .delete(McpOAuthSessionSchema)
+      .delete(McpOAuthSessionTable)
       .where(
         and(
-          eq(McpOAuthSessionSchema.mcpServerId, mcpServerId),
-          isNull(McpOAuthSessionSchema.tokens),
-          ne(McpOAuthSessionSchema.state, state),
+          eq(McpOAuthSessionTable.mcpServerId, mcpServerId),
+          isNull(McpOAuthSessionTable.tokens),
+          ne(McpOAuthSessionTable.state, state),
         ),
       );
 
@@ -101,7 +101,7 @@ export const pgMcpOAuthRepository: McpOAuthRepository = {
   // Delete a session by its OAuth state
   deleteByState: async (state) => {
     await db
-      .delete(McpOAuthSessionSchema)
-      .where(eq(McpOAuthSessionSchema.state, state));
+      .delete(McpOAuthSessionTable)
+      .where(eq(McpOAuthSessionTable.state, state));
   },
 };
