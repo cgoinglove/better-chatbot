@@ -4,46 +4,41 @@ This project ships with a unified file storage abstraction that can back onto ei
 
 ## Driver Selection
 
-The storage driver is resolved in the following order:
-
-1. `FILE_STORAGE_TYPE` (or legacy `STORAGE_TYPE`) – explicit opt-in (`local`, `vercel-blob`, or `s3`).
-2. `FILE_STORAGE_DRIVER` – legacy override kept for backwards compatibility.
-3. Vercel auto-detect – defaults to `vercel-blob` whenever `VERCEL=1`.
-4. Fallback – `local` when nothing else is provided.
+The runtime driver is decided by `FILE_STORAGE_TYPE` when it is set (`local`, `vercel-blob`, or `s3`). If the variable is omitted, deployments on Vercel default to Vercel Blob while all other environments fall back to the local filesystem driver.
 
 ```mermaid
 flowchart LR
-  A[FILE_STORAGE_TYPE] -->|valid| D((Driver))
-  B[FILE_STORAGE_DRIVER] -->|legacy| D
-  C[IS_VERCEL_ENV]|>|vercel-blob| D
-  E[Default] -->|local| D
+  A[FILE_STORAGE_TYPE] -->|set| D((Driver))
+  B[IS_VERCEL_ENV]|>|vercel-blob| D
+  C[Default] -->|local| D
 ```
 
 ### Environment Variables
 
 ```ini
-# Force a storage driver (optional)
-FILE_STORAGE_TYPE=vercel-blob | local | s3
+# Defaults already work—uncomment only when you need to override them.
 
-# Shared prefix across all drivers
-FILE_STORAGE_PREFIX=uploads
+# -- Vercel Blob example --
+# FILE_STORAGE_TYPE=vercel-blob
+# FILE_STORAGE_PREFIX=uploads
+# BLOB_READ_WRITE_TOKEN=<auto on Vercel>
+# Pull locally with `vercel env pull` when testing against the real Blob store.
 
-# Local filesystem driver
-FILE_STORAGE_LOCAL_PUBLIC_ROOT=./public
+# -- Local filesystem example --
+# FILE_STORAGE_TYPE=local
+# FILE_STORAGE_PREFIX=uploads
+# FILE_STORAGE_LOCAL_PUBLIC_ROOT=./public
 
-# Vercel Blob driver
-BLOB_READ_WRITE_TOKEN=<auto on Vercel>
-# Pull locally with `vercel env pull` when testing against the real Blob store
-
-# S3 driver (planned)
-FILE_STORAGE_S3_BUCKET=your-bucket
-FILE_STORAGE_S3_REGION=us-east-1
-FILE_STORAGE_S3_PREFIX=uploads
+# -- S3 (planned driver) --
+# FILE_STORAGE_TYPE=s3
+# FILE_STORAGE_PREFIX=uploads
+# FILE_STORAGE_S3_BUCKET=your-bucket
+# FILE_STORAGE_S3_REGION=us-east-1
 ```
 
 ## Local Filesystem Driver
 
-Files are written beneath `<public>/<FILE_STORAGE_LOCAL_PREFIX>/<uuid>/<filename>` so they can be served as static assets. Metadata is persisted alongside every file (`metadata.json`) to provide size/content type lookups without hitting the filesystem.
+Files are written beneath `<public>/<FILE_STORAGE_PREFIX>/<uuid>/<filename>` (defaults to `uploads/…`) so they can be served as static assets. Metadata is persisted alongside every file (`metadata.json`) to provide size/content type lookups without hitting the filesystem.
 
 Server-side uploads leverage the shared storage interface:
 
@@ -66,7 +61,7 @@ The Blob driver brings global edge distribution while keeping the same `FileStor
 
 ### Client Upload Flow
 
-Use the provided `handleUpload` endpoint to obtain a client token and stream the file straight to Vercel Blob. The route automatically prefixes every pathname with `FILE_STORAGE_BLOB_PREFIX` and adds a random suffix to avoid collisions.
+Use the provided `handleUpload` endpoint to obtain a client token and stream the file straight to Vercel Blob. The route automatically prefixes every pathname with `FILE_STORAGE_PREFIX` and adds a random suffix to avoid collisions.
 
 ```ts
 "use client";
