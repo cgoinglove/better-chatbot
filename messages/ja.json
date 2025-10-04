@@ -74,6 +74,11 @@
   "Chat": {
     "Error": "チャットエラー",
     "thisMessageWasNotSavedPleaseTryTheChatAgain": "このメッセージは保存されませんでした。もう一度チャットをお試しください。",
+    "uploadImage": "画像をアップロード",
+    "imageUploadedSuccessfully": "画像が正常にアップロードされました",
+    "pleaseUploadImageFile": "画像ファイルをアップロードしてください",
+    "imageSizeMustBeLessThan10MB": "画像サイズは10MB未満である必要があります",
+    "failedToUploadImage": "画像のアップロードに失敗しました",
     "Greeting": {
       "goodMorning": "おはようございます、{name}さん",
       "goodAfternoon": "こんにちは、{name}さん",

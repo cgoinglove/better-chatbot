@@ -74,6 +74,11 @@
   "Chat": {
     "Error": "Error de Chat",
     "thisMessageWasNotSavedPleaseTryTheChatAgain": "Este mensaje no se guardó. Por favor, intenta el chat nuevamente.",
+    "uploadImage": "Subir Imagen",
+    "imageUploadedSuccessfully": "Imagen subida exitosamente",
+    "pleaseUploadImageFile": "Por favor sube un archivo de imagen",
+    "imageSizeMustBeLessThan10MB": "El tamaño de la imagen debe ser menor a 10MB",
+    "failedToUploadImage": "Error al subir la imagen",
     "Greeting": {
       "goodMorning": "Buenos días, {name}",
       "goodAfternoon": "Buenas tardes, {name}",
