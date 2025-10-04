@@ -154,3 +154,84 @@ export const toBuffer = async (content: UploadContent) => {
 
   throw new TypeError("Unsupported upload content type");
 };
+
+export async function getBase64Data(image: {
+  mimeType: string;
+  data: string | Uint8Array | ArrayBuffer | Buffer | URL;
+}): Promise<{ data: string; mimeType: string }> {
+  if (!image.data) {
+    throw new Error("No image data provided");
+  }
+
+  const data = image.data;
+
+  // Case 1: Buffer, Uint8Array, or ArrayBuffer
+  if (Buffer.isBuffer(data)) {
+    return {
+      data: data.toString("base64"),
+      mimeType: image.mimeType,
+    };
+  }
+
+  if (data instanceof Uint8Array) {
+    return {
+      data: Buffer.from(data).toString("base64"),
+      mimeType: image.mimeType,
+    };
+  }
+
+  if (data instanceof ArrayBuffer) {
+    return {
+      data: Buffer.from(data).toString("base64"),
+      mimeType: image.mimeType,
+    };
+  }
+
+  // Case 2: URL object
+  if (data instanceof URL) {
+    const response = await fetch(data.href);
+    const buffer = await response.arrayBuffer();
+    return {
+      data: Buffer.from(buffer).toString("base64"),
+      mimeType: image.mimeType,
+    };
+  }
+
+  // From here, data must be a string
+  if (typeof data !== "string") {
+    throw new Error("Invalid data type");
+  }
+
+  // Case 3: data URL (data:image/png;base64,...)
+  if (data.startsWith("data:")) {
+    const base64Match = data.match(/^data:[^;]+;base64,(.+)$/);
+    if (base64Match) {
+      return {
+        data: base64Match[1], // Extract base64 part only
+        mimeType: image.mimeType,
+      };
+    }
+    throw new Error("Invalid data URL format");
+  }
+
+  // Case 4: HTTP/HTTPS URL
+  if (data.startsWith("http://") || data.startsWith("https://")) {
+    const response = await fetch(data);
+    const buffer = await response.arrayBuffer();
+    return {
+      data: Buffer.from(buffer).toString("base64"),
+      mimeType: image.mimeType,
+    };
+  }
+
+  // Case 5: Already pure base64 string
+  // Check if it looks like base64 (alphanumeric + / + = only)
+  if (/^[A-Za-z0-9+/]+=*$/.test(data)) {
+    return {
+      data,
+      mimeType: image.mimeType,
+    };
+  }
+
+  throw new Error("Unsupported image data format");
+}

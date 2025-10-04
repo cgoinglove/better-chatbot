@@ -18,3 +18,5 @@ export enum DefaultToolName {
 }
 
 export const SequentialThinkingToolName = "sequential-thinking";
+
+export const ImageToolName = "image-generator";

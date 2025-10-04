@@ -195,10 +195,12 @@
     "Error": "Chat Error",
     "thisMessageWasNotSavedPleaseTryTheChatAgain": "This message was not saved. Please try the chat again.",
     "uploadImage": "Upload Image",
+    "generateImage": "Generate Image",
     "imageUploadedSuccessfully": "Image uploaded successfully",
     "pleaseUploadImageFile": "Please upload an image file",
     "imageSizeMustBeLessThan10MB": "Image size must be less than 10MB",
     "failedToUploadImage": "Failed to upload image",
+    "imageUploadFailedUsingBase64": "Image upload failed. Using base64 encoding as fallback.",
     "Greeting": {
       "goodMorning": "Good morning, {name}",
       "goodAfternoon": "Good afternoon, {name}",

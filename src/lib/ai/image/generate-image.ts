@@ -1,82 +1,66 @@
 "use server";
-
-import { google } from "@ai-sdk/google";
+import { GoogleGenAI, Part as GeminiPart } from "@google/genai";
+import { safe } from "ts-safe";
+import { getBase64Data } from "lib/file-storage/storage-utils";
 import { openai } from "@ai-sdk/openai";
 import { xai } from "@ai-sdk/xai";
 
-import { GeneratedFile, experimental_generateImage, generateText } from "ai";
+import { experimental_generateImage } from "ai";
+import logger from "logger";
 
 type GenerateImageOptions = {
   prompt: string;
-  referenceImages?: { mimeType: string; url?: string; base64?: string }[];
+  referenceImages?: {
+    mimeType: string;
+    data: string | Uint8Array | ArrayBuffer | Buffer | URL;
+  }[];
   abortSignal?: AbortSignal;
 };
 
 type GeneratedImage = {
-  content: UploadContent;
+  base64: string;
   mimeType?: string;
 };
 
-type GeneratedImageResult = {
+export type GeneratedImageResult = {
   images: GeneratedImage[];
-  text?: string;
 };
 
 export async function generateImageWithOpenAI(
   options: GenerateImageOptions,
-): Promise<GeneratedFile[]> {
+): Promise<GeneratedImageResult> {
   return experimental_generateImage({
     model: openai.image("gpt-image-1"),
     abortSignal: options.abortSignal,
     prompt: options.prompt,
-  }).then((res) => res.images);
+  }).then((res) => {
+    return {
+      images: res.images.map((v) => {
+        const item: GeneratedImage = {
+          base64: Buffer.from(v.uint8Array).toString("base64"),
+          mimeType: v.mediaType,
+        };
+        return item;
+      }),
+    };
+  });
 }
 
 export async function generateImageWithXAI(
   options: GenerateImageOptions,
-): Promise<GeneratedFile[]> {
+): Promise<GeneratedImageResult> {
   return experimental_generateImage({
     model: xai.image("grok-2-image"),
     abortSignal: options.abortSignal,
     prompt: options.prompt,
-  }).then((res) => res.images);
-}
-
-export async function generateImageWithGoogle(
-  options: GenerateImageOptions,
-): Promise<GeneratedFile[]> {
-  const result = await generateText({
-    model: google("gemini-2.5-flash-image-preview"),
-    abortSignal: options.abortSignal,
-    prompt: options.prompt,
+  }).then((res) => {
+    return {
+      images: res.images.map((v) => ({
+        base64: Buffer.from(v.uint8Array).toString("base64"),
+        mimeType: v.mediaType,
+      })),
+    };
   });
-  return result.files;
-}
-
-import { GoogleGenAI, Part as GeminiPart } from "@google/genai";
-import { safe } from "ts-safe";
-import { UploadContent } from "lib/file-storage/file-storage.interface";
-
-async function getBase64Data(image: {
-  mimeType: string;
-  url?: string;
-  base64?: string;
-}): Promise<{ base64: string; mimeType: string }> {
-  if (image.base64) {
-    return {
-      base64: image.base64,
-      mimeType: image.mimeType,
-    };
-  }
-  if (image.url) {
-    const response = await fetch(image.url);
-    const buffer = await response.arrayBuffer();
-    return {
-      base64: Buffer.from(buffer).toString("base64"),
-      mimeType: image.mimeType,
-    };
-  }
-  throw new Error("No image data provided");
 }
 
 export const generateImageWithNanoBanana = async (
@@ -92,24 +76,29 @@ export const generateImageWithNanoBanana = async (
   )
     .map(async (images) =>
       Promise.all(
-        images.map(async (image) => await getBase64Data(image)) as GeminiPart[],
+        images.map(
+          async (image) =>
+            await getBase64Data(image).then((data) => ({
+              inlineData: {
+                data: data.data,
+                mimeType: data.mimeType,
+              },
+            })),
+        ) as GeminiPart[],
       ),
     )
     .unwrap();
-
+  logger.debug("nano banana", {
+    prompt,
+    referenceImages: referenceImages.length,
+  });
   const response = await ai.models.generateContent({
     model: "gemini-2.5-flash-image",
+    config: {
+      abortSignal: options.abortSignal,
+      responseModalities: ["IMAGE"],
+    },
     contents: [
-      {
-        role: "system",
-        parts: [
-          {
-            text: `You are a helpful assistant that generates images based on a prompt.  
-You must always generate images that are relevant to the prompt and context.  
-If the prompt is unclear, you should still generate an image without asking the user for more information.`,
-          },
-        ],
-      },
       {
         role: "user",
         parts: [
@@ -121,25 +110,20 @@ If the prompt is unclear, you should still generate an image without asking the 
       },
     ],
   });
-
   return (
     response.candidates?.reduce(
       (acc, candidate) => {
-        acc.text += candidate.content?.parts
-          ?.filter((part) => part.text)
-          .map((p) => p.text);
-
         const images =
           candidate.content?.parts
             ?.filter((part) => part.inlineData)
             .map((p) => ({
-              content: Buffer.from(p.inlineData!.data!, "base64"),
+              base64: p.inlineData!.data!,
               mimeType: p.inlineData!.mimeType,
             })) ?? [];
         acc.images.push(...images);
         return acc;
       },
-      { images: [] as GeneratedImage[], text: "" },
-    ) || { images: [] as GeneratedImage[], text: "Empty Images" }
+      { images: [] as GeneratedImage[] },
+    ) || { images: [] as GeneratedImage[] }
   );
 };

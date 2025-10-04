@@ -50,7 +50,7 @@ import {
   VercelAIWorkflowToolStreamingResultTag,
 } from "app-types/workflow";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
-import { DefaultToolName } from "lib/ai/tools";
+import { DefaultToolName, ImageToolName } from "lib/ai/tools";
 import {
   Shortcut,
   getShortcutKeyList,
@@ -714,6 +714,17 @@ const CodeExecutor = dynamic(
   },
 );
 
+const ImageGeneratorToolInvocation = dynamic(
+  () =>
+    import("./tool-invocation/image-generator").then(
+      (mod) => mod.ImageGeneratorToolInvocation,
+    ),
+  {
+    ssr: false,
+    loading,
+  },
+);
+
 // Local shortcuts for tool invocation approval/rejection
 const approveToolInvocationShortcut: Shortcut = {
   description: "approveToolInvocation",
@@ -862,6 +873,10 @@ export const ToolMessagePart = memo(
         toolName === DefaultToolName.WebContent
       ) {
         return <WebSearchToolInvocation part={part} />;
+      }
+
+      if (toolName === ImageToolName) {
+        return <ImageGeneratorToolInvocation part={part} />;
       }
 
       if (toolName === DefaultToolName.JavascriptExecution) {
