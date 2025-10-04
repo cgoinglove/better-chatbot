@@ -1,4 +1,8 @@
 import { z } from "zod";
+import { passwordSchema } from "lib/validations/password";
+
+import { UserEntity } from "lib/db/pg/schema.pg";
+import { getSession } from "auth/server";
 
 export type UserPreferences = {
   displayName?: string;
@@ -7,29 +11,74 @@ export type UserPreferences = {
   botName?: string; // Name of the bot
 };
 
-export type User = {
-  id: string;
-  name: string;
-  email: string;
-  image: string | null;
-  preferences?: UserPreferences;
+// user without password
+export interface User extends Omit<UserEntity, "password"> {
+  preferences: UserPreferences | null;
+  lastLogin?: Date | null;
+}
+
+export type BasicUser = Omit<
+  User,
+  | "password"
+  | "preferences"
+  | "image"
+  | "role"
+  | "banned"
+  | "banReason"
+  | "banExpires"
+> & {
+  image?: string | null;
+  role?: string | null;
+  banned?: boolean | null;
+  banReason?: string | null;
+  banExpires?: Date | null;
 };
+
+export interface BasicUserWithLastLogin extends BasicUser {
+  lastLogin: Date | null;
+}
+
+export type UserSession = NonNullable<Awaited<ReturnType<typeof getSession>>>;
+
+export type UserSessionUser = UserSession["user"];
 
 export type UserRepository = {
   existsByEmail: (email: string) => Promise<boolean>;
-  updateUser: (id: string, user: Pick<User, "name" | "image">) => Promise<User>;
+  updateUserDetails: (data: {
+    userId: string;
+    name?: string;
+    email?: string;
+    image?: string;
+  }) => Promise<User>;
+
   updatePreferences: (
     userId: string,
     preferences: UserPreferences,
   ) => Promise<User>;
   getPreferences: (userId: string) => Promise<UserPreferences | null>;
-  findById: (userId: string) => Promise<User | null>;
+  getUserById: (userId: string) => Promise<BasicUserWithLastLogin | null>;
+  getUserCount: () => Promise<number>;
+  getUserStats: (userId: string) => Promise<{
+    threadCount: number;
+    messageCount: number;
+    modelStats: Array<{
+      model: string;
+      messageCount: number;
+      totalTokens: number;
+    }>;
+    totalTokens: number;
+    period: string;
+  }>;
+  getUserAuthMethods: (userId: string) => Promise<{
+    hasPassword: boolean;
+    oauthProviders: string[];
+  }>;
 };
 
 export const UserZodSchema = z.object({
   name: z.string().min(1),
   email: z.string().email(),
-  password: z.string().min(8),
+  password: passwordSchema,
 });
 
 export const UserPreferencesZodSchema = z.object({

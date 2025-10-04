@@ -1,6 +1,7 @@
 import { type ClassValue, clsx } from "clsx";
 import { JSONSchema7 } from "json-schema";
 import { twMerge } from "tailwind-merge";
+import z from "zod";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -419,3 +420,12 @@ export function parseEnvBoolean(value: string | boolean | undefined): boolean {
   }
   return false;
 }
+
+const booleans = ["true", "false", true, false, 1, 0, "1", "0"];
+export const booleanCoerced = z
+  .any()
+  .refine((val) => booleans.includes(val), { message: "must be boolean" })
+  .transform((val) => {
+    if (val === "true" || val === true || val === "1" || val === 1) return true;
+    return false;
+  });

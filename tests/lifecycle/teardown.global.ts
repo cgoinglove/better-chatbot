@@ -1,10 +1,10 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import {
-  UserSchema,
-  SessionSchema,
-  AgentSchema,
-  BookmarkSchema,
-  ChatThreadSchema,
+  UserTable,
+  SessionTable,
+  AgentTable,
+  BookmarkTable,
+  ChatThreadTable,
 } from "../../src/lib/db/pg/schema.pg";
 import { eq, like, or } from "drizzle-orm";
 import { config } from "dotenv";
@@ -17,18 +17,21 @@ async function cleanup() {
   console.log("Cleaning up test data...");
 
   try {
-    // Clean up test users created during tests (those with test emails)
-    const testEmailPatterns = ["%playwright%", "%test%", "%example.com%"];
+    // Clean up only dynamically created test users (not seeded ones)
+    // Preserve our seeded test users in @test-seed.local domain
+    const testEmailPatterns = [
+      "%playwright%", // Dynamically created playwright users
+      "%@example.com%", // Test signup users
+      "%@temp-test.%", // Temporary test users
+    ];
 
     // First, get all test users
     const testUsers = await db
-      .select({ id: UserSchema.id })
-      .from(UserSchema)
+      .select({ id: UserTable.id })
+      .from(UserTable)
       .where(
         or(
-          ...testEmailPatterns.map((pattern) =>
-            like(UserSchema.email, pattern),
-          ),
+          ...testEmailPatterns.map((pattern) => like(UserTable.email, pattern)),
         ),
       );
 
@@ -40,20 +43,20 @@ async function cleanup() {
 
       // Delete chat threads
       await db
-        .delete(ChatThreadSchema)
-        .where(eq(ChatThreadSchema.userId, user.id));
+        .delete(ChatThreadTable)
+        .where(eq(ChatThreadTable.userId, user.id));
 
       // Delete bookmarks
-      await db.delete(BookmarkSchema).where(eq(BookmarkSchema.userId, user.id));
+      await db.delete(BookmarkTable).where(eq(BookmarkTable.userId, user.id));
 
       // Delete agents
-      await db.delete(AgentSchema).where(eq(AgentSchema.userId, user.id));
+      await db.delete(AgentTable).where(eq(AgentTable.userId, user.id));
 
       // Delete sessions
-      await db.delete(SessionSchema).where(eq(SessionSchema.userId, user.id));
+      await db.delete(SessionTable).where(eq(SessionTable.userId, user.id));
 
       // Delete user
-      await db.delete(UserSchema).where(eq(UserSchema.id, user.id));
+      await db.delete(UserTable).where(eq(UserTable.id, user.id));
     }
 
     console.log("Test data cleaned up successfully");

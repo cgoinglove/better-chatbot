@@ -1,3 +1,5 @@
+"use client";
+
 import { appStore } from "@/app/store";
 import { AllowedMCPServer, MCPServerInfo } from "app-types/mcp";
 import { cn, objectFlow } from "lib/utils";

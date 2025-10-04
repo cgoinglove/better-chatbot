@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("Model Selection", () => {
-  test.use({ storageState: "tests/.auth/user1.json" });
+  test.use({ storageState: "tests/.auth/admin.json" });
 
   test("should persist selected model", async ({ page }) => {
     await page.goto("/");

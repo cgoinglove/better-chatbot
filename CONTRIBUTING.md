@@ -67,34 +67,23 @@ If you are fixing a bug, please add tests to prevent the same bug from happening
 
 6. **Run e2e tests**:
 
-Before opening a PR run e2e tests to ensure your changes work as expected.
+   ```bash
+   pnpm playwright:install # install playwright browsers
+   pnpm test:e2e # run all e2e tests (48 tests covering core functionality)
 
-```bash
+   # Optional: run specific test suites
+   pnpm test:e2e -- tests/agents/
+   pnpm test:e2e -- tests/models/
 
-# install playwright browsers - you only need to do this once
-pnpm playwright:install # install playwright browsers
+   # Debug specific test
+   pnpm test:e2e -- tests/agents/agent-visibility.spec.ts --headed
+   ```
 
-# this is typically the command you will use to run all e2e tests
-pnpm test:e2e # run all e2e tests
-```
+   **E2E Test Requirements:**
 
-To help you debug, you can run the tests individually or in headed mode to see the browser UI.
-
-```bash
-
-# Optional: run specific test suites in a folder
-pnpm test:e2e -- tests/agents/
-pnpm test:e2e -- tests/models/
-
-# Debug specific test file in headed mode to see the browser UI
-pnpm test:e2e -- tests/agents/agent-visibility.spec.ts --headed
-```
-
-**E2E Test Requirements:**
-
-- PostgreSQL database (use `pnpm docker:pg` for quick setup)
-- At least one LLM provider API key (OpenAI, Anthropic, or Google)
-- `BETTER_AUTH_SECRET` environment variable set
+   - PostgreSQL database (use `pnpm docker:pg` for quick setup)
+   - At least one LLM provider API key (OpenAI, Anthropic, or Google)
+   - `BETTER_AUTH_SECRET` environment variable set
 
 ---
 

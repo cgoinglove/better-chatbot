@@ -48,11 +48,27 @@ const McpCustomizationPopup = dynamic(
     ssr: false,
   },
 );
-export function AppPopupProvider() {
+
+const UserSettingsPopup = dynamic(
+  () =>
+    import("@/components/user/user-detail/user-settings-popup").then(
+      (mod) => mod.UserSettingsPopup,
+    ),
+  {
+    ssr: false,
+  },
+);
+
+export function AppPopupProvider({
+  userSettingsComponent,
+}: {
+  userSettingsComponent: React.ReactNode;
+}) {
   return (
     <>
       <KeyboardShortcutsPopup />
       <ChatPreferencesPopup />
+      <UserSettingsPopup userSettingsComponent={userSettingsComponent} />
       <ChatBotVoice />
       <ChatBotTemporary />
       <McpCustomizationPopup />

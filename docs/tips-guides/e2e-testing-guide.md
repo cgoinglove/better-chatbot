@@ -21,7 +21,7 @@ pnpm test:e2e:ui
 pnpm test:e2e -- tests/agents/agent-creation.spec.ts
 
 # Run tests in debug mode
-pnpm test:e2e -- --debug
+pnpm test:e2e:debug
 ```
 
 ## 🏗️ Test Architecture
@@ -83,28 +83,17 @@ We recommend using the [Playwright](https://marketplace.visualstudio.com/items?i
 
 ### Test Database
 
-For safety, always use a **separate test, local database**. If you run this against a production database, it can **severely impact your data**.
-
-The easiest database to use the local postgres database setup through the included docker compose file.
-
 ```bash
-# Use Docker (recommended)
 pnpm docker:pg
-```
-
-Set the `POSTGRES_URL` environment variable in your .env to the test database URL.
-
-```text
-POSTGRES_URL="postgres://user:password@localhost:5432/better_chatbot"
 ```
 
 ## 🎯 Authentication Strategy
 
 ### Authentication Setup
 
-Tests authenticate 2 users by default on setup. - This is to test multi-user functionality like agent or workspace sharing.
+Tests authenticate 4 users 1 admin, 1 editor, 1 editor2, and 1 regular by default on setup. - This is to test multi-user functionality like agent or workspace sharing. These users are defined in `tests/constants/test-users.ts`.
 
-To test as an authenticated user (nearly all tests), you can use the `test.use({ storageState: 'tests/.auth/user1.json' });` in the test file. Without this, the test will run as an unauthenticated user. This can go in the describe block or the test block.
+To test as an authenticated user (nearly all tests), you can use the `test.use({ storageState: TEST_USERS.editor.authFile });` or `test.use({ storageState: TEST_USERS.editor2.authFile });` or `test.use({ storageState: TEST_USERS.regular.authFile });` or `test.use({ storageState: TEST_USERS.admin.authFile });` in the test file. Without this, the test will run as an unauthenticated user. This can go in the describe block or the test block.
 
 ### Multi-User Testing
 
@@ -116,8 +105,9 @@ Playwright is designed to run tests in parallel. This means that each test will 
 
 ```typescript
 // Most tests use single user authentication
+import { TEST_USERS } from '../constants/test-users';
 test.describe('Agent Creation', () => {
-  test.use({ storageState: 'tests/.auth/user1.json' });
+  test.use({ storageState: TEST_USERS.editor.authFile });
 
   test('should create agent', async ({ page }) => {
     // Test logic here
@@ -128,8 +118,9 @@ test.describe('Agent Creation', () => {
 #### User 2 Only
 
 ```typescript
+import { TEST_USERS } from '../constants/test-users';
 test.describe('Agent Creation', () => {
-  test.use({ storageState: 'tests/.auth/user2.json' });
+  test.use({ storageState: TEST_USERS.editor2.authFile });
 
   test('should create agent', async ({ page }) => {
     // Test logic here
@@ -142,17 +133,18 @@ test.describe('Agent Creation', () => {
 This is the most common use case for multi-user testing.
 
 ```typescript
+import { TEST_USERS } from '../constants/test-users';
 test.describe('Agent Sharing', () => {
   test('user sharing workflow', async ({ browser }) => {
     // User1 creates agent
     const user1Context = await browser.newContext({
-      storageState: 'tests/.auth/user1.json',
+      storageState: TEST_USERS.editor.authFile,
     });
     const user1Page = await user1Context.newPage();
 
     // User2 interacts with shared agent
     const user2Context = await browser.newContext({
-      storageState: 'tests/.auth/user2.json',
+      storageState: TEST_USERS.editor2.authFile,
     });
     const user2Page = await user2Context.newPage();
   });
@@ -213,29 +205,19 @@ const agentName = `Test Agent ${testSuffix}`;
 
 ### Debug Commands
 
-See [https://playwright.dev/docs/test-cli](https://playwright.dev/docs/test-cli) for more information.
-
-Some useful commands to help you debug your tests:
-
 ```bash
 # Run specific test with browser visible
 pnpm test:e2e -- tests/agents/agent-creation.spec.ts --headed
 
 # Debug mode with breakpoints
-pnpm test:e2e:debug -- --debug
+pnpm test:e2e:debug
 
 # Run single test
-pnpm test:e2e -- -g "should create agent"
+npx playwright test -g "should create agent"
 
 # Generate test report
-pnpm test:e2e -- show-report
+npx playwright show-report
 ```
-
-### VSCode/Cursor Debugging
-
-You can use the VSCode extension to debug and help write your tests, it's a great way to get started:
-
-See [https://playwright.dev/docs/getting-started-vscode](https://playwright.dev/docs/getting-started-vscode) for more information.
 
 ### Debug Helpers
 
@@ -286,9 +268,9 @@ Tests run automatically on GitHub Actions with:
 
 ```typescript
 import { test, expect } from '@playwright/test';
-
+import { TEST_USERS } from '../constants/test-users';
 test.describe('Your Feature', () => {
-  test.use({ storageState: 'tests/.auth/user1.json' });
+  test.use({ storageState: TEST_USERS.editor.authFile });
 
   test('should perform action', async ({ page }) => {
     // Navigate to page
@@ -310,12 +292,13 @@ test.describe('Your Feature', () => {
 ### Multi-User Test Template
 
 ```typescript
+import { TEST_USERS } from '../constants/test-users';
 test('multi-user workflow', async ({ browser }) => {
   const testId = Date.now().toString(36);
 
   // User1 setup
   const user1Context = await browser.newContext({
-    storageState: 'tests/.auth/user1.json',
+    storageState: TEST_USERS.editor.authFile,
   });
   const user1Page = await user1Context.newPage();
 

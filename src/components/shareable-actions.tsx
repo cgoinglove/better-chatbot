@@ -56,12 +56,23 @@ const VISIBILITY_CONFIG = {
       description: "Workflow.publicDescription",
     },
   },
+  mcp: {
+    private: {
+      label: "MCP.private",
+      description: "MCP.privateDescription",
+    },
+    public: {
+      label: "MCP.featured",
+      description: "MCP.featuredDescription",
+    },
+  },
 } as const;
 
 interface ShareableActionsProps {
-  type: "agent" | "workflow";
+  type: "agent" | "workflow" | "mcp";
   visibility?: Visibility;
   isOwner: boolean;
+  canChangeVisibility?: boolean;
   isBookmarked?: boolean;
   editHref?: string;
   onVisibilityChange?: (visibility: Visibility) => void;
@@ -78,6 +89,7 @@ export function ShareableActions({
   type,
   visibility,
   isOwner,
+  canChangeVisibility = true,
   isBookmarked = false,
   editHref,
   onVisibilityChange,
@@ -116,7 +128,7 @@ export function ShareableActions({
     <div className="flex items-center gap-1">
       {VisibilityIcon && (
         <>
-          {isOwner && onVisibilityChange ? (
+          {isOwner && onVisibilityChange && canChangeVisibility ? (
             <DropdownMenu>
               <Tooltip>
                 <TooltipTrigger asChild>

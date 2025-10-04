@@ -189,7 +189,10 @@ describe("File-based MCP Config Storage", () => {
         config: { url: "https://example.com" } as MCPServerConfig,
       };
 
-      const result = await storage.save(serverToSave);
+      const result = await storage.save({
+        ...serverToSave,
+        userId: "test-user-id",
+      });
 
       expect(mockWriteFile).toHaveBeenCalledWith(
         "/test/config.json",
@@ -210,7 +213,10 @@ describe("File-based MCP Config Storage", () => {
         config: { url: "https://example.com" } as MCPServerConfig,
       };
 
-      await storage.save(serverToSave);
+      await storage.save({
+        ...serverToSave,
+        userId: "test-user-id",
+      });
 
       expect(mockMkdir).toHaveBeenCalledWith("/test", { recursive: true });
     });

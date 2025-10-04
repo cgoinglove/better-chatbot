@@ -23,8 +23,6 @@ export const metadata: Metadata = {
     "Better Chatbot is a chatbot that uses the Tools to answer questions.",
 };
 
-// const themes = BASE_THEMES.flatMap((t) => [t, `${t}-dark`]);
-
 export default async function RootLayout({
   children,
 }: Readonly<{

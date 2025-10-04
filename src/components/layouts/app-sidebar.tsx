@@ -1,38 +1,26 @@
 "use client";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar,
-} from "ui/sidebar";
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { Sidebar, SidebarContent, SidebarFooter } from "ui/sidebar";
+import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 import { AppSidebarMenus } from "./app-sidebar-menus";
 import { AppSidebarAgents } from "./app-sidebar-agents";
 import { AppSidebarThreads } from "./app-sidebar-threads";
+import { SidebarHeaderShared } from "./sidebar-header";
 
 import { isShortcutEvent, Shortcuts } from "lib/keyboard-shortcuts";
 import { AppSidebarUser } from "./app-sidebar-user";
-import { PanelLeft } from "lucide-react";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { Session, User } from "better-auth";
+import { BasicUser } from "app-types/user";
 
 export function AppSidebar({
-  session,
-}: { session?: { session: Session; user: User } }) {
-  const { toggleSidebar, setOpenMobile } = useSidebar();
+  user,
+}: {
+  user?: BasicUser;
+}) {
+  const userRole = user?.role;
   const router = useRouter();
-  const isMobile = useIsMobile();
 
-  const currentPath = usePathname();
-
-  // global shortcuts
+  // Handle new chat shortcut (specific to main app)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (isShortcutEvent(e, Shortcuts.openNewChat)) {
@@ -40,64 +28,35 @@ export function AppSidebar({
         router.push("/");
         router.refresh();
       }
-      if (isShortcutEvent(e, Shortcuts.toggleSidebar)) {
-        e.preventDefault();
-        toggleSidebar();
-      }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [router, toggleSidebar]);
-
-  useEffect(() => {
-    if (isMobile) {
-      setOpenMobile(false);
-    }
-  }, [currentPath, isMobile]);
+  }, [router]);
 
   return (
     <Sidebar
       collapsible="offcanvas"
       className="border-r border-sidebar-border/80"
     >
-      <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem className="flex items-center gap-0.5">
-            <SidebarMenuButton asChild className="hover:bg-transparent">
-              <Link
-                href={`/`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  router.push("/");
-                  router.refresh();
-                }}
-              >
-                <h4 className="font-bold">better-chatbot</h4>
-                <div
-                  className="ml-auto block sm:hidden"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setOpenMobile(false);
-                  }}
-                >
-                  <PanelLeft className="size-4" />
-                </div>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarHeader>
+      <SidebarHeaderShared
+        title="better-chatbot"
+        href="/"
+        enableShortcuts={true}
+        onLinkClick={() => {
+          router.push("/");
+          router.refresh();
+        }}
+      />
 
       <SidebarContent className="mt-2 overflow-hidden relative">
         <div className="flex flex-col overflow-y-auto">
-          <AppSidebarMenus />
-          <AppSidebarAgents />
+          <AppSidebarMenus user={user} />
+          <AppSidebarAgents userRole={userRole} />
           <AppSidebarThreads />
         </div>
       </SidebarContent>
       <SidebarFooter className="flex flex-col items-stretch space-y-2">
-        <AppSidebarUser session={session} />
+        <AppSidebarUser user={user} />
       </SidebarFooter>
     </Sidebar>
   );

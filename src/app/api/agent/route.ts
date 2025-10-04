@@ -4,6 +4,7 @@ import { z } from "zod";
 import { serverCache } from "lib/cache";
 import { CacheKeys } from "lib/cache/cache-keys";
 import { AgentCreateSchema, AgentQuerySchema } from "app-types/agent";
+import { canCreateAgent } from "lib/auth/permissions";
 
 export async function GET(request: Request) {
   const session = await getSession();
@@ -55,6 +56,15 @@ export async function POST(request: Request): Promise<Response> {
 
   if (!session?.user.id) {
     return new Response("Unauthorized", { status: 401 });
+  }
+
+  // Check if user has permission to create agents
+  const hasPermission = await canCreateAgent();
+  if (!hasPermission) {
+    return Response.json(
+      { error: "You don't have permission to create agents" },
+      { status: 403 },
+    );
   }
 
   try {

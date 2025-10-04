@@ -4,11 +4,9 @@ import {
   FlaskConical,
   ShieldAlertIcon,
   Loader,
-  Pencil,
   RotateCw,
   Settings,
   Settings2,
-  Trash,
   Wrench,
 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "ui/alert";
@@ -18,23 +16,28 @@ import JsonView from "ui/json-view";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { memo, useCallback, useMemo, useState } from "react";
 import Link from "next/link";
-import { mutate } from "swr";
+import { useSWRConfig } from "swr";
 import { safe } from "ts-safe";
 
 import { handleErrorWithToast } from "ui/shared-toast";
 import {
   refreshMcpClientAction,
   removeMcpClientAction,
+  shareMcpServerAction,
 } from "@/app/api/mcp/actions";
+import { ShareableActions, type Visibility } from "./shareable-actions";
 
 import type { MCPServerInfo, MCPToolInfo } from "app-types/mcp";
 
 import { ToolDetailPopup } from "./tool-detail-popup";
 import { useTranslations } from "next-intl";
 import { Separator } from "ui/separator";
+import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { appStore } from "@/app/store";
 import { isString } from "lib/utils";
 import { redriectMcpOauth } from "lib/ai/mcp/oauth-redirect";
+import { BasicUser } from "app-types/user";
+import { canChangeVisibilityMCP } from "lib/auth/client-permissions";
 
 // Main MCPCard component
 export const MCPCard = memo(function MCPCard({
@@ -44,10 +47,23 @@ export const MCPCard = memo(function MCPCard({
   status,
   name,
   toolInfo,
-}: MCPServerInfo & { id: string }) {
+  visibility,
+  enabled,
+  userId,
+  user,
+  userName,
+  userAvatar,
+}: MCPServerInfo & { user: BasicUser }) {
   const [isProcessing, setIsProcessing] = useState(false);
+  const [visibilityChangeLoading, setVisibilityChangeLoading] = useState(false);
   const t = useTranslations("MCP");
   const appStoreMutate = appStore((state) => state.mutate);
+  const { mutate } = useSWRConfig();
+  const isOwner = userId === user?.id;
+  const canChangeVisibility = useMemo(
+    () => canChangeVisibilityMCP(user?.role),
+    [user?.role],
+  );
 
   const isLoading = useMemo(() => {
     return isProcessing || status === "loading";
@@ -55,6 +71,8 @@ export const MCPCard = memo(function MCPCard({
 
   const needsAuthorization = status === "authorizing";
   const isDisabled = isLoading || needsAuthorization;
+
+  // Check permissions (kept for potential future use)
 
   const errorMessage = useMemo(() => {
     if (error) {
@@ -87,10 +105,29 @@ export const MCPCard = memo(function MCPCard({
     [id],
   );
 
+  const handleVisibilityChange = useCallback(
+    async (newVisibility: Visibility) => {
+      // Map visibility for MCP (public becomes featured)
+      const mcpVisibility = newVisibility === "public" ? "public" : "private";
+      safe(() => setVisibilityChangeLoading(true))
+        .map(async () => shareMcpServerAction(id, mcpVisibility))
+        .ifOk(() => {
+          mutate("/api/mcp/list");
+        })
+        .ifFail((e) => {
+          handleErrorWithToast(e);
+        })
+        .watch(() => setVisibilityChangeLoading(false));
+    },
+    [id],
+  );
+
   return (
     <Card
       key={`mcp-card-${id}-${status}`}
       className="relative hover:border-foreground/20 transition-colors bg-secondary/40"
+      data-testid="mcp-server-card"
+      data-featured={visibility === "public"}
     >
       {isLoading && (
         <div className="animate-pulse z-10 absolute inset-0 bg-background/50 flex items-center justify-center w-full h-full" />
@@ -104,7 +141,9 @@ export const MCPCard = memo(function MCPCard({
         <h4 className="font-bold text-xs sm:text-lg flex items-center gap-1">
           {name}
         </h4>
+
         <div className="flex-1" />
+
         {needsAuthorization && (
           <>
             <Tooltip>
@@ -142,6 +181,9 @@ export const MCPCard = memo(function MCPCard({
                     status,
                     toolInfo,
                     error,
+                    visibility,
+                    enabled,
+                    userId,
                   },
                 })
               }
@@ -195,36 +237,43 @@ export const MCPCard = memo(function MCPCard({
             <p>{t("refresh")}</p>
           </TooltipContent>
         </Tooltip>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleDelete}
-              disabled={isLoading}
-            >
-              <Trash className="size-3.5" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>{t("delete")}</p>
-          </TooltipContent>
-        </Tooltip>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Link
-              href={`/mcp/modify/${encodeURIComponent(id)}`}
-              className="cursor-pointer"
-            >
-              <Button variant="ghost" size="icon">
-                <Pencil className="size-3.5" />
-              </Button>
-            </Link>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>{t("edit")}</p>
-          </TooltipContent>
-        </Tooltip>
+        {/* Add sharing actions for owners or visibility indicator for featured servers */}
+        <ShareableActions
+          type="mcp"
+          visibility={visibility === "public" ? "public" : "private"}
+          isOwner={isOwner}
+          canChangeVisibility={canChangeVisibility}
+          editHref={
+            isOwner ? `/mcp/modify/${encodeURIComponent(id)}` : undefined
+          }
+          onVisibilityChange={
+            canChangeVisibility ? handleVisibilityChange : undefined
+          }
+          onDelete={isOwner ? handleDelete : undefined}
+          isVisibilityChangeLoading={visibilityChangeLoading}
+          isDeleteLoading={isProcessing}
+          disabled={isLoading}
+          renderActions={() => null}
+        />
+        {/* Show user info for featured servers */}
+        {!isOwner && userName && (
+          <>
+            <div className="h-4">
+              <Separator orientation="vertical" />
+            </div>
+            <div className="flex items-center gap-1.5 ml-2">
+              <Avatar className="size-4 ring shrink-0 rounded-full">
+                <AvatarImage src={userAvatar || undefined} />
+                <AvatarFallback className="text-xs">
+                  {userName[0]?.toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <span className="text-xs text-muted-foreground font-medium">
+                {userName}
+              </span>
+            </div>
+          </>
+        )}
       </CardHeader>
 
       {errorMessage && <ErrorAlert error={errorMessage} />}

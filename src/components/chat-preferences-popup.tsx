@@ -16,8 +16,9 @@ import {
 import {
   MCPInstructionsContent,
   UserInstructionsContent,
+  ExportsManagementContent,
 } from "./chat-preferences-content";
-import { UserIcon, X } from "lucide-react";
+import { UserIcon, X, Share2 } from "lucide-react";
 import { Button } from "ui/button";
 import { useTranslations } from "next-intl";
 import { MCPIcon } from "ui/mcp-icon";
@@ -39,8 +40,12 @@ export function ChatPreferencesPopup() {
         label: t("Chat.ChatPreferences.mcpInstructions"),
         icon: <MCPIcon className="w-4 h-4 fill-muted-foreground" />,
       },
+      {
+        label: t("Chat.ChatPreferences.myExports"),
+        icon: <Share2 className="w-4 h-4" />,
+      },
     ];
-  }, []);
+  }, [t]);
 
   const [tab, setTab] = useState(0);
 
@@ -150,6 +155,8 @@ export function ChatPreferencesPopup() {
                           <UserInstructionsContent />
                         ) : tab == 1 ? (
                           <MCPInstructionsContent />
+                        ) : tab == 2 ? (
+                          <ExportsManagementContent />
                         ) : null}
                       </>
                     )}

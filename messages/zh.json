@@ -153,7 +153,12 @@
       "failedToUpdateThread": "更新线程失败",
       "titleRequired": "标题是必需的",
       "threadUpdated": "线程已更新",
-      "areYouSureYouWantToDeleteThisChatThread": "您确定要删除此聊天线程吗？"
+      "areYouSureYouWantToDeleteThisChatThread": "您确定要删除此聊天线程吗？",
+      "sharePublicLink": "分享公开链接",
+      "sharePublicLinkDescription": "分享后添加的所有消息将保持私有。",
+      "creatingLink": "正在创建链接...",
+      "createLink": "创建链接",
+      "linkCopied": "链接已复制"
     },
 
     "ChatPreferences": {

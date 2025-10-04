@@ -11,6 +11,11 @@ export async function middleware(request: NextRequest) {
   if (pathname.startsWith("/ping")) {
     return new Response("pong", { status: 200 });
   }
+
+  if (pathname === "/admin") {
+    return NextResponse.redirect(new URL("/admin/users", request.url));
+  }
+
   const sessionCookie = getSessionCookie(request);
 
   if (!sessionCookie) {
@@ -21,6 +26,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|api/auth|sign-in|sign-up).*)",
+    "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|api/auth|export|sign-in|sign-up).*)",
   ],
 };

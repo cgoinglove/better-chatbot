@@ -111,11 +111,15 @@ export class MCPClient {
 
   getInfo(): MCPServerInfo {
     return {
+      id: this.id,
       name: this.name,
       config: this.serverConfig,
       status: this.status,
       error: this.error,
       toolInfo: this.toolInfo,
+      visibility: "private" as const,
+      enabled: true,
+      userId: "", // This will be filled by the manager
     };
   }
 

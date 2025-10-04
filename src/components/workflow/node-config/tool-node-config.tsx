@@ -50,7 +50,7 @@ export const ToolNodeDataConfig = memo(function ({
   const { data: mcpList } = useMcpList();
 
   const toolList = useMemo<WorkflowToolKey[]>(() => {
-    const mcpTools: WorkflowToolKey[] = mcpList.flatMap((mcp) => {
+    const mcpTools: WorkflowToolKey[] = (mcpList || []).flatMap((mcp) => {
       return mcp.toolInfo.map((tool) => {
         return {
           type: "mcp-tool",
