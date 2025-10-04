@@ -4,6 +4,7 @@ import { getSession } from "auth/server";
 import { serverFileStorage, storageDriver } from "lib/file-storage";
 import globalLogger from "lib/logger";
 import { colorize } from "consola/utils";
+import { checkStorageAction } from "../actions";
 
 const logger = globalLogger.withDefaults({
   message: colorize("blackBright", `[${storageDriver} Upload URL API]`),
@@ -125,6 +126,24 @@ export async function POST(request: Request) {
   const session = await getSession();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Check storage configuration first
+  const storageCheck = await checkStorageAction();
+  if (!storageCheck.isValid) {
+    logger.error("Storage configuration error", {
+      error: storageCheck.error,
+      solution: storageCheck.solution,
+    });
+
+    return NextResponse.json(
+      {
+        error: storageCheck.error,
+        solution: storageCheck.solution,
+        storageDriver,
+      },
+      { status: 500 },
+    );
   }
 
   // Parse request body

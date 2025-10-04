@@ -1,12 +1,26 @@
 import { NextResponse } from "next/server";
 import { getSession } from "auth/server";
-import { serverFileStorage } from "lib/file-storage";
+import { serverFileStorage, storageDriver } from "lib/file-storage";
+import { checkStorageAction } from "../actions";
 
 export async function POST(request: Request) {
   const session = await getSession();
 
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Check storage configuration first
+  const storageCheck = await checkStorageAction();
+  if (!storageCheck.isValid) {
+    return NextResponse.json(
+      {
+        error: storageCheck.error,
+        solution: storageCheck.solution,
+        storageDriver,
+      },
+      { status: 500 },
+    );
   }
 
   try {

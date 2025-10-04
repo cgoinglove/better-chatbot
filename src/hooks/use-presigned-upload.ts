@@ -121,7 +121,17 @@ export function useFileUpload() {
           });
 
           if (!uploadUrlResponse.ok) {
-            toast.error("Failed to get upload URL");
+            const errorBody = await uploadUrlResponse.json().catch(() => ({}));
+
+            // Display detailed error with solution if available
+            if (errorBody.solution) {
+              toast.error(errorBody.error || "Failed to get upload URL", {
+                description: errorBody.solution,
+                duration: 10000, // Show for 10 seconds
+              });
+            } else {
+              toast.error(errorBody.error || "Failed to get upload URL");
+            }
             return;
           }
 
@@ -158,7 +168,16 @@ export function useFileUpload() {
 
         if (!serverUploadResponse.ok) {
           const errorBody = await serverUploadResponse.json().catch(() => ({}));
-          toast.error(errorBody.error || "Server upload failed");
+
+          // Display detailed error with solution if available
+          if (errorBody.solution) {
+            toast.error(errorBody.error || "Server upload failed", {
+              description: errorBody.solution,
+              duration: 10000, // Show for 10 seconds
+            });
+          } else {
+            toast.error(errorBody.error || "Server upload failed");
+          }
           return;
         }
 
