@@ -1,30 +1,22 @@
 import "server-only";
-import { IS_DEV, IS_VERCEL_ENV } from "lib/const";
+import { IS_DEV } from "lib/const";
 import type { FileStorage } from "./file-storage.interface";
-import { createLocalFileStorage } from "./local-file-storage";
 import { createS3FileStorage } from "./s3-file-storage";
 import { createVercelBlobStorage } from "./vercel-blob-storage";
 import logger from "logger";
 
-export type FileStorageDriver = "local" | "vercel-blob" | "s3";
+export type FileStorageDriver = "vercel-blob" | "s3";
 
 const resolveDriver = (): FileStorageDriver => {
   const candidate = process.env.FILE_STORAGE_TYPE;
 
   const normalized = candidate?.trim().toLowerCase();
-  if (
-    normalized === "local" ||
-    normalized === "vercel-blob" ||
-    normalized === "s3"
-  ) {
+  if (normalized === "vercel-blob" || normalized === "s3") {
     return normalized;
   }
 
-  if (IS_VERCEL_ENV) {
-    return "vercel-blob";
-  }
-
-  return "local";
+  // Default to Vercel Blob
+  return "vercel-blob";
 };
 
 declare global {
@@ -37,8 +29,6 @@ const storageDriver = resolveDriver();
 const createFileStorage = (): FileStorage => {
   logger.info(`Creating file storage: ${storageDriver}`);
   switch (storageDriver) {
-    case "local":
-      return createLocalFileStorage();
     case "vercel-blob":
       return createVercelBlobStorage();
     case "s3":

@@ -332,21 +332,13 @@ EXA_API_KEY=your_exa_api_key_here
 FILE_BASED_MCP_CONFIG=false
 
 # === File Storage ===
-# Defaults already work out of the box. Uncomment these examples only when you need to override them.
-# Vercel deployments automatically use Vercel Blob; other environments fall back to local disk storage.
+# Vercel Blob is the default storage driver (works in both local dev and production)
+# Pull the token locally with `vercel env pull`
+FILE_STORAGE_TYPE=vercel-blob
+FILE_STORAGE_PREFIX=uploads
+BLOB_READ_WRITE_TOKEN=
 
-# -- Vercel Blob example --
-# Pull the token locally with `vercel env pull` when testing against Vercel Blob.
-# FILE_STORAGE_TYPE=vercel-blob
-# FILE_STORAGE_PREFIX=uploads
-# BLOB_READ_WRITE_TOKEN=
-
-# -- Local filesystem example --
-# FILE_STORAGE_TYPE=local
-# FILE_STORAGE_PREFIX=uploads
-# FILE_STORAGE_LOCAL_PUBLIC_ROOT=./public
-
-# -- S3 (planned driver) --
+# -- S3 (coming soon) --
 # FILE_STORAGE_TYPE=s3
 # FILE_STORAGE_PREFIX=uploads
 # FILE_STORAGE_S3_BUCKET=
@@ -402,7 +394,7 @@ Step-by-step setup guides for running and configuring better-chatbot.
 
 #### [🗂️ File Storage Drivers](./docs/tips-guides/file-storage.md)
 
-- Multiple storage backend support with automatic driver selection: ✅ Local Filesystem, ✅ Vercel Blob (completed), 🚧 S3 (in progress)
+- Cloud-based file storage with Vercel Blob (default) for seamless uploads in both development and production. S3 support coming soon.
 
 #### [🎯 System Prompts & Chat Customization](./docs/tips-guides/system-prompts-and-customization.md)
 
@@ -431,7 +423,8 @@ Step-by-step setup guides for running and configuring better-chatbot.
 
 Planned features coming soon to better-chatbot:
 
-- [ ] **File Attach & Image Generation**
+- [x] **File Upload & Storage** (Vercel Blob integration)
+- [ ] **Image Generation**
 - [ ] **Collaborative Document Editing** (like OpenAI Canvas: user & assistant co-editing)
 - [ ] **RAG (Retrieval-Augmented Generation)**
 - [ ] **Web-based Compute** (with [WebContainers](https://webcontainers.io) integration)
