@@ -452,5 +452,37 @@
     "arrangeNodes": "Auto Layout",
     "nodesArranged": "Layout aplicado exitosamente",
     "visibilityUpdated": "Visibilidad actualizada exitosamente"
+  },
+  "User": {
+    "Profile": {
+      "common": {
+        "uploadPhoto": "Subir Foto",
+        "chooseDefault": "Elegir Predeterminada",
+        "useEmoji": "Usar Emoji",
+        "generateWithAI": "Generar con IA",
+        "changeProfilePhoto": "Cambiar Foto de Perfil",
+        "selectDefaultAvatar": "Elegir Avatar Predeterminado",
+        "selectDefaultAvatarDescription": "Selecciona uno de los avatares predeterminados a continuación",
+        "chooseEmojiAvatar": "Elegir Avatar Emoji",
+        "chooseEmojiAvatarDescription": "Selecciona un emoji para usar como tu foto de perfil",
+        "generateAvatarWithAI": "Generar Avatar con IA",
+        "generateAvatarWithAIDescription": "Describe tu foto de perfil ideal y deja que la IA la cree",
+        "aiProvider": "Proveedor de IA",
+        "describeYourAvatar": "Describe tu avatar",
+        "avatarPromptPlaceholder": "ej., Un cachorro lindo en estilo Studio Ghibli",
+        "generating": "Generando...",
+        "regenerate": "Regenerar",
+        "useThisAvatar": "Usar Este Avatar",
+        "profilePhotoUpdatedSuccessfully": "Foto de perfil actualizada exitosamente",
+        "failedToUpdateProfilePhoto": "Error al actualizar la foto de perfil",
+        "pleaseEnterPrompt": "Por favor ingresa una descripción",
+        "imageGeneratedSuccessfully": "¡Imagen generada exitosamente!",
+        "failedToGenerateImage": "Error al generar imagen",
+        "failedToSaveImage": "Error al guardar imagen",
+        "pleaseUploadValidImage": "Por favor sube una imagen válida (JPEG, PNG o WebP)",
+        "imageSizeMustBeLessThan": "El tamaño de la imagen debe ser menor a 5MB",
+        "select": "Seleccionar"
+      }
+    }
   }
 }

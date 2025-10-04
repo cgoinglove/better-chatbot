@@ -252,8 +252,21 @@ export async function generateAvatarImageAction(
       };
     }
 
-    // Add avatar-specific instructions to prompt
-    const enhancedPrompt = `${prompt}. Portrait style, centered face, suitable for profile picture`;
+    // Wrap user prompt with avatar-specific instructions
+    const enhancedPrompt = `You are tasked with creating a professional profile picture for a user.
+
+Requirements:
+- Portrait style with centered face
+- Clear, high-quality image suitable for profile/avatar use
+- Friendly and approachable expression
+- Professional yet personable appearance
+- Clean background that doesn't distract from the subject
+- Well-lit with good contrast
+
+User's request:
+"${prompt}"
+
+Generate a profile picture that fulfills the user's request while maintaining the professional portrait quality requirements above.`;
 
     let images;
 

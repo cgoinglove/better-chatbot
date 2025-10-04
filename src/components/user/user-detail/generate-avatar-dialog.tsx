@@ -26,6 +26,7 @@ import { OpenAIIcon } from "ui/openai-icon";
 import { GrokIcon } from "ui/grok-icon";
 import { GeminiIcon } from "ui/gemini-icon";
 import { useTranslations } from "next-intl";
+import { Avatar, AvatarImage, AvatarFallback } from "ui/avatar";
 
 interface GenerateAvatarDialogProps {
   open: boolean;
@@ -203,11 +204,12 @@ export function GenerateAvatarDialog({
           {generatedImage && (
             <div className="space-y-3">
               <div className="relative aspect-square rounded-lg overflow-hidden border-2 border-border">
-                <img
-                  src={generatedImage}
-                  alt="Generated avatar"
-                  className="w-full h-full object-cover"
-                />
+                <Avatar className="ring ring-border w-full h-full object-cover">
+                  <AvatarImage src={generatedImage || undefined} />
+                  <AvatarFallback>
+                    {generatedImage.slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
               </div>
 
               <div className="flex gap-2">

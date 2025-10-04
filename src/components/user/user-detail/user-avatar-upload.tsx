@@ -2,7 +2,14 @@
 
 import { useState, useRef } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "ui/avatar";
-import { Camera, Loader2, Upload, Image, Smile, Sparkles } from "lucide-react";
+import {
+  Camera,
+  Loader2,
+  Upload,
+  Smile,
+  Sparkles,
+  ImageIcon,
+} from "lucide-react";
 import { useFileUpload } from "@/hooks/use-presigned-upload";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -152,7 +159,7 @@ export function UserAvatarUpload({
                 onClick={handleDefaultAvatarClick}
                 disabled={isUploading}
               >
-                <Image className="mr-2 size-4" />
+                <ImageIcon className="mr-2 size-4" />
                 {t("chooseDefault")}
               </Button>
 

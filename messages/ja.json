@@ -451,5 +451,37 @@
     "arrangeNodes": "自動レイアウト",
     "nodesArranged": "レイアウトが正常に適用されました",
     "visibilityUpdated": "公開設定が正常に更新されました"
+  },
+  "User": {
+    "Profile": {
+      "common": {
+        "uploadPhoto": "写真をアップロード",
+        "chooseDefault": "デフォルトを選択",
+        "useEmoji": "絵文字を使用",
+        "generateWithAI": "AIで生成",
+        "changeProfilePhoto": "プロフィール写真を変更",
+        "selectDefaultAvatar": "デフォルトアバターを選択",
+        "selectDefaultAvatarDescription": "以下のデフォルトアバターから1つを選択してください",
+        "chooseEmojiAvatar": "絵文字アバターを選択",
+        "chooseEmojiAvatarDescription": "プロフィール写真として使用する絵文字を選択してください",
+        "generateAvatarWithAI": "AIでアバターを生成",
+        "generateAvatarWithAIDescription": "理想的なプロフィール写真を説明してAIに作成させましょう",
+        "aiProvider": "AIプロバイダー",
+        "describeYourAvatar": "アバターを説明",
+        "avatarPromptPlaceholder": "例：ジブリスタジオスタイルのかわいい子犬",
+        "generating": "生成中...",
+        "regenerate": "再生成",
+        "useThisAvatar": "このアバターを使用",
+        "profilePhotoUpdatedSuccessfully": "プロフィール写真が正常に更新されました",
+        "failedToUpdateProfilePhoto": "プロフィール写真の更新に失敗しました",
+        "pleaseEnterPrompt": "説明を入力してください",
+        "imageGeneratedSuccessfully": "画像が正常に生成されました！",
+        "failedToGenerateImage": "画像の生成に失敗しました",
+        "failedToSaveImage": "画像の保存に失敗しました",
+        "pleaseUploadValidImage": "有効な画像をアップロードしてください（JPEG、PNG、またはWebP）",
+        "imageSizeMustBeLessThan": "画像サイズは5MB未満である必要があります",
+        "select": "選択"
+      }
+    }
   }
 }
