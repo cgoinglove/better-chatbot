@@ -135,9 +135,6 @@ function checkProviderAPIKey(provider: keyof typeof staticModels) {
     case "xai":
       key = process.env.XAI_API_KEY;
       break;
-    case "ollama":
-      key = process.env.OLLAMA_API_KEY;
-      break;
     case "groq":
       key = process.env.GROQ_API_KEY;
       break;
