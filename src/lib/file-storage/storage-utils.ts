@@ -6,12 +6,67 @@ export const sanitizeFilename = (filename: string) => {
   return base.replace(/[^a-zA-Z0-9._-]/g, "_") || "file";
 };
 
+/**
+ * Infer content type from filename extension.
+ * Returns "application/octet-stream" for unknown types.
+ */
+export const getContentTypeFromFilename = (filename: string): string => {
+  const ext = filename.split(".").pop()?.toLowerCase();
+
+  const mimeTypes: Record<string, string> = {
+    // Images
+    jpg: "image/jpeg",
+    jpeg: "image/jpeg",
+    png: "image/png",
+    gif: "image/gif",
+    webp: "image/webp",
+    svg: "image/svg+xml",
+    ico: "image/x-icon",
+
+    // Documents
+    pdf: "application/pdf",
+    doc: "application/msword",
+    docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    xls: "application/vnd.ms-excel",
+    xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    ppt: "application/vnd.ms-powerpoint",
+    pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+
+    // Text
+    txt: "text/plain",
+    html: "text/html",
+    css: "text/css",
+    js: "text/javascript",
+    json: "application/json",
+    xml: "application/xml",
+    csv: "text/csv",
+    md: "text/markdown",
+
+    // Audio
+    mp3: "audio/mpeg",
+    wav: "audio/wav",
+    ogg: "audio/ogg",
+    m4a: "audio/mp4",
+
+    // Video
+    mp4: "video/mp4",
+    webm: "video/webm",
+    avi: "video/x-msvideo",
+    mov: "video/quicktime",
+
+    // Archives
+    zip: "application/zip",
+    rar: "application/x-rar-compressed",
+    "7z": "application/x-7z-compressed",
+    tar: "application/x-tar",
+    gz: "application/gzip",
+  };
+
+  return ext && mimeTypes[ext] ? mimeTypes[ext] : "application/octet-stream";
+};
+
 export const resolveStoragePrefix = () => {
-  const raw =
-    process.env.FILE_STORAGE_PREFIX ??
-    process.env.FILE_STORAGE_BLOB_PREFIX ??
-    process.env.FILE_STORAGE_LOCAL_PREFIX ??
-    "uploads";
+  const raw = process.env.FILE_STORAGE_PREFIX ?? "uploads";
 
   return raw.replace(/^\/+|\/+$|\.+/g, "").trim();
 };

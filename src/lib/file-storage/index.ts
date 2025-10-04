@@ -4,6 +4,7 @@ import type { FileStorage } from "./file-storage.interface";
 import { createLocalFileStorage } from "./local-file-storage";
 import { createS3FileStorage } from "./s3-file-storage";
 import { createVercelBlobStorage } from "./vercel-blob-storage";
+import logger from "logger";
 
 export type FileStorageDriver = "local" | "vercel-blob" | "s3";
 
@@ -34,6 +35,7 @@ declare global {
 const storageDriver = resolveDriver();
 
 const createFileStorage = (): FileStorage => {
+  logger.info(`Creating file storage: ${storageDriver}`);
   switch (storageDriver) {
     case "local":
       return createLocalFileStorage();

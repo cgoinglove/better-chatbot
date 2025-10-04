@@ -1,140 +1,235 @@
 # File Storage Setup
 
-This project ships with a unified file storage abstraction that can back onto either the local filesystem or Vercel Blob. The runtime driver is selected automatically so you can build once and deploy anywhere.
+> **Note**: This documentation was written by Claude 3.5 Sonnet.
 
-## Driver Selection
+This project supports **multiple file storage backends** for handling file uploads and downloads.
 
-The runtime driver is decided by `FILE_STORAGE_TYPE` when it is set (`local`, `vercel-blob`, or `s3`). If the variable is omitted, deployments on Vercel default to Vercel Blob while all other environments fall back to the local filesystem driver.
+## Overview
 
-```mermaid
-flowchart LR
-  A[FILE_STORAGE_TYPE] -->|set| D((Driver))
-  B[IS_VERCEL_ENV]|>|vercel-blob| D
-  C[Default] -->|local| D
-```
+Files are stored with **public access** by default, making them accessible via URL. This is useful for sharing uploaded content, displaying images, and integrating with external services.
+
+## Storage Drivers
+
+The project supports three storage backends:
+
+- **Local Filesystem** - For self-hosted deployments (Docker, VPS)
+- **Vercel Blob** - For Vercel deployments (default on Vercel)
+- **S3** - Planned for AWS/S3-compatible storage
+
+The storage driver is automatically selected based on your deployment environment or can be explicitly configured via `FILE_STORAGE_TYPE`.
+
+## Configuration
 
 ### Environment Variables
 
 ```ini
-# Defaults already work—uncomment only when you need to override them.
+# Storage driver selection (auto-detected if not set)
+FILE_STORAGE_TYPE=local # or vercel-blob, s3
 
-# -- Vercel Blob example --
-# FILE_STORAGE_TYPE=vercel-blob
-# FILE_STORAGE_PREFIX=uploads
-# BLOB_READ_WRITE_TOKEN=<auto on Vercel>
-# Pull locally with `vercel env pull` when testing against the real Blob store.
+# Optional: Subdirectory prefix for organizing files
+FILE_STORAGE_PREFIX=uploads
 
-# -- Local filesystem example --
-# FILE_STORAGE_TYPE=local
-# FILE_STORAGE_PREFIX=uploads
-# FILE_STORAGE_LOCAL_PUBLIC_ROOT=./public
+# === Local Filesystem (FILE_STORAGE_TYPE=local) ===
+FILE_STORAGE_LOCAL_PUBLIC_ROOT=./public # defaults to ./public
 
-# -- S3 (planned driver) --
-# FILE_STORAGE_TYPE=s3
-# FILE_STORAGE_PREFIX=uploads
-# FILE_STORAGE_S3_BUCKET=your-bucket
-# FILE_STORAGE_S3_REGION=us-east-1
+# === Vercel Blob (FILE_STORAGE_TYPE=vercel-blob) ===
+BLOB_READ_WRITE_TOKEN=<auto on Vercel>
+VERCEL_BLOB_CALLBACK_URL= # Optional: For local webhook testing with ngrok
+
+# === S3 (FILE_STORAGE_TYPE=s3, not yet implemented) ===
+# FILE_STORAGE_S3_BUCKET=
+# FILE_STORAGE_S3_REGION=
+# AWS_ACCESS_KEY_ID=
+# AWS_SECRET_ACCESS_KEY=
 ```
 
-## Local Filesystem Driver
+### Quick Start by Deployment Type
 
-Files are written beneath `<public>/<FILE_STORAGE_PREFIX>/<uuid>/<filename>` (defaults to `uploads/…`) so they can be served as static assets. Metadata is persisted alongside every file (`metadata.json`) to provide size/content type lookups without hitting the filesystem.
+#### Local Filesystem (Docker, VPS, Local Dev)
 
-Server-side uploads leverage the shared storage interface:
+The default for non-Vercel environments. Files are stored in `public/uploads/` and served by Next.js.
+
+```ini
+# .env (optional, this is the default)
+FILE_STORAGE_TYPE=local
+FILE_STORAGE_PREFIX=uploads
+```
+
+No additional setup required! Files are automatically publicly accessible.
+
+#### Vercel Blob (Vercel Deployment)
+
+Automatically enabled on Vercel. For local testing with Vercel Blob:
+
+1. Go to your Vercel project → **Storage** tab
+2. Click **Connect Database** → **Blob** → **Continue**
+3. Name it (e.g., "Files") and click **Create**
+4. Pull environment variables locally:
+
+```bash
+vercel env pull
+```
+
+## Client Upload
+
+The `useFileUpload` hook **automatically selects the optimal upload method** based on your storage backend:
+
+- **Vercel Blob**: Direct browser → CDN upload (fastest)
+- **S3**: Presigned URL upload (when implemented)
+- **Local FS**: Browser → Server → Filesystem (fallback)
+
+```tsx
+"use client";
+
+import { useFileUpload } from "hooks/use-presigned-upload";
+
+function FileUploadComponent() {
+  const { upload, isUploading } = useFileUpload();
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const result = await upload(file);
+    if (!result) return; // Upload failed (error shown via toast)
+
+    // File uploaded successfully
+    console.log("Public URL:", result.url);
+    console.log("Pathname (key):", result.pathname);
+  };
+
+  return (
+    <input type="file" onChange={handleFileChange} disabled={isUploading} />
+  );
+}
+```
+
+### Upload Flow
+
+#### Vercel Blob (Direct Upload)
+
+```mermaid
+sequenceDiagram
+  participant Browser
+  participant UploadURL as /api/storage/upload-url
+  participant Vercel as Vercel Blob CDN
+
+  Browser->>UploadURL: POST (request client token)
+  Note over Browser,UploadURL: User authenticated
+  UploadURL->>Vercel: Generate client token
+  Vercel-->>UploadURL: Return token
+  UploadURL-->>Browser: Return token + URL
+  Browser->>Vercel: PUT file (with token)
+  Vercel-->>Browser: Upload complete
+  Vercel->>UploadURL: Webhook: upload completed
+  Note over UploadURL: Optional: Save to DB
+```
+
+#### Local Filesystem (Server Upload)
+
+```mermaid
+sequenceDiagram
+  participant Browser
+  participant UploadAPI as /api/storage/upload
+  participant Storage as Local Filesystem
+
+  Browser->>UploadAPI: POST multipart/form-data
+  Note over Browser,UploadAPI: User authenticated
+  UploadAPI->>Storage: Write file to disk
+  Storage-->>UploadAPI: File written
+  UploadAPI-->>Browser: Return public URL
+  Note over Browser: File accessible at /uploads/...
+```
+
+### Features
+
+- ✅ **Multi-Backend Support**: Local FS, Vercel Blob, S3 (planned)
+- ✅ **Automatic Driver Selection**: Based on deployment environment
+- ✅ **Optimal Upload Strategy**: Direct upload when supported, server fallback otherwise
+- ✅ **Public Access**: All files get public URLs
+- ✅ **Authentication**: Users must be logged in to upload
+- ✅ **Collision Prevention**: UUID-based file naming
+- ✅ **Type Safety**: Full TypeScript support with unified interface
+
+## Server-Side Upload
+
+For server-side uploads (e.g., programmatically generated files):
 
 ```ts
 import { serverFileStorage } from "lib/file-storage";
 
-await serverFileStorage.upload(buffer, {
-  filename: "example.png",
+const result = await serverFileStorage.upload(buffer, {
+  filename: "generated-image.png",
   contentType: "image/png",
 });
 
-const url = await serverFileStorage.getSourceUrl(key);
+console.log("Public URL:", result.sourceUrl);
 ```
 
-Direct browser uploads are not exposed for the local driver. The `/api/storage/upload-url` endpoint responds with `501` so you can handle uploads through your own API route or server action.
+## Upload Completion Webhook
 
-## Vercel Blob Driver
-
-The Blob driver brings global edge distribution while keeping the same `FileStorage` contract. Uploaded files are public by default and reuse Vercel’s caching behaviour.
-
-### Client Upload Flow
-
-Use the provided `handleUpload` endpoint to obtain a client token and stream the file straight to Vercel Blob. The route automatically prefixes every pathname with `FILE_STORAGE_PREFIX` and adds a random suffix to avoid collisions.
+The `/api/storage/upload-url` endpoint handles the `onUploadCompleted` webhook from Vercel Blob. You can add custom logic here:
 
 ```ts
-"use client";
+// src/app/api/storage/upload-url/route.ts
 
-import { upload } from "@vercel/blob/client";
+onUploadCompleted: async ({ blob, tokenPayload }) => {
+  const { userId } = JSON.parse(tokenPayload);
 
-async function handleUpload(file: File) {
-  const blob = await upload(file.name, file, {
-    access: "public",
-    contentType: file.type,
-    handleUploadUrl: "/api/storage/upload-url",
+  // Save to database
+  await db.files.create({
+    url: blob.url,
+    pathname: blob.pathname,
+    userId,
+    size: blob.size,
+    contentType: blob.contentType,
   });
 
-  console.log(blob.url); // public CDN URL
-}
+  // Send notification
+  // await sendNotification(userId, "File uploaded!");
+};
 ```
 
-The same endpoint also handles the webhook-style `blob.upload-completed` events emitted by Vercel so you can extend it with custom persistence logic if needed.
+## Advanced
 
-### API Walkthrough
+### Local Development with Vercel Blob Webhooks
 
-```mermaid
-sequenceDiagram
-  participant C as Client
-  participant API as /api/storage/upload-url
-  participant V as Vercel Blob
-
-  C->>API: POST { type: 'blob.generate-client-token', ... }
-  API->>V: handleUpload()
-  V-->>API: clientToken
-  API-->>C: { clientToken }
-  C->>V: PUT blob (Bearer clientToken)
-  V-->>API: POST { type: 'blob.upload-completed', ... }
-  API-->>V: 200 OK
-```
-
-## Roadmap: S3 Support
-
-S3 (and R2-compatible) support is on the roadmap. You can already set `FILE_STORAGE_TYPE=s3` for configuration scaffolding—the server will currently throw a descriptive error until the driver lands. The shared `FileStorage` contract was designed to map cleanly to S3 APIs, so swapping will be a configuration change once the adapter is introduced.
-
-## Download URLs
-
-The `/api/storage/download-url` route normalises access to both the public and forced-download URLs. Supply the storage key and receive metadata in one call:
+To test Vercel Blob's `onUploadCompleted` webhook locally, use [ngrok](https://ngrok.com/):
 
 ```bash
-curl -X POST \
-  /api/storage/download-url \
-  -H "Content-Type: application/json" \
-  -d '{"key":"uploads/1234/avatar.png"}'
+# Terminal 1: Start your app
+pnpm dev
+
+# Terminal 2: Start ngrok
+ngrok http 3000
+
+# Add to .env.local
+VERCEL_BLOB_CALLBACK_URL=https://abc123.ngrok-free.app
 ```
 
-Response payload:
+Without ngrok, uploads will work but `onUploadCompleted` won't be called locally.
 
-```json
-{
-  "key": "uploads/1234/avatar.png",
-  "sourceUrl": "https://.../uploads/1234/avatar.png",
-  "downloadUrl": "https://.../uploads/1234/avatar.png?download=1",
-  "metadata": {
-    "filename": "avatar.png",
-    "contentType": "image/png",
-    "size": 34291,
-    "uploadedAt": "2024-04-02T06:31:11.123Z"
-  }
-}
-```
+### Custom Storage Backend
 
-For Vercel Blob the `downloadUrl` matches the SDK’s `downloadUrl` field (always forces attachment). The local driver simply mirrors the public source URL.
+To implement a custom storage driver (e.g., Cloudflare R2, MinIO):
 
-## Server Utilities & Safety
+1. Create a new file in `src/lib/file-storage/` (e.g., `r2-file-storage.ts`)
+2. Implement the `FileStorage` interface from `file-storage.interface.ts`
+3. Add your driver to `index.ts`
+4. Update `FILE_STORAGE_TYPE` environment variable
 
-- `sanitizeFilename` removes path traversal attempts and keeps file names URL-safe.
-- All path joins use `path.posix` to guarantee consistent separators across platforms.
-- Metadata lookups automatically hydrate `uploadedAt` and content type even when the JSON manifest is missing.
+The `FileStorage` interface provides:
 
-With these pieces in place you can switch between local development and Vercel deployments without touching application code—just toggle the environment variables that make sense for your deployment.
+- `upload()` - Server-side file upload
+- `createUploadUrl()` - Generate presigned URL for client uploads (optional)
+- `download()`, `delete()`, `exists()`, `getMetadata()`, `getSourceUrl()`
+
+### Storage Comparison
+
+| Feature              | Local FS        | Vercel Blob        | S3 (Planned)       |
+| -------------------- | --------------- | ------------------ | ------------------ |
+| Direct Client Upload | ❌ Server proxy | ✅ Yes             | ✅ Yes (presigned) |
+| CDN                  | ❌ No           | ✅ Global          | Configurable       |
+| Cost                 | Free            | Pay-as-you-go      | Pay-as-you-go      |
+| Best For             | Self-hosted     | Vercel deployments | AWS ecosystem      |
+| Setup Complexity     | None            | Minimal            | Moderate           |

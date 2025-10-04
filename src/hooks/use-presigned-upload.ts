@@ -1,131 +1,192 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import type { UploadUrl } from "lib/file-storage/file-storage.interface";
+import { upload as uploadToVercelBlob } from "@vercel/blob/client";
+import useSWR from "swr";
+import { toast } from "sonner";
+import { getStorageInfoAction } from "@/app/api/storage/actions";
+
+// Types
+interface StorageInfo {
+  type: "local" | "vercel-blob" | "s3";
+  supportsDirectUpload: boolean;
+}
 
 interface UploadOptions {
   filename?: string;
   contentType?: string;
-  expiresInSeconds?: number;
-  fieldName?: string; // For POST based uploads (defaults to "file")
-}
-
-interface UsePresignedUploadOptions {
-  endpoint?: string;
 }
 
 interface UploadResult {
-  key: string;
+  pathname: string;
+  url: string;
+  contentType?: string;
+  size?: number;
 }
 
-async function performUpload(
-  presigned: UploadUrl,
-  file: File,
-  contentType: string,
-  fieldName: string,
-) {
-  if (presigned.method === "PUT") {
-    const headers: Record<string, string> = {
-      ...(presigned.headers ?? {}),
-    };
+// Helpers
+function useStorageInfo() {
+  const { data, isLoading } = useSWR<StorageInfo>(
+    "storage-info",
+    getStorageInfoAction,
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      dedupingInterval: 60000, // Cache for 1 minute
+    },
+  );
 
-    if (!headers["Content-Type"] && !headers["content-type"]) {
-      headers["Content-Type"] = contentType;
-    }
-
-    const response = await fetch(presigned.url, {
-      method: "PUT",
-      headers,
-      body: file,
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to upload file (status ${response.status}).`);
-    }
-
-    return;
-  }
-
-  // POST (e.g. S3 form upload)
-  const formData = new FormData();
-  if (presigned.fields) {
-    Object.entries(presigned.fields).forEach(([key, value]) => {
-      formData.append(key, value);
-    });
-  }
-
-  formData.append(fieldName, file);
-
-  const response = await fetch(presigned.url, {
-    method: "POST",
-    body: formData,
-    headers: presigned.headers,
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to upload file (status ${response.status}).`);
-  }
+  return {
+    storageType: data?.type,
+    supportsDirectUpload: data?.supportsDirectUpload ?? false,
+    isLoading,
+  };
 }
 
-export function usePresignedUpload(options: UsePresignedUploadOptions = {}) {
-  const { endpoint = "/api/storage/upload-url" } = options;
+/**
+ * Hook for uploading files to storage.
+ *
+ * Automatically uses the optimal upload method based on storage backend:
+ * - Vercel Blob: Direct upload from browser (fast)
+ * - S3: Presigned URL (future)
+ * - Local FS: Server upload (fallback)
+ *
+ * @example
+ * ```tsx
+ * function FileUpload() {
+ *   const { upload, isUploading } = useFileUpload();
+ *
+ *   const handleFile = async (file: File) => {
+ *     const result = await upload(file);
+ *     console.log('Public URL:', result.url);
+ *   };
+ *
+ *   return <input type="file" onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])} />;
+ * }
+ * ```
+ */
+export function useFileUpload() {
+  const {
+    storageType,
+    supportsDirectUpload,
+    isLoading: isLoadingStorageInfo,
+  } = useStorageInfo();
   const [isUploading, setIsUploading] = useState(false);
 
   const upload = useCallback(
     async (
       file: File,
       uploadOptions: UploadOptions = {},
-    ): Promise<UploadResult> => {
+    ): Promise<UploadResult | undefined> => {
       if (!(file instanceof File)) {
-        throw new Error("upload() expects a File instance");
+        toast.error("Upload expects a File instance");
+        return;
       }
 
-      const filename = uploadOptions.filename ?? file.name ?? "file";
+      const filename = uploadOptions.filename ?? file.name;
       const contentType =
         uploadOptions.contentType || file.type || "application/octet-stream";
-      const fieldName = uploadOptions.fieldName ?? "file";
+
+      // Wait for storage info to load
+      if (isLoadingStorageInfo || !storageType) {
+        toast.error("Storage is still loading. Please try again.");
+        return;
+      }
 
       setIsUploading(true);
       try {
-        const response = await fetch(endpoint, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            filename,
+        // Vercel Blob direct upload
+        if (storageType === "vercel-blob") {
+          const blob = await uploadToVercelBlob(filename, file, {
+            access: "public",
+            handleUploadUrl: "/api/storage/upload-url",
             contentType,
-            expiresInSeconds: uploadOptions.expiresInSeconds,
-          }),
-        });
+          });
 
-        if (!response.ok) {
-          const errorBody = await safeParseJson(response);
-          const message = errorBody?.error || "Failed to create upload URL";
-          throw new Error(message);
+          return {
+            pathname: blob.pathname,
+            url: blob.url,
+            contentType: blob.contentType,
+            size: file.size,
+          };
         }
 
-        const presigned = (await response.json()) as UploadUrl;
+        // S3 or other direct upload (future)
+        if (supportsDirectUpload && storageType === "s3") {
+          // Request presigned URL
+          const uploadUrlResponse = await fetch("/api/storage/upload-url", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ filename, contentType }),
+          });
 
-        await performUpload(presigned, file, contentType, fieldName);
-        return { key: presigned.key };
+          if (!uploadUrlResponse.ok) {
+            toast.error("Failed to get upload URL");
+            return;
+          }
+
+          const uploadUrlData = await uploadUrlResponse.json();
+
+          // Upload to presigned URL
+          const uploadResponse = await fetch(uploadUrlData.url, {
+            method: uploadUrlData.method || "PUT",
+            headers: uploadUrlData.headers || { "Content-Type": contentType },
+            body: file,
+          });
+
+          if (!uploadResponse.ok) {
+            toast.error(`Upload failed: ${uploadResponse.status}`);
+            return;
+          }
+
+          return {
+            pathname: uploadUrlData.key,
+            url: uploadUrlData.url,
+            contentType,
+            size: file.size,
+          };
+        }
+
+        // Fallback: Server upload (Local FS)
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const serverUploadResponse = await fetch("/api/storage/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!serverUploadResponse.ok) {
+          const errorBody = await serverUploadResponse.json().catch(() => ({}));
+          toast.error(errorBody.error || "Server upload failed");
+          return;
+        }
+
+        const result = await serverUploadResponse.json();
+
+        return {
+          pathname: result.key,
+          url: result.url,
+          contentType: result.metadata?.contentType,
+          size: result.metadata?.size,
+        };
+      } catch (error: unknown) {
+        const message =
+          error instanceof Error ? error.message : "Upload failed";
+        toast.error(message);
+        return;
       } finally {
         setIsUploading(false);
       }
     },
-    [endpoint],
+    [storageType, supportsDirectUpload, isLoadingStorageInfo],
   );
 
   return {
     upload,
-    isUploading,
+    isUploading: isUploading || isLoadingStorageInfo,
   };
 }
 
-async function safeParseJson(response: Response) {
-  try {
-    return await response.clone().json();
-  } catch {
-    return null;
-  }
-}
+// Alias for backward compatibility
+export const usePresignedUpload = useFileUpload;

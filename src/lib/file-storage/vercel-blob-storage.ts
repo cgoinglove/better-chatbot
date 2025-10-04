@@ -1,4 +1,3 @@
-import { randomUUID } from "node:crypto";
 import path from "node:path";
 import { del, head, put } from "@vercel/blob";
 import { FileNotFoundError } from "lib/errors";
@@ -12,12 +11,13 @@ import {
   sanitizeFilename,
   toBuffer,
 } from "./storage-utils";
+import { generateUUID } from "lib/utils";
 
 const STORAGE_PREFIX = resolveStoragePrefix();
 
 const buildPathname = (filename: string) => {
   const safeName = sanitizeFilename(filename);
-  const id = randomUUID();
+  const id = generateUUID();
   const prefix = STORAGE_PREFIX ? `${STORAGE_PREFIX}/` : "";
   return path.posix.join(prefix, `${id}-${safeName}`);
 };
@@ -84,6 +84,8 @@ export const createVercelBlobStorage = (): FileStorage => {
       };
     },
 
+    // Vercel Blob uses handleUpload flow instead of createUploadUrl
+    // Client should use @vercel/blob/client with handleUploadUrl: "/api/storage/upload-url"
     async createUploadUrl() {
       return null;
     },
