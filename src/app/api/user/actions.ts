@@ -17,6 +17,11 @@ import {
 import { getUser, getUserAccounts, updateUserDetails } from "lib/user/server";
 import { getTranslations } from "next-intl/server";
 import { logger } from "better-auth";
+import {
+  generateImageWithOpenAI,
+  generateImageWithXAI,
+  generateImageWithGoogle,
+} from "lib/ai/image/generate-image";
 
 export const updateUserImageAction = validatedActionWithUserManagePermission(
   UpdateUserDetailsSchema.pick({ userId: true, image: true }),
@@ -222,3 +227,88 @@ export const updateUserPasswordAction = validatedActionWithUserManagePermission(
     }
   },
 );
+
+type ImageProvider = "openai" | "xai" | "google";
+
+interface GenerateAvatarResult {
+  success: boolean;
+  base64?: string;
+  mimeType?: string;
+  error?: string;
+}
+
+/**
+ * Server Action to generate avatar image using AI
+ */
+export async function generateAvatarImageAction(
+  provider: ImageProvider,
+  prompt: string,
+): Promise<GenerateAvatarResult> {
+  try {
+    if (!prompt.trim()) {
+      return {
+        success: false,
+        error: "Prompt is required",
+      };
+    }
+
+    // Add avatar-specific instructions to prompt
+    const enhancedPrompt = `${prompt}. Portrait style, centered face, suitable for profile picture`;
+
+    let images;
+
+    switch (provider) {
+      case "openai":
+        images = await generateImageWithOpenAI({
+          prompt: enhancedPrompt,
+          n: 1,
+        });
+        break;
+      case "xai":
+        images = await generateImageWithXAI({
+          prompt: enhancedPrompt,
+          n: 1,
+        });
+        break;
+      case "google":
+        images = await generateImageWithGoogle({
+          prompt: enhancedPrompt,
+        });
+        break;
+      default:
+        return {
+          success: false,
+          error: "Invalid provider",
+        };
+    }
+
+    if (!images || images.length === 0) {
+      return {
+        success: false,
+        error: "No image generated",
+      };
+    }
+
+    const image = images[0];
+
+    if (!image.base64) {
+      return {
+        success: false,
+        error: "No image data received",
+      };
+    }
+
+    return {
+      success: true,
+      base64: image.base64,
+      mimeType: image.mimeType || "image/png",
+    };
+  } catch (error) {
+    logger.error("Failed to generate avatar image:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to generate image",
+    };
+  }
+}

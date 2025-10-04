@@ -466,5 +466,37 @@
     "arrangeNodes": "자동 레이아웃",
     "nodesArranged": "레이아웃이 성공적으로 적용되었습니다",
     "visibilityUpdated": "가시성이 성공적으로 업데이트되었습니다"
+  },
+  "User": {
+    "Profile": {
+      "common": {
+        "uploadPhoto": "사진 업로드",
+        "chooseDefault": "기본 이미지 선택",
+        "useEmoji": "이모지 사용",
+        "generateWithAI": "AI로 생성",
+        "changeProfilePhoto": "프로필 사진 변경",
+        "selectDefaultAvatar": "기본 아바타 선택",
+        "selectDefaultAvatarDescription": "아래의 기본 아바타 중 하나를 선택하세요",
+        "chooseEmojiAvatar": "이모지 아바타 선택",
+        "chooseEmojiAvatarDescription": "프로필 사진으로 사용할 이모지를 선택하세요",
+        "generateAvatarWithAI": "AI로 아바타 생성",
+        "generateAvatarWithAIDescription": "이상적인 프로필 사진을 설명하고 AI가 만들도록 하세요",
+        "aiProvider": "AI 제공자",
+        "describeYourAvatar": "아바타 설명",
+        "avatarPromptPlaceholder": "예: 지브리 스튜디오 스타일의 귀여운 강아지",
+        "generating": "생성 중...",
+        "regenerate": "다시 생성",
+        "useThisAvatar": "이 아바타 사용",
+        "profilePhotoUpdatedSuccessfully": "프로필 사진이 성공적으로 업데이트되었습니다",
+        "failedToUpdateProfilePhoto": "프로필 사진 업데이트에 실패했습니다",
+        "pleaseEnterPrompt": "프롬프트를 입력하세요",
+        "imageGeneratedSuccessfully": "이미지가 성공적으로 생성되었습니다!",
+        "failedToGenerateImage": "이미지 생성에 실패했습니다",
+        "failedToSaveImage": "이미지 저장에 실패했습니다",
+        "pleaseUploadValidImage": "유효한 이미지를 업로드하세요 (JPEG, PNG 또는 WebP)",
+        "imageSizeMustBeLessThan": "이미지 크기는 5MB 미만이어야 합니다",
+        "select": "선택"
+      }
+    }
   }
 }

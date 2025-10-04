@@ -2,12 +2,17 @@
 
 import { useState, useRef } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "ui/avatar";
-import { Camera, Loader2, Upload } from "lucide-react";
+import { Camera, Loader2, Upload, Image, Smile, Sparkles } from "lucide-react";
 import { useFileUpload } from "@/hooks/use-presigned-upload";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 import { Button } from "ui/button";
+import { useTranslations } from "next-intl";
+
+import { EmojiAvatarDialog } from "./emoji-avatar-dialog";
+import { DefaultAvatarDialog } from "./default-avatar-dialog";
+import { GenerateAvatarDialog } from "./generate-avatar-dialog";
 
 interface UserAvatarUploadProps {
   currentImageUrl?: string | null;
@@ -25,8 +30,12 @@ export function UserAvatarUpload({
   onImageUpdate,
   disabled = false,
 }: UserAvatarUploadProps) {
+  const t = useTranslations("User.Profile.common");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
+  const [showDefaultDialog, setShowDefaultDialog] = useState(false);
+  const [showEmojiDialog, setShowEmojiDialog] = useState(false);
+  const [showGenerateDialog, setShowGenerateDialog] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { upload, isUploading } = useFileUpload();
 
@@ -40,13 +49,13 @@ export function UserAvatarUpload({
 
     // Validate file type
     if (!ALLOWED_TYPES.includes(file.type)) {
-      toast.error("Please upload a valid image (JPEG, PNG, or WebP)");
+      toast.error(t("pleaseUploadValidImage"));
       return;
     }
 
     // Validate file size
     if (file.size > MAX_FILE_SIZE) {
-      toast.error("Image size must be less than 5MB");
+      toast.error(t("imageSizeMustBeLessThan"));
       return;
     }
 
@@ -61,7 +70,7 @@ export function UserAvatarUpload({
     const result = await upload(file);
     if (result) {
       onImageUpdate(result.url);
-      toast.success("Profile photo updated successfully");
+      toast.success(t("profilePhotoUpdatedSuccessfully"));
     } else {
       // Reset preview on failure
       setPreviewUrl(null);
@@ -76,6 +85,21 @@ export function UserAvatarUpload({
   const handleUploadClick = () => {
     setIsOpen(false);
     fileInputRef.current?.click();
+  };
+
+  const handleDefaultAvatarClick = () => {
+    setIsOpen(false);
+    setShowDefaultDialog(true);
+  };
+
+  const handleEmojiClick = () => {
+    setIsOpen(false);
+    setShowEmojiDialog(true);
+  };
+
+  const handleGenerateClick = () => {
+    setIsOpen(false);
+    setShowGenerateDialog(true);
   };
 
   return (
@@ -111,15 +135,47 @@ export function UserAvatarUpload({
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-56 p-2" align="end">
-            <Button
-              variant="ghost"
-              className="justify-start w-full"
-              onClick={handleUploadClick}
-              disabled={isUploading}
-            >
-              <Upload className="mr-2 size-4" />
-              Upload Photo
-            </Button>
+            <div className="flex flex-col gap-1">
+              <Button
+                variant="ghost"
+                className="justify-start w-full"
+                onClick={handleUploadClick}
+                disabled={isUploading}
+              >
+                <Upload className="mr-2 size-4" />
+                {t("uploadPhoto")}
+              </Button>
+
+              <Button
+                variant="ghost"
+                className="justify-start w-full"
+                onClick={handleDefaultAvatarClick}
+                disabled={isUploading}
+              >
+                <Image className="mr-2 size-4" />
+                {t("chooseDefault")}
+              </Button>
+
+              <Button
+                variant="ghost"
+                className="justify-start w-full"
+                onClick={handleEmojiClick}
+                disabled={isUploading}
+              >
+                <Smile className="mr-2 size-4" />
+                {t("useEmoji")}
+              </Button>
+
+              <Button
+                variant="ghost"
+                className="justify-start w-full"
+                onClick={handleGenerateClick}
+                disabled={isUploading}
+              >
+                <Sparkles className="mr-2 size-4" />
+                {t("generateWithAI")}
+              </Button>
+            </div>
           </PopoverContent>
         </Popover>
       </div>
@@ -132,6 +188,25 @@ export function UserAvatarUpload({
         onChange={handleFileSelect}
         className="hidden"
         disabled={disabled || isUploading}
+      />
+
+      {/* Dialogs */}
+      <DefaultAvatarDialog
+        open={showDefaultDialog}
+        onOpenChange={setShowDefaultDialog}
+        onSelect={onImageUpdate}
+      />
+
+      <EmojiAvatarDialog
+        open={showEmojiDialog}
+        onOpenChange={setShowEmojiDialog}
+        onSelect={onImageUpdate}
+      />
+
+      <GenerateAvatarDialog
+        open={showGenerateDialog}
+        onOpenChange={setShowGenerateDialog}
+        onGenerate={onImageUpdate}
       />
     </div>
   );
