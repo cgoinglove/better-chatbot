@@ -75,10 +75,12 @@
     "Error": "Erreur de Chat",
     "thisMessageWasNotSavedPleaseTryTheChatAgain": "Ce message n'a pas été enregistré. Veuillez réessayer le chat.",
     "uploadImage": "Télécharger une Image",
+    "generateImage": "Générer une Image",
     "imageUploadedSuccessfully": "Image téléchargée avec succès",
     "pleaseUploadImageFile": "Veuillez télécharger un fichier image",
     "imageSizeMustBeLessThan10MB": "La taille de l'image doit être inférieure à 10 Mo",
     "failedToUploadImage": "Échec du téléchargement de l'image",
+    "imageUploadFailedUsingBase64": "Le téléchargement de l'image a échoué. Utilisation de l'encodage base64 comme solution de secours.",
     "Greeting": {
       "goodMorning": "Bonjour, {name}",
       "goodAfternoon": "Bon après-midi, {name}",

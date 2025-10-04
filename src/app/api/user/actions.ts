@@ -20,7 +20,8 @@ import { logger } from "better-auth";
 import {
   generateImageWithOpenAI,
   generateImageWithXAI,
-  generateImageWithGoogle,
+  GeneratedImageResult,
+  generateImageWithNanoBanana,
 } from "lib/ai/image/generate-image";
 
 export const updateUserImageAction = validatedActionWithUserManagePermission(
@@ -268,23 +269,21 @@ User's request:
 
 Generate a profile picture that fulfills the user's request while maintaining the professional portrait quality requirements above.`;
 
-    let images;
+    let response: GeneratedImageResult;
 
     switch (provider) {
       case "openai":
-        images = await generateImageWithOpenAI({
+        response = await generateImageWithOpenAI({
           prompt: enhancedPrompt,
-          n: 1,
         });
         break;
       case "xai":
-        images = await generateImageWithXAI({
+        response = await generateImageWithXAI({
           prompt: enhancedPrompt,
-          n: 1,
         });
         break;
       case "google":
-        images = await generateImageWithGoogle({
+        response = await generateImageWithNanoBanana({
           prompt: enhancedPrompt,
         });
         break;
@@ -295,14 +294,14 @@ Generate a profile picture that fulfills the user's request while maintaining th
         };
     }
 
-    if (!images || images.length === 0) {
+    if (!response || response.images.length === 0) {
       return {
         success: false,
         error: "No image generated",
       };
     }
 
-    const image = images[0];
+    const image = response.images[0];
 
     if (!image.base64) {
       return {

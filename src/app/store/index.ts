@@ -18,6 +18,7 @@ export interface UploadedFile {
   progress?: number;
   previewUrl?: string;
   abortController?: AbortController;
+  dataUrl?: string; // Full data URL format: "data:image/png;base64,..."
 }
 
 export interface AppState {
@@ -36,6 +37,9 @@ export interface AppState {
   };
   threadFiles: {
     [threadId: string]: UploadedFile[];
+  };
+  threadImageToolModel: {
+    [threadId: string]: string | undefined;
   };
   toolPresets: {
     allowedMcpServers?: Record<string, AllowedMCPServer>;
@@ -73,6 +77,7 @@ const initialState: AppState = {
   generatingTitleThreadIds: [],
   threadMentions: {},
   threadFiles: {},
+  threadImageToolModel: {},
   mcpList: [],
   agentList: [],
   workflowToolList: [],

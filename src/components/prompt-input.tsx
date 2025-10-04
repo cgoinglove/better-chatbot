@@ -8,6 +8,7 @@ import {
   ImageIcon,
   Loader2,
   PlusIcon,
+  Sparkles,
   Square,
   XIcon,
 } from "lucide-react";
@@ -39,6 +40,10 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuPortal,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "ui/dropdown-menu";
 import { useFileUpload } from "@/hooks/use-presigned-upload";
@@ -92,11 +97,18 @@ export default function PromptInput({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { upload } = useFileUpload();
 
-  const [globalModel, threadMentions, threadFiles, appStoreMutate] = appStore(
+  const [
+    globalModel,
+    threadMentions,
+    threadFiles,
+    threadImageToolModel,
+    appStoreMutate,
+  ] = appStore(
     useShallow((state) => [
       state.chatModel,
       state.threadMentions,
       state.threadFiles,
+      state.threadImageToolModel,
       state.mutate,
     ]),
   );
@@ -110,6 +122,11 @@ export default function PromptInput({
     if (!threadId) return [];
     return threadFiles[threadId] ?? [];
   }, [threadFiles, threadId]);
+
+  const imageToolModel = useMemo(() => {
+    if (!threadId) return undefined;
+    return threadImageToolModel[threadId];
+  }, [threadImageToolModel, threadId]);
 
   const chatModel = useMemo(() => {
     return model ?? globalModel;
@@ -240,7 +257,36 @@ export default function PromptInput({
 
           toast.success(t("imageUploadedSuccessfully"));
         } else {
-          // Remove failed upload
+          // Failed to upload - use base64 as fallback
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const dataUrl = reader.result as string;
+            appStoreMutate((prev) => ({
+              threadFiles: {
+                ...prev.threadFiles,
+                [threadId]: (prev.threadFiles[threadId] ?? []).map((f) =>
+                  f.id === fileId
+                    ? {
+                        ...f,
+                        dataUrl, // Store complete data URL
+                        isUploading: false,
+                        progress: 100,
+                      }
+                    : f,
+                ),
+              },
+            }));
+            toast.warning(
+              t("imageUploadFailedUsingBase64") ||
+                "Image upload failed. Using base64 encoding as fallback.",
+            );
+          };
+          reader.readAsDataURL(file);
+        }
+      } catch (error) {
+        // Upload failed - convert to base64 and keep the file
+        if (error instanceof Error && error.name === "AbortError") {
+          // Remove aborted upload
           appStoreMutate((prev) => ({
             threadFiles: {
               ...prev.threadFiles,
@@ -249,20 +295,32 @@ export default function PromptInput({
               ),
             },
           }));
-        }
-      } catch (error) {
-        // Remove failed upload
-        appStoreMutate((prev) => ({
-          threadFiles: {
-            ...prev.threadFiles,
-            [threadId]: (prev.threadFiles[threadId] ?? []).filter(
-              (f) => f.id !== fileId,
-            ),
-          },
-        }));
-
-        if (error instanceof Error && error.name !== "AbortError") {
-          toast.error(t("failedToUploadImage") || "Failed to upload image");
+        } else {
+          // For other errors, use base64 as fallback
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const dataUrl = reader.result as string;
+            appStoreMutate((prev) => ({
+              threadFiles: {
+                ...prev.threadFiles,
+                [threadId]: (prev.threadFiles[threadId] ?? []).map((f) =>
+                  f.id === fileId
+                    ? {
+                        ...f,
+                        dataUrl, // Store complete data URL
+                        isUploading: false,
+                        progress: 100,
+                      }
+                    : f,
+                ),
+              },
+            }));
+            toast.warning(
+              t("imageUploadFailedUsingBase64") ||
+                "Image upload failed. Using base64 encoding as fallback.",
+            );
+          };
+          reader.readAsDataURL(file);
         }
       } finally {
         // Cleanup preview URL
@@ -276,6 +334,30 @@ export default function PromptInput({
       setIsUploadDropdownOpen(false);
     },
     [threadId, upload, appStoreMutate, t],
+  );
+
+  const handleGenerateImage = useCallback(
+    (provider?: "google") => {
+      if (!provider) {
+        appStoreMutate({
+          threadImageToolModel: {},
+        });
+      }
+      if (!threadId) return;
+
+      setIsUploadDropdownOpen(false);
+
+      appStoreMutate((prev) => ({
+        threadImageToolModel: {
+          ...prev.threadImageToolModel,
+          [threadId]: provider,
+        },
+      }));
+
+      // Focus on the input
+      editorRef.current?.commands.focus();
+    },
+    [threadId, editorRef],
   );
 
   const addMention = useCallback(
@@ -358,6 +440,7 @@ export default function PromptInput({
     if (isLoading) return;
     const userMessage = input?.trim() || "";
     if (userMessage.length === 0) return;
+
     setInput("");
     sendMessage({
       role: "user",
@@ -366,7 +449,7 @@ export default function PromptInput({
           (file) =>
             ({
               type: "file",
-              url: file.url,
+              url: file.url || file.dataUrl || "",
               mediaType: file.mimeType,
             }) as FileUIPart,
         ),
@@ -517,6 +600,24 @@ export default function PromptInput({
                       <ImageIcon className="mr-2 size-4" />
                       {t("uploadImage")}
                     </DropdownMenuItem>
+
+                    <DropdownMenuSub>
+                      <DropdownMenuSubTrigger className="cursor-pointer">
+                        <Sparkles className="mr-2 size-4" />
+                        {t("generateImage")}
+                      </DropdownMenuSubTrigger>
+                      <DropdownMenuPortal>
+                        <DropdownMenuSubContent>
+                          <DropdownMenuItem
+                            onClick={() => handleGenerateImage("google")}
+                            className="cursor-pointer"
+                          >
+                            <GeminiIcon className="mr-2 size-4" />
+                            Google
+                          </DropdownMenuItem>
+                        </DropdownMenuSubContent>
+                      </DropdownMenuPortal>
+                    </DropdownMenuSub>
                   </DropdownMenuContent>
                 </DropdownMenu>
 
@@ -532,6 +633,17 @@ export default function PromptInput({
                       mentions={mentions}
                     />
                   </>
+                )}
+                {imageToolModel && (
+                  <Button
+                    variant={"ghost"}
+                    size={"sm"}
+                    className="rounded-full hover:bg-input! p-2!"
+                    onClick={() => handleGenerateImage()}
+                  >
+                    <Sparkles className="mr-2 size-4" />
+                    {t("generateImage")}
+                  </Button>
                 )}
 
                 <div className="flex-1" />
@@ -619,6 +731,8 @@ export default function PromptInput({
                     const isImage = file.mimeType.startsWith("image/");
                     const fileExtension =
                       file.name.split(".").pop()?.toUpperCase() || "FILE";
+                    const imageSrc =
+                      file.previewUrl || file.url || file.dataUrl || "";
 
                     return (
                       <div
@@ -628,7 +742,7 @@ export default function PromptInput({
                         {isImage ? (
                           /* eslint-disable-next-line @next/next/no-img-element */
                           <img
-                            src={file.previewUrl || file.url}
+                            src={imageSrc}
                             alt={file.name}
                             className="w-24 h-24 object-cover"
                           />

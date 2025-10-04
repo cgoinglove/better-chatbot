@@ -46,6 +46,8 @@ import {
 import { getSession } from "auth/server";
 import { colorize } from "consola/utils";
 import { generateUUID } from "lib/utils";
+import { nanoBananaTool } from "lib/ai/tools/image";
+import { ImageToolName } from "lib/ai/tools";
 
 const logger = globalLogger.withDefaults({
   message: colorize("blackBright", `Chat API: `),
@@ -209,6 +211,7 @@ export async function POST(request: Request) {
                 : t;
             return {
               ...bindingTools,
+              [ImageToolName]: nanoBananaTool,
               ...APP_DEFAULT_TOOLS, // APP_DEFAULT_TOOLS Not Supported Manual
             };
           })
