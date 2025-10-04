@@ -11,6 +11,7 @@ import {
   AssistMessagePart,
   ToolMessagePart,
   ReasoningPart,
+  FileMessagePart,
 } from "./message-parts";
 import { ChevronDown, ChevronUp, TriangleAlertIcon } from "lucide-react";
 import { Button } from "ui/button";
@@ -137,6 +138,14 @@ const PurePreviewMessage = ({
               );
             } else if (part.type === "step-start") {
               return null;
+            } else if (part.type === "file") {
+              return (
+                <FileMessagePart
+                  key={key}
+                  part={part}
+                  isUserMessage={isUserMessage}
+                />
+              );
             } else {
               return <div key={key}> unknown part {part.type}</div>;
             }

@@ -38,13 +38,12 @@ const staticModels = {
     "gemini-2.5-pro": google("gemini-2.5-pro"),
   },
   anthropic: {
-    "claude-4-sonnet": anthropic("claude-4-sonnet-20250514"),
-    "claude-4-opus": anthropic("claude-4-opus-20250514"),
-    "claude-3-7-sonnet": anthropic("claude-3-7-sonnet-20250219"),
+    "sonnet-4.5": anthropic("claude-sonnet-4-5"),
+    "opus-4.1": anthropic("claude-opus-4-1"),
   },
   xai: {
-    "grok-4": xai("grok-4"),
     "grok-4-fast": xai("grok-4-fast-non-reasoning"),
+    "grok-4": xai("grok-4"),
     "grok-3": xai("grok-3"),
     "grok-3-mini": xai("grok-3-mini"),
   },
@@ -134,9 +133,6 @@ function checkProviderAPIKey(provider: keyof typeof staticModels) {
       break;
     case "xai":
       key = process.env.XAI_API_KEY;
-      break;
-    case "ollama":
-      key = process.env.OLLAMA_API_KEY;
       break;
     case "groq":
       key = process.env.GROQ_API_KEY;

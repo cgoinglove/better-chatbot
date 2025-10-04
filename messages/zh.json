@@ -75,6 +75,11 @@
   "Chat": {
     "Error": "聊天错误",
     "thisMessageWasNotSavedPleaseTryTheChatAgain": "此消息未保存。请重试聊天。",
+    "uploadImage": "上传图片",
+    "imageUploadedSuccessfully": "图片上传成功",
+    "pleaseUploadImageFile": "请上传图片文件",
+    "imageSizeMustBeLessThan10MB": "图片大小必须小于10MB",
+    "failedToUploadImage": "上传图片失败",
     "Greeting": {
       "goodMorning": "早上好，{name}",
       "goodAfternoon": "下午好，{name}",
@@ -453,5 +458,37 @@
     "arrangeNodes": "自动布局",
     "nodesArranged": "布局已成功应用",
     "visibilityUpdated": "可见性已成功更新"
+  },
+  "User": {
+    "Profile": {
+      "common": {
+        "uploadPhoto": "上传照片",
+        "chooseDefault": "选择默认",
+        "useEmoji": "使用表情符号",
+        "generateWithAI": "使用AI生成",
+        "changeProfilePhoto": "更改个人资料照片",
+        "selectDefaultAvatar": "选择默认头像",
+        "selectDefaultAvatarDescription": "从下面选择一个默认头像",
+        "chooseEmojiAvatar": "选择表情头像",
+        "chooseEmojiAvatarDescription": "选择一个表情符号作为您的个人资料照片",
+        "generateAvatarWithAI": "使用AI生成头像",
+        "generateAvatarWithAIDescription": "描述您理想的个人资料照片，让AI为您创建",
+        "aiProvider": "AI提供商",
+        "describeYourAvatar": "描述您的头像",
+        "avatarPromptPlaceholder": "例如，吉卜力工作室风格的可爱小狗",
+        "generating": "生成中...",
+        "regenerate": "重新生成",
+        "useThisAvatar": "使用此头像",
+        "profilePhotoUpdatedSuccessfully": "个人资料照片已成功更新",
+        "failedToUpdateProfilePhoto": "更新个人资料照片失败",
+        "pleaseEnterPrompt": "请输入描述",
+        "imageGeneratedSuccessfully": "图像生成成功！",
+        "failedToGenerateImage": "图像生成失败",
+        "failedToSaveImage": "图像保存失败",
+        "pleaseUploadValidImage": "请上传有效的图像（JPEG、PNG或WebP）",
+        "imageSizeMustBeLessThan": "图像大小必须小于5MB",
+        "select": "选择"
+      }
+    }
   }
 }

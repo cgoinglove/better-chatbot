@@ -85,6 +85,20 @@ describe("Auth Config", () => {
       expect(config.socialAuthenticationProviders.github).toEqual({
         clientId: "github-client-id",
         clientSecret: "github-client-secret",
+        disableSignUp: false,
+      });
+    });
+
+    it("should include GitHub config with disableSignUp when DISABLE_SIGN_UP is set", () => {
+      vi.stubEnv("GITHUB_CLIENT_ID", "github-client-id");
+      vi.stubEnv("GITHUB_CLIENT_SECRET", "github-client-secret");
+      vi.stubEnv("DISABLE_SIGN_UP", "1");
+
+      const config = getAuthConfig();
+      expect(config.socialAuthenticationProviders.github).toEqual({
+        clientId: "github-client-id",
+        clientSecret: "github-client-secret",
+        disableSignUp: true,
       });
     });
 
@@ -98,6 +112,7 @@ describe("Auth Config", () => {
         clientId: "google-client-id",
         clientSecret: "google-client-secret",
         prompt: "select_account",
+        disableSignUp: false,
       });
     });
 
@@ -110,6 +125,7 @@ describe("Auth Config", () => {
       expect(config.socialAuthenticationProviders.google).toEqual({
         clientId: "google-client-id",
         clientSecret: "google-client-secret",
+        disableSignUp: false,
       });
     });
 
@@ -123,6 +139,7 @@ describe("Auth Config", () => {
         clientId: "microsoft-client-id",
         clientSecret: "microsoft-client-secret",
         tenantId: "custom-tenant-id",
+        disableSignUp: false,
       });
     });
 
@@ -135,6 +152,7 @@ describe("Auth Config", () => {
         clientId: "microsoft-client-id",
         clientSecret: "microsoft-client-secret",
         tenantId: "common",
+        disableSignUp: false,
       });
     });
 
@@ -149,6 +167,7 @@ describe("Auth Config", () => {
         clientSecret: "microsoft-client-secret",
         tenantId: "common",
         prompt: "select_account",
+        disableSignUp: false,
       });
     });
 
@@ -174,17 +193,20 @@ describe("Auth Config", () => {
           github: {
             clientId: "github-client-id",
             clientSecret: "github-client-secret",
+            disableSignUp: true,
           },
           google: {
             clientId: "google-client-id",
             clientSecret: "google-client-secret",
             prompt: "select_account",
+            disableSignUp: true,
           },
           microsoft: {
             clientId: "microsoft-client-id",
             clientSecret: "microsoft-client-secret",
             tenantId: "custom-tenant",
             prompt: "select_account",
+            disableSignUp: true,
           },
         },
       });

@@ -1,6 +1,6 @@
 "use client";
 
-import { getToolName, ToolUIPart, UIMessage } from "ai";
+import { FileUIPart, getToolName, ToolUIPart, UIMessage } from "ai";
 import {
   Check,
   Copy,
@@ -15,6 +15,8 @@ import {
   TriangleAlert,
   HammerIcon,
   EllipsisIcon,
+  FileIcon,
+  Download,
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { Button } from "ui/button";
@@ -1161,3 +1163,77 @@ export const ToolMessagePart = memo(
 );
 
 ToolMessagePart.displayName = "ToolMessagePart";
+
+// File Message Part Component
+interface FileMessagePartProps {
+  part: FileUIPart; // FileUIPart from AI SDK
+  isUserMessage: boolean;
+}
+
+export const FileMessagePart = memo(
+  ({ part, isUserMessage }: FileMessagePartProps) => {
+    const isImage = part.mediaType?.startsWith("image/");
+
+    const fileExtension =
+      part.filename?.split(".").pop()?.toUpperCase() || "FILE";
+    const fileUrl = part.url;
+
+    if (isImage && fileUrl) {
+      return (
+        <div
+          className={cn(
+            "max-w-md rounded-lg overflow-hidden border border-border",
+            isUserMessage ? "ml-auto" : "mr-auto",
+          )}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={fileUrl}
+            alt={part.filename || "Uploaded image"}
+            className="w-full h-auto"
+          />
+          {part.filename && (
+            <div className="px-3 py-2 bg-muted text-sm text-muted-foreground">
+              {part.filename}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // Non-image file
+    return (
+      <div
+        className={cn(
+          "max-w-sm rounded-lg border border-border bg-muted p-4",
+          isUserMessage ? "ml-auto" : "mr-auto",
+        )}
+      >
+        <div className="flex items-center gap-3">
+          <div className="flex-shrink-0 p-2 rounded bg-background">
+            <FileIcon className="size-6 text-muted-foreground" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium truncate">
+              {part.filename || "File"}
+            </p>
+            <p className="text-xs text-muted-foreground">{fileExtension}</p>
+          </div>
+          {fileUrl && (
+            <a
+              href={fileUrl}
+              download={part.filename}
+              className="flex-shrink-0"
+            >
+              <Button size="icon" variant="ghost" className="size-8">
+                <Download className="size-4" />
+              </Button>
+            </a>
+          )}
+        </div>
+      </div>
+    );
+  },
+);
+
+FileMessagePart.displayName = "FileMessagePart";

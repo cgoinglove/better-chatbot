@@ -8,6 +8,18 @@ import { AppDefaultToolkit } from "lib/ai/tools";
 import { AgentSummary } from "app-types/agent";
 import { ArchiveWithItemCount } from "app-types/archive";
 
+export interface UploadedFile {
+  id: string;
+  url: string;
+  name: string;
+  mimeType: string;
+  size: number;
+  isUploading?: boolean;
+  progress?: number;
+  previewUrl?: string;
+  abortController?: AbortController;
+}
+
 export interface AppState {
   threadList: ChatThread[];
   mcpList: (MCPServerInfo & { id: string })[];
@@ -21,6 +33,9 @@ export interface AppState {
   archiveList: ArchiveWithItemCount[];
   threadMentions: {
     [threadId: string]: ChatMention[];
+  };
+  threadFiles: {
+    [threadId: string]: UploadedFile[];
   };
   toolPresets: {
     allowedMcpServers?: Record<string, AllowedMCPServer>;
@@ -57,6 +72,7 @@ const initialState: AppState = {
   archiveList: [],
   generatingTitleThreadIds: [],
   threadMentions: {},
+  threadFiles: {},
   mcpList: [],
   agentList: [],
   workflowToolList: [],
