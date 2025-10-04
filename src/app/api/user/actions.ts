@@ -18,6 +18,58 @@ import { getUser, getUserAccounts, updateUserDetails } from "lib/user/server";
 import { getTranslations } from "next-intl/server";
 import { logger } from "better-auth";
 
+export const updateUserImageAction = validatedActionWithUserManagePermission(
+  UpdateUserDetailsSchema.pick({ userId: true, image: true }),
+  async (
+    data,
+    userId,
+    userSession,
+    isOwnResource,
+  ): Promise<UpdateUserActionState> => {
+    const t = await getTranslations("User.Profile.common");
+
+    try {
+      const { image } = data;
+
+      if (isOwnResource) {
+        await auth.api.updateUser({
+          returnHeaders: true,
+          body: { image },
+          headers: await headers(),
+        });
+      } else {
+        await updateUserDetails(
+          userId,
+          userSession.user.name,
+          userSession.user.email || "",
+          image,
+        );
+      }
+
+      const user = await getUser(userId);
+      if (!user) {
+        return {
+          success: false,
+          message: t("userNotFound"),
+        };
+      }
+
+      return {
+        success: true,
+        message: "Profile photo updated successfully",
+        user,
+        currentUserUpdated: isOwnResource,
+      };
+    } catch (error) {
+      logger.error("Failed to update user image:", error);
+      return {
+        success: false,
+        message: "Failed to update profile photo",
+      };
+    }
+  },
+);
+
 export const updateUserDetailsAction = validatedActionWithUserManagePermission(
   UpdateUserDetailsSchema,
   async (

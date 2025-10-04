@@ -402,7 +402,7 @@ Step-by-step setup guides for running and configuring better-chatbot.
 
 #### [🗂️ File Storage Drivers](./docs/tips-guides/file-storage.md)
 
-- Configure local disk storage for dev, Vercel Blob in production, and prep for upcoming S3 support with the shared `FileStorage` adapter.
+- Multiple storage backend support with automatic driver selection: ✅ Local Filesystem, ✅ Vercel Blob (completed), 🚧 S3 (in progress)
 
 #### [🎯 System Prompts & Chat Customization](./docs/tips-guides/system-prompts-and-customization.md)
 

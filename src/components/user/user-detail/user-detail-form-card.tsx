@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { format } from "date-fns";
 import {
   Card,
@@ -9,21 +9,23 @@ import {
   CardTitle,
   CardDescription,
 } from "ui/card";
-import { Avatar, AvatarImage, AvatarFallback } from "ui/avatar";
 import { Label } from "ui/label";
 import { Input } from "ui/input";
-
 import { Badge } from "ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { User } from "lucide-react";
 import { toast } from "sonner";
 import Form from "next/form";
-import { updateUserDetailsAction } from "@/app/api/user/actions";
+import {
+  updateUserDetailsAction,
+  updateUserImageAction,
+} from "@/app/api/user/actions";
 import { UpdateUserActionState } from "@/app/api/user/validations";
 import { BasicUserWithLastLogin } from "app-types/user";
 import { getUserAvatar } from "lib/user/utils";
 import { SubmitButton } from "./user-submit-button";
 import { useProfileTranslations } from "@/hooks/use-profile-translations";
+import { UserAvatarUpload } from "./user-avatar-upload";
 
 interface UserDetailFormCardProps {
   user: BasicUserWithLastLogin;
@@ -44,6 +46,7 @@ export function UserDetailFormCard({
   view,
 }: UserDetailFormCardProps) {
   const { t, tCommon } = useProfileTranslations(view);
+  const [currentUser, setCurrentUser] = useState(user);
 
   const [, detailsUpdateFormAction, isPending] = useActionState<
     UpdateUserActionState,
@@ -53,12 +56,25 @@ export function UserDetailFormCard({
     if (result?.success && result.user) {
       const updatedUser = result.user;
       toast.success(t("updateSuccess"));
+      setCurrentUser(updatedUser);
       onUserDetailsUpdate?.(updatedUser);
     } else {
       toast.error(result?.message || t("updateError"));
     }
     return result;
   }, {});
+
+  const handleImageUpdate = async (imageUrl: string) => {
+    const formData = new FormData();
+    formData.append("userId", user.id);
+    formData.append("image", imageUrl);
+
+    const result = await updateUserImageAction({}, formData);
+    if (result?.success && result.user) {
+      setCurrentUser(result.user);
+      onUserDetailsUpdate?.(result.user);
+    }
+  };
   return (
     <Card className="transition-all duration-200 hover:shadow-md">
       <CardHeader className="pb-4">
@@ -81,14 +97,14 @@ export function UserDetailFormCard({
         >
           <input type="hidden" name="userId" value={user.id} />
 
-          {/* Avatar and Name Section */}
-          <div className="flex items-center gap-4">
-            <Avatar className="size-26 rounded-full mx-auto my-4 ring ring-border">
-              <AvatarImage src={getUserAvatar(user)} />
-              <AvatarFallback className="text-lg font-semibold">
-                {user.name.slice(0, 2).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
+          {/* Avatar Upload Section */}
+          <div className="flex items-center justify-center gap-4 my-4">
+            <UserAvatarUpload
+              currentImageUrl={getUserAvatar(currentUser)}
+              userName={currentUser.name}
+              onImageUpdate={handleImageUpdate}
+              disabled={isPending}
+            />
           </div>
 
           {/* Form Fields */}
@@ -98,7 +114,7 @@ export function UserDetailFormCard({
               <Input
                 id="name"
                 name="name"
-                defaultValue={user.name}
+                defaultValue={currentUser.name}
                 required
                 disabled={isPending}
                 data-testid="user-name-input"
@@ -120,7 +136,7 @@ export function UserDetailFormCard({
                       id="email"
                       name="email"
                       type="email"
-                      defaultValue={user.email}
+                      defaultValue={currentUser.email}
                       disabled={
                         !!userAccountInfo?.oauthProviders?.length || isPending
                       }
@@ -145,7 +161,7 @@ export function UserDetailFormCard({
                 {tCommon("joined")}
               </Label>
               <p className="text-sm font-medium" data-testid="user-created-at">
-                {format(new Date(user.createdAt), "PPP")}
+                {format(new Date(currentUser.createdAt), "PPP")}
               </p>
             </div>
 
@@ -154,7 +170,7 @@ export function UserDetailFormCard({
                 {tCommon("lastUpdated")}
               </Label>
               <p className="text-sm font-medium" data-testid="user-updated-at">
-                {format(new Date(user.updatedAt), "PPP")}
+                {format(new Date(currentUser.updatedAt), "PPP")}
               </p>
             </div>
           </div>
