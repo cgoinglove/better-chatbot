@@ -49,6 +49,7 @@ export function AppSidebarUserInner(props: {
   const { data: user } = useSWR<BasicUser>(`/api/user/details`, fetcher, {
     fallbackData: props.user,
     suspense: true,
+    revalidateOnMount: false,
     revalidateOnFocus: false,
     shouldRetryOnError: false,
     refreshInterval: 1000 * 60 * 10,

@@ -26,7 +26,7 @@ export default async function ChatLayout({
     cookieStore.get(COOKIE_KEY_SIDEBAR_STATE)?.value !== "true";
   return (
     <SidebarProvider defaultOpen={!isCollapsed}>
-      <SWRConfigProvider>
+      <SWRConfigProvider user={session.user}>
         <AppPopupProvider
           userSettingsComponent={
             <Suspense fallback={<UserDetailContentSkeleton />}>
