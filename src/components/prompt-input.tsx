@@ -9,7 +9,6 @@ import {
   Loader2,
   PaperclipIcon,
   PlusIcon,
-  Sparkles,
   Square,
   XIcon,
 } from "lucide-react";
