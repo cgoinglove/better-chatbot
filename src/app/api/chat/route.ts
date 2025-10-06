@@ -225,7 +225,6 @@ export async function POST(request: Request) {
                 : t;
             return {
               ...bindingTools,
-              [ImageToolName]: nanoBananaTool,
               ...APP_DEFAULT_TOOLS, // APP_DEFAULT_TOOLS Not Supported Manual
             };
           })
@@ -243,9 +242,13 @@ export async function POST(request: Request) {
         logger.info(
           `allowedMcpTools: ${allowedMcpTools.length ?? 0}, allowedAppDefaultToolkit: ${allowedAppDefaultToolkit?.length ?? 0}`,
         );
-        logger.info(
-          `binding tool count APP_DEFAULT: ${Object.keys(APP_DEFAULT_TOOLS ?? {}).length}, MCP: ${Object.keys(MCP_TOOLS ?? {}).length}, Workflow: ${Object.keys(WORKFLOW_TOOLS ?? {}).length}`,
-        );
+        if (useImageTool) {
+          logger.info(`binding tool count Image: ${imageTool?.model}`);
+        } else {
+          logger.info(
+            `binding tool count APP_DEFAULT: ${Object.keys(APP_DEFAULT_TOOLS ?? {}).length}, MCP: ${Object.keys(MCP_TOOLS ?? {}).length}, Workflow: ${Object.keys(WORKFLOW_TOOLS ?? {}).length}`,
+          );
+        }
         logger.info(`model: ${chatModel?.provider}/${chatModel?.model}`);
 
         const result = streamText({
