@@ -8,7 +8,10 @@
 
 🚀 **[Live Demo](https://better-chatbot-demo.vercel.app/)** | See the experience in action in the [preview](#preview) below!
 
-[Demo Chat](https://better-chatbot-demo.vercel.app/export/a4820921-8012-496b-8a5d-13757050bafe)
+#### Demo Chats
+
+- **MCP Tools Demo:** [Chat with MCP Tools](https://better-chatbot-demo.vercel.app/export/a4820921-8012-496b-8a5d-13757050bafe)
+- **Image Generation Demo:** [Chat with Image Generation](https://better-chatbot-demo.vercel.app/export/image-generation-demo-12345)
 
 **Better Chatbot** - A better open-source AI chatbot for individuals and teams, inspired by ChatGPT, Claude, Grok, and Gemini.
 
@@ -204,6 +207,15 @@ Built-in web search powered by [Exa AI](https://exa.ai). Search the web with sem
 - **Optional:** Add `EXA_API_KEY` to `.env` to enable web search
 - **Free Tier:** 1,000 requests/month at no cost, no credit card required
 - **Easy Setup:** Get your API key instantly at [dashboard.exa.ai](https://dashboard.exa.ai)
+
+#### 🎨 Image Generation
+
+<img width="1034" height="940" loading="lazy" alt="image-generation" src="https://github.com/user-attachments/assets/placeholder-image" />
+
+Built-in image generation and editing capabilities powered by AI models. Create, edit, and modify images directly in your chats.
+
+- **Supported Operations:** Image generation, editing, and composition
+- **Current Models:** Gemini Nano Banana, OpenAI (coming soon)
 
 #### ⚡️ JS,PYTHON Executor
 
@@ -424,7 +436,7 @@ Step-by-step setup guides for running and configuring better-chatbot.
 Planned features coming soon to better-chatbot:
 
 - [x] **File Upload & Storage** (Vercel Blob integration)
-- [ ] **Image Generation**
+- [x] **Image Generation**
 - [ ] **Collaborative Document Editing** (like OpenAI Canvas: user & assistant co-editing)
 - [ ] **RAG (Retrieval-Augmented Generation)**
 - [ ] **Web-based Compute** (with [WebContainers](https://webcontainers.io) integration)
