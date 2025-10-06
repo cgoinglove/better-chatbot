@@ -1,5 +1,7 @@
 import { Buffer } from "node:buffer";
 import type { UploadContent } from "./file-storage.interface";
+import logger from "logger";
+import { withTimeout } from "lib/utils";
 
 export const sanitizeFilename = (filename: string) => {
   const base = filename.split(/[/\\]/).pop() ?? "file";
@@ -189,7 +191,13 @@ export async function getBase64Data(image: {
 
   // Case 2: URL object
   if (data instanceof URL) {
-    const response = await fetch(data.href);
+    const response = await withTimeout(
+      fetch(data.href).catch((err) => {
+        logger.withTag("getBase64Data").error(err);
+        throw err;
+      }),
+      10000,
+    );
     const buffer = await response.arrayBuffer();
     return {
       data: Buffer.from(buffer).toString("base64"),

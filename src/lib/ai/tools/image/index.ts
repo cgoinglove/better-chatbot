@@ -80,12 +80,12 @@ export const nanoBananaTool = createTool({
           logger.info(`upload image failed. using base64`);
         }),
       )
-      .orElse(
-        images.images.map((v) => ({
-          url: `data:${v.mimeType || "image/png"};base64,${v.base64}`,
-          mimeType: v.mimeType,
-        })),
-      );
+      .ifFail(() => {
+        throw new Error(
+          "Image generation was successful, but file upload failed. Please check your file upload configuration and try again.",
+        );
+      })
+      .unwrap();
 
     return {
       images: resultImages,

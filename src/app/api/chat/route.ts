@@ -208,15 +208,13 @@ export async function POST(request: Request) {
           !supportToolCall && buildToolCallUnsupportedModelSystemPrompt,
         );
 
-        const IMAGE_TOOL = useImageTool
+        const IMAGE_TOOL: Record<string, Tool> = useImageTool
           ? { [ImageToolName]: nanoBananaTool }
           : {};
-
         const vercelAITooles = safe({
           ...MCP_TOOLS,
           ...WORKFLOW_TOOLS,
-          ...IMAGE_TOOL,
-        } as Record<string, Tool>)
+        })
           .map((t) => {
             const bindingTools =
               toolChoice === "manual" ||
@@ -226,6 +224,7 @@ export async function POST(request: Request) {
             return {
               ...bindingTools,
               ...APP_DEFAULT_TOOLS, // APP_DEFAULT_TOOLS Not Supported Manual
+              ...IMAGE_TOOL,
             };
           })
           .unwrap();

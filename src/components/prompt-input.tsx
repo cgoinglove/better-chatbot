@@ -269,34 +269,18 @@ export default function PromptInput({
 
           toast.success(t("imageUploadedSuccessfully"));
         } else {
-          // Failed to upload - use base64 as fallback
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            const dataUrl = reader.result as string;
-            appStoreMutate((prev) => ({
-              threadFiles: {
-                ...prev.threadFiles,
-                [threadId]: (prev.threadFiles[threadId] ?? []).map((f) =>
-                  f.id === fileId
-                    ? {
-                        ...f,
-                        dataUrl, // Store complete data URL
-                        isUploading: false,
-                        progress: 100,
-                      }
-                    : f,
-                ),
-              },
-            }));
-            toast.warning(
-              t("imageUploadFailedUsingBase64") ||
-                "Image upload failed. Using base64 encoding as fallback.",
-            );
-          };
-          reader.readAsDataURL(file);
+          // Failed to upload - remove the file
+          appStoreMutate((prev) => ({
+            threadFiles: {
+              ...prev.threadFiles,
+              [threadId]: (prev.threadFiles[threadId] ?? []).filter(
+                (f) => f.id !== fileId,
+              ),
+            },
+          }));
         }
       } catch (error) {
-        // Upload failed - convert to base64 and keep the file
+        // Upload failed - remove the file
         if (error instanceof Error && error.name === "AbortError") {
           // Remove aborted upload
           appStoreMutate((prev) => ({
@@ -308,31 +292,15 @@ export default function PromptInput({
             },
           }));
         } else {
-          // For other errors, use base64 as fallback
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            const dataUrl = reader.result as string;
-            appStoreMutate((prev) => ({
-              threadFiles: {
-                ...prev.threadFiles,
-                [threadId]: (prev.threadFiles[threadId] ?? []).map((f) =>
-                  f.id === fileId
-                    ? {
-                        ...f,
-                        dataUrl, // Store complete data URL
-                        isUploading: false,
-                        progress: 100,
-                      }
-                    : f,
-                ),
-              },
-            }));
-            toast.warning(
-              t("imageUploadFailedUsingBase64") ||
-                "Image upload failed. Using base64 encoding as fallback.",
-            );
-          };
-          reader.readAsDataURL(file);
+          // For other errors, remove the file and show error
+          appStoreMutate((prev) => ({
+            threadFiles: {
+              ...prev.threadFiles,
+              [threadId]: (prev.threadFiles[threadId] ?? []).filter(
+                (f) => f.id !== fileId,
+              ),
+            },
+          }));
         }
       } finally {
         // Cleanup preview URL

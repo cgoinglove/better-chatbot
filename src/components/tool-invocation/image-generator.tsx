@@ -74,10 +74,14 @@ function PureImageGeneratorToolInvocation({
   // Simple loading state like web-search
   if (isGenerating) {
     return (
-      <div className="flex flex-col gap-4 text-sm">
+      <div className="flex flex-col gap-4">
         <TextShimmer>{getModeText(mode)}</TextShimmer>
-        <div className="w-full h-96 overflow-hidden rounded-xl">
+        <div className="w-full h-96 overflow-hidden relative">
           <LetterGlitch />
+          <div className="z-10 absolute inset-0 w-full h-1/12 bg-gradient-to-b to-90% from-background to-transparent  pointer-events-none" />
+          <div className="z-10 absolute inset-0 w-1/12 h-full bg-gradient-to-r from-background to-transparent  pointer-events-none" />
+          <div className="z-10 absolute left-0 bottom-0 w-full h-1/12 bg-gradient-to-t from-background to-transparent  pointer-events-none" />
+          <div className="z-10 absolute right-0 bottom-0 w-1/12 h-full bg-gradient-to-l from-background to-transparent  pointer-events-none" />
         </div>
       </div>
     );
@@ -95,10 +99,11 @@ function PureImageGeneratorToolInvocation({
 
       <div className="w-full flex flex-col gap-3 pb-2">
         {hasError ? (
-          <div className="bg-secondary text-muted-foreground p-4 rounded-lg text-sm">
-            {result?.images.length === 0
-              ? "No images generated"
-              : "Failed to generate image. Please try again."}
+          <div className="bg-card text-muted-foreground p-6 rounded-lg text-xs border border-border/20">
+            {part.errorText ??
+              (result?.images.length === 0
+                ? "No images generated"
+                : "Failed to generate image. Please try again.")}
           </div>
         ) : (
           <>
