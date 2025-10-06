@@ -1,10 +1,18 @@
-import { FilePart, ModelMessage, ToolResultPart, tool as createTool } from "ai";
+import {
+  FilePart,
+  ImagePart,
+  ModelMessage,
+  ToolResultPart,
+  tool as createTool,
+  generateText,
+} from "ai";
 import { generateImageWithNanoBanana } from "lib/ai/image/generate-image";
 import { serverFileStorage } from "lib/file-storage";
 import { safe, watchError } from "ts-safe";
 import z from "zod";
 import { ImageToolName } from "..";
 import logger from "logger";
+import { openai } from "@ai-sdk/openai";
 
 export type ImageToolResult = {
   images: {
@@ -98,6 +106,97 @@ export const nanoBananaTool = createTool({
     };
   },
 });
+
+export const openaiImageTool = createTool({
+  name: ImageToolName,
+  description: `Generate, edit, or composite images based on the conversation context. This tool automatically analyzes recent messages to create images without requiring explicit input parameters. It includes all user-uploaded images from the recent conversation and only the most recent AI-generated image to avoid confusion. Use the 'mode' parameter to specify the operation type: 'create' for new images, 'edit' for modifying existing images, or 'composite' for combining multiple images. Use this when the user requests image creation, modification, or visual content generation.`,
+  inputSchema: z.object({
+    mode: z
+      .enum(["create", "edit", "composite"])
+      .optional()
+      .default("create")
+      .describe(
+        "Image generation mode: 'create' for new images, 'edit' for modifying existing images, 'composite' for combining multiple images",
+      ),
+  }),
+  execute: async ({ mode }, { messages, abortSignal }) => {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      throw new Error("OPENAI_API_KEY is not set");
+    }
+
+    let hasFoundImage = false;
+    const latestMessages = messages
+      .slice(-6)
+      .reverse()
+      .flatMap((m) => {
+        if (m.role != "tool") return m;
+        if (hasFoundImage) return null; // Skip if we already found an image
+        const fileParts = m.content.flatMap(convertToImageToolPartToImagePart);
+        if (fileParts.length === 0) return null;
+        hasFoundImage = true; // Mark that we found the most recent image
+        return [
+          {
+            role: "user",
+            content: fileParts,
+          },
+          m,
+        ] as ModelMessage[];
+      })
+      .filter((v) => Boolean(v?.content?.length))
+      .reverse() as ModelMessage[];
+    const result = await generateText({
+      model: openai("gpt-4.1-mini"),
+      abortSignal,
+      messages: latestMessages,
+      tools: {
+        image_generation: openai.tools.imageGeneration({
+          outputFormat: "webp",
+          model: "gpt-image-1",
+        }),
+      },
+      toolChoice: "required",
+    });
+
+    for (const toolResult of result.staticToolResults) {
+      if (toolResult.toolName === "image_generation") {
+        const base64Image = toolResult.output.result;
+        const uploadedImage = await serverFileStorage
+          .upload(Buffer.from(base64Image, "base64"), {
+            contentType: "image/webp",
+          })
+          .catch(() => {
+            throw new Error(
+              "Image generation was successful, but file upload failed. Please check your file upload configuration and try again.",
+            );
+          });
+        return {
+          images: [{ url: uploadedImage.sourceUrl, mimeType: "image/webp" }],
+          mode,
+          model: "gpt-4.1",
+          guide:
+            "The image has been successfully generated and is now displayed above. If you need any edits, modifications, or adjustments to the image, please let me know.",
+        };
+      }
+    }
+    return {
+      images: [],
+      mode,
+      model: "gpt-4.1",
+      guide: "",
+    };
+  },
+});
+
+function convertToImageToolPartToImagePart(part: ToolResultPart): ImagePart[] {
+  if (part.toolName !== ImageToolName) return [];
+  const result = part.output.value as ImageToolResult;
+  return result.images.map((image) => ({
+    type: "image",
+    image: image.url,
+    mediaType: image.mimeType,
+  }));
+}
 
 function convertToImageToolPartToFilePart(part: ToolResultPart): FilePart[] {
   if (part.toolName !== ImageToolName) return [];

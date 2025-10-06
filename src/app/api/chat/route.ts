@@ -47,7 +47,7 @@ import {
 import { getSession } from "auth/server";
 import { colorize } from "consola/utils";
 import { generateUUID } from "lib/utils";
-import { nanoBananaTool } from "lib/ai/tools/image";
+import { nanoBananaTool, openaiImageTool } from "lib/ai/tools/image";
 import { ImageToolName } from "lib/ai/tools";
 
 const logger = globalLogger.withDefaults({
@@ -209,7 +209,12 @@ export async function POST(request: Request) {
         );
 
         const IMAGE_TOOL: Record<string, Tool> = useImageTool
-          ? { [ImageToolName]: nanoBananaTool }
+          ? {
+              [ImageToolName]:
+                imageTool?.model === "google"
+                  ? nanoBananaTool
+                  : openaiImageTool,
+            }
           : {};
         const vercelAITooles = safe({
           ...MCP_TOOLS,

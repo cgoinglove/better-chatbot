@@ -76,13 +76,12 @@ function PureImageGeneratorToolInvocation({
     return (
       <div className="flex flex-col gap-4">
         <TextShimmer>{getModeText(mode)}</TextShimmer>
-        <div className="w-full h-96 overflow-hidden relative">
+        <div className="w-full h-96 overflow-hidden rounded-lg">
           <LetterGlitch />
-          <div className="z-10 absolute inset-0 w-full h-1/12 bg-gradient-to-b to-90% from-background to-transparent  pointer-events-none" />
-          <div className="z-10 absolute inset-0 w-1/12 h-full bg-gradient-to-r from-background to-transparent  pointer-events-none" />
-          <div className="z-10 absolute left-0 bottom-0 w-full h-1/12 bg-gradient-to-t from-background to-transparent  pointer-events-none" />
-          <div className="z-10 absolute right-0 bottom-0 w-1/12 h-full bg-gradient-to-l from-background to-transparent  pointer-events-none" />
         </div>
+        <p className="text-xs text-muted-foreground text-center">
+          Image generation may take up to 1 minute.
+        </p>
       </div>
     );
   }

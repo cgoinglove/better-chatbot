@@ -74,9 +74,15 @@ export async function generateImageWithXAI(
 export const generateImageWithNanoBanana = async (
   options: GenerateImageOptions,
 ): Promise<GeneratedImageResult> => {
+  const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+  if (!apiKey) {
+    throw new Error("GOOGLE_GENERATIVE_AI_API_KEY is not set");
+  }
+
   const ai = new GoogleGenAI({
-    apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+    apiKey: apiKey,
   });
+
   const geminiMessages: GeminiMessage[] = await safe(options.messages || [])
     .map((messages) => Promise.all(messages.map(convertToGeminiMessage)))
     .watch(watchError(logger.error))

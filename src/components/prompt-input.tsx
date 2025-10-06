@@ -317,7 +317,7 @@ export default function PromptInput({
   );
 
   const handleGenerateImage = useCallback(
-    (provider?: "google") => {
+    (provider?: "google" | "openai") => {
       if (!provider) {
         appStoreMutate({
           threadImageToolModel: {},
@@ -450,26 +450,24 @@ export default function PromptInput({
   // Handle ESC key to clear mentions
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && mentions.length > 0 && threadId) {
+      if (
+        e.key === "Escape" &&
+        threadId &&
+        (mentions.length > 0 || imageToolModel)
+      ) {
         e.preventDefault();
         e.stopPropagation();
-        appStoreMutate((prev) => ({
-          threadMentions: {
-            ...prev.threadMentions,
-            [threadId]: [],
-          },
+        appStoreMutate(() => ({
+          threadMentions: {},
           agentId: undefined,
+          threadImageToolModel: {},
         }));
         editorRef.current?.commands.focus();
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [mentions.length, threadId, appStoreMutate]);
-
-  useEffect(() => {
-    if (!editorRef.current) return;
-  }, [editorRef.current]);
+  }, [mentions.length, threadId, appStoreMutate, imageToolModel]);
 
   return (
     <div className="max-w-3xl mx-auto fade-in animate-in">
@@ -598,6 +596,14 @@ export default function PromptInput({
                             <GeminiIcon className="mr-2 size-4" />
                             Gemini (Nano Banana)
                           </DropdownMenuItem>
+                          <DropdownMenuItem
+                            disabled={modelInfo?.isToolCallUnsupported}
+                            onClick={() => handleGenerateImage("openai")}
+                            className="cursor-pointer"
+                          >
+                            <OpenAIIcon className="mr-2 size-4" />
+                            OpenAI
+                          </DropdownMenuItem>
                         </DropdownMenuSubContent>
                       </DropdownMenuPortal>
                     </DropdownMenuSub>
@@ -625,6 +631,7 @@ export default function PromptInput({
                         side="top"
                         onSelectWorkflow={onSelectWorkflow}
                         onSelectAgent={onSelectAgent}
+                        onGenerateImage={handleGenerateImage}
                         mentions={mentions}
                       />
                     </>
