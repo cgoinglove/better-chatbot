@@ -5,7 +5,7 @@ import { openai } from "@ai-sdk/openai";
 import { google } from "@ai-sdk/google";
 import { anthropic } from "@ai-sdk/anthropic";
 import { xai } from "@ai-sdk/xai";
-import { openrouter } from "@openrouter/ai-sdk-provider";
+import { LanguageModelV2, openrouter } from "@openrouter/ai-sdk-provider";
 import { createGroq } from "@ai-sdk/groq";
 import { LanguageModel } from "ai";
 import {
@@ -82,6 +82,13 @@ const staticUnsupportedModels = new Set([
   staticModels.openRouter["gemini-2.0-flash-exp:free"],
 ]);
 
+const staticSupportImageInputModels = {
+  ...staticModels.google,
+  ...staticModels.xai,
+  ...staticModels.openai,
+  ...staticModels.anthropic,
+};
+
 const openaiCompatibleProviders = openaiCompatibleModelsSafeParse(
   process.env.OPENAI_COMPATIBLE_DATA,
 );
@@ -102,6 +109,10 @@ export const isToolCallUnsupportedModel = (model: LanguageModel) => {
   return allUnsupportedModels.has(model);
 };
 
+const isImageInputUnsupportedModel = (model: LanguageModelV2) => {
+  return !Object.values(staticSupportImageInputModels).includes(model);
+};
+
 const fallbackModel = staticModels.openai["gpt-4.1"];
 
 export const customModelProvider = {
@@ -110,6 +121,7 @@ export const customModelProvider = {
     models: Object.entries(models).map(([name, model]) => ({
       name,
       isToolCallUnsupported: isToolCallUnsupportedModel(model),
+      isImageInputUnsupported: isImageInputUnsupportedModel(model),
     })),
     hasAPIKey: checkProviderAPIKey(provider as keyof typeof staticModels),
   })),

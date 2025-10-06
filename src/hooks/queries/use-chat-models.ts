@@ -1,8 +1,8 @@
 import { appStore } from "@/app/store";
 import { fetcher } from "lib/utils";
-import useSWR from "swr";
+import useSWR, { SWRConfiguration } from "swr";
 
-export const useChatModels = () => {
+export const useChatModels = (options?: SWRConfiguration) => {
   return useSWR<
     {
       provider: string;
@@ -10,6 +10,7 @@ export const useChatModels = () => {
       models: {
         name: string;
         isToolCallUnsupported: boolean;
+        isImageInputUnsupported: boolean;
       }[];
     }[]
   >("/api/chat/models", fetcher, {
@@ -24,5 +25,6 @@ export const useChatModels = () => {
         appStore.setState({ chatModel: { provider: firstProvider, model } });
       }
     },
+    ...options,
   });
 };

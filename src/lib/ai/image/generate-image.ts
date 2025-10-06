@@ -1,19 +1,27 @@
 "use server";
-import { GoogleGenAI, Part as GeminiPart } from "@google/genai";
-import { safe } from "ts-safe";
+import {
+  GoogleGenAI,
+  Part as GeminiPart,
+  Content as GeminiMessage,
+} from "@google/genai";
+import { safe, watchError } from "ts-safe";
 import { getBase64Data } from "lib/file-storage/storage-utils";
 import { openai } from "@ai-sdk/openai";
 import { xai } from "@ai-sdk/xai";
 
-import { experimental_generateImage } from "ai";
+import {
+  FilePart,
+  ImagePart,
+  ModelMessage,
+  TextPart,
+  experimental_generateImage,
+} from "ai";
+import { isString } from "lib/utils";
 import logger from "logger";
 
 type GenerateImageOptions = {
+  messages?: ModelMessage[];
   prompt: string;
-  referenceImages?: {
-    mimeType: string;
-    data: string | Uint8Array | ArrayBuffer | Buffer | URL;
-  }[];
   abortSignal?: AbortSignal;
 };
 
@@ -69,47 +77,29 @@ export const generateImageWithNanoBanana = async (
   const ai = new GoogleGenAI({
     apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
   });
-  const prompt = options.prompt;
-
-  const referenceImages: GeminiPart[] = await safe(
-    options.referenceImages || [],
-  )
-    .map(async (images) =>
-      Promise.all(
-        images.map(
-          async (image) =>
-            await getBase64Data(image).then((data) => ({
-              inlineData: {
-                data: data.data,
-                mimeType: data.mimeType,
-              },
-            })),
-        ) as GeminiPart[],
-      ),
-    )
+  const geminiMessages: GeminiMessage[] = await safe(options.messages || [])
+    .map((messages) => Promise.all(messages.map(convertToGeminiMessage)))
+    .watch(watchError(logger.error))
     .unwrap();
-  logger.debug("nano banana", {
-    prompt,
-    referenceImages: referenceImages.length,
-  });
-  const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash-image",
-    config: {
-      abortSignal: options.abortSignal,
-      responseModalities: ["IMAGE"],
-    },
-    contents: [
-      {
-        role: "user",
-        parts: [
-          {
-            text: prompt,
-          },
-          ...referenceImages,
-        ],
+  if (options.prompt) {
+    geminiMessages.push({
+      role: "user",
+      parts: [{ text: options.prompt }],
+    });
+  }
+  const response = await ai.models
+    .generateContent({
+      model: "gemini-2.5-flash-image",
+      config: {
+        abortSignal: options.abortSignal,
+        responseModalities: ["IMAGE"],
       },
-    ],
-  });
+      contents: geminiMessages,
+    })
+    .catch((err) => {
+      logger.error(err);
+      throw err;
+    });
   return (
     response.candidates?.reduce(
       (acc, candidate) => {
@@ -127,3 +117,51 @@ export const generateImageWithNanoBanana = async (
     ) || { images: [] as GeneratedImage[] }
   );
 };
+
+async function convertToGeminiMessage(
+  message: ModelMessage,
+): Promise<GeminiMessage> {
+  const parts = isString(message.content)
+    ? ([{ text: message.content }] as GeminiPart[])
+    : await Promise.all(
+        message.content.map(async (content) => {
+          if (content.type == "file") {
+            const part = content as FilePart;
+            const data = await getBase64Data({
+              data: part.data,
+              mimeType: part.mediaType!,
+            });
+            return {
+              inlineData: data,
+            } as GeminiPart;
+          }
+          if (content.type == "text") {
+            const part = content as TextPart;
+            return {
+              text: part.text,
+            };
+          }
+          if (content.type == "image") {
+            const part = content as ImagePart;
+            const data = await getBase64Data({
+              data: part.image,
+              mimeType: part.mediaType!,
+            });
+            return {
+              inlineData: data,
+            };
+          }
+          return null;
+        }),
+      )
+        .then((parts) => parts.filter(Boolean) as GeminiPart[])
+        .catch((err) => {
+          logger.withTag("convertToGeminiMessage").error(err);
+          throw err;
+        });
+
+  return {
+    role: message.role == "user" ? "user" : "model",
+    parts,
+  };
+}

@@ -5,8 +5,9 @@ import {
   ChevronDown,
   CornerRightUp,
   FileIcon,
-  ImageIcon,
+  ImagesIcon,
   Loader2,
+  PaperclipIcon,
   PlusIcon,
   Sparkles,
   Square,
@@ -53,6 +54,7 @@ import { generateUUID, cn } from "@/lib/utils";
 import { EMOJI_DATA } from "lib/const";
 import { AgentSummary } from "app-types/agent";
 import { FileUIPart } from "ai";
+import { useChatModels } from "@/hooks/queries/use-chat-models";
 
 interface PromptInputProps {
   placeholder?: string;
@@ -96,6 +98,7 @@ export default function PromptInput({
   const [isUploadDropdownOpen, setIsUploadDropdownOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { upload } = useFileUpload();
+  const { data: providers } = useChatModels();
 
   const [
     globalModel,
@@ -112,6 +115,16 @@ export default function PromptInput({
       state.mutate,
     ]),
   );
+
+  const modelInfo = useMemo(() => {
+    const provider = providers?.find(
+      (provider) => provider.provider === globalModel?.provider,
+    );
+    const model = provider?.models.find(
+      (model) => model.name === globalModel?.model,
+    );
+    return model;
+  }, [providers, globalModel]);
 
   const mentions = useMemo<ChatMention[]>(() => {
     if (!threadId) return [];
@@ -595,25 +608,28 @@ export default function PromptInput({
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start" side="top">
                     <DropdownMenuItem
+                      className="cursor-pointer"
+                      disabled={modelInfo?.isImageInputUnsupported}
                       onClick={() => fileInputRef.current?.click()}
                     >
-                      <ImageIcon className="mr-2 size-4" />
+                      <PaperclipIcon className="mr-2 size-4" />
                       {t("uploadImage")}
                     </DropdownMenuItem>
 
                     <DropdownMenuSub>
                       <DropdownMenuSubTrigger className="cursor-pointer">
-                        <Sparkles className="mr-2 size-4" />
-                        {t("generateImage")}
+                        <ImagesIcon className="mr-4 size-4 text-muted-foreground" />
+                        <span className="mr-4">{t("generateImage")}</span>
                       </DropdownMenuSubTrigger>
                       <DropdownMenuPortal>
                         <DropdownMenuSubContent>
                           <DropdownMenuItem
+                            disabled={modelInfo?.isToolCallUnsupported}
                             onClick={() => handleGenerateImage("google")}
                             className="cursor-pointer"
                           >
                             <GeminiIcon className="mr-2 size-4" />
-                            Google
+                            Gemini (Nano Banana)
                           </DropdownMenuItem>
                         </DropdownMenuSubContent>
                       </DropdownMenuPortal>
@@ -621,30 +637,31 @@ export default function PromptInput({
                   </DropdownMenuContent>
                 </DropdownMenu>
 
-                {!toolDisabled && (
-                  <>
-                    <ToolModeDropdown />
-                    <ToolSelectDropdown
-                      className="mx-1"
-                      align="start"
-                      side="top"
-                      onSelectWorkflow={onSelectWorkflow}
-                      onSelectAgent={onSelectAgent}
-                      mentions={mentions}
-                    />
-                  </>
-                )}
-                {imageToolModel && (
-                  <Button
-                    variant={"ghost"}
-                    size={"sm"}
-                    className="rounded-full hover:bg-input! p-2!"
-                    onClick={() => handleGenerateImage()}
-                  >
-                    <Sparkles className="mr-2 size-4" />
-                    {t("generateImage")}
-                  </Button>
-                )}
+                {!toolDisabled &&
+                  (imageToolModel ? (
+                    <Button
+                      variant={"ghost"}
+                      size={"sm"}
+                      className="rounded-full hover:bg-input! p-2! group/image-generator text-primary"
+                      onClick={() => handleGenerateImage()}
+                    >
+                      <ImagesIcon className="size-3.5" />
+                      {t("generateImage")}
+                      <XIcon className="size-3 group-hover/image-generator:opacity-100 opacity-0 transition-opacity duration-200" />
+                    </Button>
+                  ) : (
+                    <>
+                      <ToolModeDropdown />
+                      <ToolSelectDropdown
+                        className="mx-1"
+                        align="start"
+                        side="top"
+                        onSelectWorkflow={onSelectWorkflow}
+                        onSelectAgent={onSelectAgent}
+                        mentions={mentions}
+                      />
+                    </>
+                  ))}
 
                 <div className="flex-1" />
 

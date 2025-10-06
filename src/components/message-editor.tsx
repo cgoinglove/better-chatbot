@@ -2,17 +2,18 @@
 
 import type { UIMessage } from "ai";
 import { Button } from "./ui/button";
-import { type Dispatch, type SetStateAction, useState } from "react";
+import {
+  type Dispatch,
+  type SetStateAction,
+  useState,
+  useMemo,
+  useEffect,
+} from "react";
 import { Textarea } from "./ui/textarea";
 import { deleteMessagesByChatIdAfterTimestampAction } from "@/app/api/chat/actions";
 import type { UseChatHelpers } from "@ai-sdk/react";
 import { useTranslations } from "next-intl";
 import { Loader } from "lucide-react";
-
-type TextUIPart = {
-  type: "text";
-  text: string;
-};
 
 export type MessageEditorProps = {
   message: UIMessage;
@@ -29,37 +30,78 @@ export function MessageEditor({
 }: MessageEditorProps) {
   const t = useTranslations();
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [draftParts, setDraftParts] = useState<TextUIPart[]>(() => {
-    if (message.parts && message.parts.length > 0) {
-      return message.parts.map((part: any) => ({
-        type: "text",
-        text: part.text,
-      }));
+
+  const canEdit = useMemo(
+    () =>
+      message.parts &&
+      message.parts.length > 0 &&
+      message.parts[message.parts.length - 1]?.type === "text",
+    [message.parts],
+  );
+
+  const [draftText, setDraftText] = useState<string>(() => {
+    if (canEdit) {
+      const lastPart = message.parts[message.parts.length - 1] as any;
+      return lastPart.text || "";
     }
-    return [{ type: "text", text: "" }];
+    return "";
   });
 
-  const handlePartChange = (index: number, value: string) => {
-    setDraftParts((prev) => {
-      const newParts = [...prev];
-      newParts[index] = { type: "text", text: value };
-      return newParts;
-    });
+  const handleTextChange = (value: string) => {
+    setDraftText(value);
   };
+
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+
+    await deleteMessagesByChatIdAfterTimestampAction(message.id);
+
+    setMessages((messages) => {
+      const index = messages.findIndex((m) => m.id === message.id);
+
+      if (index !== -1) {
+        const updatedParts = [...message.parts];
+        const lastPartIndex = updatedParts.length - 1;
+        const lastPart = updatedParts[lastPartIndex];
+
+        if (lastPart && lastPart.type === "text") {
+          updatedParts[lastPartIndex] = {
+            ...lastPart,
+            text: draftText,
+          };
+        }
+
+        const updatedMessage: UIMessage = {
+          ...message,
+          parts: updatedParts,
+        };
+
+        return [...messages.slice(0, index), updatedMessage];
+      }
+
+      return messages;
+    });
+
+    setMode("view");
+    sendMessage();
+  };
+  useEffect(() => {
+    if (!canEdit) {
+      setMode("view");
+    }
+  }, [canEdit]);
 
   return (
     <div className="flex flex-col gap-4 w-full mb-4">
-      {draftParts.map((part, index) => (
-        <div key={index} className="flex flex-col gap-2">
-          <Textarea
-            data-testid={`message-editor-part-${index}`}
-            className="overflow-y-auto bg-transparent outline-none overflow-hidden resize-none !text-base rounded-xl w-full min-h-[100px]"
-            value={part.text}
-            onChange={(e) => handlePartChange(index, e.target.value)}
-            placeholder={`Part ${index + 1}`}
-          />
-        </div>
-      ))}
+      <div className="flex flex-col gap-2">
+        <Textarea
+          data-testid="message-editor-text"
+          className="overflow-y-auto bg-transparent outline-none overflow-hidden resize-none !text-base rounded-xl w-full min-h-[100px]"
+          value={draftText}
+          onChange={(e) => handleTextChange(e.target.value)}
+          placeholder="Edit your message..."
+        />
+      </div>
       <div className="flex flex-row gap-2 justify-end">
         <Button
           variant="outline"
@@ -77,29 +119,7 @@ export function MessageEditor({
           size="sm"
           className="h-fit py-2 px-3"
           disabled={isSubmitting}
-          onClick={async () => {
-            setIsSubmitting(true);
-
-            await deleteMessagesByChatIdAfterTimestampAction(message.id);
-
-            setMessages((messages) => {
-              const index = messages.findIndex((m) => m.id === message.id);
-
-              if (index !== -1) {
-                const updatedMessage: UIMessage = {
-                  ...message,
-                  parts: draftParts,
-                };
-
-                return [...messages.slice(0, index), updatedMessage];
-              }
-
-              return messages;
-            });
-
-            setMode("view");
-            sendMessage();
-          }}
+          onClick={handleSubmit}
         >
           {isSubmitting ? t("Common.saving") : t("Common.save")}
           {isSubmitting && <Loader className="size-4 animate-spin" />}

@@ -5,6 +5,7 @@ import {
   smoothStream,
   stepCountIs,
   streamText,
+  Tool,
   UIMessage,
 } from "ai";
 
@@ -69,6 +70,7 @@ export async function POST(request: Request) {
       toolChoice,
       allowedAppDefaultToolkit,
       allowedMcpServers,
+      imageTool,
       mentions = [],
     } = chatApiSchemaRequestBodySchema.parse(json);
 
@@ -119,8 +121,12 @@ export async function POST(request: Request) {
       mentions.push(...agent.instructions.mentions);
     }
 
+    const useImageTool = Boolean(imageTool?.model);
+
     const isToolCallAllowed =
-      supportToolCall && (toolChoice != "none" || mentions.length > 0);
+      supportToolCall &&
+      (toolChoice != "none" || mentions.length > 0) &&
+      !useImageTool;
 
     const metadata: ChatMetadata = {
       agentId: agent?.id,
@@ -202,7 +208,15 @@ export async function POST(request: Request) {
           !supportToolCall && buildToolCallUnsupportedModelSystemPrompt,
         );
 
-        const vercelAITooles = safe({ ...MCP_TOOLS, ...WORKFLOW_TOOLS })
+        const IMAGE_TOOL = useImageTool
+          ? { [ImageToolName]: nanoBananaTool }
+          : {};
+
+        const vercelAITooles = safe({
+          ...MCP_TOOLS,
+          ...WORKFLOW_TOOLS,
+          ...IMAGE_TOOL,
+        } as Record<string, Tool>)
           .map((t) => {
             const bindingTools =
               toolChoice === "manual" ||
