@@ -171,6 +171,15 @@ export default function SignIn({
                     Microsoft
                   </Button>
                 )}
+                {socialAuthenticationProviders.includes("okta") && (
+                  <Button
+                    variant="outline"
+                    onClick={() => handleSocialSignIn("okta")}
+                    className="flex-1 w-full"
+                  >
+                    Okta
+                  </Button>
+                )}
               </div>
             </>
           )}

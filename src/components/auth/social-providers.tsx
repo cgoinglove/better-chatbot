@@ -49,6 +49,17 @@ export default function SocialProviders({
           Microsoft
         </Button>
       )}
+      {socialAuthenticationProviders.includes("okta") && (
+        <Button
+          variant="outline"
+          onClick={() => onSocialProviderClick("okta")}
+          className="flex-1 w-full"
+          data-testid="okta-signup-button"
+        >
+          {/* No dedicated Okta icon in UI set; using text label */}
+          Okta
+        </Button>
+      )}
     </div>
   );
 }
