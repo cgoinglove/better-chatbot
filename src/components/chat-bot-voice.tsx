@@ -21,6 +21,7 @@ import {
   MessageSquareMoreIcon,
   WrenchIcon,
   ChevronRight,
+  BrainCircuitIcon,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -66,6 +67,12 @@ const prependTools: EnabledTools[] = [
     })),
   },
 ];
+
+export const OPENAI_REALTIME_MODELS = {
+  "GPT-4o Realtime": "gpt-4o-realtime-preview",
+  "GPT Realtime": "gpt-realtime",
+  "GPT Realtime Mini": "gpt-realtime-mini",
+} as const;
 
 export function ChatBotVoice() {
   const t = useTranslations("Chat");
@@ -363,8 +370,52 @@ export function ChatBotVoice() {
                           className="flex items-center gap-2 cursor-pointer"
                           icon=""
                         >
+                          <BrainCircuitIcon className="size-3.5" />
+                          Model
+                        </DropdownMenuSubTrigger>
+                        <DropdownMenuPortal>
+                          <DropdownMenuSubContent>
+                            {Object.entries(OPENAI_REALTIME_MODELS).map(
+                              ([key, value]) => (
+                                <DropdownMenuItem
+                                  className="cursor-pointer flex items-center justify-between"
+                                  onClick={() =>
+                                    appStoreMutate({
+                                      voiceChat: {
+                                        ...voiceChat,
+                                        options: {
+                                          ...voiceChat.options,
+                                          providerOptions: {
+                                            ...voiceChat.options
+                                              .providerOptions,
+                                            model: value,
+                                          },
+                                        },
+                                      },
+                                    })
+                                  }
+                                  key={key}
+                                >
+                                  {key}
+
+                                  {value ===
+                                    voiceChat.options.providerOptions
+                                      ?.model && (
+                                    <CheckIcon className="size-3.5" />
+                                  )}
+                                </DropdownMenuItem>
+                              ),
+                            )}
+                          </DropdownMenuSubContent>
+                        </DropdownMenuPortal>
+                      </DropdownMenuSub>
+                      <DropdownMenuSub>
+                        <DropdownMenuSubTrigger
+                          className="flex items-center gap-2 cursor-pointer"
+                          icon=""
+                        >
                           <OpenAIIcon className="size-3.5 stroke-none fill-foreground" />
-                          Open AI
+                          Voice
                         </DropdownMenuSubTrigger>
                         <DropdownMenuPortal>
                           <DropdownMenuSubContent>
@@ -377,8 +428,10 @@ export function ChatBotVoice() {
                                       voiceChat: {
                                         ...voiceChat,
                                         options: {
-                                          provider: "openai",
+                                          ...voiceChat.options,
                                           providerOptions: {
+                                            ...voiceChat.options
+                                              .providerOptions,
                                             voice: value,
                                           },
                                         },
