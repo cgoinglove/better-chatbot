@@ -30,7 +30,7 @@ export function createOpenAICompatibleModels(
 
       providers[providerKey] = {};
 
-      if (provider === "Azure OpenAI") {
+      if (provider.startsWith("Azure OpenAI")) {
         // Handle Azure OpenAI with specific requirements (new addition)
         const azureProvider = createAzureOpenAICompatible({
           name: provider,

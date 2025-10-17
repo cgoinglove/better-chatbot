@@ -48,6 +48,7 @@
     "check": "pnpm lint:fix && pnpm check-types && pnpm test"
   },
   "dependencies": {
+    "@ai-sdk/amazon-bedrock": "^3.0.42",
     "@ai-sdk/anthropic": "^2.0.23",
     "@ai-sdk/google": "^2.0.17",
     "@ai-sdk/groq": "^2.0.22",
