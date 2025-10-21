@@ -25,7 +25,7 @@ const groq = createGroq({
 const staticModels = {
   openai: {
     "gpt-4.1": openai("gpt-4.1"),
-    "gpt-4.1-mini": openai("gpt-4.1-migrate"),
+    "gpt-4.1-mini": openai("gpt-4.1-mini"),
     "o4-mini": openai("o4-mini"),
     o3: openai("o3"),
     "gpt-5": openai("gpt-5"),
