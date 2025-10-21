@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.24.1](https://github.com/cgoinglove/better-chatbot/compare/v1.24.0...v1.24.1) (2025-10-21)
+
+
+### Bug Fixes
+
+* model name for gpt-4.1-mini in staticModels ([#299](https://github.com/cgoinglove/better-chatbot/issues/299)) ([4513ac0](https://github.com/cgoinglove/better-chatbot/commit/4513ac0e842f588a24d7075af8700e3cc7a3eb39))
+
 ## [1.24.0](https://github.com/cgoinglove/better-chatbot/compare/v1.23.0...v1.24.0) (2025-10-06)
 
 
