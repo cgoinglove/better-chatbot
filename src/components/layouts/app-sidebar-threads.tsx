@@ -108,14 +108,17 @@ export function AppSidebarThreads() {
       return [];
     }
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // Get today's date at midnight in local timezone
+    const now = new Date();
+    const todayLocal = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+    );
+    const todayStart = todayLocal.getTime();
 
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-
-    const lastWeek = new Date(today);
-    lastWeek.setDate(lastWeek.getDate() - 7);
+    const yesterdayStart = todayStart - 24 * 60 * 60 * 1000;
+    const lastWeekStart = todayStart - 7 * 24 * 60 * 60 * 1000;
 
     const groups: ThreadGroup[] = [
       { label: t("today"), threads: [] },
@@ -125,17 +128,31 @@ export function AppSidebarThreads() {
     ];
 
     displayThreadList.forEach((thread) => {
-      const threadDate =
-        (thread.lastMessageAt
-          ? new Date(thread.lastMessageAt)
-          : new Date(thread.createdAt)) || new Date();
-      threadDate.setHours(0, 0, 0, 0);
+      // Get the timestamp - lastMessageAt is already a timestamp, createdAt is a Date
+      const threadTimestamp =
+        thread.lastMessageAt || new Date(thread.createdAt).getTime();
 
-      if (threadDate.getTime() === today.getTime()) {
+      // Convert timestamp to a date in LOCAL timezone
+      const threadDate = new Date(threadTimestamp);
+
+      // Get the local date components (this gives us the date in user's timezone)
+      const localYear = threadDate.getFullYear();
+      const localMonth = threadDate.getMonth();
+      const localDay = threadDate.getDate();
+
+      // Create normalized day start using local components
+      const normalizedThreadDay = new Date(
+        localYear,
+        localMonth,
+        localDay,
+      ).getTime();
+
+      // Check which group this thread belongs to
+      if (normalizedThreadDay === todayStart) {
         groups[0].threads.push(thread);
-      } else if (threadDate.getTime() === yesterday.getTime()) {
+      } else if (normalizedThreadDay === yesterdayStart) {
         groups[1].threads.push(thread);
-      } else if (threadDate.getTime() >= lastWeek.getTime()) {
+      } else if (normalizedThreadDay >= lastWeekStart) {
         groups[2].threads.push(thread);
       } else {
         groups[3].threads.push(thread);
