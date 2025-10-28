@@ -13,6 +13,7 @@ import {
   openaiCompatibleModelsSafeParse,
 } from "./create-openai-compatiable";
 import { ChatModel } from "app-types/chat";
+import { createBedrockProvider } from "./aws-bedrock-provider";
 
 const ollama = createOllama({
   baseURL: process.env.OLLAMA_BASE_URL || "http://localhost:11434/api",
@@ -21,6 +22,15 @@ const groq = createGroq({
   baseURL: process.env.GROQ_BASE_URL || "https://api.groq.com/openai/v1",
   apiKey: process.env.GROQ_API_KEY,
 });
+
+// Initialize AWS Bedrock provider (will only work if credentials are provided)
+let bedrock: ReturnType<typeof createBedrockProvider> | null = null;
+try {
+  bedrock = createBedrockProvider();
+} catch (_error) {
+  // Bedrock credentials not available, provider will be disabled
+  console.log("AWS Bedrock credentials not configured");
+}
 
 const staticModels = {
   openai: {
@@ -68,6 +78,78 @@ const staticModels = {
     "deepseek-v3:free": openrouter("deepseek/deepseek-chat-v3-0324:free"),
     "gemini-2.0-flash-exp:free": openrouter("google/gemini-2.0-flash-exp:free"),
   },
+  ...(bedrock
+    ? {
+        bedrock: {
+          // Claude 4.5 models (using inference profiles)
+          "claude-sonnet-4.5": bedrock(
+            "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          ),
+          "claude-haiku-4.5": bedrock(
+            "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+          ),
+
+          // Claude 4.1 and 4 models (using inference profiles)
+          "claude-opus-4.1": bedrock(
+            "us.anthropic.claude-opus-4-1-20250805-v1:0",
+          ),
+          "claude-opus-4": bedrock("us.anthropic.claude-opus-4-20250514-v1:0"),
+          "claude-sonnet-4": bedrock(
+            "us.anthropic.claude-sonnet-4-20250514-v1:0",
+          ),
+
+          // Claude 3.7 models (using inference profiles)
+          "claude-3.7-sonnet": bedrock(
+            "us.anthropic.claude-3-7-sonnet-20250219-v1:0",
+          ),
+
+          // Claude 3.5 models (using inference profiles)
+          "claude-3.5-sonnet-v2": bedrock(
+            "us.anthropic.claude-3-5-sonnet-20241022-v2:0",
+          ),
+          "claude-3.5-sonnet": bedrock(
+            "us.anthropic.claude-3-5-sonnet-20240620-v1:0",
+          ),
+          "claude-3.5-haiku": bedrock(
+            "us.anthropic.claude-3-5-haiku-20241022-v1:0",
+          ),
+
+          // Claude 3 models (using inference profiles)
+          "claude-3-opus": bedrock("us.anthropic.claude-3-opus-20240229-v1:0"),
+          "claude-3-sonnet": bedrock(
+            "us.anthropic.claude-3-sonnet-20240229-v1:0",
+          ),
+          "claude-3-haiku": bedrock(
+            "us.anthropic.claude-3-haiku-20240307-v1:0",
+          ),
+
+          // Llama 4 models (using inference profiles)
+          "llama-4-scout-17b": bedrock(
+            "us.meta.llama4-scout-17b-instruct-v1:0",
+          ),
+          "llama-4-maverick-17b": bedrock(
+            "us.meta.llama4-maverick-17b-instruct-v1:0",
+          ),
+
+          // Llama 3.3 models (using inference profiles)
+          "llama-3.3-70b": bedrock("us.meta.llama3-3-70b-instruct-v1:0"),
+
+          // Llama 3.2 models (using inference profiles)
+          "llama-3.2-90b": bedrock("us.meta.llama3-2-90b-instruct-v1:0"),
+          "llama-3.2-11b": bedrock("us.meta.llama3-2-11b-instruct-v1:0"),
+          "llama-3.2-3b": bedrock("us.meta.llama3-2-3b-instruct-v1:0"),
+          "llama-3.2-1b": bedrock("us.meta.llama3-2-1b-instruct-v1:0"),
+
+          // Llama 3.1 models (using inference profiles)
+          "llama-3.1-70b": bedrock("us.meta.llama3-1-70b-instruct-v1:0"),
+          "llama-3.1-8b": bedrock("us.meta.llama3-1-8b-instruct-v1:0"),
+
+          // Llama 3 models (direct model IDs work for these)
+          "llama-3-70b": bedrock("meta.llama3-70b-instruct-v1:0"),
+          "llama-3-8b": bedrock("meta.llama3-8b-instruct-v1:0"),
+        },
+      }
+    : {}),
 };
 
 const staticUnsupportedModels = new Set([
@@ -87,6 +169,14 @@ const staticSupportImageInputModels = {
   ...staticModels.xai,
   ...staticModels.openai,
   ...staticModels.anthropic,
+  // All Claude models via Bedrock support image inputs
+  ...(bedrock && staticModels.bedrock
+    ? Object.fromEntries(
+        Object.entries(staticModels.bedrock)
+          .filter(([key]) => key.startsWith("claude-"))
+          .map(([key, value]) => [key, value]),
+      )
+    : {}),
 };
 
 const openaiCompatibleProviders = openaiCompatibleModelsSafeParse(
@@ -152,6 +242,16 @@ function checkProviderAPIKey(provider: keyof typeof staticModels) {
     case "openRouter":
       key = process.env.OPENROUTER_API_KEY;
       break;
+    case "bedrock":
+      // Bedrock requires both access key and secret key
+      const accessKey = process.env.AWS_ACCESS_KEY_ID;
+      const secretKey = process.env.AWS_SECRET_ACCESS_KEY;
+      return !!(
+        accessKey &&
+        secretKey &&
+        accessKey !== "****" &&
+        secretKey !== "****"
+      );
     default:
       return true; // assume the provider has an API key
   }
