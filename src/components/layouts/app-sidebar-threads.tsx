@@ -117,8 +117,8 @@ export function AppSidebarThreads() {
     );
     const todayStart = todayLocal.getTime();
 
-    const yesterdayStart = todayStart - 24 * 60 * 60 * 1000;
-    const lastWeekStart = todayStart - 7 * 24 * 60 * 60 * 1000;
+    const yesterdayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1).getTime();
+    const lastWeekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7).getTime();
 
     const groups: ThreadGroup[] = [
       { label: t("today"), threads: [] },
