@@ -105,9 +105,10 @@ export const pgChatRepository: ChatRepository = {
         // PostgreSQL returns timestamp without timezone info in format 'YYYY-MM-DD HH:MM:SS'
         // We need to treat it as UTC, not local time
         // Add 'Z' suffix to make it explicit UTC, or use Date.UTC
-        const utcTimestamp = row.lastMessageAt.includes("T")
-          ? row.lastMessageAt // Already has timezone info
-          : row.lastMessageAt.replace(" ", "T") + "Z"; // Convert to ISO format with UTC
+        let utcTimestamp = row.lastMessageAt.replace(' ', 'T');
+        if (!/Z|[+-]\d{2}(:\d{2})?$/.test(utcTimestamp)) {
+          utcTimestamp += 'Z';
+        }
         timestamp = new Date(utcTimestamp).getTime();
       }
 
