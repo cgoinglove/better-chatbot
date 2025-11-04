@@ -359,6 +359,24 @@ export const AssistMessagePart = memo(function AssistMessagePart({
       .unwrap();
   };
 
+  const downloadMarkdown = useCallback(() => {
+    const timestamp = new Date()
+      .toISOString()
+      .replace(/[:.]/g, "-")
+      .slice(0, 19);
+    const filename = `response-${timestamp}.md`;
+
+    const blob = new Blob([part.text], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }, [part.text]);
+
   return (
     <div
       className={cn(
@@ -389,6 +407,20 @@ export const AssistMessagePart = memo(function AssistMessagePart({
               </Button>
             </TooltipTrigger>
             <TooltipContent>Copy</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                data-testid="message-download-button"
+                variant="ghost"
+                size="icon"
+                className="size-3! p-4!"
+                onClick={downloadMarkdown}
+              >
+                <Download />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Download Markdown</TooltipContent>
           </Tooltip>
           {!readonly && (
             <>
