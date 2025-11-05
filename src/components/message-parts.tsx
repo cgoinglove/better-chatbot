@@ -703,6 +703,39 @@ const Timeline = dynamic(
   },
 );
 
+const StepsInvocation = dynamic(
+  () =>
+    import("./tool-invocation/steps-invocation").then(
+      (mod) => mod.StepsInvocation,
+    ),
+  {
+    ssr: false,
+    loading,
+  },
+);
+
+const GalleryInvocation = dynamic(
+  () =>
+    import("./tool-invocation/gallery-invocation").then(
+      (mod) => mod.GalleryInvocation,
+    ),
+  {
+    ssr: false,
+    loading,
+  },
+);
+
+const CarouselInvocation = dynamic(
+  () =>
+    import("./tool-invocation/carousel-invocation").then(
+      (mod) => mod.CarouselInvocation,
+    ),
+  {
+    ssr: false,
+    loading,
+  },
+);
+
 const WebSearchToolInvocation = dynamic(
   () =>
     import("./tool-invocation/web-search").then(
@@ -937,6 +970,27 @@ export const ToolMessagePart = memo(
           case DefaultToolName.CreateTimeline:
             return (
               <Timeline key={`${toolCallId}-${toolName}`} {...(input as any)} />
+            );
+          case DefaultToolName.CreateSteps:
+            return (
+              <StepsInvocation
+                key={`${toolCallId}-${toolName}`}
+                {...(input as any)}
+              />
+            );
+          case DefaultToolName.CreateImageGallery:
+            return (
+              <GalleryInvocation
+                key={`${toolCallId}-${toolName}`}
+                {...(input as any)}
+              />
+            );
+          case DefaultToolName.CreateCarousel:
+            return (
+              <CarouselInvocation
+                key={`${toolCallId}-${toolName}`}
+                {...(input as any)}
+              />
             );
         }
       }

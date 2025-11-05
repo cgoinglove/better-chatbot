@@ -3,6 +3,9 @@ import { createBarChartTool } from "./visualization/create-bar-chart";
 import { createLineChartTool } from "./visualization/create-line-chart";
 import { createTableTool } from "./visualization/create-table";
 import { createTimelineTool } from "./visualization/create-timeline";
+import { createStepsTool } from "./visualization/create-steps";
+import { createImageGalleryTool } from "./visualization/create-image-gallery";
+import { createCarouselTool } from "./visualization/create-carousel";
 import { exaSearchTool, exaContentsTool } from "./web/web-search";
 import { AppDefaultToolkit, DefaultToolName } from ".";
 import { Tool } from "ai";
@@ -20,6 +23,9 @@ export const APP_DEFAULT_TOOL_KIT: Record<
     [DefaultToolName.CreateLineChart]: createLineChartTool,
     [DefaultToolName.CreateTable]: createTableTool,
     [DefaultToolName.CreateTimeline]: createTimelineTool,
+    [DefaultToolName.CreateSteps]: createStepsTool,
+    [DefaultToolName.CreateImageGallery]: createImageGalleryTool,
+    [DefaultToolName.CreateCarousel]: createCarouselTool,
   },
   [AppDefaultToolkit.WebSearch]: {
     [DefaultToolName.WebSearch]: exaSearchTool,
