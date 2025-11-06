@@ -66,6 +66,8 @@
       "emailAlreadyExists": "이메일이 이미 존재합니다",
       "nameRequired": "이름이 필요합니다",
       "passwordRequired": "비밀번호가 필요합니다",
+      "confirmPassword": "비밀번호 확인",
+      "passwordsDoNotMatch": "비밀번호가 일치하지 않습니다",
       "createAccount": "계정 생성"
     },
     "Intro": {

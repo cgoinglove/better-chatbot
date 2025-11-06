@@ -65,6 +65,8 @@
       "emailAlreadyExists": "メールアドレスが既に存在します",
       "nameRequired": "名前が必要です",
       "passwordRequired": "パスワードが必要です",
+      "confirmPassword": "パスワードを確認",
+      "passwordsDoNotMatch": "パスワードが一致しません",
       "createAccount": "アカウントを作成"
     },
     "Intro": {

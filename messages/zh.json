@@ -66,6 +66,8 @@
       "emailAlreadyExists": "邮箱已存在",
       "nameRequired": "姓名是必需的",
       "passwordRequired": "密码是必需的",
+      "confirmPassword": "确认密码",
+      "passwordsDoNotMatch": "密码不匹配",
       "createAccount": "创建账户"
     },
     "Intro": {

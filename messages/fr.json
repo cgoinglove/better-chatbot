@@ -65,6 +65,8 @@
       "emailAlreadyExists": "L'e-mail existe déjà",
       "nameRequired": "Le nom est requis",
       "passwordRequired": "Le mot de passe est requis",
+      "confirmPassword": "Confirmer le mot de passe",
+      "passwordsDoNotMatch": "Les mots de passe ne correspondent pas",
       "createAccount": "Créer un compte"
     },
     "Intro": {

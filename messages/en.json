@@ -185,6 +185,8 @@
       "emailAlreadyExists": "Email already exists",
       "nameRequired": "Name is required",
       "passwordRequired": "Password is required",
+      "confirmPassword": "Confirm Password",
+      "passwordsDoNotMatch": "Passwords do not match",
       "createAccount": "Create account"
     },
     "Intro": {
