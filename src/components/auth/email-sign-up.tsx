@@ -151,11 +151,11 @@ export default function EmailSignUp({
           )}
           {step === 2 && (
             <div className={cn("flex flex-col gap-2")}>
-              <Label htmlFor="name">Full Name</Label>
+              <Label htmlFor="name">Name</Label>
               <Input
                 id="name"
                 type="text"
-                placeholder="Cgoing"
+                placeholder=""
                 disabled={isLoading}
                 autoFocus
                 value={formData.name}
