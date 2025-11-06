@@ -60,3 +60,14 @@ local-data
 openai-compatible.config.ts
 certificates
 public/uploads
+
+# Fork-specific documentation (keep local only)
+FORK_MANAGEMENT.md
+CLAUDE.md
+SESSION.md
+BRANCH_README.md
+JEZWEB_SETUP.md
+docs/FUTURE_FEATURE_IDEAS.md
+docs/MCP_CREDENTIAL_SECURITY.md
+docs/MCP_CREDENTIAL_SECURITY_ISSUE.md
+docs/features/
