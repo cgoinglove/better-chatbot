@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/card";
 import { useObjectState } from "@/hooks/use-object-state";
 import { cn } from "lib/utils";
-import { ChevronLeft, Loader } from "lucide-react";
+import { ChevronLeft, Loader, Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { safe } from "ts-safe";
 import { UserZodSchema } from "app-types/user";
@@ -34,6 +34,7 @@ export default function EmailSignUp({
     email: "",
     name: "",
     password: "",
+    confirmPassword: "",
   });
 
   const steps = [
@@ -77,6 +78,12 @@ export default function EmailSignUp({
   };
 
   const successPasswordStep = async () => {
+    // Check if passwords match
+    if (formData.password !== formData.confirmPassword) {
+      toast.error(t("Auth.SignUp.passwordsDoNotMatch"));
+      return;
+    }
+
     // client side validation
     const { success: passwordSuccess, error: passwordError } =
       UserZodSchema.shape.password.safeParse(formData.password);
@@ -173,28 +180,63 @@ export default function EmailSignUp({
             </div>
           )}
           {step === 3 && (
-            <div className={cn("flex flex-col gap-2")}>
-              <div className="flex items-center">
+            <div className={cn("flex flex-col gap-4")}>
+              <div className="flex flex-col gap-2">
                 <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="********"
+                  disabled={isLoading}
+                  autoFocus
+                  value={formData.password}
+                  onChange={(e) => setFormData({ password: e.target.value })}
+                  required
+                />
               </div>
-              <Input
-                id="password"
-                type="password"
-                placeholder="********"
-                disabled={isLoading}
-                autoFocus
-                value={formData.password}
-                onKeyDown={(e) => {
-                  if (
-                    e.key === "Enter" &&
-                    e.nativeEvent.isComposing === false
-                  ) {
-                    successPasswordStep();
-                  }
-                }}
-                onChange={(e) => setFormData({ password: e.target.value })}
-                required
-              />
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="confirmPassword">
+                  {t("Auth.SignUp.confirmPassword")}
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    placeholder="********"
+                    disabled={isLoading}
+                    value={formData.confirmPassword}
+                    onKeyDown={(e) => {
+                      if (
+                        e.key === "Enter" &&
+                        e.nativeEvent.isComposing === false
+                      ) {
+                        successPasswordStep();
+                      }
+                    }}
+                    onChange={(e) =>
+                      setFormData({ confirmPassword: e.target.value })
+                    }
+                    className={cn(
+                      formData.confirmPassword &&
+                        formData.password !== formData.confirmPassword &&
+                        "border-red-500 focus-visible:ring-red-500",
+                      formData.confirmPassword &&
+                        formData.password === formData.confirmPassword &&
+                        "border-green-500 focus-visible:ring-green-500",
+                    )}
+                    required
+                  />
+                  {formData.confirmPassword && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      {formData.password === formData.confirmPassword ? (
+                        <Check className="h-5 w-5 text-green-500" />
+                      ) : (
+                        <X className="h-5 w-5 text-red-500" />
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           )}
           <p className="text-muted-foreground text-xs mb-6">
