@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.26.0](https://github.com/cgoinglove/better-chatbot/compare/v1.25.0...v1.26.0) (2025-11-07)
+
+
+### Features
+
+* add LaTeX/TeX math equation rendering support ([#318](https://github.com/cgoinglove/better-chatbot/issues/318)) ([c0a8b5b](https://github.com/cgoinglove/better-chatbot/commit/c0a8b5b9b28599716013c83cac03fa5745ffd403))
+
+
+### Bug Fixes
+
+* hide MCP server credentials from non-owners ([#317](https://github.com/cgoinglove/better-chatbot/issues/317)) ([#319](https://github.com/cgoinglove/better-chatbot/issues/319)) ([6e32417](https://github.com/cgoinglove/better-chatbot/commit/6e32417535c27f1215f96d68b7302dba4a1b904d))
+
 ## [1.25.0](https://github.com/cgoinglove/better-chatbot/compare/v1.24.0...v1.25.0) (2025-10-30)
 
 

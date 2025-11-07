@@ -1,6 +1,6 @@
 {
   "name": "better-chatbot",
-  "version": "1.25.0",
+  "version": "1.26.0",
   "private": true,
   "author": "cgoinglove",
   "license": "MIT",
@@ -156,7 +156,10 @@
     "vitest": "^3.2.4"
   },
   "lint-staged": {
-    "*.{js,json,mjs,ts,yaml,tsx,css}": ["pnpm format", "pnpm lint:fix"]
+    "*.{js,json,mjs,ts,yaml,tsx,css}": [
+      "pnpm format",
+      "pnpm lint:fix"
+    ]
   },
   "packageManager": "pnpm@10.2.1",
   "engines": {
