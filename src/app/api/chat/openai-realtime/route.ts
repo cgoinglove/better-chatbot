@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
       return new Response("Unauthorized", { status: 401 });
     }
 
-    const { voice, mentions, agentId } = (await request.json()) as {
+    const { model, voice, mentions, agentId } = (await request.json()) as {
       model: string;
       voice: string;
       agentId?: string;
@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
       },
 
       body: JSON.stringify({
-        model: "gpt-4o-realtime-preview",
+        model: model || "gpt-4o-realtime-preview",
         voice: voice || "alloy",
         input_audio_transcription: {
           model: "whisper-1",
