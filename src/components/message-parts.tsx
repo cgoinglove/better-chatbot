@@ -695,6 +695,14 @@ const InteractiveTable = dynamic(
   },
 );
 
+const Timeline = dynamic(
+  () => import("./tool-invocation/timeline").then((mod) => mod.Timeline),
+  {
+    ssr: false,
+    loading,
+  },
+);
+
 const WebSearchToolInvocation = dynamic(
   () =>
     import("./tool-invocation/web-search").then(
@@ -925,6 +933,10 @@ export const ToolMessagePart = memo(
                 key={`${toolCallId}-${toolName}`}
                 {...(input as any)}
               />
+            );
+          case DefaultToolName.CreateTimeline:
+            return (
+              <Timeline key={`${toolCallId}-${toolName}`} {...(input as any)} />
             );
         }
       }
