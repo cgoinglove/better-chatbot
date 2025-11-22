@@ -10,6 +10,10 @@ import {
   CodeIcon,
   HammerIcon,
   TableOfContents,
+  LayoutList,
+  ListChecks,
+  Images,
+  GalleryHorizontalEnd,
 } from "lucide-react";
 import { useMemo } from "react";
 
@@ -36,6 +40,22 @@ export function DefaultToolIcon({
     if (name === DefaultToolName.CreateTable) {
       return (
         <TableOfContents className={cn("size-3.5 text-blue-500", className)} />
+      );
+    }
+    if (name === DefaultToolName.CreateTimeline) {
+      return <LayoutList className={cn("size-3.5 text-blue-500", className)} />;
+    }
+    if (name === DefaultToolName.CreateSteps) {
+      return <ListChecks className={cn("size-3.5 text-blue-500", className)} />;
+    }
+    if (name === DefaultToolName.CreateImageGallery) {
+      return <Images className={cn("size-3.5 text-blue-500", className)} />;
+    }
+    if (name === DefaultToolName.CreateCarousel) {
+      return (
+        <GalleryHorizontalEnd
+          className={cn("size-3.5 text-blue-500", className)}
+        />
       );
     }
     if (name === DefaultToolName.WebSearch) {
