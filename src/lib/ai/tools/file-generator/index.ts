@@ -101,7 +101,10 @@ IMPORTANT: After invoking this tool, do NOT include file URLs in your text respo
           // Get presigned URL for private buckets if available
           let downloadUrl: string;
           if (serverFileStorage.getDownloadUrl) {
-            downloadUrl = await serverFileStorage.getDownloadUrl(uploaded.key);
+            const presignedUrl = await serverFileStorage.getDownloadUrl(
+              uploaded.key,
+            );
+            downloadUrl = presignedUrl || uploaded.sourceUrl;
             logger.info("Presigned URL generated:", {
               downloadUrl,
               isPresigned: downloadUrl.includes("X-Amz"),
