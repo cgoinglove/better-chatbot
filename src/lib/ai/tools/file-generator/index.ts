@@ -12,6 +12,7 @@ export type FileGeneratorToolResult = {
     size: number;
   }[];
   description?: string;
+  guide?: string;
 };
 
 export const fileGeneratorTool = createTool({
@@ -22,7 +23,9 @@ export const fileGeneratorTool = createTool({
 - Code files: Python, JavaScript, HTML, CSS, etc.
 - Structured data exports
 
-The tool will generate the file, upload it to storage, and provide a download link. Do not use this for images (use image-manager instead) or for simple text responses that don't need to be downloaded.`,
+The tool will generate the file, upload it to storage, and provide a download link. Do not use this for images (use image-manager instead) or for simple text responses that don't need to be downloaded.
+
+IMPORTANT: After invoking this tool, do NOT include file URLs in your text response. The download links are automatically displayed in the UI above your message. Simply acknowledge that the file(s) have been generated.`,
   inputSchema: z.object({
     files: z
       .array(
@@ -89,13 +92,29 @@ The tool will generate the file, upload it to storage, and provide a download li
             contentType: mimeType,
           });
 
+          logger.info("File uploaded:", {
+            key: uploaded.key,
+            sourceUrl: uploaded.sourceUrl,
+            hasGetDownloadUrl: !!serverFileStorage.getDownloadUrl,
+          });
+
           // Get presigned URL for private buckets if available
-          const downloadUrl = serverFileStorage.getDownloadUrl
-            ? await serverFileStorage.getDownloadUrl(uploaded.key)
-            : uploaded.sourceUrl;
+          let downloadUrl: string;
+          if (serverFileStorage.getDownloadUrl) {
+            downloadUrl = await serverFileStorage.getDownloadUrl(uploaded.key);
+            logger.info("Presigned URL generated:", {
+              downloadUrl,
+              isPresigned: downloadUrl.includes("X-Amz"),
+            });
+          } else {
+            downloadUrl = uploaded.sourceUrl;
+            logger.info("Using source URL (no getDownloadUrl):", {
+              downloadUrl,
+            });
+          }
 
           return {
-            url: downloadUrl || uploaded.sourceUrl,
+            url: downloadUrl,
             filename: uploaded.metadata.filename || file.filename,
             mimeType: uploaded.metadata.contentType || mimeType,
             size: uploaded.metadata.size || buffer.length,
@@ -103,9 +122,18 @@ The tool will generate the file, upload it to storage, and provide a download li
         }),
       );
 
+      const fileCount = uploadedFiles.length;
+      const guide =
+        fileCount > 0
+          ? fileCount === 1
+            ? "Your file has been generated successfully and is ready for download above. You can click the download button to save it to your device."
+            : `Your ${fileCount} files have been generated successfully and are ready for download above. You can click the download buttons to save them to your device.`
+          : undefined;
+
       return {
         files: uploadedFiles,
         description,
+        guide,
       };
     } catch (e) {
       logger.error(e);
