@@ -103,6 +103,19 @@ export function createUINode(
         content: [],
       },
     };
+  } else if (node.data.kind === NodeKind.ReplyInThread) {
+    node.data.outputSchema = structuredClone(
+      defaultReplyInThreadNodeOutputSchema,
+    );
+    node.data.messages = [
+      {
+        role: "user",
+      },
+    ];
+    node.data.title = {
+      type: "doc",
+      content: [],
+    };
   }
 
   return node;
@@ -125,6 +138,27 @@ export const defaultTemplateNodeOutputSchema: ObjectJsonSchema7 = {
   properties: {
     template: {
       type: "string",
+    },
+  },
+};
+
+export const defaultReplyInThreadNodeOutputSchema: ObjectJsonSchema7 = {
+  type: "object",
+  properties: {
+    threadId: {
+      type: "string",
+    },
+    title: {
+      type: "string",
+    },
+    messageIds: {
+      type: "array",
+      items: {
+        type: "string",
+      },
+    },
+    messageCount: {
+      type: "number",
     },
   },
 };

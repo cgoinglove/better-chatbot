@@ -10,6 +10,7 @@ import {
   toolNodeExecutor,
   httpNodeExecutor,
   templateNodeExecutor,
+  replyInThreadNodeExecutor,
 } from "./node-executor";
 import { toAny } from "lib/utils";
 import { addEdgeBranchLabel } from "./add-edge-branch-label";
@@ -39,6 +40,8 @@ function getExecutorByKind(kind: NodeKind): NodeExecutor {
       return httpNodeExecutor;
     case NodeKind.Template:
       return templateNodeExecutor;
+    case NodeKind.ReplyInThread:
+      return replyInThreadNodeExecutor;
     case "NOOP" as any:
       return () => {
         return {
