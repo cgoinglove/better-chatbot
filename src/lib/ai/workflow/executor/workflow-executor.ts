@@ -11,6 +11,7 @@ import {
   httpNodeExecutor,
   templateNodeExecutor,
   replyInThreadNodeExecutor,
+  schedulerNodeExecutor,
 } from "./node-executor";
 import { toAny } from "lib/utils";
 import { addEdgeBranchLabel } from "./add-edge-branch-label";
@@ -42,6 +43,8 @@ function getExecutorByKind(kind: NodeKind): NodeExecutor {
       return templateNodeExecutor;
     case NodeKind.ReplyInThread:
       return replyInThreadNodeExecutor;
+    case NodeKind.Scheduler:
+      return schedulerNodeExecutor;
     case "NOOP" as any:
       return () => {
         return {

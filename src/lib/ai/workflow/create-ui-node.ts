@@ -116,6 +116,12 @@ export function createUINode(
       type: "doc",
       content: [],
     };
+  } else if (node.data.kind === NodeKind.Scheduler) {
+    node.data.outputSchema = structuredClone(defaultSchedulerNodeOutputSchema);
+    node.data.cron = "0 * * * *";
+    node.data.timezone = "UTC";
+    node.data.enabled = true;
+    node.data.payload = {};
   }
 
   return node;
@@ -159,6 +165,24 @@ export const defaultReplyInThreadNodeOutputSchema: ObjectJsonSchema7 = {
     },
     messageCount: {
       type: "number",
+    },
+  },
+};
+
+export const defaultSchedulerNodeOutputSchema: ObjectJsonSchema7 = {
+  type: "object",
+  properties: {
+    scheduleId: {
+      type: "string",
+    },
+    lastRunAt: {
+      type: "string",
+    },
+    nextRunAt: {
+      type: "string",
+    },
+    status: {
+      type: "string",
     },
   },
 };

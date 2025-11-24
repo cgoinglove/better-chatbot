@@ -1,5 +1,6 @@
 import { Edge } from "@xyflow/react";
 import { JSONSchema7 } from "json-schema";
+import CronExpressionParser from "cron-parser";
 import {
   ConditionNodeData,
   OutputNodeData,
@@ -12,6 +13,7 @@ import {
   HttpNodeData,
   TemplateNodeData,
   ReplyInThreadNodeData,
+  SchedulerNodeData,
 } from "lib/ai/workflow/workflow.interface";
 import { cleanVariableName } from "lib/utils";
 import { safe } from "ts-safe";
@@ -112,6 +114,8 @@ export const nodeValidate: NodeValidate<WorkflowNodeData> = ({
       return templateNodeValidate({ node, nodes, edges });
     case NodeKind.ReplyInThread:
       return replyInThreadNodeValidate({ node, nodes, edges });
+    case NodeKind.Scheduler:
+      return schedulerNodeValidate({ node, nodes, edges });
   }
 };
 
@@ -293,4 +297,35 @@ export const replyInThreadNodeValidate: NodeValidate<ReplyInThreadNodeData> = ({
       throw new Error(`Message #${index + 1} requires content`);
     }
   });
+};
+
+export const schedulerNodeValidate: NodeValidate<SchedulerNodeData> = ({
+  node,
+}) => {
+  if (!node.cron || !node.cron.trim()) {
+    throw new Error("Scheduler node requires a cron expression");
+  }
+
+  try {
+    CronExpressionParser.parse(node.cron, {
+      currentDate: new Date(),
+      tz: node.timezone || "UTC",
+    });
+  } catch {
+    throw new Error("Invalid cron expression");
+  }
+
+  if (node.timezone) {
+    try {
+      new Intl.DateTimeFormat("en-US", {
+        timeZone: node.timezone,
+      }).format(new Date());
+    } catch {
+      throw new Error("Invalid timezone identifier");
+    }
+  }
+
+  if (node.payload !== undefined && typeof node.payload !== "object") {
+    throw new Error("Scheduler payload must be a JSON object");
+  }
 };

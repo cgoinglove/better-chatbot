@@ -25,6 +25,7 @@ export enum NodeKind {
   Code = "code", // Code execution node (future implementation)
   Output = "output", // Exit point of workflow - produces final result
   ReplyInThread = "reply-in-thread", // Create chat thread with predefined messages
+  Scheduler = "scheduler", // Configure cron-based workflow executions
 }
 
 export type WorkflowExecutionContext = {
@@ -234,6 +235,15 @@ export type ReplyInThreadNodeData = BaseWorkflowNodeDataData<{
   }[];
 };
 
+export type SchedulerNodeData = BaseWorkflowNodeDataData<{
+  kind: NodeKind.Scheduler;
+}> & {
+  cron?: string;
+  timezone?: string;
+  enabled?: boolean;
+  payload?: Record<string, unknown>;
+};
+
 /**
  * Union type of all possible node data types.
  * When adding a new node type, include it in this union.
@@ -247,7 +257,8 @@ export type WorkflowNodeData =
   | ConditionNodeData
   | HttpNodeData
   | TemplateNodeData
-  | ReplyInThreadNodeData;
+  | ReplyInThreadNodeData
+  | SchedulerNodeData;
 
 /**
  * Runtime fields added during workflow execution

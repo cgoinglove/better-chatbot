@@ -12,6 +12,7 @@ import {
   OutputSchemaSourceKey,
   WORKFLOW_CONTEXT_KEY,
   WorkflowExecutionContext,
+  SchedulerNodeData,
 } from "../workflow.interface";
 import { WorkflowRuntimeState } from "./graph-store";
 import {
@@ -596,6 +597,19 @@ export const replyInThreadNodeExecutor: NodeExecutor<
       },
       messageIds: savedMessages.map((message) => message.id),
       messageCount: savedMessages.length,
+    },
+  };
+};
+
+export const schedulerNodeExecutor: NodeExecutor<SchedulerNodeData> = ({
+  node,
+}) => {
+  return {
+    output: {
+      cron: node.cron,
+      timezone: node.timezone,
+      enabled: node.enabled ?? true,
+      payload: node.payload,
     },
   };
 };
