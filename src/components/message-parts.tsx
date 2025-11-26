@@ -213,7 +213,7 @@ export const UserMessagePart = memo(
           )}
         </div>
         {isLast && (
-          <div className="flex w-full justify-end opacity-0 group-hover/message:opacity-100 transition-opacity duration-300">
+          <div className="flex w-full justify-end md:opacity-0 group-hover/message:opacity-100 transition-opacity duration-300">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
