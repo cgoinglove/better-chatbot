@@ -138,14 +138,21 @@ export async function createPulseWorkflow(
     position: { x: 560, y: 0 },
   }) as UINode<NodeKind.LLM>;
   llmNode.data.model = model ?? DEFAULT_MODEL;
-  llmNode.data.outputSchema = {
+  llmNode.data.outputSchema.properties.answer = {
     type: "object",
     properties: {
-      answer: { type: "string" },
-      hasNewInfo: { type: "boolean" },
+      hasNewInfo: {
+        type: "boolean",
+        description:
+          "Indicates whether there is meaningful new information to report.",
+      },
+      answer: {
+        type: "string",
+        description: "The summary text of the latest findings.",
+      },
     },
-    required: ["answer", "hasNewInfo"],
-  } as ObjectJsonSchema7;
+    required: ["answer"],
+  };
   llmNode.data.messages = [
     {
       role: "system",
@@ -198,7 +205,7 @@ export async function createPulseWorkflow(
         {
           source: {
             nodeId: llmNode.id,
-            path: ["hasNewInfo"],
+            path: ["answer", "hasNewInfo"],
           },
           operator: BooleanConditionOperator.IsTrue,
         },
@@ -229,7 +236,7 @@ export async function createPulseWorkflow(
           mention(inputNode.id, ["query"]),
           text(":"),
         ]),
-        paragraph([mention(llmNode.id, ["answer"])]),
+        paragraph([mention(llmNode.id, ["answer", "answer"])]),
       ]),
     },
   ];
@@ -245,7 +252,7 @@ export async function createPulseWorkflow(
       key: "text",
       source: {
         nodeId: llmNode.id,
-        path: ["answer"],
+        path: ["answer", "answer"],
       },
     },
   ];
