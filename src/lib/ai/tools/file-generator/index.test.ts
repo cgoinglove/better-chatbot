@@ -1,12 +1,14 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { fileGeneratorTool, FileGeneratorToolResult } from "./index";
 import type { FileStorage } from "lib/file-storage/file-storage.interface";
 
 // Mock the server file storage
+const mockUpload = vi.fn();
+const mockGetDownloadUrl = vi.fn();
+
 vi.mock("lib/file-storage", () => ({
   serverFileStorage: {
-    upload: vi.fn(),
-    getDownloadUrl: vi.fn(),
+    upload: mockUpload,
+    getDownloadUrl: mockGetDownloadUrl,
   } as Partial<FileStorage>,
 }));
 
@@ -14,11 +16,15 @@ vi.mock("lib/file-storage", () => ({
 vi.mock("logger", () => ({
   default: {
     error: vi.fn(),
+    info: vi.fn(),
   },
 }));
 
 // Import after mocking
-const { serverFileStorage } = await import("lib/file-storage");
+const { fileGeneratorTool } = await import("./index");
+type FileGeneratorToolResult = Awaited<
+  ReturnType<typeof fileGeneratorTool.execute>
+>;
 
 describe("fileGeneratorTool.execute", () => {
   beforeEach(() => {
@@ -48,7 +54,6 @@ describe("fileGeneratorTool.execute", () => {
 
     testCases.forEach(({ ext, expected }) => {
       it(`should infer ${expected} for .${ext} files`, async () => {
-        const mockUpload = vi.mocked(serverFileStorage.upload!);
         mockUpload.mockResolvedValue({
           key: "test-key",
           sourceUrl: "https://example.com/file",
@@ -86,7 +91,6 @@ describe("fileGeneratorTool.execute", () => {
     });
 
     it("should use provided mimeType over inferred one", async () => {
-      const mockUpload = vi.mocked(serverFileStorage.upload!);
       mockUpload.mockResolvedValue({
         key: "test-key",
         sourceUrl: "https://example.com/file",
@@ -125,7 +129,6 @@ describe("fileGeneratorTool.execute", () => {
 
   describe("file upload", () => {
     it("should upload file content as Buffer", async () => {
-      const mockUpload = vi.mocked(serverFileStorage.upload!);
       mockUpload.mockResolvedValue({
         key: "test-key",
         sourceUrl: "https://example.com/file",
@@ -159,9 +162,6 @@ describe("fileGeneratorTool.execute", () => {
     });
 
     it("should use presigned URL when available", async () => {
-      const mockUpload = vi.mocked(serverFileStorage.upload!);
-      const mockGetDownloadUrl = vi.mocked(serverFileStorage.getDownloadUrl!);
-
       mockUpload.mockResolvedValue({
         key: "test-key",
         sourceUrl: "https://s3.example.com/file",
@@ -204,11 +204,7 @@ describe("fileGeneratorTool.execute", () => {
       }
     });
 
-    it("should fall back to sourceUrl when getDownloadUrl is not available", async () => {
-      const mockUpload = vi.mocked(serverFileStorage.upload!);
-      // Remove getDownloadUrl
-      (serverFileStorage as any).getDownloadUrl = undefined;
-
+    it("should fall back to sourceUrl when getDownloadUrl returns null", async () => {
       mockUpload.mockResolvedValue({
         key: "test-key",
         sourceUrl: "https://example.com/file",
@@ -220,6 +216,8 @@ describe("fileGeneratorTool.execute", () => {
           uploadedAt: new Date(),
         },
       });
+
+      mockGetDownloadUrl.mockResolvedValue(null);
 
       let result:
         | FileGeneratorToolResult
@@ -242,13 +240,9 @@ describe("fileGeneratorTool.execute", () => {
       if (result && !(Symbol.asyncIterator in result)) {
         expect(result.files[0].url).toBe("https://example.com/file");
       }
-
-      // Restore for other tests
-      (serverFileStorage as any).getDownloadUrl = vi.fn();
     });
 
     it("should upload multiple files in parallel", async () => {
-      const mockUpload = vi.mocked(serverFileStorage.upload!);
       mockUpload.mockImplementation(async (buffer, options) => ({
         key: `key-${options?.filename}`,
         sourceUrl: `https://example.com/${options?.filename}`,
@@ -290,7 +284,6 @@ describe("fileGeneratorTool.execute", () => {
 
   describe("result format", () => {
     it("should return correct result structure", async () => {
-      const mockUpload = vi.mocked(serverFileStorage.upload!);
       mockUpload.mockResolvedValue({
         key: "test-key",
         sourceUrl: "https://example.com/file.csv",
@@ -324,7 +317,7 @@ describe("fileGeneratorTool.execute", () => {
       }
 
       if (result && !(Symbol.asyncIterator in result)) {
-        expect(result).toEqual({
+        expect(result).toMatchObject({
           files: [
             {
               url: "https://example.com/file.csv",
@@ -335,11 +328,11 @@ describe("fileGeneratorTool.execute", () => {
           ],
           description: "Test CSV file",
         });
+        expect(result.guide).toBeDefined();
       }
     });
 
     it("should include file size in result", async () => {
-      const mockUpload = vi.mocked(serverFileStorage.upload!);
       const content = "test content with some length";
 
       mockUpload.mockResolvedValue({
@@ -380,7 +373,6 @@ describe("fileGeneratorTool.execute", () => {
 
   describe("error handling", () => {
     it("should throw error when upload fails", async () => {
-      const mockUpload = vi.mocked(serverFileStorage.upload!);
       mockUpload.mockRejectedValue(new Error("Upload failed"));
 
       if (fileGeneratorTool.execute) {
