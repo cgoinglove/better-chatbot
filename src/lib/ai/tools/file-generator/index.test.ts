@@ -22,9 +22,17 @@ vi.mock("logger", () => ({
 
 // Import after mocking
 const { fileGeneratorTool } = await import("./index");
-type FileGeneratorToolResult = Awaited<
-  ReturnType<typeof fileGeneratorTool.execute>
->;
+
+type FileGeneratorToolResult = {
+  files: {
+    url: string;
+    filename: string;
+    mimeType: string;
+    size: number;
+  }[];
+  description?: string;
+  guide?: string;
+};
 
 describe("fileGeneratorTool.execute", () => {
   beforeEach(() => {
