@@ -75,7 +75,7 @@ function resolveTimezone(candidate?: string, fallback?: string): string {
 
 export const pulseTool = createTool({
   description:
-    "Create a Pulse automation that monitors a topic on a recurring schedule. Provide a cron expression, timezone, and topic so the assistant can build a workflow that performs a web search, summarizes the findings, and replies in the thread when each run completes.",
+    "Create a Pulse automation that monitors a topic on a recurring schedule. Provide a cron expression, timezone, and topic so the assistant can build a workflow that performs a web search, summarizes the findings, and replies in the thread only when meaningful new information is found. If no new info is gathered, the pulse silently skips sending a message.",
   inputSchema: jsonSchemaToZod(pulseToolSchema),
   async execute(input) {
     const context = getRequestContext();

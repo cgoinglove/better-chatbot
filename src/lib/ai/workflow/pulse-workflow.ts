@@ -13,6 +13,7 @@ import { exaSearchSchema, exaSearchTool } from "lib/ai/tools/web/web-search";
 import { generateUUID } from "lib/utils";
 import { DBEdge, DBNode } from "app-types/workflow";
 import { computeNextRunDate } from "./scheduler-utils";
+import { ConditionBranch, BooleanConditionOperator } from "./condition";
 
 const DEFAULT_ICON: WorkflowIcon = {
   type: "emoji",
@@ -137,6 +138,14 @@ export async function createPulseWorkflow(
     position: { x: 560, y: 0 },
   }) as UINode<NodeKind.LLM>;
   llmNode.data.model = model ?? DEFAULT_MODEL;
+  llmNode.data.outputSchema = {
+    type: "object",
+    properties: {
+      answer: { type: "string" },
+      hasNewInfo: { type: "boolean" },
+    },
+    required: ["answer", "hasNewInfo"],
+  } as ObjectJsonSchema7;
   llmNode.data.messages = [
     {
       role: "system",
@@ -145,6 +154,11 @@ export async function createPulseWorkflow(
           text(
             summaryInstructions ||
               "You are a monitoring assistant. Produce concise updates that highlight what changed since prior runs, cite notable sources, and suggest any next actions if relevant.",
+          ),
+        ]),
+        paragraph([
+          text(
+            'IMPORTANT: Respond ONLY with valid JSON in this exact format: {"hasNewInfo": true/false, "answer": "your summary here"}. Set hasNewInfo to true only if there is meaningful new information worth reporting. If the search returned no results, errors, or nothing noteworthy, set hasNewInfo to false and provide a brief explanation in answer.',
           ),
         ]),
       ]),
@@ -161,14 +175,47 @@ export async function createPulseWorkflow(
           text("Fresh research data: "),
           mention(toolNode.id, ["tool_result"]),
         ]),
+        paragraph([
+          text(
+            'Remember to respond with JSON: {"hasNewInfo": boolean, "answer": string}',
+          ),
+        ]),
       ]),
     },
   ];
 
+  const conditionNode = createUINode(NodeKind.Condition, {
+    id: generateUUID(),
+    name: "HAS_NEW_INFO",
+    position: { x: 900, y: 0 },
+  }) as UINode<NodeKind.Condition>;
+  conditionNode.data.branches = {
+    if: {
+      id: "if",
+      logicalOperator: "AND",
+      type: "if",
+      conditions: [
+        {
+          source: {
+            nodeId: llmNode.id,
+            path: ["hasNewInfo"],
+          },
+          operator: BooleanConditionOperator.IsTrue,
+        },
+      ],
+    } as ConditionBranch,
+    else: {
+      id: "else",
+      logicalOperator: "AND",
+      type: "else",
+      conditions: [],
+    } as ConditionBranch,
+  };
+
   const replyNode = createUINode(NodeKind.ReplyInThread, {
     id: generateUUID(),
     name: "REPLY",
-    position: { x: 900, y: 0 },
+    position: { x: 1240, y: -100 },
   }) as UINode<NodeKind.ReplyInThread>;
   replyNode.data.title = buildDoc([
     paragraph([text("Pulse: "), mention(inputNode.id, ["query"])]),
@@ -190,7 +237,7 @@ export async function createPulseWorkflow(
   const outputNode = createUINode(NodeKind.Output, {
     id: generateUUID(),
     name: "OUTPUT",
-    position: { x: 560, y: 200 },
+    position: { x: 900, y: 200 },
   }) as UINode<NodeKind.Output>;
   outputNode.data.outputSchema = structuredClone(defaultObjectJsonSchema);
   outputNode.data.outputData = [
@@ -207,6 +254,7 @@ export async function createPulseWorkflow(
     inputNode,
     toolNode,
     llmNode,
+    conditionNode,
     replyNode,
     outputNode,
     schedulerNode,
@@ -215,8 +263,16 @@ export async function createPulseWorkflow(
   const edges: DBEdge[] = [
     createEdge(workflow.id, inputNode.id, toolNode.id),
     createEdge(workflow.id, toolNode.id, llmNode.id),
-    createEdge(workflow.id, llmNode.id, replyNode.id),
-    createEdge(workflow.id, llmNode.id, outputNode.id),
+    createEdge(workflow.id, llmNode.id, conditionNode.id),
+    createEdge(workflow.id, conditionNode.id, replyNode.id, {
+      sourceHandle: "if",
+    }),
+    createEdge(workflow.id, conditionNode.id, outputNode.id, {
+      sourceHandle: "else",
+    }),
+    createEdge(workflow.id, conditionNode.id, outputNode.id, {
+      sourceHandle: "if",
+    }),
     createEdge(workflow.id, inputNode.id, schedulerNode.id),
   ];
 
