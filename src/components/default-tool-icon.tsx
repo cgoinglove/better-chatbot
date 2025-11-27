@@ -10,6 +10,7 @@ import {
   CodeIcon,
   HammerIcon,
   TableOfContents,
+  SparklesIcon,
 } from "lucide-react";
 import { useMemo } from "react";
 
@@ -56,6 +57,11 @@ export function DefaultToolIcon({
     }
     if (name === DefaultToolName.PythonExecution) {
       return <CodeIcon className={cn("size-3.5 text-blue-400", className)} />;
+    }
+    if (name === DefaultToolName.Pulse) {
+      return (
+        <SparklesIcon className={cn("size-3.5 text-pink-400", className)} />
+      );
     }
     return <HammerIcon className={cn("size-3.5", className)} />;
   }, [name]);

@@ -386,6 +386,11 @@ export function ChatMentionInputSuggestion({
           label = "python-execution";
           description = "Execute simple python code";
           break;
+        case DefaultToolName.Pulse:
+          label = "pulse";
+          description =
+            "Create a Pulse automation that schedules web research updates";
+          break;
       }
       return {
         id: toolName,

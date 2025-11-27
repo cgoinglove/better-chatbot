@@ -13,6 +13,8 @@ import {
   TerminalIcon,
   TextIcon,
   WrenchIcon,
+  MessageCircleReply,
+  CalendarClock,
 } from "lucide-react";
 import { useMemo } from "react";
 
@@ -39,6 +41,10 @@ export function NodeIcon({
         return HardDriveUpload;
       case NodeKind.Template:
         return TextIcon;
+      case NodeKind.ReplyInThread:
+        return MessageCircleReply;
+      case NodeKind.Scheduler:
+        return CalendarClock;
       case NodeKind.Code:
         return TerminalIcon;
       default:
@@ -63,9 +69,13 @@ export function NodeIcon({
                     ? "bg-rose-500"
                     : type === NodeKind.Template
                       ? "bg-purple-500"
-                      : type === NodeKind.Condition
-                        ? "bg-amber-500"
-                        : "bg-card",
+                      : type === NodeKind.ReplyInThread
+                        ? "bg-emerald-500"
+                        : type === NodeKind.Condition
+                          ? "bg-amber-500"
+                          : type === NodeKind.Scheduler
+                            ? "bg-cyan-500"
+                            : "bg-card",
         "p-1 rounded",
         className,
       )}

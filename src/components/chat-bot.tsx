@@ -186,6 +186,13 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
           [],
         );
 
+        let clientTimezone: string | undefined;
+        try {
+          clientTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        } catch {
+          clientTimezone = undefined;
+        }
+
         const sanitizedLastMessage = {
           ...lastMessage,
           parts: lastMessage.parts.filter((p: any) => p?.type !== "source-url"),
@@ -213,6 +220,7 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
             model: latestRef.current.threadImageToolModel[threadId],
           },
           attachments,
+          clientTimezone,
         };
         return { body: requestBody };
       },

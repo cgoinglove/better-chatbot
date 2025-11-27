@@ -8,7 +8,11 @@ import {
   ToolNodeData,
   HttpNodeData,
   TemplateNodeData,
+  ReplyInThreadNodeData,
   OutputSchemaSourceKey,
+  WORKFLOW_CONTEXT_KEY,
+  WorkflowExecutionContext,
+  SchedulerNodeData,
 } from "../workflow.interface";
 import { WorkflowRuntimeState } from "./graph-store";
 import {
@@ -23,7 +27,7 @@ import {
   convertTiptapJsonToText,
 } from "../shared.workflow";
 import { jsonSchemaToZod } from "lib/json-schema-to-zod";
-import { toAny } from "lib/utils";
+import { generateUUID, toAny } from "lib/utils";
 import { AppError } from "lib/errors";
 import { DefaultToolName } from "lib/ai/tools";
 import {
@@ -31,6 +35,7 @@ import {
   exaContentsToolForWorkflow,
 } from "lib/ai/tools/web/web-search";
 import { mcpClientsManager } from "lib/ai/mcp/mcp-manager";
+import { chatRepository } from "lib/db/repository";
 
 /**
  * Interface for node executor functions.
@@ -51,6 +56,16 @@ export type NodeExecutor<T extends WorkflowNodeData = any> = (input: {
       input?: any;
       output?: any;
     };
+
+function getWorkflowContext(
+  state: WorkflowRuntimeState,
+): WorkflowExecutionContext | undefined {
+  const context = state.query?.[WORKFLOW_CONTEXT_KEY];
+  if (!context || typeof context !== "object") {
+    return undefined;
+  }
+  return context as WorkflowExecutionContext;
+}
 
 /**
  * Input Node Executor
@@ -497,6 +512,104 @@ export const templateNodeExecutor: NodeExecutor<TemplateNodeData> = ({
   return {
     output: {
       template: text,
+    },
+  };
+};
+
+export const replyInThreadNodeExecutor: NodeExecutor<
+  ReplyInThreadNodeData
+> = async ({ node, state }) => {
+  const context = getWorkflowContext(state);
+  const userId = context?.user?.id;
+
+  if (!userId) {
+    throw new Error(
+      "Reply-in-thread node requires an authenticated user context",
+    );
+  }
+
+  if (!node.title) {
+    throw new Error("Reply-in-thread node must define a title");
+  }
+
+  if (!node.messages?.length) {
+    throw new Error("Reply-in-thread node must include messages to save");
+  }
+
+  const resolvedTitle = convertTiptapJsonToText({
+    json: node.title,
+    getOutput: state.getOutput,
+  }).trim();
+
+  if (!resolvedTitle) {
+    throw new Error("Reply-in-thread node resolved title is empty");
+  }
+
+  const resolvedMessages = node.messages.map((message, index) => {
+    if (!message.content) {
+      throw new Error(`Message #${index + 1} is missing content`);
+    }
+
+    const aiMessage = convertTiptapJsonToAiMessage({
+      role: message.role,
+      getOutput: state.getOutput,
+      json: message.content,
+    });
+
+    const hasTextContent = aiMessage.parts.some((part) => {
+      return part.type === "text" && part.text.trim().length > 0;
+    });
+
+    if (!hasTextContent) {
+      throw new Error(`Message #${index + 1} resolved to empty content`);
+    }
+
+    return {
+      id: generateUUID(),
+      role: aiMessage.role,
+      parts: aiMessage.parts,
+    };
+  });
+
+  const thread = await chatRepository.insertThread({
+    id: generateUUID(),
+    title: resolvedTitle,
+    userId,
+  });
+
+  const savedMessages = await chatRepository.insertMessages(
+    resolvedMessages.map((message) => ({
+      ...message,
+      threadId: thread.id,
+    })),
+  );
+
+  return {
+    input: {
+      title: resolvedTitle,
+      messages: resolvedMessages,
+    },
+    output: {
+      thread: {
+        id: thread.id,
+        title: thread.title,
+        createdAt: thread.createdAt,
+      },
+      messageIds: savedMessages.map((message) => message.id),
+      messageCount: savedMessages.length,
+    },
+  };
+};
+
+export const schedulerNodeExecutor: NodeExecutor<SchedulerNodeData> = ({
+  node,
+}) => {
+  return {
+    output: {
+      cron: node.cron,
+      timezone: node.timezone,
+      enabled: node.enabled ?? true,
+      payload: node.payload,
     },
   };
 };
