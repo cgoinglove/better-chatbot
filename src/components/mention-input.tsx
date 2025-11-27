@@ -209,7 +209,11 @@ export default function MentionInput({
         !e.shiftKey &&
         !e.metaKey &&
         !e.nativeEvent.isComposing;
-      if (isSubmit) onEnter?.();
+      if (isSubmit) {
+        e.preventDefault();
+        onEnter?.();
+        editor?.commands.blur();
+      }
     },
     [editor, onEnter, open],
   );
