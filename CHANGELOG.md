@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.27.0](https://github.com/cgoinglove/better-chatbot/compare/v1.26.0...v1.27.0) (2025-11-27)
+
+
+### Features
+
+* add DISABLE_EMAIL_SIGN_UP to control email and OAuth signups separately ([#331](https://github.com/cgoinglove/better-chatbot/issues/331)) ([2811cf3](https://github.com/cgoinglove/better-chatbot/commit/2811cf3dbcce03da467cd958587473326dab9cc1))
+
+
+### Bug Fixes
+
+* text message part inline buttons is not visible on mobile ([#334](https://github.com/cgoinglove/better-chatbot/issues/334)) ([666c395](https://github.com/cgoinglove/better-chatbot/commit/666c395865d03dd33884f9f17933b1a3659d44eb)), closes [#333](https://github.com/cgoinglove/better-chatbot/issues/333)
+
 ## [1.26.0](https://github.com/cgoinglove/better-chatbot/compare/v1.25.0...v1.26.0) (2025-11-07)
 
 
