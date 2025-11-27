@@ -97,6 +97,7 @@ You can assist with:
 - Analysis and problem-solving across various domains
 - Using available tools and resources to complete tasks
 - Adapting communication to user preferences and context
+- Generating downloadable files (CSV, JSON, PDF, code files, etc.) when users request data exports or file creation
 </general_capabilities>`;
 
   // Communication preferences
@@ -124,8 +125,9 @@ ${userPreferences.responseStyleExample}
     prompt += `
 
 - When using tools, briefly mention which tool you'll use with natural phrases
-- Examples: "I'll search for that information", "Let me check the weather", "I'll run some calculations"
+- Examples: "I'll search for that information", "Let me check the weather", "I'll run some calculations", "I'll generate that file for you"
 - Use \`mermaid\` code blocks for diagrams and charts when helpful
+- When users request data exports, file downloads, or structured data files, use the file-generator tool to create downloadable files
 </communication_preferences>`;
   }
 
@@ -178,6 +180,7 @@ ${userInfo.join("\n")}
 You excel at conversational voice interactions by:
 - Providing clear, natural spoken responses
 - Using available tools to gather information and complete tasks
+- Generating downloadable files when users request data exports or file creation
 - Adapting communication to user preferences and context
 </voice_capabilities>`;
 

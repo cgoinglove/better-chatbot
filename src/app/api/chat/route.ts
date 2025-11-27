@@ -48,7 +48,8 @@ import { getSession } from "auth/server";
 import { colorize } from "consola/utils";
 import { generateUUID } from "lib/utils";
 import { nanoBananaTool, openaiImageTool } from "lib/ai/tools/image";
-import { ImageToolName } from "lib/ai/tools";
+import { fileGeneratorTool } from "lib/ai/tools/file-generator";
+import { ImageToolName, FileGeneratorToolName } from "lib/ai/tools";
 import { buildCsvIngestionPreviewParts } from "@/lib/ai/ingest/csv-ingest";
 import { serverFileStorage } from "lib/file-storage";
 
@@ -283,9 +284,13 @@ export async function POST(request: Request) {
                   : openaiImageTool,
             }
           : {};
+        const FILE_GENERATOR_TOOL: Record<string, Tool> = {
+          [FileGeneratorToolName]: fileGeneratorTool,
+        };
         const vercelAITooles = safe({
           ...MCP_TOOLS,
           ...WORKFLOW_TOOLS,
+          ...FILE_GENERATOR_TOOL,
         })
           .map((t) => {
             const bindingTools =
