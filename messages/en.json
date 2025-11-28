@@ -146,7 +146,8 @@
       "code": "Execute custom code scripts with access to previous node data.\n\nRun JavaScript, Python, or other languages within your workflow (coming soon).",
       "http": "Fetch data from external APIs and web services via HTTP requests.\n\nIntegrate with REST APIs, webhooks, and third-party services.",
       "template": "Create dynamic documents by combining text with data from previous nodes.\n\nGenerate emails, reports, or formatted content using variable substitution.",
-      "condition": "Add conditional logic to branch your workflow based on data evaluation.\n\nCreate if-else logic to handle different scenarios and data conditions."
+      "condition": "Add conditional logic to branch your workflow based on data evaluation.\n\nCreate if-else logic to handle different scenarios and data conditions.",
+      "reply-in-thread": "Create a new chat thread for the current user with scripted messages.\n\nUse '/' mentions to inject data from previous nodes before saving the conversation."
     },
     "structuredOutputSwitchConfirm": "You currently have structured output enabled.\n What would you like to do?",
     "structuredOutputSwitchConfirmOk": "Edit Structured Output",
