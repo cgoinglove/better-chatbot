@@ -5,6 +5,7 @@ import {
   WorkflowEdgeTable,
   WorkflowNodeDataTable,
   WorkflowTable,
+  WorkflowScheduleTable,
 } from "../schema.pg";
 import {
   DBWorkflow,
@@ -13,7 +14,11 @@ import {
   WorkflowRepository,
   WorkflowSummary,
 } from "app-types/workflow";
-import { NodeKind } from "lib/ai/workflow/workflow.interface";
+import {
+  NodeKind,
+  SchedulerNodeData,
+} from "lib/ai/workflow/workflow.interface";
+import { computeNextRunDate } from "lib/ai/workflow/scheduler-utils";
 import { createUINode } from "lib/ai/workflow/create-ui-node";
 import {
   convertUINodeToDBNode,
@@ -232,6 +237,13 @@ export const pgWorkflowRepository: WorkflowRepository = {
               updatedAt: new Date(),
             },
           });
+
+        const schedulerNodes = nodes.filter(
+          (node) => node.kind === NodeKind.Scheduler,
+        );
+        if (schedulerNodes.length) {
+          await upsertWorkflowSchedules(tx, workflowId, schedulerNodes);
+        }
       }
       if (edges?.length) {
         await tx.insert(WorkflowEdgeTable).values(edges).onConflictDoNothing();
@@ -269,3 +281,72 @@ export const pgWorkflowRepository: WorkflowRepository = {
     };
   },
 };
+
+async function upsertWorkflowSchedules(
+  tx: any,
+  workflowId: string,
+  nodes: DBNode[],
+) {
+  const now = new Date();
+  const values = nodes
+    .map((node) => {
+      const config = (node.nodeConfig || {}) as Partial<SchedulerNodeData>;
+      const cron = (config.cron || "").trim();
+      if (!cron) {
+        return null;
+      }
+      const timezone = (config.timezone || "UTC").trim() || "UTC";
+      const enabled = config.enabled ?? true;
+      const rawPayload = config.payload;
+      const payload =
+        rawPayload &&
+        typeof rawPayload === "object" &&
+        !Array.isArray(rawPayload)
+          ? rawPayload
+          : {};
+      const nextRunAt = enabled
+        ? computeNextRunDate(cron, timezone, now)
+        : null;
+
+      return {
+        workflowId,
+        workflowNodeId: node.id,
+        cron,
+        timezone,
+        enabled,
+        payload,
+        nextRunAt,
+        updatedAt: now,
+      };
+    })
+    .filter(Boolean) as {
+    workflowId: string;
+    workflowNodeId: string;
+    cron: string;
+    timezone: string;
+    enabled: boolean;
+    payload: Record<string, unknown>;
+    nextRunAt: Date | null;
+    updatedAt: Date;
+  }[];
+
+  if (!values.length) return;
+
+  await tx
+    .insert(WorkflowScheduleTable)
+    .values(values)
+    .onConflictDoUpdate({
+      target: [WorkflowScheduleTable.workflowNodeId],
+      set: {
+        cron: sql.raw(`excluded.${WorkflowScheduleTable.cron.name}`),
+        timezone: sql.raw(`excluded.${WorkflowScheduleTable.timezone.name}`),
+        enabled: sql.raw(`excluded.${WorkflowScheduleTable.enabled.name}`),
+        payload: sql.raw(`excluded.${WorkflowScheduleTable.payload.name}`),
+        nextRunAt: sql.raw(`excluded.${WorkflowScheduleTable.nextRunAt.name}`),
+        updatedAt: sql.raw(`excluded.${WorkflowScheduleTable.updatedAt.name}`),
+        lockedAt: sql`NULL`,
+        lockedBy: sql`NULL`,
+        lastError: sql`NULL`,
+      },
+    });
+}

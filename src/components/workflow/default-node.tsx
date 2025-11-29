@@ -25,6 +25,8 @@ import { createAppendNode } from "./create-append-node";
 import { ToolNodeStack } from "./node-config/tool-node-config";
 import { Markdown } from "../markdown";
 import { HttpNodeDataStack } from "./node-config/http-node-config";
+import { ReplyInThreadNodeStack } from "./node-config/reply-in-thread-node-config";
+import { SchedulerNodeStack } from "./node-config/scheduler-node-config";
 
 type Props = NodeProps<UINode>;
 
@@ -106,7 +108,9 @@ export const DefaultNode = memo(function DefaultNode({
           )}
         >
           <div className="flex items-center gap-2 relative px-4">
-            {![NodeKind.Note, NodeKind.Input].includes(data.kind) && (
+            {![NodeKind.Note, NodeKind.Input, NodeKind.Scheduler].includes(
+              data.kind,
+            ) && (
               <Handle
                 id="left"
                 type="target"
@@ -122,9 +126,12 @@ export const DefaultNode = memo(function DefaultNode({
             )}
             <NodeIcon type={data.kind} />
             <div className="font-bold truncate">{data.name}</div>
-            {![NodeKind.Note, NodeKind.Output, NodeKind.Condition].includes(
-              data.kind,
-            ) && (
+            {![
+              NodeKind.Note,
+              NodeKind.Output,
+              NodeKind.Condition,
+              NodeKind.Scheduler,
+            ].includes(data.kind) && (
               <Handle
                 type="source"
                 onConnect={() => update()}
@@ -197,6 +204,12 @@ export const DefaultNode = memo(function DefaultNode({
             )}
             {data.kind === NodeKind.Tool && <ToolNodeStack data={data} />}
             {data.kind === NodeKind.Http && <HttpNodeDataStack data={data} />}
+            {data.kind === NodeKind.ReplyInThread && (
+              <ReplyInThreadNodeStack data={data} />
+            )}
+            {data.kind === NodeKind.Scheduler && (
+              <SchedulerNodeStack data={data} />
+            )}
             {data.description && (
               <div className="px-4 mt-2">
                 <div className="text-xs text-muted-foreground">
