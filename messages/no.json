@@ -123,7 +123,7 @@
       "buildAutomationTitle": "Automatiser ved å koble sammen noder",
       "buildAutomationDescription": "Koble sammen ulike noder for å automatisere komplekse oppgaver. Hver node håndterer spesifikke funksjoner, og data flyter sekvensielt for behandling.",
       "chatbotToolTitle": "Bruk som chatbot-verktøy",
-      "chatbotToolDescription": "Hovedformålet med arbeidsflyter er å bruke dem som verktøy i chatbot-samtaler. Gjør repeterende oppgaver til arbeidsflyter for enkel utførelse under samtaler.",
+      "chatbotToolDescription": "Hovedformålet med arbeidsflyter er å bruke dem som verktøy i chatbot-samtaler. Gjør repeterende oppgaver om til arbeidsflyter slik at de kan kjøres enkelt direkte i samtalen.",
       "parameterBasedTitle": "Parameterbasert start",
       "parameterBasedDescription": "Startnoder definerer parameterstrukturer, ikke utløsere. De spesifiserer dataformatet som trengs når chatboten kaller denne arbeidsflyten som verktøy.",
       "exampleTitle": "Brukseksempel",
@@ -138,8 +138,8 @@
       "getWeather": "Sjekk været"
     },
     "kindsDescription": {
-      "input": "Definer inndataparametere som chatboten vil gi når den bruker denne arbeidsflyten som verktøy.\n\nSpesifiser datastrukturen og valideringsreglene for verktøyutførelse.",
-      "output": "Samle inn og returner de endelige resultatene fra arbeidsflytutførelsen din.\n\nKombiner data fra flere noder til det endelige verktøysvaret.",
+      "input": "Definer inndataparametere som chatboten vil gi når den bruker denne arbeidsflyten som verktøy.\n\nSpesifiser datastrukturen og valideringsreglene for verktøykjøring.",
+      "output": "Samle inn og returner de endelige resultatene fra arbeidsflytkjøringen din.\n\nKombiner data fra flere noder til det endelige verktøysvaret.",
       "llm": "Generer tekst eller strukturerte data ved hjelp av AI-modeller.\n\nReferer til tidligere nodeutdata med '/'-nevninger for å skape kontekstbevisste svar.\n\nBruk strukturert utdata for å transformere, formatere og validere data - ikke bare for tekstgenerering.",
       "tool": "Utfør MCP-verktøy eller eksterne tjenester.\n\nSkriv instruksjoner i meldinger, og LLM vil generere de nødvendige verktøyparametrene fra konteksten din.",
       "note": "Legg til dokumentasjon og kommentarer for å organisere arbeidsflytlogikken din.\n\nHjelp teammedlemmer med å forstå komplekse arbeidsflytprosesser.",
@@ -232,22 +232,22 @@
       "manualToolModeDescription": "Ber om tillatelse før bruk av verktøy",
       "noneToolModeDescription": "Ikke bruk verktøy. @nevning er fortsatt tilgjengelig.",
       "toolsSetup": "Verktøyoppsett",
-      "preset": "Forhåndsinnstilling",
-      "toolPresets": "Verktøyforhåndsinnstillinger",
-      "saveAsPreset": "Lagre som forhåndsinnstilling",
-      "saveAsPresetDescription": "Lagre gjeldende verktøykonfigurasjon som en forhåndsinnstilling.",
-      "noPresetsAvailableYet": "Ingen forhåndsinnstillinger tilgjengelig ennå",
-      "presetNameCannotBeEmpty": "Forhåndsinnstillingsnavn kan ikke være tomt",
-      "presetNameAlreadyExists": "Forhåndsinnstillingsnavnet finnes allerede",
-      "presetSaved": "Forhåndsinnstilling lagret",
-      "clickSaveAsPresetToGetStarted": "Klikk Lagre som forhåndsinnstilling for å komme i gang.",
+      "preset": "Mal",
+      "toolPresets": "Verktøymal",
+      "saveAsPreset": "Lagre som mal",
+      "saveAsPresetDescription": "Lagre gjeldende verktøykonfigurasjon som en mal.",
+      "noPresetsAvailableYet": "Ingen maler tilgjengelig ennå",
+      "presetNameCannotBeEmpty": "Navn på mal kan ikke være tomt",
+      "presetNameAlreadyExists": "Malen finnes allerede",
+      "presetSaved": "Mal lagret",
+      "clickSaveAsPresetToGetStarted": "Klikk Lagre som mal for å komme i gang.",
       "searchOptions": "Søkealternativer",
       "searchOptionsDescription": "Du kan sende søkealternativer til chatboten, som maksimalt antall søkeresultater, søkedato osv.",
       "defaultToolKit": {
         "visualization": "Datavisualisering",
         "webSearch": "Søk på nettet",
         "http": "HTTP-forespørsel",
-        "code": "Kodeutførelse"
+        "code": "Kodekjøring"
       }
     },
     "VoiceChat": {
