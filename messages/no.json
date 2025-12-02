@@ -66,7 +66,7 @@
     "workflowNamePlaceholder": "Chatboten vil gjenkjenne dette som verktøynavn",
     "description": "Beskrivelse",
     "descriptionPlaceholder": "Chatboten vil se dette som verktøybeskrivelse",
-    "inputNodeCannotBeDeleted": "Inngangsnode kan ikke slettes",
+    "inputNodeCannotBeDeleted": "Startnode kan ikke slettes",
     "autoSaveDescription": "Automatisk lagret hvert 10. sekund",
     "draftDescription": "For øyeblikket et utkast.\n\nKlikk Publiser for å gjøre den tilgjengelig for chatboten\n(men ikke lenger redigerbar).",
     "publishedDescription": "For øyeblikket publisert og tilgjengelig for chatboten.\n\nKlikk Utkast for å gjøre den redigerbar\n(men utilgjengelig for chatboten).",
@@ -125,7 +125,7 @@
       "chatbotToolTitle": "Bruk som chatbot-verktøy",
       "chatbotToolDescription": "Hovedformålet med arbeidsflyter er å bruke dem som verktøy i chatbot-samtaler. Gjør repeterende oppgaver til arbeidsflyter for enkel utførelse under samtaler.",
       "parameterBasedTitle": "Parameterbasert start",
-      "parameterBasedDescription": "Inngangsnoder definerer parameterstrukturer, ikke utløsere. De spesifiserer dataformatet som trengs når chatboten kaller denne arbeidsflyten som verktøy.",
+      "parameterBasedDescription": "Startnoder definerer parameterstrukturer, ikke utløsere. De spesifiserer dataformatet som trengs når chatboten kaller denne arbeidsflyten som verktøy.",
       "exampleTitle": "Brukseksempel",
       "exampleDescription": "Opprett en «E-postskriving → Oversettelse → Send»-arbeidsflyt, og utfør den enkelt i chatbot-samtaler med «@email_workflow».",
       "availableNodesTitle": "Tilgjengelige noder",
@@ -134,8 +134,8 @@
       "soonMessage": "Kommer snart."
     },
     "example": {
-      "babyResearch": "Babyundersøkelse",
-      "getWeather": "Hent vær"
+      "babyResearch": "Baby research",
+      "getWeather": "Sjekk været"
     },
     "kindsDescription": {
       "input": "Definer inndataparametere som chatboten vil gi når den bruker denne arbeidsflyten som verktøy.\n\nSpesifiser datastrukturen og valideringsreglene for verktøyutførelse.",
@@ -309,7 +309,7 @@
       "mcpInstructions": "MCP-instruksjoner",
       "mcpInstructionsDescription": "Tilpass MCP-serverinstruksjonene.",
       "userSettings": "Brukerinnstillinger",
-      "myExports": "Mine eksporter",
+      "myExports": "Mine eksporterte chatter",
       "myExportsDescription": "Administrer og organiser dine delte chateksporter.",
       "noExportsYet": "Ingen eksporter ennå",
       "exportHint": "Del en chat for å opprette din første eksport.",
@@ -412,7 +412,7 @@
     "generatingAgent": "Genererer agent...",
     "agentNameAndIconLabel": "Gi agenten din et navn og ikon.",
     "agentDescriptionLabel": "Legg til en kort beskrivelse av hva denne agenten gjør.",
-    "agentDescriptionPlaceholder": "Dette er bare en beskrivelse av agenten, den er ikke kritisk.",
+    "agentDescriptionPlaceholder": "Dette er bare en beskrivelse av agenten. Den er ikke påkrevd.",
     "agentSettingsDescription": "Herfra er dette innstillinger som kan påvirke agenten.",
     "thisAgentIs": "Denne agenten er en ekspert på",
     "expertIn": "",
@@ -714,7 +714,7 @@
       "searchPlaceholder": "Søk etter navn eller e-post...",
       "clear": "Tøm",
       "noUsersFound": "Ingen brukere funnet",
-      "youBadge": "Deg",
+      "youBadge": "Du",
       "totalCount": "{count} bruker{count, plural, =1 {} other {e}} totalt",
       "user": "Bruker",
       "role": "Rolle",
