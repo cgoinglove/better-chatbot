@@ -213,7 +213,7 @@
       "whatAreYouThinking": "Hva tenker du på, {name}?"
     },
     "TemporaryChat": {
-      "toggleTemporaryChat": "Veksle midlertidig chat",
+      "toggleTemporaryChat": "Åpne midlertidig chat",
       "temporaryChat": "Midlertidig chat",
       "resetChat": "Tilbakestill chat",
       "thisChatWontBeSaved": "Denne chatten blir ikke lagret.",
@@ -259,7 +259,7 @@
       "closeMic": "Slå av mikrofon",
       "openMic": "Slå på mikrofon",
       "endConversation": "Avslutt samtale",
-      "toggleVoiceChat": "Veksle talechat",
+      "toggleVoiceChat": "Åpne talechat",
       "readyWhenYouAreJustStartTalking": "Klar når du er – bare begynn å snakke.",
       "yourMicIsOff": "Mikrofonen din er av.",
       "preparing": "Forbereder...",
@@ -329,7 +329,7 @@
     "workflow": "Arbeidsflyt",
     "admin": "Admin",
     "users": "Brukere",
-    "toggleSidebar": "Veksle sidefelt",
+    "toggleSidebar": "Åpne sidefelt",
     "newChat": "Ny chat",
     "mcpConfiguration": "MCP-konfigurasjon",
     "agents": "Agenter",
@@ -461,14 +461,14 @@
   "KeyboardShortcuts": {
     "title": "Tastatursnarveier",
     "newChat": "Ny chat",
-    "toggleTemporaryChat": "Veksle midlertidig chat",
-    "toggleSidebar": "Veksle sidefelt",
+    "toggleTemporaryChat": "Åpne midlertidig chat",
+    "toggleSidebar": "Åpne sidefelt",
     "toolMode": "Verktøymodus",
     "lastMessageCopy": "Kopier siste melding",
     "openChatPreferences": "Åpne chatpreferanser",
     "deleteThread": "Slett chat",
     "openShortcutsPopup": "Åpne snarveier-popup",
-    "toggleVoiceChat": "Veksle talechat"
+    "toggleVoiceChat": "Åpne talechat"
   },
   "User": {
     "Profile": {
@@ -703,7 +703,7 @@
     "title": "Admin",
     "Sidebar": {
       "users": "Brukere",
-      "toggleSidebar": "Veksle sidefelt",
+      "toggleSidebar": "Åpne sidefelt",
       "adminPanel": "Adminpanel",
       "backToApp": "Tilbake til appen"
     },
