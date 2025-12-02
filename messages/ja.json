@@ -187,7 +187,8 @@
       "userInstructions": "ユーザー指示",
       "userInstructionsDescription": "自己紹介をして、よりパーソナライズされた回答を受け取りましょう。",
       "mcpInstructions": "MCP 指示",
-      "mcpInstructionsDescription": "MCP サーバーの指示をカスタマイズします。"
+      "mcpInstructionsDescription": "MCP サーバーの指示をカスタマイズします。",
+      "userSettings": "ユーザー設定"
     }
   },
   "Layout": {
@@ -237,7 +238,8 @@
     "showLessChats": "少なく表示",
     "reportAnIssue": "問題を報告",
     "joinCommunity": "コミュニティに参加",
-    "workflow": "ワークフロー"
+    "workflow": "ワークフロー",
+    "userSettings": "ユーザー設定"
   },
   "Archive": {
     "title": "アーカイブ",
