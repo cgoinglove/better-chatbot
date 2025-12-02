@@ -203,7 +203,7 @@
     "imageUploadFailedUsingBase64": "Bildeopplasting mislyktes. Bruker base64-koding som reserve.",
     "Greeting": {
       "goodMorning": "God morgen, {name}",
-      "goodAfternoon": "God ettermiddag, {name}",
+      "goodAfternoon": "God dag, {name}",
       "goodEvening": "God kveld, {name}",
       "niceToSeeYouAgain": "Hyggelig å se deg igjen, {name}",
       "whatAreYouWorkingOnToday": "Hva jobber du med i dag, {name}?",
@@ -683,7 +683,7 @@
         "created": "Opprettet",
         "expires": "Utløper",
         "ipAddress": "IP-adresse",
-        "userAgent": "Brukeragent",
+        "userAgent": "User agent",
         "notAvailable": "Ikke tilgjengelig",
         "userNotFound": "Bruker ikke funnet",
         "userDetailsUpdatedSuccessfully": "Brukerdetaljer oppdatert",
@@ -791,8 +791,8 @@
     "privateDescription": "Bare du kan bruke denne MCP-serveren",
     "readonly": "Skrivebeskyttet",
     "readonlyDescription": "Andre kan se, men ikke endre denne MCP-serveren",
-    "public": "Fremhevet",
-    "publicDescription": "Fremhevet for alle brukere",
+    "public": "Offentlig",
+    "publicDescription": "Offentlig for alle brukere",
     "featured": "Fremhevet",
     "featuredDescription": "Fremhevet for alle brukere"
   }
