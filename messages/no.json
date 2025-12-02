@@ -790,9 +790,9 @@
     "privateDescription": "Bare du kan bruke denne MCP-serveren",
     "readonly": "Skrivebeskyttet",
     "readonlyDescription": "Andre kan se, men ikke endre denne MCP-serveren",
-    "public": "Utvalgt",
-    "publicDescription": "Utvalgt for alle brukere",
-    "featured": "Utvalgt",
-    "featuredDescription": "Utvalgt for alle brukere"
+    "public": "Fremhevet",
+    "publicDescription": "Fremhevet for alle brukere",
+    "featured": "Fremhevet",
+    "featuredDescription": "Fremhevet for alle brukere"
   }
 }
