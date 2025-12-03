@@ -202,7 +202,8 @@
       "linkCopied": "링크가 클립보드에 복사되었습니다",
       "confirmDeleteExport": "이 공유를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
       "exportDeleted": "공유가 성공적으로 삭제되었습니다",
-      "failedToDeleteExport": "공유 삭제에 실패했습니다"
+      "failedToDeleteExport": "공유 삭제에 실패했습니다",
+      "userSettings": "사용자 설정"
     }
   },
   "Layout": {
@@ -252,7 +253,8 @@
     "showAllChats": "모든 채팅",
     "showLessChats": "간략히 보기",
     "reportAnIssue": "도움 받기",
-    "joinCommunity": "커뮤니티 가입"
+    "joinCommunity": "커뮤니티 가입",
+    "userSettings": "사용자 설정"
   },
   "Archive": {
     "title": "아카이브",

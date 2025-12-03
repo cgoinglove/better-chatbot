@@ -14,11 +14,17 @@ export default async function SignUp() {
   if (!signUpEnabled) {
     redirect("/sign-in");
   }
+
   const enabledProviders = (
     Object.keys(
       socialAuthenticationProviders,
     ) as (keyof typeof socialAuthenticationProviders)[]
   ).filter((key) => socialAuthenticationProviders[key]);
+
+  if (emailAndPasswordEnabled && enabledProviders.length === 0) {
+    redirect("/sign-up/email");
+  }
+
   return (
     <SignUpPage
       isFirstUser={isFirstUser}

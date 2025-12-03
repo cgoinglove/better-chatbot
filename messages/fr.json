@@ -187,7 +187,8 @@
       "userInstructions": "Instructions Utilisateur",
       "userInstructionsDescription": "Présentez-vous et obtenez une réponse plus personnalisée.",
       "mcpInstructions": "Instructions MCP",
-      "mcpInstructionsDescription": "Personnalisez les instructions du serveur MCP."
+      "mcpInstructionsDescription": "Personnalisez les instructions du serveur MCP.",
+      "userSettings": "Paramètres Utilisateur"
     }
   },
   "Layout": {
@@ -238,7 +239,8 @@
     "showLessChats": "Afficher moins",
     "reportAnIssue": "Signaler un problème",
     "joinCommunity": "Rejoindre la Communauté",
-    "workflow": "Flux de Travail"
+    "workflow": "Flux de Travail",
+    "userSettings": "Paramètres Utilisateur"
   },
   "Archive": {
     "title": "Archive",

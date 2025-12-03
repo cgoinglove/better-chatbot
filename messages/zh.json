@@ -186,7 +186,8 @@
       "userInstructions": "用户说明",
       "userInstructionsDescription": "介绍自己并获得更个性化的回应。",
       "mcpInstructions": "MCP 说明",
-      "mcpInstructionsDescription": "自定义 MCP 服务器说明。"
+      "mcpInstructionsDescription": "自定义 MCP 服务器说明。",
+      "userSettings": "用户设置"
     }
   },
   "Layout": {
@@ -236,7 +237,8 @@
     "showLessChats": "显示更少",
     "reportAnIssue": "报告问题",
     "joinCommunity": "加入社区",
-    "workflow": "工作流"
+    "workflow": "工作流",
+    "userSettings": "用户设置"
   },
   "Archive": {
     "title": "归档",
