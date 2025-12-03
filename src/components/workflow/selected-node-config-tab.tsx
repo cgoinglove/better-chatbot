@@ -22,6 +22,8 @@ import { ToolNodeDataConfig } from "./node-config/tool-node-config";
 import { HttpNodeConfig } from "./node-config/http-node-config";
 import { TemplateNodeConfig } from "./node-config/template-node-config";
 import { useTranslations } from "next-intl";
+import { ReplyInThreadNodeConfig } from "./node-config/reply-in-thread-node-config";
+import { SchedulerNodeConfig } from "./node-config/scheduler-node-config";
 
 export function SelectedNodeConfigTab({ node }: { node: UINode }) {
   const t = useTranslations();
@@ -99,6 +101,10 @@ export function SelectedNodeConfigTab({ node }: { node: UINode }) {
           <HttpNodeConfig node={node} />
         ) : node.data.kind === NodeKind.Template ? (
           <TemplateNodeConfig data={node.data} />
+        ) : node.data.kind === NodeKind.ReplyInThread ? (
+          <ReplyInThreadNodeConfig data={node.data} />
+        ) : node.data.kind === NodeKind.Scheduler ? (
+          <SchedulerNodeConfig data={node.data} />
         ) : node.data.kind === NodeKind.Note ? (
           <div className="h-full flex flex-col gap-2 px-4">
             <Label
@@ -121,7 +127,9 @@ export function SelectedNodeConfigTab({ node }: { node: UINode }) {
         ) : null}
       </div>
 
-      {![NodeKind.Output, NodeKind.Note].includes(node.data.kind) && (
+      {![NodeKind.Output, NodeKind.Note, NodeKind.Scheduler].includes(
+        node.data.kind,
+      ) && (
         <>
           <Separator className="my-6" />
           <div className="px-4 ">
