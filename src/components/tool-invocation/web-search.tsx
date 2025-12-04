@@ -6,7 +6,7 @@ import equal from "lib/equal";
 import { notify } from "lib/notify";
 import { cn, toAny } from "lib/utils";
 import { AlertTriangleIcon } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useFormatter } from "next-intl";
 import { memo, useMemo, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { GlobalIcon } from "ui/global-icon";
@@ -22,6 +22,7 @@ interface WebSearchToolInvocationProps {
 
 function PureWebSearchToolInvocation({ part }: WebSearchToolInvocationProps) {
   const t = useTranslations();
+  const format = useFormatter();
 
   const result = useMemo(() => {
     if (!part.state.startsWith("output")) return null;
@@ -204,9 +205,10 @@ function PureWebSearchToolInvocation({ part }: WebSearchToolInvocationProps) {
                         {result.publishedDate && (
                           <div className="text-xs text-muted-foreground">
                             <span className="font-medium">Published:</span>{" "}
-                            {new Date(
-                              result.publishedDate,
-                            ).toLocaleDateString()}
+                            {format.dateTime(
+                              new Date(result.publishedDate),
+                              "short",
+                            )}
                           </div>
                         )}
                       </div>

@@ -6,23 +6,10 @@ import { Card, CardContent, CardHeader } from "ui/card";
 import { MessageCircleXIcon } from "lucide-react";
 import { ArchiveActionsClient } from "@/app/(chat)/archive/[id]/archive-actions-client";
 import { Separator } from "ui/separator";
+import { getFormatter, getTranslations } from "next-intl/server";
 
 import LightRays from "ui/light-rays";
 import Particles from "ui/particles";
-
-// Simple date formatting function
-function formatTimeAgo(date: Date): string {
-  const now = new Date();
-  const diffInMs = now.getTime() - date.getTime();
-  const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
-
-  if (diffInDays === 0) return "Today";
-  if (diffInDays === 1) return "Yesterday";
-  if (diffInDays < 7) return `${diffInDays} days ago`;
-  if (diffInDays < 30) return `${Math.floor(diffInDays / 7)} weeks ago`;
-  if (diffInDays < 365) return `${Math.floor(diffInDays / 30)} months ago`;
-  return `${Math.floor(diffInDays / 365)} years ago`;
-}
 
 interface ArchiveWithThreads {
   id: string;
@@ -85,6 +72,9 @@ export default async function ArchivePage({
     redirect("/");
   }
 
+  const format = await getFormatter();
+  const t = await getTranslations("User.Profile.common");
+
   return (
     <>
       <>
@@ -115,7 +105,7 @@ export default async function ArchivePage({
             <h1 className="text-2xl font-bold">{archive.name}</h1>
             <div className="flex-1" />
             <p className="text-xs text-muted-foreground mr-2">
-              Created {formatTimeAgo(archive.createdAt)}
+              {t("created")} {format.relativeTime(archive.createdAt)}
             </p>
             <div className="h-4">
               <Separator orientation="vertical" />
@@ -166,7 +156,7 @@ export default async function ArchivePage({
                         </h3>
                       </div>
                       <span className="text-xs text-muted-foreground">
-                        {formatTimeAgo(
+                        {format.relativeTime(
                           new Date(thread.lastMessageAt || thread.createdAt),
                         )}
                       </span>

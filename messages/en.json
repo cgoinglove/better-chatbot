@@ -628,6 +628,7 @@
         "avgTokensPerMessage": "Avg Tokens/Message",
         "topModel": "Top Model",
         "summary": "Summary",
+        "last30Days": "last 30 days",
         "tokensAcross": "{tokens} tokens across {count} model{count, plural, =1 {} other {s}} in {period}.",
         "mostActive": "Most active: {model} ({tokens} tokens).",
         "summaryPrefix": "📊 Summary: ",

@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { format } from "date-fns";
+import { useFormatter } from "next-intl";
 import {
   Card,
   CardContent,
@@ -46,6 +46,7 @@ export function UserDetailFormCard({
   view,
 }: UserDetailFormCardProps) {
   const { t, tCommon } = useProfileTranslations(view);
+  const format = useFormatter();
   const [currentUser, setCurrentUser] = useState(user);
 
   const [, detailsUpdateFormAction, isPending] = useActionState<
@@ -161,7 +162,7 @@ export function UserDetailFormCard({
                 {tCommon("joined")}
               </Label>
               <p className="text-sm font-medium" data-testid="user-created-at">
-                {format(new Date(currentUser.createdAt), "PPP")}
+                {format.dateTime(new Date(currentUser.createdAt), "long")}
               </p>
             </div>
 
@@ -170,7 +171,7 @@ export function UserDetailFormCard({
                 {tCommon("lastUpdated")}
               </Label>
               <p className="text-sm font-medium" data-testid="user-updated-at">
-                {format(new Date(currentUser.updatedAt), "PPP")}
+                {format.dateTime(new Date(currentUser.updatedAt), "long")}
               </p>
             </div>
           </div>

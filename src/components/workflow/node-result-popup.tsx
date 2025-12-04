@@ -24,7 +24,7 @@ import { useCopy } from "@/hooks/use-copy";
 import { Button } from "ui/button";
 import { cn, errorToString } from "lib/utils";
 import { Alert, AlertDescription, AlertTitle } from "ui/alert";
-import { useTranslations } from "next-intl";
+import { useTranslations, useFormatter } from "next-intl";
 
 export function NodeResultPopup({
   history,
@@ -40,6 +40,7 @@ export function NodeResultPopup({
 }) {
   const { copy, copied } = useCopy();
   const t = useTranslations();
+  const format = useFormatter();
 
   const [tab, setTab] = useState<"input" | "output">("output");
 
@@ -90,7 +91,9 @@ export function NodeResultPopup({
               <p className="text-muted-foreground mb-2">
                 {t("Common.startedAt")}
               </p>
-              <p>{new Date(history.startedAt).toLocaleString()}</p>
+              <p>
+                {format.dateTime(new Date(history.startedAt), "shortWithTime")}
+              </p>
             </div>
             <div>
               <p className="text-muted-foreground mb-2">

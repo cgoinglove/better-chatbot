@@ -27,7 +27,7 @@ import { McpServerCustomizationContent } from "./mcp-customization-popup";
 import { MCPServerInfo } from "app-types/mcp";
 import { useMcpList } from "@/hooks/queries/use-mcp-list";
 import { ChatExportSummary } from "app-types/chat-export";
-import { formatDistanceToNow } from "date-fns";
+import { useFormatter } from "next-intl";
 import { notify } from "lib/notify";
 
 export function UserInstructionsContent() {
@@ -307,6 +307,7 @@ export function MCPInstructionsContent() {
 
 export function ExportsManagementContent() {
   const t = useTranslations();
+  const format = useFormatter();
 
   const {
     data: exports,
@@ -389,20 +390,15 @@ export function ExportsManagementContent() {
                     <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 mt-2 text-sm text-muted-foreground">
                       <span>
                         {t("Chat.ChatPreferences.exported")}{" "}
-                        {formatDistanceToNow(new Date(exportItem.exportedAt), {
-                          addSuffix: true,
-                        })}
+                        {format.relativeTime(new Date(exportItem.exportedAt))}
                       </span>
                       {exportItem.expiresAt && (
                         <>
                           <span className="hidden sm:inline">•</span>
                           <span>
                             {t("Chat.ChatPreferences.expires")}{" "}
-                            {formatDistanceToNow(
+                            {format.relativeTime(
                               new Date(exportItem.expiresAt),
-                              {
-                                addSuffix: true,
-                              },
                             )}
                           </span>
                         </>

@@ -159,7 +159,7 @@ export const pgUserRepository: UserRepository = {
         totalTokens: Number(stat.totalTokens || 0),
       })),
       totalTokens,
-      period: "Last 30 Days",
+      period: "last30Days",
     };
   },
   getUserAuthMethods: async (userId: string) => {

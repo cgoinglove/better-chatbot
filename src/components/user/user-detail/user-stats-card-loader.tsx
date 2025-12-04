@@ -11,12 +11,7 @@ export const UserStatsCardLoader = async ({
   view?: "admin" | "user";
 }) => {
   const userStats = await getUserStats(userId);
-  return (
-    <UserStatisticsCard
-      stats={{ ...userStats, period: "Last 30 Days" }}
-      view={view}
-    />
-  );
+  return <UserStatisticsCard stats={userStats} view={view} />;
 };
 
 export const UserStatsCardLoaderSkeleton = () => {
