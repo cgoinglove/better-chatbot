@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.27.0](https://github.com/cgoinglove/better-chatbot/compare/v1.26.0...v1.27.0) (2025-12-04)
+
+
+### Features
+
+* add DISABLE_EMAIL_SIGN_UP to control email and OAuth signups separately ([#331](https://github.com/cgoinglove/better-chatbot/issues/331)) ([2811cf3](https://github.com/cgoinglove/better-chatbot/commit/2811cf3dbcce03da467cd958587473326dab9cc1))
+* add norwegian translation ([#341](https://github.com/cgoinglove/better-chatbot/issues/341)) ([64f88cc](https://github.com/cgoinglove/better-chatbot/commit/64f88cc37fab0613c0711d9b30bff84daae74839))
+
+
+### Bug Fixes
+
+* blur prompt-input after submit to collapse mobile keyboard ([#337](https://github.com/cgoinglove/better-chatbot/issues/337)) ([aec3530](https://github.com/cgoinglove/better-chatbot/commit/aec35300c1ca7269aa5086a95f1a4f480b2564c7))
+* skip signup method selection when only email is enabled ([#338](https://github.com/cgoinglove/better-chatbot/issues/338)) ([7538bc8](https://github.com/cgoinglove/better-chatbot/commit/7538bc8babb0943f2857a9a9139bff79e2c5e486))
+* text message part inline buttons is not visible on mobile ([#334](https://github.com/cgoinglove/better-chatbot/issues/334)) ([666c395](https://github.com/cgoinglove/better-chatbot/commit/666c395865d03dd33884f9f17933b1a3659d44eb)), closes [#333](https://github.com/cgoinglove/better-chatbot/issues/333)
+* use translation for user settings menu item ([#339](https://github.com/cgoinglove/better-chatbot/issues/339)) ([eadc71a](https://github.com/cgoinglove/better-chatbot/commit/eadc71ae6d62ae297aeff44979591bd03a86b19d))
+
 ## [1.26.0](https://github.com/cgoinglove/better-chatbot/compare/v1.25.0...v1.26.0) (2025-11-07)
 
 
