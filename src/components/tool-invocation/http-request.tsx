@@ -1,16 +1,21 @@
 "use client";
 
+import type { JSX } from "react";
 import { ToolUIPart } from "ai";
 import equal from "lib/equal";
 import { toAny } from "lib/utils";
 import { AlertTriangleIcon, Globe } from "lucide-react";
-import { memo, useMemo } from "react";
+import { Fragment, memo, useLayoutEffect, useMemo, useState } from "react";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "ui/hover-card";
 import JsonView from "ui/json-view";
 import { Separator } from "ui/separator";
 import { TextShimmer } from "ui/text-shimmer";
 import { Badge } from "ui/badge";
 import { WikipediaResult } from "./http-renderers/wikipedia";
+import { codeToHast, type BundledLanguage } from "shiki/bundle/web";
+import { toJsxRuntime } from "hast-util-to-jsx-runtime";
+import { jsx, jsxs } from "react/jsx-runtime";
+import { useTheme } from "next-themes";
 
 interface HttpRequestToolInvocationProps {
   part: ToolUIPart;
@@ -92,6 +97,185 @@ function getRendererForUrl(url: string): DomainRenderer | null {
   return null;
 }
 
+/**
+ * Detect content type from response body
+ */
+function detectContentType(
+  body: any,
+  headers?: Record<string, string>,
+): BundledLanguage | "text" {
+  // Check content-type header first
+  const contentType =
+    headers?.["content-type"] || headers?.["Content-Type"] || "";
+  if (contentType.includes("text/html")) return "html";
+  if (contentType.includes("application/json")) return "json";
+  if (
+    contentType.includes("text/xml") ||
+    contentType.includes("application/xml")
+  )
+    return "xml";
+  if (contentType.includes("text/css")) return "css";
+  if (
+    contentType.includes("text/javascript") ||
+    contentType.includes("application/javascript")
+  )
+    return "javascript";
+
+  // Fallback: detect from body content
+  if (typeof body === "string") {
+    const trimmed = body.trim();
+    if (
+      trimmed.startsWith("<!DOCTYPE") ||
+      trimmed.startsWith("<html") ||
+      trimmed.startsWith("<HTML")
+    )
+      return "html";
+    if (trimmed.startsWith("<?xml")) return "xml";
+    if (trimmed.startsWith("{") || trimmed.startsWith("[")) return "json";
+  }
+
+  return "text";
+}
+
+/**
+ * Syntax highlighted code viewer for HTTP responses
+ */
+function CodeViewer({
+  code,
+  lang,
+  maxHeight = 300,
+}: { code: string; lang: BundledLanguage | "text"; maxHeight?: number }) {
+  const { theme } = useTheme();
+  const [highlighted, setHighlighted] = useState<JSX.Element | null>(null);
+
+  useLayoutEffect(() => {
+    // Skip highlighting for plain text
+    if (lang === "text") {
+      setHighlighted(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    codeToHast(code, {
+      lang,
+      theme: theme === "dark" ? "dark-plus" : "github-light",
+    })
+      .then((hast) => {
+        if (cancelled) return;
+        const element = toJsxRuntime(hast, {
+          Fragment,
+          jsx,
+          jsxs,
+          components: {
+            pre: ({ children, ...props }) => (
+              <pre {...props} className="!bg-transparent !p-0 !m-0">
+                {children}
+              </pre>
+            ),
+          },
+        }) as JSX.Element;
+        setHighlighted(element);
+      })
+      .catch(() => {
+        // Fallback to plain text on error
+        if (!cancelled) setHighlighted(null);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [code, lang, theme]);
+
+  return (
+    <div
+      className="overflow-auto rounded-lg bg-card p-3 border text-xs font-mono"
+      style={{ maxHeight }}
+    >
+      {highlighted || (
+        <pre className="whitespace-pre-wrap break-words">{code}</pre>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Default HTTP response view
+ */
+function DefaultHttpView({
+  input,
+  result,
+  options,
+}: {
+  input: { url: string; method?: string };
+  result: HttpFetchResponse;
+  options: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center gap-2">
+        <Globe className="size-5 text-muted-foreground" />
+        <span className="text-sm font-semibold">HTTP Request</span>
+        <Badge
+          variant={result?.ok ? "secondary" : "destructive"}
+          className="text-xs"
+        >
+          {result?.status} {result?.statusText}
+        </Badge>
+        {options}
+      </div>
+      <div className="flex gap-2">
+        <div className="px-2.5">
+          <Separator
+            orientation="vertical"
+            className="bg-gradient-to-b from-border to-transparent from-80%"
+          />
+        </div>
+        <div className="flex flex-col gap-2 pb-2 w-full">
+          <div className="text-xs text-muted-foreground">
+            <span className="font-medium">{input?.method || "GET"}</span>{" "}
+            <span className="truncate">{input?.url}</span>
+          </div>
+          {result?.body &&
+            (typeof result.body === "object" ? (
+              <div className="max-h-[300px] overflow-auto rounded-lg bg-card p-3 border text-xs">
+                <JsonView data={result.body} />
+              </div>
+            ) : (
+              <CodeViewer
+                code={String(result.body)}
+                lang={detectContentType(result.body, result.headers)}
+              />
+            ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Wrapper that tries custom renderer, falls back to default if it returns null
+ */
+function CustomRendererWithFallback({
+  CustomRenderer,
+  input,
+  result,
+  options,
+}: {
+  CustomRenderer: DomainRenderer;
+  input: { url: string; method?: string };
+  result: HttpFetchResponse;
+  options: React.ReactNode;
+}) {
+  const customResult = CustomRenderer({ input, output: result });
+
+  if (customResult === null) {
+    return <DefaultHttpView input={input} result={result} options={options} />;
+  }
+
+  return customResult;
+}
+
 function PureHttpRequestToolInvocation({
   part,
 }: HttpRequestToolInvocationProps) {
@@ -134,12 +318,6 @@ function PureHttpRequestToolInvocation({
     return getRendererForUrl(input.url);
   }, [input?.url, result]);
 
-  // Try custom renderer, it may return null if it can't handle the response
-  const customResult = useMemo(() => {
-    if (!CustomRenderer || !result) return null;
-    return <CustomRenderer input={input} output={result} />;
-  }, [CustomRenderer, input, result]);
-
   // Loading state
   if (!part.state.startsWith("output")) {
     const loadingText = `${input?.method || "GET"} ${input?.url ? truncateUrl(input.url) : "..."}`;
@@ -178,52 +356,20 @@ function PureHttpRequestToolInvocation({
     );
   }
 
-  // If we have a custom renderer result, use it
-  if (customResult) {
-    return customResult;
+  // If we have a custom renderer, try it first - it will render default view if it returns null
+  if (CustomRenderer && result) {
+    return (
+      <CustomRendererWithFallback
+        CustomRenderer={CustomRenderer}
+        input={input}
+        result={result}
+        options={options}
+      />
+    );
   }
 
   // Default rendering
-  return (
-    <div className="flex flex-col gap-2">
-      <div className="flex items-center gap-2">
-        <Globe className="size-5 text-muted-foreground" />
-        <span className="text-sm font-semibold">HTTP Request</span>
-        <Badge
-          variant={result?.ok ? "secondary" : "destructive"}
-          className="text-xs"
-        >
-          {result?.status} {result?.statusText}
-        </Badge>
-        {options}
-      </div>
-      <div className="flex gap-2">
-        <div className="px-2.5">
-          <Separator
-            orientation="vertical"
-            className="bg-gradient-to-b from-border to-transparent from-80%"
-          />
-        </div>
-        <div className="flex flex-col gap-2 pb-2 w-full">
-          <div className="text-xs text-muted-foreground">
-            <span className="font-medium">{input?.method || "GET"}</span>{" "}
-            <span className="truncate">{input?.url}</span>
-          </div>
-          {result?.body && (
-            <div className="max-h-[300px] overflow-auto rounded-lg bg-card p-3 border text-xs">
-              {typeof result.body === "object" ? (
-                <JsonView data={result.body} />
-              ) : (
-                <pre className="whitespace-pre-wrap break-words">
-                  {String(result.body)}
-                </pre>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
+  return <DefaultHttpView input={input} result={result!} options={options} />;
 }
 
 function truncateUrl(url: string, maxLength = 50): string {

@@ -79,15 +79,22 @@ interface WikipediaRendererProps {
 // Detect response type
 function detectResponseType(
   body: any,
-): "summary" | "search" | "opensearch" | "unknown" {
+): "summary" | "search" | "opensearch" | "article" | "unknown" {
   if (Array.isArray(body) && body.length === 4) {
     return "opensearch";
   }
   if (body?.query?.search) {
     return "search";
   }
-  if (body?.extract || body?.title) {
+  if (body?.extract || (body?.title && body?.content_urls)) {
     return "summary";
+  }
+  // HTML article page
+  if (
+    typeof body === "string" &&
+    (body.includes("<!DOCTYPE") || body.includes("<html"))
+  ) {
+    return "article";
   }
   return "unknown";
 }
@@ -104,6 +111,100 @@ function stripHtml(html: string): string {
 function getWikiLang(url: string): string {
   const match = url.match(/(?:https?:\/\/)?(\w+)\.wikipedia\.org/);
   return match?.[1] || "en";
+}
+
+// Get article title from URL path
+function getArticleTitleFromUrl(url: string): string {
+  try {
+    const urlObj = new URL(url);
+    const path = urlObj.pathname;
+    // /wiki/Article_Name -> Article_Name
+    const match = path.match(/\/wiki\/(.+)/);
+    if (match) {
+      return decodeURIComponent(match[1].replace(/_/g, " "));
+    }
+    return "";
+  } catch {
+    return "";
+  }
+}
+
+// Extract first paragraph text from HTML
+function extractFirstParagraph(html: string): string {
+  // Try to find content in mw-parser-output (main content area)
+  const contentMatch = html.match(
+    /<div[^>]*class="[^"]*mw-parser-output[^"]*"[^>]*>([\s\S]*?)<\/div>/,
+  );
+  const content = contentMatch ? contentMatch[1] : html;
+
+  // Find first substantial paragraph (skip empty or very short ones)
+  const paragraphs = content.match(/<p[^>]*>([\s\S]*?)<\/p>/gi) || [];
+  for (const p of paragraphs) {
+    const text = stripHtml(p).trim();
+    // Skip coordinates, empty, or very short paragraphs
+    if (text.length > 50 && !text.startsWith("Coordinates:")) {
+      return text.slice(0, 300) + (text.length > 300 ? "..." : "");
+    }
+  }
+  return "";
+}
+
+// Article HTML view component
+function ArticleView({
+  html,
+  url,
+  lang,
+}: { html: string; url: string; lang: string }) {
+  const title = getArticleTitleFromUrl(url);
+  const excerpt = useMemo(() => extractFirstParagraph(html), [html]);
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center gap-2">
+        <BookOpen className="size-5 text-primary" />
+        <span className="text-sm font-semibold">Wikipedia</span>
+        <Badge variant="outline" className="text-xs uppercase">
+          {lang}
+        </Badge>
+      </div>
+
+      <div className="flex gap-2">
+        <div className="px-2.5">
+          <Separator
+            orientation="vertical"
+            className="bg-gradient-to-b from-border to-transparent from-80%"
+          />
+        </div>
+        <div className="flex flex-col gap-3 pb-2 max-w-2xl">
+          {/* Article card */}
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex gap-3 p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors group"
+          >
+            <div className="p-2 rounded-md bg-blue-500/10 shrink-0 h-fit">
+              <BookOpen className="size-6 text-blue-500" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h4 className="font-medium text-sm group-hover:text-primary transition-colors">
+                {title}
+              </h4>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {lang}.wikipedia.org
+              </p>
+              {excerpt && (
+                <p className="text-sm text-muted-foreground mt-2 line-clamp-3">
+                  {excerpt}
+                </p>
+              )}
+            </div>
+            <ExternalLink className="size-4 text-muted-foreground shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+          </a>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 // Summary view component
@@ -148,9 +249,12 @@ function SummaryView({
               />
             )}
             <div className="flex-1 min-w-0">
-              <h4 className="font-medium text-sm group-hover:text-primary transition-colors">
-                {data.displaytitle || data.title}
-              </h4>
+              <h4
+                className="font-medium text-sm group-hover:text-primary transition-colors"
+                dangerouslySetInnerHTML={{
+                  __html: data.displaytitle || data.title,
+                }}
+              ></h4>
               {data.description && (
                 <p className="text-xs text-muted-foreground mt-0.5">
                   {data.description}
@@ -389,6 +493,12 @@ export function WikipediaResult({ input, output }: WikipediaRendererProps) {
         data={output.body as WikipediaOpenSearchResponse}
         lang={lang}
       />
+    );
+  }
+
+  if (responseType === "article") {
+    return (
+      <ArticleView html={output.body as string} url={input.url} lang={lang} />
     );
   }
 
