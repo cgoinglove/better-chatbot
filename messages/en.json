@@ -154,7 +154,9 @@
     "noTools": "No published workflows available.\nCreate workflows to build custom tools.",
     "arrangeNodes": "Auto Layout",
     "nodesArranged": "Layout applied successfully",
-    "visibilityUpdated": "Visibility updated successfully"
+    "visibilityUpdated": "Visibility updated successfully",
+    "deleted": "Workflow deleted successfully",
+    "deleteConfirm": "Are you sure you want to delete this workflow?"
   },
   "Auth": {
     "SignIn": {

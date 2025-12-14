@@ -474,7 +474,9 @@
     },
     "arrangeNodes": "자동 레이아웃",
     "nodesArranged": "레이아웃이 성공적으로 적용되었습니다",
-    "visibilityUpdated": "가시성이 성공적으로 업데이트되었습니다"
+    "visibilityUpdated": "가시성이 성공적으로 업데이트되었습니다",
+    "deleted": "워크플로우가 성공적으로 삭제되었습니다",
+    "deleteConfirm": "이 워크플로우를 삭제하시겠습니까?"
   },
   "User": {
     "Profile": {

@@ -1,0 +1,80 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug Production (build:local && start)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "pnpm build:local && pnpm start",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NO_HTTPS": "1",
+        "NODE_OPTIONS": "--inspect=0.0.0.0:9229"
+      },
+      "presentation": {
+        "hidden": false,
+        "group": "build",
+        "order": 1
+      }
+    },
+    {
+      "name": "Debug Development",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "pnpm dev",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NODE_OPTIONS": "--inspect=0.0.0.0:9229"
+      },
+      "presentation": {
+        "hidden": false,
+        "group": "build",
+        "order": 2
+      }
+    },
+    {
+      "name": "Attach to Server",
+      "type": "node",
+      "request": "attach",
+      "address": "localhost",
+      "port": 9229,
+      "localRoot": "${workspaceFolder}",
+      "remoteRoot": "${workspaceFolder}",
+      "skipFiles": ["<node_internals>/**"],
+      "presentation": {
+        "hidden": false,
+        "group": "debug",
+        "order": 1
+      }
+    },
+    {
+      "name": "Debug Client-Side (Chrome)",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder}",
+      "sourceMaps": true,
+      "trace": true,
+      "presentation": {
+        "hidden": false,
+        "group": "debug",
+        "order": 2
+      }
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Debug Full Stack Production",
+      "configurations": [
+        "Debug Production (build:local && start)",
+        "Debug Client-Side (Chrome)"
+      ],
+      "stopAll": true
+    },
+    {
+      "name": "Debug Full Stack Development",
+      "configurations": ["Debug Development", "Debug Client-Side (Chrome)"],
+      "stopAll": true
+    }
+  ]
+}
