@@ -8,13 +8,16 @@ export const pgMcpOAuthRepository: McpOAuthRepository = {
   // 1. Query methods
 
   // Get session with valid tokens (authenticated)
-  getAuthenticatedSession: async (mcpServerId) => {
+  getAuthenticatedSession: async (mcpServerId, userId) => {
     const [session] = await db
       .select()
       .from(McpOAuthSessionTable)
       .where(
         and(
           eq(McpOAuthSessionTable.mcpServerId, mcpServerId),
+          userId
+            ? eq(McpOAuthSessionTable.userId, userId)
+            : isNull(McpOAuthSessionTable.userId),
           isNotNull(McpOAuthSessionTable.tokens),
         ),
       )
@@ -85,15 +88,20 @@ export const pgMcpOAuthRepository: McpOAuthRepository = {
       .where(eq(McpOAuthSessionTable.state, state))
       .returning();
 
-    await db
-      .delete(McpOAuthSessionTable)
-      .where(
-        and(
-          eq(McpOAuthSessionTable.mcpServerId, mcpServerId),
-          isNull(McpOAuthSessionTable.tokens),
-          ne(McpOAuthSessionTable.state, state),
-        ),
-      );
+    if (session) {
+      await db
+        .delete(McpOAuthSessionTable)
+        .where(
+          and(
+            eq(McpOAuthSessionTable.mcpServerId, mcpServerId),
+            session.userId
+              ? eq(McpOAuthSessionTable.userId, session.userId)
+              : isNull(McpOAuthSessionTable.userId),
+            isNull(McpOAuthSessionTable.tokens),
+            ne(McpOAuthSessionTable.state, state),
+          ),
+        );
+    }
 
     return session as McpOAuthSession;
   },

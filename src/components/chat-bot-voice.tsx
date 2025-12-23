@@ -105,7 +105,7 @@ export function ChatBotVoice() {
         .flatMap((v) => {
           const tools = allowedMcpServers[v.id].tools;
           return tools.map((tool) => {
-            const toolInfo = v.toolInfo.find((t) => t.name === tool);
+            const toolInfo = v.toolInfo?.find((t) => t.name === tool);
             const mention: ChatMention = {
               type: "mcpTool",
               serverName: v.name,

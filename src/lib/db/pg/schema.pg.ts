@@ -1,6 +1,6 @@
 import { Agent } from "app-types/agent";
 import { UserPreferences } from "app-types/user";
-import { MCPServerConfig } from "app-types/mcp";
+import { MCPServerConfig, MCPToolInfo } from "app-types/mcp";
 import { sql } from "drizzle-orm";
 import {
   pgTable,
@@ -84,6 +84,7 @@ export const McpServerTable = pgTable("mcp_server", {
   name: text("name").notNull(),
   config: json("config").notNull().$type<MCPServerConfig>(),
   enabled: boolean("enabled").notNull().default(true),
+  perUserAuth: boolean("per_user_auth").notNull().default(false),
   userId: uuid("user_id")
     .notNull()
     .references(() => UserTable.id, { onDelete: "cascade" }),
@@ -92,6 +93,7 @@ export const McpServerTable = pgTable("mcp_server", {
   })
     .notNull()
     .default("private"),
+  toolInfo: json("tool_info").$type<MCPToolInfo[]>().default([]),
   createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
@@ -299,6 +301,9 @@ export const McpOAuthSessionTable = pgTable(
     mcpServerId: uuid("mcp_server_id")
       .notNull()
       .references(() => McpServerTable.id, { onDelete: "cascade" }),
+    userId: uuid("user_id").references(() => UserTable.id, {
+      onDelete: "cascade",
+    }),
     serverUrl: text("server_url").notNull(),
     clientInfo: json("client_info"),
     tokens: json("tokens"),
@@ -313,10 +318,11 @@ export const McpOAuthSessionTable = pgTable(
   },
   (t) => [
     index("mcp_oauth_session_server_id_idx").on(t.mcpServerId),
+    index("mcp_oauth_session_user_id_idx").on(t.userId),
     index("mcp_oauth_session_state_idx").on(t.state),
     // Partial index for sessions with tokens for better performance
     index("mcp_oauth_session_tokens_idx")
-      .on(t.mcpServerId)
+      .on(t.mcpServerId, t.userId)
       .where(isNotNull(t.tokens)),
   ],
 );
