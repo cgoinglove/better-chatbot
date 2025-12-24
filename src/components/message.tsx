@@ -18,6 +18,7 @@ import { ChevronDown, ChevronUp, TriangleAlertIcon } from "lucide-react";
 import { Button } from "ui/button";
 import { useTranslations } from "next-intl";
 import { ChatMetadata } from "app-types/chat";
+import { parseRateLimitMessage } from "lib/ai/rate-limit-message";
 
 interface Props {
   message: UIMessage;
@@ -210,6 +211,53 @@ export const ErrorMessage = ({
   const [isExpanded, setIsExpanded] = useState(false);
   const maxLength = 200;
   const t = useTranslations();
+  const parsedRateLimit = parseRateLimitMessage(error.message);
+
+  if (parsedRateLimit) {
+    const retryMinutes = Math.max(
+      1,
+      Math.ceil(parsedRateLimit.retryAfterSeconds / 60),
+    );
+
+    return (
+      <div className="w-full mx-auto max-w-3xl px-6 animate-in fade-in mt-4">
+        <div className="relative overflow-hidden rounded-xl border bg-gradient-to-br from-red-50 via-background to-background dark:from-red-950/40 dark:via-background dark:to-background">
+          <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_20%_20%,rgba(248,113,113,0.15),transparent_35%),radial-gradient(circle_at_80%_0%,rgba(94,234,212,0.1),transparent_25%)]" />
+          <div className="relative flex flex-col gap-3 p-5">
+            <div className="flex items-start gap-3">
+              <div className="p-2 bg-destructive/10 border border-destructive/30 rounded-lg shadow-sm text-destructive">
+                <TriangleAlertIcon className="h-4 w-4" />
+              </div>
+              <div className="space-y-1">
+                <p className="font-semibold text-sm tracking-tight">
+                  {t("Chat.rateLimitedTitle")}
+                </p>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  {parsedRateLimit.window === "hour"
+                    ? t("Chat.rateLimitedHourly", {
+                        limit: parsedRateLimit.limit,
+                      })
+                    : t("Chat.rateLimitedDaily", {
+                        limit: parsedRateLimit.limit,
+                      })}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+              <span className="inline-flex items-center gap-1 rounded-full border px-2 py-1 bg-background/60">
+                <span className="h-2 w-2 rounded-full bg-destructive" />
+                {t("Chat.rateLimitedRetryAfter", { minutes: retryMinutes })}
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-full border px-2 py-1 bg-background/60">
+                {t("Chat.rateLimitedSupport")}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="w-full mx-auto max-w-3xl px-6 animate-in fade-in mt-4">
       <div className="flex flex-col gap-2">

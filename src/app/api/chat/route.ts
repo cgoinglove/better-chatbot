@@ -51,6 +51,8 @@ import { nanoBananaTool, openaiImageTool } from "lib/ai/tools/image";
 import { ImageToolName } from "lib/ai/tools";
 import { buildCsvIngestionPreviewParts } from "@/lib/ai/ingest/csv-ingest";
 import { serverFileStorage } from "lib/file-storage";
+import { getAiRateLimiter } from "lib/ai/rate-limit";
+import { buildRateLimitMessage } from "lib/ai/rate-limit-message";
 
 const logger = globalLogger.withDefaults({
   message: colorize("blackBright", `Chat API: `),
@@ -64,6 +66,22 @@ export async function POST(request: Request) {
 
     if (!session?.user.id) {
       return new Response("Unauthorized", { status: 401 });
+    }
+
+    const rateLimiter = getAiRateLimiter();
+    if (rateLimiter) {
+      const rateLimitResult = await rateLimiter.check(
+        session.user.id,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (session.user as any).role,
+      );
+      if (!rateLimitResult.ok) {
+        const message = buildRateLimitMessage(rateLimitResult);
+        return new Response(message, {
+          status: 429,
+          headers: { "Retry-After": `${rateLimitResult.retryAfterSeconds}` },
+        });
+      }
     }
     const {
       id,
