@@ -61,8 +61,8 @@ describe("Auth Config", () => {
       expect(config.emailAndPasswordEnabled).toBe(false);
     });
 
-    it("should parse DISABLE_SIGN_UP correctly", () => {
-      vi.stubEnv("DISABLE_SIGN_UP", "1");
+    it("should parse DISABLE_EMAIL_SIGN_UP correctly", () => {
+      vi.stubEnv("DISABLE_EMAIL_SIGN_UP", "1");
 
       const config = getAuthConfig();
       expect(config.signUpEnabled).toBe(false);
@@ -173,6 +173,7 @@ describe("Auth Config", () => {
 
     it("should handle complete configuration with all providers", () => {
       vi.stubEnv("DISABLE_EMAIL_SIGN_IN", "1");
+      vi.stubEnv("DISABLE_EMAIL_SIGN_UP", "1");
       vi.stubEnv("DISABLE_SIGN_UP", "1");
       vi.stubEnv("GITHUB_CLIENT_ID", "github-client-id");
       vi.stubEnv("GITHUB_CLIENT_SECRET", "github-client-secret");
@@ -263,7 +264,7 @@ describe("Auth Config", () => {
 
     it("should handle case variations for DISABLE variables", () => {
       vi.stubEnv("DISABLE_EMAIL_SIGN_IN", "TRUE");
-      vi.stubEnv("DISABLE_SIGN_UP", "True");
+      vi.stubEnv("DISABLE_EMAIL_SIGN_UP", "True");
 
       const config = getAuthConfig();
       expect(config.emailAndPasswordEnabled).toBe(false);

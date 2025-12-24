@@ -11,7 +11,7 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "incremental": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
@@ -43,7 +43,8 @@
     "vitest.setup.ts",
     "vitest.config.ts",
     "drizzle.config.ts",
-    "tests/**/*.ts"
+    "tests/**/*.ts",
+    ".next/dev/types/**/*.ts"
   ],
   "exclude": ["node_modules"]
 }

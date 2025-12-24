@@ -47,13 +47,31 @@ export async function checkStorageAction(): Promise<StorageCheckResult> {
 
   // 2. Check S3 configuration
   if (storageDriver === "s3") {
-    return {
-      isValid: false,
-      error: "S3 storage is not yet implemented",
-      solution:
-        "S3 storage support is coming soon.\n" +
-        "For now, please use Vercel Blob (default)",
-    };
+    const missing: string[] = [];
+    if (!process.env.FILE_STORAGE_S3_BUCKET)
+      missing.push("FILE_STORAGE_S3_BUCKET");
+    if (!process.env.FILE_STORAGE_S3_REGION && !process.env.AWS_REGION) {
+      missing.push("FILE_STORAGE_S3_REGION or AWS_REGION");
+    }
+
+    if (missing.length > 0) {
+      return {
+        isValid: false,
+        error: `Missing S3 configuration: ${missing.join(", ")}`,
+        solution:
+          "Add required env vars for S3 file storage:\n" +
+          "- FILE_STORAGE_TYPE=s3\n" +
+          "- FILE_STORAGE_S3_BUCKET=your-bucket\n" +
+          "- FILE_STORAGE_S3_REGION=your-region (e.g., us-east-1)\n" +
+          "(Optional) FILE_STORAGE_S3_PUBLIC_BASE_URL=https://cdn.example.com\n" +
+          "(Optional) FILE_STORAGE_S3_ENDPOINT for S3-compatible stores (e.g., MinIO)\n" +
+          "(Optional) FILE_STORAGE_S3_FORCE_PATH_STYLE=1 for path-style endpoints",
+      };
+    }
+
+    // Warn if neither a public base URL nor a public bucket policy is set.
+    // We can't reliably detect bucket policy here; we just pass validation.
+    return { isValid: true };
   }
 
   // 3. Validate storage driver

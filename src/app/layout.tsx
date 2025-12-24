@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import "katex/dist/katex.min.css";
 import {
   ThemeProvider,
   ThemeStyleProvider,
@@ -37,7 +38,7 @@ export default async function RootLayout({
       >
         <ThemeProvider
           attribute="class"
-          defaultTheme="dark"
+          defaultTheme="system"
           themes={["light", "dark"]}
           storageKey="app-theme-v2"
           disableTransitionOnChange

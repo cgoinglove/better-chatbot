@@ -31,6 +31,7 @@ function parseSocialAuthConfigs() {
     microsoft?: MicrosoftConfig;
     okta?: OktaConfig;
   } = {};
+  // DISABLE_SIGN_UP only applies to OAuth signups, not email signups
   const disableSignUp = parseEnvBoolean(process.env.DISABLE_SIGN_UP);
 
   if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
@@ -127,8 +128,10 @@ export function getAuthConfig(): AuthConfig {
     emailAndPasswordEnabled: process.env.DISABLE_EMAIL_SIGN_IN
       ? !parseEnvBoolean(process.env.DISABLE_EMAIL_SIGN_IN)
       : true,
-    signUpEnabled: process.env.DISABLE_SIGN_UP
-      ? !parseEnvBoolean(process.env.DISABLE_SIGN_UP)
+    // signUpEnabled now only applies to email signups
+    // OAuth signups are controlled separately via DISABLE_SIGN_UP in parseSocialAuthConfigs
+    signUpEnabled: process.env.DISABLE_EMAIL_SIGN_UP
+      ? !parseEnvBoolean(process.env.DISABLE_EMAIL_SIGN_UP)
       : true,
     socialAuthenticationProviders: parseSocialAuthConfigs(),
   };

@@ -194,7 +194,7 @@
   "Chat": {
     "Error": "Chat Error",
     "thisMessageWasNotSavedPleaseTryTheChatAgain": "This message was not saved. Please try the chat again.",
-    "uploadImage": "Upload Image",
+    "uploadImage": "Upload File",
     "generateImage": "Generate Image",
     "imageUploadedSuccessfully": "Image uploaded successfully",
     "pleaseUploadImageFile": "Please upload an image file",
@@ -379,7 +379,8 @@
     "showAllChats": "View All Chats",
     "showLessChats": "Show less",
     "reportAnIssue": "Report an issue",
-    "joinCommunity": "Join Community"
+    "joinCommunity": "Join Community",
+    "userSettings": "User Settings"
   },
   "Archive": {
     "title": "Archive",

@@ -17,6 +17,15 @@ export type ChatModel = {
   model: string;
 };
 
+export const ChatAttachmentSchema = z.object({
+  type: z.enum(["file", "source-url"]),
+  url: z.string(),
+  mediaType: z.string().optional(),
+  filename: z.string().optional(),
+});
+
+export type ChatAttachment = z.infer<typeof ChatAttachmentSchema>;
+
 export type ChatThread = {
   id: string;
   title: string;
@@ -98,6 +107,7 @@ export const chatApiSchemaRequestBodySchema = z.object({
   imageTool: z.object({ model: z.string().optional() }).optional(),
   allowedMcpServers: z.record(z.string(), AllowedMCPServerZodSchema).optional(),
   allowedAppDefaultToolkit: z.array(z.string()).optional(),
+  attachments: z.array(ChatAttachmentSchema).optional(),
 });
 
 export type ChatApiSchemaRequestBody = z.infer<

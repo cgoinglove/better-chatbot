@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { Button } from "ui/button";
+import { Badge } from "ui/badge";
 import { Markdown } from "./markdown";
 import { cn, safeJSONParse, truncateString } from "lib/utils";
 import JsonView from "ui/json-view";
@@ -212,7 +213,7 @@ export const UserMessagePart = memo(
           )}
         </div>
         {isLast && (
-          <div className="flex w-full justify-end opacity-0 group-hover/message:opacity-100 transition-opacity duration-300">
+          <div className="flex w-full justify-end md:opacity-0 group-hover/message:opacity-100 transition-opacity duration-300">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -1190,8 +1191,16 @@ export const FileMessagePart = memo(
     const isImage = part.mediaType?.startsWith("image/");
 
     const fileExtension =
-      part.filename?.split(".").pop()?.toUpperCase() || "FILE";
+      part.filename?.split(".").pop()?.toUpperCase() ||
+      part.mediaType?.split("/").pop()?.toUpperCase() ||
+      "FILE";
     const fileUrl = part.url;
+    const filename =
+      part.filename || part.url?.split("/").pop() || "Attachment";
+    const secondaryLabel =
+      part.mediaType && part.mediaType !== "application/octet-stream"
+        ? part.mediaType
+        : undefined;
 
     if (isImage && fileUrl) {
       return (
@@ -1220,30 +1229,93 @@ export const FileMessagePart = memo(
     return (
       <div
         className={cn(
-          "max-w-sm rounded-lg border border-border bg-muted p-4",
-          isUserMessage ? "ml-auto" : "mr-auto",
+          "max-w-md rounded-2xl border border-border/80 p-4 shadow-sm backdrop-blur-sm",
+          isUserMessage
+            ? "ml-auto bg-accent text-accent-foreground border-accent/40"
+            : "mr-auto bg-muted/60 text-foreground",
         )}
       >
-        <div className="flex items-center gap-3">
-          <div className="flex-shrink-0 p-2 rounded bg-background">
-            <FileIcon className="size-6 text-muted-foreground" />
+        <div className="flex items-start gap-4">
+          <div
+            className={cn(
+              "flex-shrink-0 rounded-xl p-3",
+              isUserMessage ? "bg-accent-foreground/10" : "bg-muted",
+            )}
+          >
+            <FileIcon
+              className={cn(
+                "size-6",
+                isUserMessage
+                  ? "text-accent-foreground/80"
+                  : "text-muted-foreground",
+              )}
+            />
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">
-              {part.filename || "File"}
+          <div className="flex-1 min-w-0 space-y-1 pr-3">
+            <p
+              className={cn(
+                "text-sm font-medium line-clamp-1",
+                isUserMessage ? "text-accent-foreground" : "text-foreground",
+              )}
+              title={filename}
+            >
+              {filename}
             </p>
-            <p className="text-xs text-muted-foreground">{fileExtension}</p>
+            <div
+              className={cn(
+                "flex flex-wrap items-center gap-2 text-xs",
+                isUserMessage
+                  ? "text-accent-foreground/70"
+                  : "text-muted-foreground",
+              )}
+            >
+              <Badge
+                variant="outline"
+                className={cn(
+                  "uppercase tracking-wide px-2 py-0.5",
+                  isUserMessage &&
+                    "border-accent-foreground/30 text-accent-foreground/90",
+                )}
+              >
+                {fileExtension}
+              </Badge>
+              {secondaryLabel && (
+                <span
+                  className={cn(
+                    "truncate max-w-[10rem]",
+                    isUserMessage
+                      ? "text-accent-foreground/70"
+                      : "text-muted-foreground",
+                  )}
+                  title={secondaryLabel}
+                >
+                  {secondaryLabel}
+                </span>
+              )}
+            </div>
           </div>
           {fileUrl && (
-            <a
-              href={fileUrl}
-              download={part.filename}
-              className="flex-shrink-0"
-            >
-              <Button size="icon" variant="ghost" className="size-8">
-                <Download className="size-4" />
-              </Button>
-            </a>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  asChild
+                  size="icon"
+                  variant="ghost"
+                  className={cn(
+                    "size-9 flex-shrink-0 hover:text-foreground",
+                    isUserMessage
+                      ? "text-accent-foreground/70 hover:text-accent-foreground"
+                      : "text-muted-foreground",
+                  )}
+                >
+                  <a href={fileUrl} download={part.filename ?? filename}>
+                    <Download className="size-4" />
+                    <span className="sr-only">Download {filename}</span>
+                  </a>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Download</TooltipContent>
+            </Tooltip>
           )}
         </div>
       </div>
@@ -1252,3 +1324,106 @@ export const FileMessagePart = memo(
 );
 
 FileMessagePart.displayName = "FileMessagePart";
+
+// Source URL (non-model) attachment renderer
+export function SourceUrlMessagePart({
+  part,
+  isUserMessage,
+}: {
+  part: { type: "source-url"; url: string; title?: string; mediaType?: string };
+  isUserMessage: boolean;
+}) {
+  const name = part.title || part.url?.split("/").pop() || "attachment";
+  const ext = name.split(".").pop()?.toUpperCase() || "FILE";
+  const mediaType =
+    part.mediaType && part.mediaType !== "application/octet-stream"
+      ? part.mediaType
+      : undefined;
+  return (
+    <div
+      className={cn(
+        "max-w-md rounded-2xl border border-border/80 p-4 backdrop-blur-sm shadow-sm",
+        isUserMessage
+          ? "ml-auto bg-accent text-accent-foreground border-accent/40"
+          : "mr-auto bg-muted/60 text-foreground",
+      )}
+    >
+      <div className="flex items-start gap-4 max-w-sm">
+        <div
+          className={cn(
+            "flex-shrink-0 rounded-xl p-3",
+            isUserMessage ? "bg-accent-foreground/10" : "bg-muted",
+          )}
+        >
+          <FileIcon
+            className={cn(
+              "size-6",
+              isUserMessage
+                ? "text-accent-foreground/80"
+                : "text-muted-foreground",
+            )}
+          />
+        </div>
+        <div className="flex-1 min-w-0 space-y-1 pr-3">
+          <a
+            href={part.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={cn(
+              "text-sm font-medium hover:underline line-clamp-1",
+              isUserMessage ? "text-accent-foreground" : "text-foreground",
+            )}
+            title={name}
+          >
+            {name}
+          </a>
+          <div
+            className={cn(
+              "flex flex-wrap items-center gap-2 text-xs",
+              isUserMessage
+                ? "text-accent-foreground/70"
+                : "text-muted-foreground",
+            )}
+          >
+            <Badge
+              variant="outline"
+              className={cn(
+                "uppercase tracking-wide px-2 py-0.5",
+                isUserMessage &&
+                  "border-accent-foreground/30 text-accent-foreground/90",
+              )}
+            >
+              {ext}
+            </Badge>
+            {mediaType && (
+              <span className="truncate max-w-[10rem]" title={mediaType}>
+                {mediaType}
+              </span>
+            )}
+          </div>
+        </div>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              asChild
+              size="icon"
+              variant="ghost"
+              className={cn(
+                "size-9 flex-shrink-0 hover:text-foreground",
+                isUserMessage
+                  ? "text-accent-foreground/70 hover:text-accent-foreground"
+                  : "text-muted-foreground",
+              )}
+            >
+              <a href={part.url} target="_blank" rel="noopener noreferrer">
+                <Download className="size-4" />
+                <span className="sr-only">Open attachment</span>
+              </a>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Open attachment</TooltipContent>
+        </Tooltip>
+      </div>
+    </div>
+  );
+}

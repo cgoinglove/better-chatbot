@@ -73,6 +73,15 @@ export const resolveStoragePrefix = () => {
   return raw.replace(/^\/+|\/+$|\.+/g, "").trim();
 };
 
+export const storageKeyFromUrl = (input: string): string | null => {
+  try {
+    const url = new URL(input);
+    return decodeURIComponent(url.pathname.replace(/^\//, ""));
+  } catch {
+    return null;
+  }
+};
+
 const isArrayBufferLike = (value: unknown): value is ArrayBuffer =>
   value instanceof ArrayBuffer;
 

@@ -5,6 +5,7 @@ import {
   ChevronDown,
   CornerRightUp,
   FileIcon,
+  FileTextIcon,
   ImagesIcon,
   Loader2,
   PaperclipIcon,
@@ -46,13 +47,14 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "ui/dropdown-menu";
-import { useFileUpload } from "@/hooks/use-presigned-upload";
-import { toast } from "sonner";
-import { generateUUID, cn } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { useThreadFileUploader } from "@/hooks/use-thread-file-uploader";
 
 import { EMOJI_DATA } from "lib/const";
 import { AgentSummary } from "app-types/agent";
-import { FileUIPart } from "ai";
+import { FileUIPart, TextUIPart } from "ai";
+import { toast } from "sonner";
+import { isFilePartSupported, isIngestSupported } from "@/lib/ai/file-support";
 import { useChatModels } from "@/hooks/queries/use-chat-models";
 
 interface PromptInputProps {
@@ -96,7 +98,7 @@ export default function PromptInput({
   const t = useTranslations("Chat");
   const [isUploadDropdownOpen, setIsUploadDropdownOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { upload } = useFileUpload();
+  const { uploadFiles } = useThreadFileUploader(threadId);
   const { data: providers } = useChatModels();
 
   const [
@@ -124,6 +126,10 @@ export default function PromptInput({
     );
     return model;
   }, [providers, globalModel]);
+
+  const supportedFileMimeTypes = modelInfo?.supportedFileMimeTypes;
+  const canUploadImages =
+    supportedFileMimeTypes?.some((mime) => mime.startsWith("image/")) ?? true;
 
   const mentions = useMemo<ChatMention[]>(() => {
     if (!threadId) return [];
@@ -201,119 +207,18 @@ export default function PromptInput({
     [uploadedFiles, threadId, appStoreMutate],
   );
 
+  // uploadFiles handled by hook
+
   const handleFileSelect = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (!file || !threadId) return;
-
-      // Validate image type
-      if (!file.type.startsWith("image/")) {
-        toast.error(t("pleaseUploadImageFile"));
-        return;
-      }
-
-      // Validate file size (10MB limit)
-      if (file.size > 10 * 1024 * 1024) {
-        toast.error(t("imageSizeMustBeLessThan10MB"));
-        return;
-      }
-
-      // Create preview URL
-      const previewUrl = URL.createObjectURL(file);
-      const fileId = generateUUID();
-      const abortController = new AbortController();
-
-      // Add file with uploading state immediately
-      const uploadingFile: UploadedFile = {
-        id: fileId,
-        url: "",
-        name: file.name,
-        mimeType: file.type,
-        size: file.size,
-        isUploading: true,
-        progress: 0,
-        previewUrl,
-        abortController,
-      };
-
-      appStoreMutate((prev) => ({
-        threadFiles: {
-          ...prev.threadFiles,
-          [threadId]: [...(prev.threadFiles[threadId] ?? []), uploadingFile],
-        },
-      }));
-
-      setIsUploadDropdownOpen(false);
-
-      try {
-        // Upload file
-        const uploadedFile = await upload(file);
-
-        if (uploadedFile) {
-          // Update with final URL
-          appStoreMutate((prev) => ({
-            threadFiles: {
-              ...prev.threadFiles,
-              [threadId]: (prev.threadFiles[threadId] ?? []).map((f) =>
-                f.id === fileId
-                  ? {
-                      ...f,
-                      url: uploadedFile.url,
-                      isUploading: false,
-                      progress: 100,
-                    }
-                  : f,
-              ),
-            },
-          }));
-
-          toast.success(t("imageUploadedSuccessfully"));
-        } else {
-          // Failed to upload - remove the file
-          appStoreMutate((prev) => ({
-            threadFiles: {
-              ...prev.threadFiles,
-              [threadId]: (prev.threadFiles[threadId] ?? []).filter(
-                (f) => f.id !== fileId,
-              ),
-            },
-          }));
-        }
-      } catch (error) {
-        // Upload failed - remove the file
-        if (error instanceof Error && error.name === "AbortError") {
-          // Remove aborted upload
-          appStoreMutate((prev) => ({
-            threadFiles: {
-              ...prev.threadFiles,
-              [threadId]: (prev.threadFiles[threadId] ?? []).filter(
-                (f) => f.id !== fileId,
-              ),
-            },
-          }));
-        } else {
-          // For other errors, remove the file and show error
-          appStoreMutate((prev) => ({
-            threadFiles: {
-              ...prev.threadFiles,
-              [threadId]: (prev.threadFiles[threadId] ?? []).filter(
-                (f) => f.id !== fileId,
-              ),
-            },
-          }));
-        }
-      } finally {
-        // Cleanup preview URL
-        URL.revokeObjectURL(previewUrl);
-      }
-
+      const list = e.target.files;
+      if (!list) return;
+      await uploadFiles(Array.from(list));
       // Reset input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
+      if (fileInputRef.current) fileInputRef.current.value = "";
       setIsUploadDropdownOpen(false);
     },
-    [threadId, upload, appStoreMutate, t],
+    [uploadFiles],
   );
 
   const handleGenerateImage = useCallback(
@@ -418,26 +323,60 @@ export default function PromptInput({
 
   const submit = () => {
     if (isLoading) return;
+    if (uploadedFiles.some((file) => file.isUploading)) {
+      toast.error("Please wait for files to finish uploading before sending.");
+      return;
+    }
     const userMessage = input?.trim() || "";
     if (userMessage.length === 0) return;
 
     setInput("");
+    const attachmentParts = uploadedFiles.reduce<
+      Array<FileUIPart | TextUIPart | any>
+    >((acc, file) => {
+      const isFileSupported = isFilePartSupported(
+        file.mimeType,
+        supportedFileMimeTypes,
+      );
+      const link = file.url || file.dataUrl || "";
+      if (!link) return acc;
+      if (isFileSupported) {
+        acc.push({
+          type: "file",
+          url: link,
+          mediaType: file.mimeType,
+          filename: file.name,
+        } as FileUIPart);
+      } else {
+        // Use a rich UI part for unsupported file types; will be filtered out for model input
+        acc.push({
+          type: "source-url",
+          url: link,
+          title: file.name,
+          mediaType: file.mimeType,
+        } as any);
+      }
+      return acc;
+    }, []);
+
+    if (attachmentParts.length) {
+      const summary = uploadedFiles
+        .map((file, index) => {
+          const type = file.mimeType || "unknown";
+          return `${index + 1}. ${file.name} (${type})`;
+        })
+        .join("\n");
+
+      attachmentParts.unshift({
+        type: "text",
+        text: `Attached files:\n${summary}`,
+        ingestionPreview: true,
+      });
+    }
+
     sendMessage({
       role: "user",
-      parts: [
-        ...uploadedFiles.map(
-          (file) =>
-            ({
-              type: "file",
-              url: file.url || file.dataUrl || "",
-              mediaType: file.mimeType,
-            }) as FileUIPart,
-        ),
-        {
-          type: "text",
-          text: userMessage,
-        },
-      ],
+      parts: [...attachmentParts, { type: "text", text: userMessage }],
     });
     appStoreMutate((prev) => ({
       threadFiles: {
@@ -468,6 +407,8 @@ export default function PromptInput({
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [mentions.length, threadId, appStoreMutate, imageToolModel]);
+
+  // Drag overlay handled globally in ChatBot
 
   return (
     <div className="max-w-3xl mx-auto fade-in animate-in">
@@ -551,7 +492,8 @@ export default function PromptInput({
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="image/*"
+                  accept="image/*,.pdf,.txt,.md,.csv,.json,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.rar,.7z,.tar,.gz,.mp3,.wav,.m4a,.ogg,.mp4,.webm,.mov"
+                  multiple
                   className="hidden"
                   onChange={handleFileSelect}
                   disabled={!threadId}
@@ -574,7 +516,9 @@ export default function PromptInput({
                   <DropdownMenuContent align="start" side="top">
                     <DropdownMenuItem
                       className="cursor-pointer"
-                      disabled={modelInfo?.isImageInputUnsupported}
+                      disabled={
+                        modelInfo?.isImageInputUnsupported || !canUploadImages
+                      }
                       onClick={() => fileInputRef.current?.click()}
                     >
                       <PaperclipIcon className="mr-2 size-4" />
@@ -720,11 +664,12 @@ export default function PromptInput({
                 <div className="flex flex-wrap gap-2">
                   {uploadedFiles.map((file) => {
                     const isImage = file.mimeType.startsWith("image/");
-                    const fileExtension =
-                      file.name.split(".").pop()?.toUpperCase() || "FILE";
                     const imageSrc =
                       file.previewUrl || file.url || file.dataUrl || "";
-
+                    const displayName = file.name;
+                    const displayExt =
+                      file.name.split(".").pop()?.toUpperCase() || "FILE";
+                    const isSummarizable = isIngestSupported(file.mimeType);
                     return (
                       <div
                         key={file.id}
@@ -738,10 +683,13 @@ export default function PromptInput({
                             className="w-24 h-24 object-cover"
                           />
                         ) : (
-                          <div className="w-24 h-24 flex flex-col items-center justify-center bg-muted">
+                          <div className="w-32 h-28 flex flex-col items-center justify-center bg-muted px-2 py-3 text-center">
                             <FileIcon className="size-8 text-muted-foreground mb-1" />
-                            <span className="text-xs font-medium text-muted-foreground">
-                              {fileExtension}
+                            <span className="text-xs font-medium text-muted-foreground line-clamp-2 w-full">
+                              {displayName}
+                            </span>
+                            <span className="text-[11px] text-muted-foreground/80">
+                              {displayExt}
                             </span>
                           </div>
                         )}
@@ -762,7 +710,7 @@ export default function PromptInput({
                           </div>
                         )}
 
-                        {/* Hover Delete Button */}
+                        {/* Hover Actions */}
                         <div
                           className={cn(
                             "absolute inset-0 bg-background/80 backdrop-blur-sm transition-opacity flex items-center justify-center rounded-lg",
@@ -771,15 +719,68 @@ export default function PromptInput({
                               : "opacity-0 group-hover:opacity-100",
                           )}
                         >
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="rounded-full bg-background/80 hover:bg-background"
-                            onClick={() => deleteFile(file.id)}
-                            disabled={file.isUploading}
-                          >
-                            <XIcon className="size-4" />
-                          </Button>
+                          <div className="flex gap-2 items-center">
+                            {isSummarizable && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="secondary"
+                                    size="icon"
+                                    className="rounded-full"
+                                    onClick={async () => {
+                                      try {
+                                        const url = file.url || file.dataUrl;
+                                        if (!url) {
+                                          toast.error("No file URL available");
+                                          return;
+                                        }
+                                        const res = await fetch(
+                                          "/api/storage/ingest",
+                                          {
+                                            method: "POST",
+                                            headers: {
+                                              "Content-Type":
+                                                "application/json",
+                                            },
+                                            body: JSON.stringify({ url }),
+                                          },
+                                        );
+                                        if (!res.ok) {
+                                          const e = await res
+                                            .json()
+                                            .catch(() => ({}));
+                                          toast.error(
+                                            e.error || "Failed to ingest file",
+                                          );
+                                          return;
+                                        }
+                                        const data = await res.json();
+                                        // Append preview text to input for the user to send
+                                        setInput(
+                                          `${input ? input + "\n\n" : ""}${data.text}`,
+                                        );
+                                      } catch (_err) {
+                                        toast.error("Failed to ingest file");
+                                      }
+                                    }}
+                                  >
+                                    <FileTextIcon className="size-4" />
+                                    <span className="sr-only">Summarize</span>
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Summarize</TooltipContent>
+                              </Tooltip>
+                            )}
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="rounded-full bg-background/80 hover:bg-background"
+                              onClick={() => deleteFile(file.id)}
+                              disabled={file.isUploading}
+                            >
+                              <XIcon className="size-4" />
+                            </Button>
+                          </div>
                         </div>
 
                         {/* Cancel Upload Button (Top Right) */}

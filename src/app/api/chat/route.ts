@@ -49,6 +49,8 @@ import { colorize } from "consola/utils";
 import { generateUUID } from "lib/utils";
 import { nanoBananaTool, openaiImageTool } from "lib/ai/tools/image";
 import { ImageToolName } from "lib/ai/tools";
+import { buildCsvIngestionPreviewParts } from "@/lib/ai/ingest/csv-ingest";
+import { serverFileStorage } from "lib/file-storage";
 
 const logger = globalLogger.withDefaults({
   message: colorize("blackBright", `Chat API: `),
@@ -72,6 +74,7 @@ export async function POST(request: Request) {
       allowedMcpServers,
       imageTool,
       mentions = [],
+      attachments = [],
     } = chatApiSchemaRequestBodySchema.parse(json);
 
     const model = customModelProvider.getModel(chatModel);
@@ -104,6 +107,70 @@ export async function POST(request: Request) {
     if (messages.at(-1)?.id == message.id) {
       messages.pop();
     }
+    const ingestionPreviewParts = await buildCsvIngestionPreviewParts(
+      attachments,
+      (key) => serverFileStorage.download(key),
+    );
+    if (ingestionPreviewParts.length) {
+      const baseParts = [...message.parts];
+      let insertionIndex = -1;
+      for (let i = baseParts.length - 1; i >= 0; i -= 1) {
+        if (baseParts[i]?.type === "text") {
+          insertionIndex = i;
+          break;
+        }
+      }
+      if (insertionIndex !== -1) {
+        baseParts.splice(insertionIndex, 0, ...ingestionPreviewParts);
+        message.parts = baseParts;
+      } else {
+        message.parts = [...baseParts, ...ingestionPreviewParts];
+      }
+    }
+
+    if (attachments.length) {
+      const firstTextIndex = message.parts.findIndex(
+        (part: any) => part?.type === "text",
+      );
+      const attachmentParts: any[] = [];
+
+      attachments.forEach((attachment) => {
+        const exists = message.parts.some(
+          (part: any) =>
+            part?.type === attachment.type && part?.url === attachment.url,
+        );
+        if (exists) return;
+
+        if (attachment.type === "file") {
+          attachmentParts.push({
+            type: "file",
+            url: attachment.url,
+            mediaType: attachment.mediaType,
+            filename: attachment.filename,
+          });
+        } else if (attachment.type === "source-url") {
+          attachmentParts.push({
+            type: "source-url",
+            url: attachment.url,
+            mediaType: attachment.mediaType,
+            title: attachment.filename,
+          });
+        }
+      });
+
+      if (attachmentParts.length) {
+        if (firstTextIndex >= 0) {
+          message.parts = [
+            ...message.parts.slice(0, firstTextIndex),
+            ...attachmentParts,
+            ...message.parts.slice(firstTextIndex),
+          ];
+        } else {
+          message.parts = [...message.parts, ...attachmentParts];
+        }
+      }
+    }
+
     messages.push(message);
 
     const supportToolCall = !isToolCallUnsupportedModel(model);

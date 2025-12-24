@@ -151,7 +151,8 @@ export function useFileUpload() {
 
           return {
             pathname: uploadUrlData.key,
-            url: uploadUrlData.url,
+            // Use server-provided public source URL (not the presigned PUT URL)
+            url: uploadUrlData.sourceUrl ?? uploadUrlData.url,
             contentType,
             size: file.size,
           };

@@ -12,6 +12,7 @@ import {
   ToolMessagePart,
   ReasoningPart,
   FileMessagePart,
+  SourceUrlMessagePart,
 } from "./message-parts";
 import { ChevronDown, ChevronUp, TriangleAlertIcon } from "lucide-react";
 import { Button } from "ui/button";
@@ -48,10 +49,19 @@ const PurePreviewMessage = ({
   sendMessage,
 }: Props) => {
   const isUserMessage = useMemo(() => message.role === "user", [message.role]);
+  const partsForDisplay = useMemo(
+    () =>
+      message.parts.filter(
+        (part) => !(part.type === "text" && (part as any).ingestionPreview),
+      ),
+    [message.parts],
+  );
+
   if (message.role == "system") {
     return null; // system message is not shown
   }
-  if (!message.parts.length) return null;
+  if (!partsForDisplay.length) return null;
+
   return (
     <div className="w-full mx-auto max-w-3xl px-6 group/message">
       <div
@@ -61,9 +71,9 @@ const PurePreviewMessage = ({
         )}
       >
         <div className="flex flex-col gap-4 w-full">
-          {message.parts?.map((part, index) => {
+          {partsForDisplay.map((part, index) => {
             const key = `message-${messageIndex}-part-${part.type}-${index}`;
-            const isLastPart = index === message.parts.length - 1;
+            const isLastPart = index === partsForDisplay.length - 1;
 
             if (part.type === "reasoning") {
               return (
@@ -143,6 +153,14 @@ const PurePreviewMessage = ({
                 <FileMessagePart
                   key={key}
                   part={part}
+                  isUserMessage={isUserMessage}
+                />
+              );
+            } else if ((part as any).type === "source-url") {
+              return (
+                <SourceUrlMessagePart
+                  key={key}
+                  part={part as any}
                   isUserMessage={isUserMessage}
                 />
               );

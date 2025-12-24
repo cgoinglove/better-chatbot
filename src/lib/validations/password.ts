@@ -2,11 +2,11 @@ import { z } from "zod";
 
 export const passwordRegexPattern =
   process.env.NEXT_PUBLIC_PASSWORD_REGEX_PATTERN ||
-  "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?]).{8,20}$";
+  "^(?=.*[a-zA-Z])(?=.*\\d)[a-zA-Z\\d!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?]{8,20}$";
 
 export const passwordRequirementsText =
   process.env.NEXT_PUBLIC_PASSWORD_REQUIREMENTS_TEXT ||
-  "Password must be 8-20 characters and contain at least one uppercase letter, one lowercase letter, one number, and one special character.";
+  "Password must be 8-20 characters and contain at least one letter and one number.";
 
 // Shared password validation schema
 export const passwordSchema = z

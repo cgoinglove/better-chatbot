@@ -13,6 +13,13 @@ import {
   openaiCompatibleModelsSafeParse,
 } from "./create-openai-compatiable";
 import { ChatModel } from "app-types/chat";
+import {
+  DEFAULT_FILE_PART_MIME_TYPES,
+  OPENAI_FILE_MIME_TYPES,
+  GEMINI_FILE_MIME_TYPES,
+  ANTHROPIC_FILE_MIME_TYPES,
+  XAI_FILE_MIME_TYPES,
+} from "./file-support";
 
 const ollama = createOllama({
   baseURL: process.env.OLLAMA_BASE_URL || "http://localhost:11434/api",
@@ -25,26 +32,28 @@ const groq = createGroq({
 const staticModels = {
   openai: {
     "gpt-4.1": openai("gpt-4.1"),
-    "gpt-4.1-mini": openai("gpt-4.1-migrate"),
+    "gpt-4.1-mini": openai("gpt-4.1-mini"),
     "o4-mini": openai("o4-mini"),
     o3: openai("o3"),
-    "gpt-5": openai("gpt-5"),
-    "gpt-5-mini": openai("gpt-5-mini"),
-    "gpt-5-nano": openai("gpt-5-nano"),
+    "gpt-5.1-chat": openai("gpt-5.1-chat-latest"),
+    "gpt-5.1": openai("gpt-5.1"),
+    "gpt-5.1-codex": openai("gpt-5.1-codex"),
+    "gpt-5.1-codex-mini": openai("gpt-5.1-codex-mini"),
   },
   google: {
     "gemini-2.5-flash-lite": google("gemini-2.5-flash-lite"),
     "gemini-2.5-flash": google("gemini-2.5-flash"),
+    "gemini-3-pro": google("gemini-3-pro-preview"),
     "gemini-2.5-pro": google("gemini-2.5-pro"),
   },
   anthropic: {
     "sonnet-4.5": anthropic("claude-sonnet-4-5"),
-    "opus-4.1": anthropic("claude-opus-4-1"),
+    "haiku-4.5": anthropic("claude-haiku-4-5"),
+    "opus-4.5": anthropic("claude-opus-4-5"),
   },
   xai: {
-    "grok-4-fast": xai("grok-4-fast-non-reasoning"),
-    "grok-4": xai("grok-4"),
-    "grok-3": xai("grok-3"),
+    "grok-4-1-fast": xai("grok-4-1-fast-non-reasoning"),
+    "grok-4-1": xai("grok-4-1"),
     "grok-3-mini": xai("grok-3-mini"),
   },
   ollama: {
@@ -89,6 +98,59 @@ const staticSupportImageInputModels = {
   ...staticModels.anthropic,
 };
 
+const staticFilePartSupportByModel = new Map<
+  LanguageModel,
+  readonly string[]
+>();
+
+const registerFileSupport = (
+  model: LanguageModel | undefined,
+  mimeTypes: readonly string[] = DEFAULT_FILE_PART_MIME_TYPES,
+) => {
+  if (!model) return;
+  staticFilePartSupportByModel.set(model, Array.from(mimeTypes));
+};
+
+registerFileSupport(staticModels.openai["gpt-4.1"], OPENAI_FILE_MIME_TYPES);
+registerFileSupport(
+  staticModels.openai["gpt-4.1-mini"],
+  OPENAI_FILE_MIME_TYPES,
+);
+registerFileSupport(staticModels.openai["gpt-5"], OPENAI_FILE_MIME_TYPES);
+registerFileSupport(staticModels.openai["gpt-5-mini"], OPENAI_FILE_MIME_TYPES);
+registerFileSupport(staticModels.openai["gpt-5-nano"], OPENAI_FILE_MIME_TYPES);
+
+registerFileSupport(
+  staticModels.google["gemini-2.5-flash-lite"],
+  GEMINI_FILE_MIME_TYPES,
+);
+registerFileSupport(
+  staticModels.google["gemini-2.5-flash"],
+  GEMINI_FILE_MIME_TYPES,
+);
+registerFileSupport(
+  staticModels.google["gemini-2.5-pro"],
+  GEMINI_FILE_MIME_TYPES,
+);
+
+registerFileSupport(
+  staticModels.anthropic["sonnet-4.5"],
+  ANTHROPIC_FILE_MIME_TYPES,
+);
+registerFileSupport(
+  staticModels.anthropic["opus-4.1"],
+  ANTHROPIC_FILE_MIME_TYPES,
+);
+
+registerFileSupport(staticModels.xai["grok-4-fast"], XAI_FILE_MIME_TYPES);
+registerFileSupport(staticModels.xai["grok-4"], XAI_FILE_MIME_TYPES);
+registerFileSupport(staticModels.xai["grok-3"], XAI_FILE_MIME_TYPES);
+registerFileSupport(staticModels.xai["grok-3-mini"], XAI_FILE_MIME_TYPES);
+registerFileSupport(
+  staticModels.openRouter["gemini-2.0-flash-exp:free"],
+  GEMINI_FILE_MIME_TYPES,
+);
+
 const openaiCompatibleProviders = openaiCompatibleModelsSafeParse(
   process.env.OPENAI_COMPATIBLE_DATA,
 );
@@ -113,6 +175,10 @@ const isImageInputUnsupportedModel = (model: LanguageModelV2) => {
   return !Object.values(staticSupportImageInputModels).includes(model);
 };
 
+export const getFilePartSupportedMimeTypes = (model: LanguageModel) => {
+  return staticFilePartSupportByModel.get(model) ?? [];
+};
+
 const fallbackModel = staticModels.openai["gpt-4.1"];
 
 export const customModelProvider = {
@@ -122,6 +188,7 @@ export const customModelProvider = {
       name,
       isToolCallUnsupported: isToolCallUnsupportedModel(model),
       isImageInputUnsupported: isImageInputUnsupportedModel(model),
+      supportedFileMimeTypes: [...getFilePartSupportedMimeTypes(model)],
     })),
     hasAPIKey: checkProviderAPIKey(provider as keyof typeof staticModels),
   })),

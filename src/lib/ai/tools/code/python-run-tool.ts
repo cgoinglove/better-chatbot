@@ -7,7 +7,7 @@ export const pythonExecutionSchema: JSONSchema7 = {
   properties: {
     code: {
       type: "string",
-      description: `Execute Python code directly in the user's browser using Pyodide. Code runs client-side without server dependency.\n\nUse print() for output. Module imports are supported. The last expression's value will be returned if possible.\n\nOutput collection:\n// Set up stdout capture\npyodide.setStdout({\n  batched: (output: string) => {\n    const type = output.startsWith("data:image/png;base64")\n      ? "image"\n      : "data";\n    logs.push({ type: "log", args: [{ type, value: output }] });\n  },\n});\n\npyodide.setStderr({\n  batched: (output: string) => {\n    logs.push({ type: "error", args: [{ type: "data", value: output }] });\n  },\n});`,
+      description: `Execute Python code in the user's browser via Pyodide.\n\nNetwork access: use pyodide.http.open_url for HTTP/HTTPS, not urllib/request/requests. CORS must allow the app origin.\nExample (CSV):\nfrom pyodide.http import open_url\nimport pandas as pd\nurl = 'https://example.com/data.csv'\ndf = pd.read_csv(open_url(url))\nprint(df.head())\n\nOutput capture:\npyodide.setStdout({\n  batched: (output: string) => {\n    const type = output.startsWith('data:image/png;base64') ? 'image' : 'data'\n    logs.push({ type: 'log', args: [{ type, value: output }] })\n  },\n})\npyodide.setStderr({\n  batched: (output: string) => {\n    logs.push({ type: 'error', args: [{ type: 'data', value: output }] })\n  },\n})`,
     },
   },
   required: ["code"],
@@ -15,6 +15,6 @@ export const pythonExecutionSchema: JSONSchema7 = {
 
 export const pythonExecutionTool = createTool({
   description:
-    "Execute Python code directly in the user's browser using Pyodide. Code runs client-side without server dependency.",
+    "Execute Python code in the user's browser via Pyodide. Use pyodide.http.open_url for HTTP(S) downloads; CORS must allow the app origin.",
   inputSchema: jsonSchemaToZod(pythonExecutionSchema),
 });

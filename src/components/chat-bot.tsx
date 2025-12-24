@@ -21,13 +21,17 @@ import {
 
 import { safe } from "ts-safe";
 import { mutate } from "swr";
-import { ChatApiSchemaRequestBody, ChatModel } from "app-types/chat";
+import {
+  ChatApiSchemaRequestBody,
+  ChatAttachment,
+  ChatModel,
+} from "app-types/chat";
 import { useToRef } from "@/hooks/use-latest";
 import { isShortcutEvent, Shortcuts } from "lib/keyboard-shortcuts";
 import { Button } from "ui/button";
 import { deleteThreadAction } from "@/app/api/chat/actions";
 import { useRouter } from "next/navigation";
-import { ArrowDown, Loader } from "lucide-react";
+import { ArrowDown, Loader, FilePlus } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -43,6 +47,8 @@ import dynamic from "next/dynamic";
 import { useMounted } from "@/hooks/use-mounted";
 import { getStorageManager } from "lib/browser-stroage";
 import { AnimatePresence, motion } from "framer-motion";
+import { useThreadFileUploader } from "@/hooks/use-thread-file-uploader";
+import { useFileDragOverlay } from "@/hooks/use-file-drag-overlay";
 
 type Props = {
   threadId: string;
@@ -67,6 +73,17 @@ firstTimeStorage.set(false);
 export default function ChatBot({ threadId, initialMessages }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isAtBottom, setIsAtBottom] = useState(true);
+  const { uploadFiles } = useThreadFileUploader(threadId);
+  const handleFileDrop = useCallback(
+    async (files: File[]) => {
+      if (!files.length) return;
+      await uploadFiles(files);
+    },
+    [uploadFiles],
+  );
+  const { isDragging } = useFileDragOverlay({
+    onDropFiles: handleFileDrop,
+  });
 
   const [
     appStoreMutate,
@@ -146,6 +163,36 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
           window.history.replaceState({}, "", `/chat/${threadId}`);
         }
         const lastMessage = messages.at(-1)!;
+        // Filter out UI-only parts (e.g., source-url) so the model doesn't receive unknown parts
+        const attachments: ChatAttachment[] = lastMessage.parts.reduce(
+          (acc: ChatAttachment[], part: any) => {
+            if (part?.type === "file") {
+              acc.push({
+                type: "file",
+                url: part.url,
+                mediaType: part.mediaType,
+                filename: part.filename,
+              });
+            } else if (part?.type === "source-url") {
+              acc.push({
+                type: "source-url",
+                url: part.url,
+                mediaType: part.mediaType,
+                filename: part.title,
+              });
+            }
+            return acc;
+          },
+          [],
+        );
+
+        const sanitizedLastMessage = {
+          ...lastMessage,
+          parts: lastMessage.parts.filter((p: any) => p?.type !== "source-url"),
+        } as typeof lastMessage;
+        const hasFilePart = lastMessage.parts?.some(
+          (p) => (p as any)?.type === "file",
+        );
 
         const requestBody: ChatApiSchemaRequestBody = {
           ...body,
@@ -153,17 +200,19 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
           chatModel:
             (body as { model: ChatModel })?.model ?? latestRef.current.model,
           toolChoice: latestRef.current.toolChoice,
-          allowedAppDefaultToolkit: latestRef.current.mentions?.length
-            ? []
-            : latestRef.current.allowedAppDefaultToolkit,
+          allowedAppDefaultToolkit:
+            latestRef.current.mentions?.length || hasFilePart
+              ? []
+              : latestRef.current.allowedAppDefaultToolkit,
           allowedMcpServers: latestRef.current.mentions?.length
             ? {}
             : latestRef.current.allowedMcpServers,
           mentions: latestRef.current.mentions,
-          message: lastMessage,
+          message: sanitizedLastMessage,
           imageTool: {
             model: latestRef.current.threadImageToolModel[threadId],
           },
+          attachments,
         };
         return { body: requestBody };
       },
@@ -363,6 +412,18 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
           "flex flex-col min-w-0 relative h-full z-40",
         )}
       >
+        {isDragging && (
+          <div className="absolute inset-0 z-40 bg-background/70 backdrop-blur-sm flex items-center justify-center pointer-events-none">
+            <div className="rounded-2xl px-6 py-5 bg-background/80 shadow-xl border border-border flex items-center gap-3">
+              <div className="rounded-full bg-primary/10 p-2 text-primary">
+                <FilePlus className="size-6" />
+              </div>
+              <span className="text-sm text-muted-foreground">
+                Drop files to upload
+              </span>
+            </div>
+          </div>
+        )}
         {emptyMessage ? (
           <ChatGreeting />
         ) : (

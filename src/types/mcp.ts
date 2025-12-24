@@ -42,7 +42,7 @@ export type MCPToolInfo = {
 export type MCPServerInfo = {
   id: string;
   name: string;
-  config: MCPServerConfig;
+  config?: MCPServerConfig; // Optional - hidden from non-owners for security
   visibility: "public" | "private";
   error?: unknown;
   enabled: boolean;

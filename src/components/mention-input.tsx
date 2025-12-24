@@ -1,4 +1,5 @@
 "use client";
+import { useIsMobile } from "@/hooks/use-mobile";
 import Mention from "@tiptap/extension-mention";
 import {
   EditorContent,
@@ -70,6 +71,7 @@ export default function MentionInput({
   onBlur,
   fullWidthSuggestion = false,
 }: MentionInputProps) {
+  const isMobile = useIsMobile();
   const [open, setOpen] = useState(false);
   const position = useRef<{
     top: number;
@@ -158,7 +160,18 @@ export default function MentionInput({
           ?.flatMap(({ content }) => {
             return content
               ?.filter((v) => v.type == "mention")
-              .map((v) => v.attrs);
+              .map(
+                (v) =>
+                  (
+                    v as {
+                      type: "mention";
+                      attrs: {
+                        id: string;
+                        label: string;
+                      };
+                    }
+                  ).attrs,
+              );
           })
           .filter(Boolean) as { label: string; id: string }[];
         latestContent.current = {
@@ -167,7 +180,7 @@ export default function MentionInput({
         };
         onChange?.({
           json,
-          text,
+          text: text.trim(),
           mentions,
         });
       },
@@ -209,7 +222,13 @@ export default function MentionInput({
         !e.shiftKey &&
         !e.metaKey &&
         !e.nativeEvent.isComposing;
-      if (isSubmit) onEnter?.();
+      if (isSubmit) {
+        e.preventDefault();
+        onEnter?.();
+        if (isMobile) {
+          editor?.commands.blur();
+        }
+      }
     },
     [editor, onEnter, open],
   );

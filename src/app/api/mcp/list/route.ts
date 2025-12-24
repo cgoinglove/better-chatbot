@@ -42,8 +42,11 @@ export async function GET() {
   const result = servers.map((server) => {
     const mem = memoryMap.get(server.id);
     const info = mem?.getInfo();
+    const isOwner = server.userId === currentUser.id;
     const mcpInfo: MCPServerInfo = {
       ...server,
+      // Hide config from non-owners to prevent credential exposure
+      config: isOwner ? server.config : undefined,
       enabled: info?.enabled ?? true,
       status: info?.status ?? "connected",
       error: info?.error,
