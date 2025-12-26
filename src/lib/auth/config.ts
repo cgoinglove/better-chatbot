@@ -98,16 +98,33 @@ function parseSocialAuthConfigs() {
     }
   }
 
-  // Okta uses OIDC/OAuth 2.0 with issuer base URL like https://dev-xxxx.okta.com/oauth2/default
+  // Okta OIDC/OAuth 2.0 configuration
+  // Supports two modes:
+  // 1. Authorization Server mode: OKTA_ISSUER = https://dev-xxxx.okta.com/oauth2/default
+  //    - Requires Okta API Access Management feature (paid feature)
+  //    - Full OIDC support with custom scopes and claims
+  // 2. Org Authorization Server mode: OKTA_DOMAIN = https://dev-xxxx.okta.com
+  //    - Available on all Okta tenants (no extra features required)
+  //    - Uses the chatbot server as the OAuth redirect handler
+  //    - Limited to basic OpenID Connect scopes
+  //
+  // Priority: OKTA_ISSUER takes precedence over OKTA_DOMAIN
   if (
     process.env.OKTA_CLIENT_ID &&
     process.env.OKTA_CLIENT_SECRET &&
-    process.env.OKTA_ISSUER
+    (process.env.OKTA_ISSUER || process.env.OKTA_DOMAIN)
   ) {
+    // Determine the issuer URL
+    // If OKTA_ISSUER is provided, use it directly (authorization server mode)
+    // Otherwise, construct from OKTA_DOMAIN (org authorization server mode)
+    const issuer = process.env.OKTA_ISSUER
+      ? process.env.OKTA_ISSUER
+      : process.env.OKTA_DOMAIN;
+
     const oktaResult = OktaConfigSchema.safeParse({
       clientId: process.env.OKTA_CLIENT_ID,
       clientSecret: process.env.OKTA_CLIENT_SECRET,
-      issuer: process.env.OKTA_ISSUER,
+      issuer: issuer,
       disableSignUp,
     });
     if (oktaResult.success) {

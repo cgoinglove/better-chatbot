@@ -20,7 +20,8 @@ import { ConsolaInstance } from "consola";
 
 /**
  * PostgreSQL-based OAuth client provider for MCP servers
- * Manages OAuth authentication state and tokens with multi-instance support
+ * Manages OAuth authorization state and tokens with multi-instance support
+ * Supports User Session Authorization - each user can have their own isolated session
  */
 export class PgOAuthClientProvider implements OAuthClientProvider {
   private currentOAuthState: string = "";
@@ -32,6 +33,7 @@ export class PgOAuthClientProvider implements OAuthClientProvider {
     private config: {
       name: string;
       mcpServerId: string;
+      userId?: string; // User ID for user session authorization
       serverUrl: string;
       _clientMetadata: OAuthClientMetadata;
       onRedirectToAuthorization: (authUrl: URL) => Promise<void>;
@@ -61,25 +63,33 @@ export class PgOAuthClientProvider implements OAuthClientProvider {
         return;
       }
     }
-    // 1. Check for authenticated session first
+    // 1. Check for authorized session first (with optional userId for user session authorization)
+    this.logger.info(
+      `Checking for authorized session: server=${this.config.mcpServerId}, user=${this.config.userId || "shared"}`,
+    );
     const authenticated = await pgMcpOAuthRepository.getAuthenticatedSession(
       this.config.mcpServerId,
+      this.config.userId,
     );
     if (authenticated) {
       this.currentOAuthState = authenticated.state || "";
       this.cachedAuthData = authenticated;
       this.initialized = true;
-      this.logger.info("Using existing authenticated session");
+      this.logger.info(
+        `Using existing authenticated session: state=${this.currentOAuthState}`,
+      );
       return;
     }
 
     // 2. Always create a new in-progress session when not authenticated
+    this.logger.info("No authenticated session found, creating new one");
     this.currentOAuthState = generateUUID();
     this.cachedAuthData = await pgMcpOAuthRepository.createSession(
       this.config.mcpServerId,
       {
         state: this.currentOAuthState,
         serverUrl: this.config.serverUrl,
+        userId: this.config.userId, // Include userId for user session authorization
       },
     );
     this.initialized = true;

@@ -65,9 +65,16 @@ export default function SignIn({
   };
 
   const handleSocialSignIn = (provider: SocialAuthenticationProvider) => {
-    authClient.signIn.social({ provider }).catch((e) => {
-      toast.error(e.error);
-    });
+    // Okta uses genericOAuth plugin, not standard social sign-in
+    if (provider === "okta") {
+      authClient.signIn.oauth2({ providerId: "okta" }).catch((e) => {
+        toast.error(e.error || e.message || "Failed to sign in with Okta");
+      });
+    } else {
+      authClient.signIn.social({ provider }).catch((e) => {
+        toast.error(e.error);
+      });
+    }
   };
   return (
     <div className="w-full h-full flex flex-col p-4 md:p-8 justify-center">
