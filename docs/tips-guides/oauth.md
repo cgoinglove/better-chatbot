@@ -1,4 +1,4 @@
-## Social Login Setup (Google & GitHub, English)
+## Social Login Setup (Google, GitHub, Microsoft, Okta)
 
 ### Get your Google credentials
 
@@ -52,6 +52,27 @@ To use Microsoft as a social provider, you need to get your Microsoft credential
   MICROSOFT_TENANT_ID=your_tenant_id # Optional
   ```
 
+### Get your Okta credentials
+
+To use Okta as a social provider, create an OIDC app integration in the Okta Admin Console.
+
+- In Okta Admin, go to **Applications > Applications** and click **Create App Integration**.
+- Choose **Sign-in method: OIDC - OpenID Connect** and **Application type: Web Application**.
+- In **Sign-in redirect URIs**, set:
+  - For local development: `http://localhost:3000/api/auth/callback/okta`
+  - For production: `https://your-domain.com/api/auth/callback/okta`
+- After creation, copy:
+  - Your **Okta domain/issuer** (e.g. `https://dev-XXXX.okta.com/oauth2/default`). Use this as `OKTA_ISSUER`.
+  - **Client ID** and **Client Secret**.
+- Add your credentials to your `.env` file:
+
+  ```text
+  OKTA_CLIENT_ID=your_okta_client_id
+  OKTA_CLIENT_SECRET=your_okta_client_secret
+  # Full issuer URL, e.g. https://dev-XXXX.okta.com/oauth2/default
+  OKTA_ISSUER=https://your-okta-domain/oauth2/default
+  ```
+
 ## Environment Variable Check
 
 Make sure your `.env` file contains the following variables:
@@ -73,6 +94,12 @@ MICROSOFT_TENANT_ID=your_microsoft_tenant_id
 # Set to 1 to force account selection
 MICROSOFT_FORCE_ACCOUNT_SELECTION=1
 
+
+# Okta
+OKTA_CLIENT_ID=your_okta_client_id
+OKTA_CLIENT_SECRET=your_okta_client_secret
+# Full issuer URL (e.g. https://dev-XXXX.okta.com/oauth2/default)
+OKTA_ISSUER=https://your-okta-domain/oauth2/default
 
 ```
 
@@ -107,4 +134,4 @@ BETTER_AUTH_URL=https://yourdomain.com
 
 ## Done
 
-You can now sign in to better-chatbot using your Google, GitHub or Microsoft account. Restart the application to apply the changes.
+You can now sign in to better-chatbot using your Google, GitHub, Microsoft, or Okta account. Restart the application to apply the changes.
