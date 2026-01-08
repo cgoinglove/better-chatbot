@@ -180,7 +180,7 @@ export default function MentionInput({
         };
         onChange?.({
           json,
-          text: text.trim(),
+          text,
           mentions,
         });
       },
