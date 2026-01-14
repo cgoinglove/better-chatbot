@@ -434,10 +434,12 @@ function isUnauthorized(error: any): boolean {
   return (
     error instanceof UnauthorizedError ||
     error?.status === 401 ||
+    error?.code === 401 ||
     error?.message?.includes("401") ||
     error?.message?.includes("Unauthorized") ||
     error?.message?.includes("invalid_token") ||
-    error?.message?.includes("HTTP 401")
+    error?.message?.includes("HTTP 401") ||
+    error?.message?.includes("Authentication required")
   );
 }
 
