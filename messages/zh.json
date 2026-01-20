@@ -75,6 +75,11 @@
   "Chat": {
     "Error": "聊天错误",
     "thisMessageWasNotSavedPleaseTryTheChatAgain": "此消息未保存。请重试聊天。",
+    "rateLimitedTitle": "已达到 AI 限制",
+    "rateLimitedHourly": "每小时最多可发送 {limit} 条 AI 消息。",
+    "rateLimitedDaily": "每天最多可发送 {limit} 条 AI 消息。",
+    "rateLimitedRetryAfter": "请在 {minutes} 分钟后重试",
+    "rateLimitedSupport": "需要更高额度？请联系管理员。",
     "uploadImage": "上传文件",
     "generateImage": "生成图片",
     "imageUploadedSuccessfully": "图片上传成功",

@@ -74,6 +74,11 @@
   "Chat": {
     "Error": "チャットエラー",
     "thisMessageWasNotSavedPleaseTryTheChatAgain": "このメッセージは保存されませんでした。もう一度チャットをお試しください。",
+    "rateLimitedTitle": "AI の制限に達しました",
+    "rateLimitedHourly": "1 時間に {limit} 件まで AI メッセージを送信できます。",
+    "rateLimitedDaily": "1 日に {limit} 件まで AI メッセージを送信できます。",
+    "rateLimitedRetryAfter": "{minutes} 分後に再試行してください",
+    "rateLimitedSupport": "上限を増やすには管理者に連絡してください。",
     "uploadImage": "ファイルをアップロード",
     "generateImage": "画像を生成",
     "imageUploadedSuccessfully": "画像が正常にアップロードされました",
@@ -146,7 +151,6 @@
     },
     "Thread": {
       "chat": "チャット",
-
       "renameChat": "名前を変更",
       "deleteChat": "チャットを削除",
       "deleteUnarchivedChats": "アーカイブされていないチャットをすべて削除",
@@ -166,7 +170,6 @@
       "createLink": "リンクを作成",
       "linkCopied": "リンクがコピーされました"
     },
-
     "ChatPreferences": {
       "title": "チャット設定",
       "whatShouldWeCallYou": "何とお呼びすればよろしいですか？",

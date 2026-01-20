@@ -74,6 +74,11 @@
   "Chat": {
     "Error": "Erreur de Chat",
     "thisMessageWasNotSavedPleaseTryTheChatAgain": "Ce message n'a pas été enregistré. Veuillez réessayer le chat.",
+    "rateLimitedTitle": "Vous avez atteint la limite IA",
+    "rateLimitedHourly": "Vous pouvez envoyer jusqu'à {limit} messages IA par heure.",
+    "rateLimitedDaily": "Vous pouvez envoyer jusqu'à {limit} messages IA par jour.",
+    "rateLimitedRetryAfter": "Réessayez dans {minutes} min",
+    "rateLimitedSupport": "Besoin de plus ? Contactez votre administrateur.",
     "uploadImage": "Téléverser un fichier",
     "generateImage": "Générer une Image",
     "imageUploadedSuccessfully": "Image téléchargée avec succès",
@@ -146,7 +151,6 @@
     },
     "Thread": {
       "chat": "Chat",
-
       "renameChat": "Renommer",
       "deleteChat": "Supprimer le Chat",
       "deleteUnarchivedChats": "Supprimer Tous les Chats Non Archivés",
@@ -166,7 +170,6 @@
       "createLink": "Créer le Lien",
       "linkCopied": "Lien copié"
     },
-
     "ChatPreferences": {
       "title": "Préférences de Chat",
       "whatShouldWeCallYou": "Comment devrions-nous vous appeler ?",
@@ -234,7 +237,6 @@
     "theme": "Thème",
     "signOut": "Se déconnecter",
     "language": "Langue",
-
     "showAllChats": "Voir Tous les Chats",
     "showLessChats": "Afficher moins",
     "reportAnIssue": "Signaler un problème",
