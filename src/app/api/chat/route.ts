@@ -286,6 +286,7 @@ export async function POST(request: Request) {
         const vercelAITooles = safe({
           ...MCP_TOOLS,
           ...WORKFLOW_TOOLS,
+          ...IMAGE_TOOL,
         })
           .map((t) => {
             const bindingTools =
