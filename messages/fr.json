@@ -51,21 +51,43 @@
       "noAccount": "Vous n'avez pas de compte ?",
       "signUp": "S'inscrire",
       "signIn": "Se connecter",
-      "orContinueWith": "OU CONTINUER AVEC"
+      "orContinueWith": "OU CONTINUER AVEC",
+      "email": "E-mail",
+      "emailPlaceholder": "utilisateur@exemple.com",
+      "password": "Mot de passe"
     },
     "SignUp": {
       "title": "Créer un compte",
+      "titleAdmin": "Créer un compte administrateur",
       "signIn": "Se connecter",
+      "email": "E-mail",
+      "emailPlaceholder": "utilisateur@exemple.com",
+      "name": "Nom",
+      "namePlaceholder": "Jean Dupont",
+      "password": "Mot de passe",
       "description": "Inscrivez-vous à votre compte",
+      "signUpDescription": "Commencez votre parcours avec nous",
+      "signUpDescriptionAdmin": "Bienvenue, premier utilisateur ! Vous serez l'administrateur du système.",
       "step1": "Commencez votre parcours avec nous en saisissant votre adresse e-mail",
       "step2": "J'utiliserai ce nom quand nous discuterons",
       "step3": "Créez un mot de passe fort pour sécuriser votre compte",
+      "stepProgress": "Étape {current} sur {total}",
       "signUp": "S'inscrire",
       "invalidEmail": "Adresse e-mail invalide",
       "emailAlreadyExists": "L'e-mail existe déjà",
       "nameRequired": "Le nom est requis",
       "passwordRequired": "Le mot de passe est requis",
-      "createAccount": "Créer un compte"
+      "createAccount": "Créer un compte",
+      "passwordHintLength": "8-20 caractères",
+      "passwordHintLetter": "Au moins une lettre",
+      "passwordHintNumber": "Au moins un chiffre"
+    },
+    "Error": {
+      "title": "Erreur d'authentification",
+      "signupDisabled": "L'inscription est désactivée",
+      "unauthorized": "Authentification requise",
+      "unknownError": "Erreur inconnue",
+      "goToHome": "Aller à l'accueil"
     },
     "Intro": {
       "description": "Bienvenue sur better-chatbot. Connectez-vous pour découvrir nos outils de conversation alimentés par l'IA."
