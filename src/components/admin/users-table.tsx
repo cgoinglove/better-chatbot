@@ -2,7 +2,7 @@
 
 import { useTransition, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { format } from "date-fns";
+import { useFormatter } from "next-intl";
 import {
   Table,
   TableBody,
@@ -62,6 +62,7 @@ export function UsersTable({
   const formRef = useRef<HTMLFormElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const t = useTranslations("Admin.Users");
+  const format = useFormatter();
   const shouldAutoFocusRef = useRef<boolean>(false);
 
   const submitForm = useCallback(() => {
@@ -282,7 +283,7 @@ export function UsersTable({
                     />
                   </TableCell>
                   <TableCell className="text-muted-foreground">
-                    {format(new Date(user.createdAt), "MMM d, yyyy")}
+                    {format.dateTime(new Date(user.createdAt), "short")}
                   </TableCell>
                   <TableCell>
                     <ChevronRight

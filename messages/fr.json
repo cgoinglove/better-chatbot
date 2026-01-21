@@ -490,7 +490,8 @@
         "failedToSaveImage": "Échec de l'enregistrement de l'image",
         "pleaseUploadValidImage": "Veuillez télécharger une image valide (JPEG, PNG ou WebP)",
         "imageSizeMustBeLessThan": "La taille de l'image doit être inférieure à 5 Mo",
-        "select": "Sélectionner"
+        "select": "Sélectionner",
+        "last30Days": "les 30 derniers jours"
       }
     }
   }

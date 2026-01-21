@@ -3,7 +3,7 @@
 import { ChatExportCommentWithUser } from "app-types/chat-export";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Button } from "ui/button";
-import { formatDistanceToNow } from "date-fns";
+import { useFormatter } from "next-intl";
 import { useState } from "react";
 
 import { mutate } from "swr";
@@ -24,6 +24,7 @@ export default function Comment({
   maxReplyDepth?: number;
   onReply?: () => void;
 }) {
+  const format = useFormatter();
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDelete = async () => {
@@ -67,9 +68,7 @@ export default function Comment({
         <div className="flex items-center gap-2 mb-1">
           <span className="font-medium text-xs">{comment.authorName}</span>
           <span className="text-xs text-muted-foreground">
-            {formatDistanceToNow(new Date(comment.createdAt), {
-              addSuffix: true,
-            })}
+            {format.relativeTime(new Date(comment.createdAt))}
           </span>
         </div>
 
