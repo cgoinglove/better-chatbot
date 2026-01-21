@@ -51,21 +51,43 @@
       "noAccount": "¿No tienes una cuenta?",
       "signUp": "Registrarse",
       "signIn": "Iniciar sesión",
-      "orContinueWith": "O CONTINÚA CON"
+      "orContinueWith": "O CONTINÚA CON",
+      "email": "Correo electrónico",
+      "emailPlaceholder": "usuario@ejemplo.com",
+      "password": "Contraseña"
     },
     "SignUp": {
       "title": "Crear una cuenta",
+      "titleAdmin": "Crear una cuenta de administrador",
       "signIn": "Iniciar sesión",
+      "email": "Correo electrónico",
+      "emailPlaceholder": "usuario@ejemplo.com",
+      "name": "Nombre",
+      "namePlaceholder": "Juan Pérez",
+      "password": "Contraseña",
       "description": "Regístrate en tu cuenta",
+      "signUpDescription": "Comienza tu viaje con nosotros",
+      "signUpDescriptionAdmin": "¡Bienvenido, primer usuario! Serás el administrador del sistema.",
       "step1": "Comienza tu viaje con nosotros ingresando tu dirección de correo electrónico",
       "step2": "Usaré este nombre cuando charlemos",
       "step3": "Crea una contraseña segura para proteger tu cuenta",
+      "stepProgress": "Paso {current} de {total}",
       "signUp": "Registrarse",
       "invalidEmail": "Dirección de correo electrónico inválida",
       "emailAlreadyExists": "El correo electrónico ya existe",
       "nameRequired": "El nombre es obligatorio",
       "passwordRequired": "La contraseña es obligatoria",
-      "createAccount": "Crear cuenta"
+      "createAccount": "Crear cuenta",
+      "passwordHintLength": "8-20 caracteres",
+      "passwordHintLetter": "Al menos una letra",
+      "passwordHintNumber": "Al menos un número"
+    },
+    "Error": {
+      "title": "Error de autenticación",
+      "signupDisabled": "El registro está deshabilitado",
+      "unauthorized": "Se requiere autenticación",
+      "unknownError": "Error desconocido",
+      "goToHome": "Ir al inicio"
     },
     "Intro": {
       "description": "Bienvenido a better-chatbot. Inicia sesión para experimentar nuestras herramientas conversacionales impulsadas por IA."
