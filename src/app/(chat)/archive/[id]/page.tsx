@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader } from "ui/card";
 import { MessageCircleXIcon } from "lucide-react";
 import { ArchiveActionsClient } from "@/app/(chat)/archive/[id]/archive-actions-client";
 import { Separator } from "ui/separator";
-import { getFormatter } from "next-intl/server";
+import { getFormatter, getTranslations } from "next-intl/server";
 
 import LightRays from "ui/light-rays";
 import Particles from "ui/particles";
@@ -73,6 +73,7 @@ export default async function ArchivePage({
   }
 
   const format = await getFormatter();
+  const t = await getTranslations("User.Profile.common");
 
   return (
     <>
@@ -104,7 +105,7 @@ export default async function ArchivePage({
             <h1 className="text-2xl font-bold">{archive.name}</h1>
             <div className="flex-1" />
             <p className="text-xs text-muted-foreground mr-2">
-              Created {format.relativeTime(archive.createdAt)}
+              {t("created")} {format.relativeTime(archive.createdAt)}
             </p>
             <div className="h-4">
               <Separator orientation="vertical" />
