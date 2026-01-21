@@ -489,7 +489,8 @@
         "failedToSaveImage": "画像の保存に失敗しました",
         "pleaseUploadValidImage": "有効な画像をアップロードしてください（JPEG、PNG、またはWebP）",
         "imageSizeMustBeLessThan": "画像サイズは5MB未満である必要があります",
-        "select": "選択"
+        "select": "選択",
+        "last30Days": "過去30日間"
       }
     }
   }
