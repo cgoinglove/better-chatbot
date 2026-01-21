@@ -155,10 +155,12 @@ export function ToolSelectDropdown({
     const defaultTools = Object.values(AppDefaultToolkit)
       .filter((t) => allowedAppDefaultToolkit?.includes(t))
       .map((t) => translate[t]);
-    const mcpIds = mcpList.map((v) => v.id);
+    const connectedMcpIds = mcpList
+      .filter((v) => v.status === "connected")
+      .map((v) => v.id);
     const mcpTools = Object.values(
       objectFlow(allowedMcpServers ?? {}).filter((_, id) =>
-        mcpIds.includes(id),
+        connectedMcpIds.includes(id),
       ),
     )
       .map((v) => v.tools)
