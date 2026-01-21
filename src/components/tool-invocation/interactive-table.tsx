@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useFormatter } from "next-intl";
 import {
   ArrowDownUp,
   Download,
@@ -85,6 +86,7 @@ const loadXLSX = async () => {
 
 export function InteractiveTable(props: InteractiveTableProps) {
   const { title, data, columns, description } = props;
+  const format = useFormatter();
 
   // Fixed settings for simplicity
   const pageSize = 20;
@@ -107,12 +109,12 @@ export function InteractiveTable(props: InteractiveTableProps) {
 
     switch (columnType) {
       case "number":
-        return typeof value === "number" ? value.toLocaleString() : value;
+        return typeof value === "number" ? format.number(value) : value;
       case "boolean":
         return value ? "Yes" : "No";
       case "date":
         try {
-          return new Date(value).toLocaleDateString();
+          return format.dateTime(new Date(value), "short");
         } catch {
           return value;
         }

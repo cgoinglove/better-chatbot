@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useActionState } from "react";
-import { format } from "date-fns";
+import { useFormatter } from "next-intl";
 import { Card, CardContent } from "ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "ui/avatar";
 import { Label } from "ui/label";
@@ -38,6 +38,7 @@ export function UserInfoCard({
   view,
 }: UserInfoCardProps) {
   const { t, tCommon } = useProfileTranslations(view);
+  const format = useFormatter();
   const [editingField, setEditingField] = useState<"name" | "email" | null>(
     null,
   );
@@ -199,7 +200,7 @@ export function UserInfoCard({
               {tCommon("joined")}
             </Label>
             <p className="text-sm font-medium" data-testid="user-created-at">
-              {format(new Date(user.createdAt), "PPP")}
+              {format.dateTime(new Date(user.createdAt), "long")}
             </p>
           </div>
 
@@ -208,7 +209,7 @@ export function UserInfoCard({
               {tCommon("lastUpdated")}
             </Label>
             <p className="text-sm font-medium" data-testid="user-updated-at">
-              {format(new Date(user.updatedAt), "PPP")}
+              {format.dateTime(new Date(user.updatedAt), "long")}
             </p>
           </div>
         </div>
