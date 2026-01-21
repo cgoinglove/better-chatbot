@@ -357,7 +357,11 @@
     "mcpServerCustomization": "MCPサーバーカスタマイゼーション",
     "mcpServerCustomizationDescription": "MCPサーバーカスタマイゼーション指示は、MCPサーバーが利用可能な場合にシステムプロンプトに追加されます。",
     "toolCustomizationInstructionsPlaceholder": "ツールカスタマイゼーション指示は利用できません。",
-    "mcpServerCustomizationPlaceholder": "例：入力値がメールの場合、常にexample@example.comの形式でメールを入力してください。"
+    "mcpServerCustomizationPlaceholder": "例：入力値がメールの場合、常にexample@example.comの形式でメールを入力してください。",
+    "authorizationRequired": "認証が必要です",
+    "authorizationRequiredDescription": "{serverName} のツールにアクセスするには認証が必要です。",
+    "authorize": "認証",
+    "authorizationFailed": "認証に失敗しました"
   },
   "Error": {},
   "Info": {

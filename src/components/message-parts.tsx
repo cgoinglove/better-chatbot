@@ -1,5 +1,6 @@
 "use client";
 
+import { mutate } from "swr";
 import { FileUIPart, getToolName, ToolUIPart, UIMessage } from "ai";
 import {
   Check,
@@ -43,6 +44,8 @@ import { ChatMetadata, ChatModel, ManualToolConfirmTag } from "app-types/chat";
 import { useTranslations } from "next-intl";
 import { extractMCPToolId } from "lib/ai/mcp/mcp-tool-id";
 import { Separator } from "ui/separator";
+import { useMcpList } from "@/hooks/queries/use-mcp-list";
+import { MCPAuthDialog } from "./mcp-auth-dialog";
 
 import { TextShimmer } from "ui/text-shimmer";
 import equal from "lib/equal";
@@ -755,6 +758,7 @@ export const ToolMessagePart = memo(
     isManualToolInvocation,
   }: ToolMessagePartProps) => {
     const t = useTranslations("");
+    const { data: mcpList } = useMcpList();
 
     const { output, toolCallId, state, input, errorText } = part;
 
@@ -935,6 +939,16 @@ export const ToolMessagePart = memo(
       return extractMCPToolId(toolName);
     }, [toolName]);
 
+    const mcpServer = useMemo(() => {
+      return mcpList?.find((s) => s.name === mcpServerName);
+    }, [mcpList, mcpServerName]);
+
+    useEffect(() => {
+      if (mcpServerName && (output as any)?.isError) {
+        mutate("/api/mcp/list");
+      }
+    }, [mcpServerName, output]);
+
     const isExpanded = useMemo(() => {
       return expanded || result === null || isWorkflowTool;
     }, [expanded, result, isWorkflowTool]);
@@ -949,6 +963,8 @@ export const ToolMessagePart = memo(
 
     return (
       <div className="group w-full">
+        <MCPAuthDialog server={mcpServer} serverName={mcpServerName} />
+
         {CustomToolComponent ? (
           CustomToolComponent
         ) : (

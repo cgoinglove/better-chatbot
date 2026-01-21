@@ -794,6 +794,10 @@
     "public": "Offentlig",
     "publicDescription": "Offentlig for alle brukere",
     "featured": "Fremhevet",
-    "featuredDescription": "Fremhevet for alle brukere"
+    "featuredDescription": "Fremhevet for alle brukere",
+    "authorizationRequired": "Autorisasjon kreves",
+    "authorizationRequiredDescription": "{serverName} krever autorisasjon for å få tilgang til verktøyene.",
+    "authorize": "Autoriser",
+    "authorizationFailed": "Autorisasjon feilet"
   }
 }
