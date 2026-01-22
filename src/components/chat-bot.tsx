@@ -429,7 +429,9 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
         ) : (
           <>
             <div
-              className={"flex flex-col gap-2 overflow-y-auto py-6 z-10"}
+              className={
+                "flex flex-col gap-2 overflow-y-auto py-6 z-10 [scrollbar-gutter:stable_both-edges]"
+              }
               ref={containerRef}
               onScroll={handleScroll}
             >
