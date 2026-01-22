@@ -120,15 +120,12 @@ export const auth = betterAuth({
 });
 
 export const getSession = async () => {
+  const reqHeaders = await headers();
   try {
     const session = await auth.api.getSession({
-      headers: await headers(),
+      headers: reqHeaders,
     });
-    if (!session) {
-      logger.error("No session found");
-      return null;
-    }
-    return session;
+    return session ?? null;
   } catch (error) {
     logger.error("Error getting session:", error);
     return null;
