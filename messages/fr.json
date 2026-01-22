@@ -460,7 +460,9 @@
     },
     "arrangeNodes": "Auto Layout",
     "nodesArranged": "Layout appliqué avec succès",
-    "visibilityUpdated": "Visibilité mise à jour avec succès"
+    "visibilityUpdated": "Visibilité mise à jour avec succès",
+    "deleted": "Flux de travail supprimé avec succès",
+    "deleteConfirm": "Êtes-vous sûr de vouloir supprimer ce flux de travail ?"
   },
   "User": {
     "Profile": {

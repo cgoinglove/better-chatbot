@@ -459,7 +459,9 @@
     },
     "arrangeNodes": "自动布局",
     "nodesArranged": "布局已成功应用",
-    "visibilityUpdated": "可见性已成功更新"
+    "visibilityUpdated": "可见性已成功更新",
+    "deleted": "工作流删除成功",
+    "deleteConfirm": "您确定要删除此工作流吗？"
   },
   "User": {
     "Profile": {
