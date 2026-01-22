@@ -88,6 +88,7 @@ const initialState: AppState = {
   allowedAppDefaultToolkit: [
     AppDefaultToolkit.Code,
     AppDefaultToolkit.Visualization,
+    AppDefaultToolkit.Automation,
   ],
   toolPresets: [],
   chatModel: undefined,

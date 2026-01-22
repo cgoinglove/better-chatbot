@@ -265,6 +265,39 @@ export const WorkflowEdgeTable = pgTable("workflow_edge", {
   createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
+export const WorkflowScheduleTable = pgTable(
+  "workflow_schedule",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    workflowId: uuid("workflow_id")
+      .notNull()
+      .references(() => WorkflowTable.id, { onDelete: "cascade" }),
+    workflowNodeId: uuid("workflow_node_id")
+      .notNull()
+      .references(() => WorkflowNodeDataTable.id, { onDelete: "cascade" }),
+    cron: text("cron").notNull(),
+    timezone: text("timezone").notNull().default("UTC"),
+    enabled: boolean("enabled").notNull().default(true),
+    payload: json("payload").$type<Record<string, unknown>>().default({}),
+    nextRunAt: timestamp("next_run_at"),
+    lastRunAt: timestamp("last_run_at"),
+    lastError: text("last_error"),
+    lockedAt: timestamp("locked_at"),
+    lockedBy: text("locked_by"),
+    createdAt: timestamp("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: timestamp("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    unique("workflow_schedule_node_unique").on(table.workflowNodeId),
+    index("workflow_schedule_workflow_idx").on(table.workflowId),
+    index("workflow_schedule_next_run_idx").on(table.nextRunAt),
+  ],
+);
+
 export const ArchiveTable = pgTable("archive", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
   name: text("name").notNull(),
@@ -374,3 +407,4 @@ export const ChatExportCommentTable = pgTable("chat_export_comment", {
 export type ArchiveEntity = typeof ArchiveTable.$inferSelect;
 export type ArchiveItemEntity = typeof ArchiveItemTable.$inferSelect;
 export type BookmarkEntity = typeof BookmarkTable.$inferSelect;
+export type WorkflowScheduleEntity = typeof WorkflowScheduleTable.$inferSelect;
