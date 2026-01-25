@@ -190,10 +190,10 @@ export function ToolSelectDropdown({
       >
         <span className={!bindingTools ? "text-muted-foreground" : ""}>
           {agentMention
-            ? "Agent"
+            ? t("agent")
             : (mentions?.length ?? 0 > 0)
-              ? "Mention"
-              : "Tools"}
+              ? t("mention")
+              : t("tools")}
         </span>
 
         {((!agentMention && bindingTools.length > 0) || isLoading) && (
@@ -222,7 +222,7 @@ export function ToolSelectDropdown({
 
   useEffect(() => {
     if (bindingTools.length > 128) {
-      toast("Too many tools selected, please select less than 128 tools");
+      toast(t("tooManyToolsSelected"));
     }
   }, [bindingTools.length > 128]);
 
@@ -371,7 +371,7 @@ function ToolPresets() {
                     {t("Chat.Tool.saveAsPresetDescription")}
                   </DialogDescription>
                   <Input
-                    placeholder="Preset Name"
+                    placeholder={t("Chat.Tool.presetNamePlaceholder")}
                     value={presetName}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" && !e.nativeEvent.isComposing) {
@@ -581,6 +581,7 @@ function WorkflowToolSelector({
 }
 
 function McpServerSelector() {
+  const t = useTranslations("Chat.Tool");
   const [appStoreMutate, allowedMcpServers, mcpServerList] = appStore(
     useShallow((state) => [
       state.mutate,
@@ -636,13 +637,13 @@ function McpServerSelector() {
     <DropdownMenuGroup>
       {!selectedMcpServerList.length ? (
         <div className="text-sm text-muted-foreground w-full h-full flex flex-col items-center justify-center py-6">
-          <div>No MCP servers detected.</div>
+          <div>{t("noMcpServersDetected")}</div>
           <Link href="/mcp">
             <Button
               variant={"ghost"}
               className="mt-2 text-primary flex items-center gap-1"
             >
-              Add a server <ChevronRight className="size-4" />
+              {t("addServer")} <ChevronRight className="size-4" />
             </Button>
           </Link>
         </div>
@@ -688,7 +689,7 @@ function McpServerSelector() {
                 <span
                   className={cn("text-xs text-destructive ml-1 p-1 rounded")}
                 >
-                  error
+                  {t("error")}
                 </span>
               ) : null}
             </DropdownMenuSubTrigger>
@@ -748,6 +749,7 @@ function McpServerToolSelector({
   onToolClick,
 }: McpServerToolSelectorProps) {
   const t = useTranslations("Common");
+  const tTool = useTranslations("Chat.Tool");
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const filteredTools = useMemo(() => {
@@ -783,10 +785,8 @@ function McpServerToolSelector({
       >
         {loading ? <Loader className="animate-spin" /> : <ShieldAlertIcon />}
 
-        <AlertTitle>Authorization Required</AlertTitle>
-        <AlertDescription>
-          Click here to authorize this MCP server and access its tools.
-        </AlertDescription>
+        <AlertTitle>{tTool("authorizationRequired")}</AlertTitle>
+        <AlertDescription>{tTool("clickToAuthorize")}</AlertDescription>
       </Alert>
     );
   }

@@ -248,7 +248,22 @@
         "webSearch": "Search the Web",
         "http": "HTTP Request",
         "code": "Code Execution"
-      }
+      },
+      "agent": "Agent",
+      "mention": "Mention",
+      "tools": "Tools",
+      "tooManyToolsSelected": "Too many tools selected, please select less than 128 tools",
+      "presetNamePlaceholder": "Preset Name",
+      "noMcpServersDetected": "No MCP servers detected.",
+      "addServer": "Add a server",
+      "error": "error",
+      "authorizationRequired": "Authorization Required",
+      "clickToAuthorize": "Click here to authorize this MCP server and access its tools.",
+      "auto": "Auto",
+      "manual": "Manual",
+      "none": "None",
+      "mentionOnly": "@mention only",
+      "noToolsAvailable": "No tools available"
     },
     "VoiceChat": {
       "title": "Voice Chat Mode",
@@ -787,6 +802,7 @@
     "mcpServerCustomizationDescription": "MCP server customization instructions will be added to the system prompt when the MCP server is available.",
     "toolCustomizationInstructionsPlaceholder": "Tool customization instructions are not available.",
     "mcpServerCustomizationPlaceholder": "eg. If the input value is email, always enter the email in the format example@example.com.",
+    "noInstructions": "None",
     "private": "Private",
     "privateDescription": "Only you can use this MCP server",
     "readonly": "Read-only",

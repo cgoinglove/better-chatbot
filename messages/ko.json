@@ -128,7 +128,22 @@
       "defaultToolKit": {
         "visualization": "데이터 시각화",
         "webSearch": "웹 검색"
-      }
+      },
+      "agent": "에이전트",
+      "mention": "멘션",
+      "tools": "도구",
+      "tooManyToolsSelected": "너무 많은 도구가 선택되었습니다. 128개 미만으로 선택해주세요",
+      "presetNamePlaceholder": "프리셋 이름",
+      "noMcpServersDetected": "MCP 서버가 감지되지 않았습니다.",
+      "addServer": "서버 추가",
+      "error": "오류",
+      "authorizationRequired": "인증 필요",
+      "clickToAuthorize": "이 MCP 서버에 접근하려면 여기를 클릭하여 인증하세요.",
+      "auto": "자동",
+      "manual": "수동",
+      "none": "없음",
+      "mentionOnly": "@멘션만",
+      "noToolsAvailable": "사용 가능한 도구가 없습니다"
     },
     "VoiceChat": {
       "title": "음성 채팅 모드",
@@ -372,7 +387,8 @@
     "mcpServerCustomization": "MCP 서버 지침 설정",
     "mcpServerCustomizationDescription": "MCP 서버 사용자 지정 지침은 MCP서버를 사용할 때 시스템 프롬프트에 추가됩니다.",
     "toolCustomizationInstructionsPlaceholder": "도구 사용자 지정 지침이 없습니다.",
-    "mcpServerCustomizationPlaceholder": "예) 이 MCP 서버의 툴중에 입력값이 email인 경우 항상 example@example.com 형식으로 입력해주세요."
+    "mcpServerCustomizationPlaceholder": "예) 이 MCP 서버의 툴중에 입력값이 email인 경우 항상 example@example.com 형식으로 입력해주세요.",
+    "noInstructions": "없음"
   },
   "Error": {},
   "Info": {

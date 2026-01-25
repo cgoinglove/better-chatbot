@@ -127,7 +127,22 @@
       "defaultToolKit": {
         "visualization": "データ可視化",
         "webSearch": "ウェブを検索"
-      }
+      },
+      "agent": "エージェント",
+      "mention": "メンション",
+      "tools": "ツール",
+      "tooManyToolsSelected": "選択されているツールが多すぎます。128個未満を選択してください",
+      "presetNamePlaceholder": "プリセット名",
+      "noMcpServersDetected": "MCPサーバーが検出されませんでした。",
+      "addServer": "サーバーを追加",
+      "error": "エラー",
+      "authorizationRequired": "認証が必要です",
+      "clickToAuthorize": "このMCPサーバーを認証してツールにアクセスするには、ここをクリックしてください。",
+      "auto": "自動",
+      "manual": "手動",
+      "none": "なし",
+      "mentionOnly": "@メンションのみ",
+      "noToolsAvailable": "利用可能なツールがありません"
     },
     "VoiceChat": {
       "title": "音声チャットモード",
@@ -357,7 +372,8 @@
     "mcpServerCustomization": "MCPサーバーカスタマイゼーション",
     "mcpServerCustomizationDescription": "MCPサーバーカスタマイゼーション指示は、MCPサーバーが利用可能な場合にシステムプロンプトに追加されます。",
     "toolCustomizationInstructionsPlaceholder": "ツールカスタマイゼーション指示は利用できません。",
-    "mcpServerCustomizationPlaceholder": "例：入力値がメールの場合、常にexample@example.comの形式でメールを入力してください。"
+    "mcpServerCustomizationPlaceholder": "例：入力値がメールの場合、常にexample@example.comの形式でメールを入力してください。",
+    "noInstructions": "なし"
   },
   "Error": {},
   "Info": {

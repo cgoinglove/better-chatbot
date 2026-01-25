@@ -128,7 +128,22 @@
       "defaultToolKit": {
         "visualization": "数据可视化",
         "webSearch": "网页搜寻"
-      }
+      },
+      "agent": "智能体",
+      "mention": "提及",
+      "tools": "工具",
+      "tooManyToolsSelected": "选择的工具过多，请选择少于128个工具",
+      "presetNamePlaceholder": "预设名称",
+      "noMcpServersDetected": "未检测到MCP服务器。",
+      "addServer": "添加服务器",
+      "error": "错误",
+      "authorizationRequired": "需要授权",
+      "clickToAuthorize": "点击此处授权此MCP服务器并访问其工具。",
+      "auto": "自动",
+      "manual": "手动",
+      "none": "无",
+      "mentionOnly": "仅@提及",
+      "noToolsAvailable": "无可用工具"
     },
     "VoiceChat": {
       "title": "语音聊天模式",
@@ -357,7 +372,8 @@
     "mcpServerCustomization": "MCP 服务器自定义",
     "mcpServerCustomizationDescription": "MCP 服务器自定义指令将在 MCP 服务器可用时添加到系统提示中。",
     "toolCustomizationInstructionsPlaceholder": "工具自定义指令不可用。",
-    "mcpServerCustomizationPlaceholder": "例如：如果输入值是电子邮件，始终以 example@example.com 格式输入电子邮件。"
+    "mcpServerCustomizationPlaceholder": "例如：如果输入值是电子邮件，始终以 example@example.com 格式输入电子邮件。",
+    "noInstructions": "无"
   },
   "Error": {},
   "Info": {
