@@ -125,7 +125,7 @@ export const ToolModeDropdown = ({ disabled }: { disabled?: boolean }) => {
             <div className="flex flex-col gap-2 w-full">
               <div className="flex items-center gap-2">
                 <Infinity />
-                <span className="font-bold">Auto</span>
+                <span className="font-bold">{t("auto")}</span>
                 {toolChoice == "auto" && <Check className="ml-auto" />}
               </div>
               <p className="text-xs text-muted-foreground">
@@ -142,7 +142,7 @@ export const ToolModeDropdown = ({ disabled }: { disabled?: boolean }) => {
             <div className="flex flex-col gap-2 w-full">
               <div className="flex items-center gap-2">
                 <ClipboardCheck />
-                <span className="font-bold">Manual</span>
+                <span className="font-bold">{t("manual")}</span>
                 {toolChoice == "manual" && <Check className="ml-auto" />}
               </div>
               <p className="text-xs text-muted-foreground">
@@ -159,9 +159,9 @@ export const ToolModeDropdown = ({ disabled }: { disabled?: boolean }) => {
             <div className="flex flex-col gap-2 w-full">
               <div className="flex items-center gap-2">
                 <PenOff />
-                <span className="font-bold">None</span>
+                <span className="font-bold">{t("none")}</span>
                 <span className="text-xs text-muted-foreground ml-4">
-                  @mention only
+                  {t("mentionOnly")}
                 </span>
                 {toolChoice == "none" && <Check className="ml-auto" />}
               </div>

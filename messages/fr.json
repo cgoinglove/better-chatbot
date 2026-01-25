@@ -127,7 +127,22 @@
       "defaultToolKit": {
         "visualization": "Visualisation de données",
         "webSearch": "Rechercher sur le le Web"
-      }
+      },
+      "agent": "Agent",
+      "mention": "Mention",
+      "tools": "Outils",
+      "tooManyToolsSelected": "Trop d'outils sélectionnés, veuillez sélectionner moins de 128 outils",
+      "presetNamePlaceholder": "Nom du Préréglage",
+      "noMcpServersDetected": "Aucun serveur MCP détecté.",
+      "addServer": "Ajouter un serveur",
+      "error": "erreur",
+      "authorizationRequired": "Autorisation Requise",
+      "clickToAuthorize": "Cliquez ici pour autoriser ce serveur MCP et accéder à ses outils.",
+      "auto": "Auto",
+      "manual": "Manuel",
+      "none": "Aucun",
+      "mentionOnly": "@mention uniquement",
+      "noToolsAvailable": "Aucun outil disponible"
     },
     "VoiceChat": {
       "title": "Mode Chat Vocal",
@@ -358,7 +373,8 @@
     "mcpServerCustomization": "Personnalisation du Serveur MCP",
     "mcpServerCustomizationDescription": "Les instructions de personnalisation du serveur MCP seront ajoutées à l'invite système lorsque le serveur MCP sera disponible.",
     "toolCustomizationInstructionsPlaceholder": "Les instructions de personnalisation d'outils ne sont pas disponibles.",
-    "mcpServerCustomizationPlaceholder": "ex. Si la valeur d'entrée est un email, toujours entrer l'email au format exemple@exemple.com."
+    "mcpServerCustomizationPlaceholder": "ex. Si la valeur d'entrée est un email, toujours entrer l'email au format exemple@exemple.com.",
+    "noInstructions": "Aucun"
   },
   "Error": {},
   "Info": {
