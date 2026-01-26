@@ -42,6 +42,10 @@ export default async function Page({
               initialConfig={mcpClient.config}
               name={mcpClient.name}
               id={mcpClient.id}
+              initialUserSessionAuth={mcpClient.userSessionAuth}
+              initialRequiresAuth={mcpClient.requiresAuth}
+              initialAuthProvider={mcpClient.authProvider}
+              initialAuthConfig={mcpClient.authConfig}
             />
           ) : (
             <Alert variant="destructive">MCP client not found</Alert>

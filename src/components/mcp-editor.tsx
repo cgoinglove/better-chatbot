@@ -4,6 +4,8 @@ import {
   MCPServerConfig,
   MCPRemoteConfigZodSchema,
   MCPStdioConfigZodSchema,
+  McpAuthProvider,
+  McpAuthConfig,
 } from "app-types/mcp";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
@@ -16,7 +18,7 @@ import { useRouter } from "next/navigation";
 import { createDebounce, fetcher, isNull, safeJSONParse } from "lib/utils";
 import { handleErrorWithToast } from "ui/shared-toast";
 import { mutate } from "swr";
-import { Loader } from "lucide-react";
+import { Loader, ShieldCheck, Info } from "lucide-react";
 import {
   isMaybeMCPServerConfig,
   isMaybeRemoteConfig,
@@ -26,11 +28,28 @@ import { Alert, AlertDescription, AlertTitle } from "ui/alert";
 import { z } from "zod";
 import { useTranslations } from "next-intl";
 import { existMcpClientByServerNameAction } from "@/app/api/mcp/actions";
+import { Switch } from "./ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "./ui/collapsible";
 
 interface MCPEditorProps {
   initialConfig?: MCPServerConfig;
   name?: string;
   id?: string;
+  initialUserSessionAuth?: boolean;
+  initialRequiresAuth?: boolean;
+  initialAuthProvider?: McpAuthProvider;
+  initialAuthConfig?: McpAuthConfig;
 }
 
 const STDIO_ARGS_ENV_PLACEHOLDER = `/** STDIO Example */
@@ -54,6 +73,10 @@ export default function MCPEditor({
   initialConfig,
   name: initialName,
   id,
+  initialUserSessionAuth = false,
+  initialRequiresAuth = false,
+  initialAuthProvider = "none",
+  initialAuthConfig,
 }: MCPEditorProps) {
   const t = useTranslations();
   const shouldInsert = useMemo(() => isNull(id), [id]);
@@ -73,6 +96,20 @@ export default function MCPEditor({
   const [jsonString, setJsonString] = useState<string>(
     initialConfig ? JSON.stringify(initialConfig, null, 2) : "",
   );
+
+  // User Session Authorization - enables per-user session isolation
+  const [userSessionAuth, setUserSessionAuth] = useState(
+    initialUserSessionAuth,
+  );
+
+  // Authentication configuration state (admin-configured auth)
+  const [requiresAuth, setRequiresAuth] = useState(initialRequiresAuth);
+  const [authProvider, setAuthProvider] =
+    useState<McpAuthProvider>(initialAuthProvider);
+  const [authConfig, setAuthConfig] = useState<McpAuthConfig>(
+    initialAuthConfig || {},
+  );
+  const [authConfigOpen, setAuthConfigOpen] = useState(initialRequiresAuth);
 
   // Name validation schema
   const nameSchema = z.string().regex(/^[a-zA-Z0-9\-]+$/, {
@@ -146,6 +183,11 @@ export default function MCPEditor({
             name,
             config,
             id,
+            userSessionAuth,
+            requiresAuth,
+            authProvider: requiresAuth ? authProvider : "none",
+            authConfig:
+              requiresAuth && authProvider !== "none" ? authConfig : undefined,
           }),
         }),
       )
@@ -244,6 +286,184 @@ export default function MCPEditor({
             </div>
           </div>
         </div>
+
+        {/* User Session Authorization */}
+        <div className="border rounded-lg p-4 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="size-4 text-muted-foreground" />
+              <Label htmlFor="user-session-auth" className="font-medium">
+                User Session Authorization
+              </Label>
+            </div>
+            <Switch
+              id="user-session-auth"
+              checked={userSessionAuth}
+              onCheckedChange={setUserSessionAuth}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Enable user session isolation for this MCP server. Each user will
+            maintain their own authorization session, ensuring proper access
+            governance and session isolation.
+          </p>
+        </div>
+
+        {/* Admin-Configured Authentication */}
+        <Collapsible open={authConfigOpen} onOpenChange={setAuthConfigOpen}>
+          <div className="border rounded-lg p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="size-4 text-muted-foreground" />
+                <Label htmlFor="requires-auth" className="font-medium">
+                  Admin-Configured Authentication
+                </Label>
+              </div>
+              <Switch
+                id="requires-auth"
+                checked={requiresAuth}
+                onCheckedChange={(checked) => {
+                  setRequiresAuth(checked);
+                  setAuthConfigOpen(checked);
+                  if (!checked) {
+                    setAuthProvider("none");
+                  } else if (authProvider === "none") {
+                    setAuthProvider("okta");
+                  }
+                }}
+              />
+            </div>
+
+            <p className="text-xs text-muted-foreground">
+              Configure a specific identity provider (Okta, OAuth2) for this MCP
+              server. Users must authenticate before accessing tools.
+            </p>
+
+            <CollapsibleContent className="space-y-4 pt-2">
+              {requiresAuth && (
+                <>
+                  {/* Auth Provider Selection */}
+                  <div className="space-y-2">
+                    <Label htmlFor="auth-provider">
+                      Authentication Provider
+                    </Label>
+                    <Select
+                      value={authProvider}
+                      onValueChange={(value) =>
+                        setAuthProvider(value as McpAuthProvider)
+                      }
+                    >
+                      <SelectTrigger id="auth-provider">
+                        <SelectValue placeholder="Select provider" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="okta">Okta</SelectItem>
+                        <SelectItem value="oauth2">
+                          Generic OAuth 2.0
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Okta Configuration */}
+                  {authProvider === "okta" && (
+                    <div className="space-y-4 p-4 bg-secondary/50 rounded-lg">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Info className="size-3" />
+                        <span>Configure your Okta application settings</span>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="okta-issuer">Okta Issuer URL</Label>
+                        <Input
+                          id="okta-issuer"
+                          value={authConfig.issuer || ""}
+                          onChange={(e) =>
+                            setAuthConfig({
+                              ...authConfig,
+                              issuer: e.target.value,
+                            })
+                          }
+                          placeholder="https://your-domain.okta.com"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Your Okta domain (e.g., https://dev-123456.okta.com)
+                        </p>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="okta-client-id">Client ID</Label>
+                        <Input
+                          id="okta-client-id"
+                          value={authConfig.clientId || ""}
+                          onChange={(e) =>
+                            setAuthConfig({
+                              ...authConfig,
+                              clientId: e.target.value,
+                            })
+                          }
+                          placeholder="0oa..."
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="okta-scopes">
+                          Scopes (comma-separated)
+                        </Label>
+                        <Input
+                          id="okta-scopes"
+                          value={
+                            authConfig.scopes?.join(", ") ||
+                            "openid, profile, email"
+                          }
+                          onChange={(e) =>
+                            setAuthConfig({
+                              ...authConfig,
+                              scopes: e.target.value
+                                .split(",")
+                                .map((s) => s.trim()),
+                            })
+                          }
+                          placeholder="openid, profile, email"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="okta-audience">
+                          Audience (optional)
+                        </Label>
+                        <Input
+                          id="okta-audience"
+                          value={authConfig.audience || ""}
+                          onChange={(e) =>
+                            setAuthConfig({
+                              ...authConfig,
+                              audience: e.target.value,
+                            })
+                          }
+                          placeholder="api://default"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Generic OAuth2 Info */}
+                  {authProvider === "oauth2" && (
+                    <Alert>
+                      <Info className="size-4" />
+                      <AlertTitle>Generic OAuth 2.0</AlertTitle>
+                      <AlertDescription>
+                        For generic OAuth 2.0, the MCP server itself must
+                        provide the OAuth endpoints. The chatbot will discover
+                        them automatically when connecting.
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </>
+              )}
+            </CollapsibleContent>
+          </div>
+        </Collapsible>
 
         {/* Save button */}
         <Button onClick={handleSave} className="w-full" disabled={saveDisabled}>

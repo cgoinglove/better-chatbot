@@ -4,6 +4,7 @@ import {
   type McpServerInsert,
   type McpServerSelect,
   type VercelAIMcpTool,
+  type McpUserOAuthRepository,
 } from "app-types/mcp";
 import { createMCPClient, type MCPClient } from "./create-mcp-client";
 import {
@@ -20,6 +21,21 @@ import globalLogger from "logger";
 import { jsonSchema, ToolCallOptions } from "ai";
 import { createMemoryMCPConfigStorage } from "./memory-mcp-config-storage";
 import { colorize } from "consola/utils";
+
+// Result type for tool calls that may require authentication
+export type ToolCallResult = {
+  isError?: boolean;
+  requiresAuth?: boolean;
+  mcpServerId?: string;
+  mcpServerName?: string;
+  authProvider?: string;
+  error?: {
+    message: string;
+    name: string;
+  };
+  content: any[];
+  structuredContent?: any;
+};
 
 /**
  * Interface for storage of MCP server configurations.
@@ -91,10 +107,12 @@ export class MCPClientsManager {
           await this.storage.init(this);
           const configs = await this.storage.loadAll();
           await Promise.all(
-            configs.map(({ id, name, config }) =>
-              this.addClient(id, name, config).catch(() => {
-                `ignore error`;
-              }),
+            configs.map(({ id, name, config, userSessionAuth }) =>
+              this.addClient(id, name, config, { userSessionAuth }).catch(
+                () => {
+                  `ignore error`;
+                },
+              ),
             ),
           );
         }
@@ -150,14 +168,28 @@ export class MCPClientsManager {
   }
   /**
    * Creates and adds a new client instance to memory only (no storage persistence)
+   * @param id - MCP server ID
+   * @param name - MCP server name
+   * @param serverConfig - MCP server configuration
+   * @param options - Optional settings for user session authorization
    */
-  async addClient(id: string, name: string, serverConfig: MCPServerConfig) {
+  async addClient(
+    id: string,
+    name: string,
+    serverConfig: MCPServerConfig,
+    options?: {
+      userId?: string;
+      userSessionAuth?: boolean;
+    },
+  ) {
     if (this.clients.has(id)) {
       const prevClient = this.clients.get(id)!;
       void prevClient.client.disconnect();
     }
     const client = createMCPClient(id, name, serverConfig, {
       autoDisconnectSeconds: this.autoDisconnectSeconds,
+      userId: options?.userId,
+      userSessionAuth: options?.userSessionAuth,
     });
     this.clients.set(id, { client, name });
     return client.connect();
@@ -294,6 +326,131 @@ export class MCPClientsManager {
         };
       })
       .unwrap();
+  }
+
+  /**
+   * Tool call with user session context - checks if MCP server requires authorization
+   * and if the user has valid tokens before executing the tool.
+   *
+   * User Session Authorization Management:
+   * - For userSessionAuth=true (MCP SDK integrated):
+   *   - The MCP client is created with userId, so the PgOAuthClientProvider
+   *     automatically uses the user's session for token management
+   *   - Token relay happens through the MCP SDK's OAuth flow
+   *   - Each user maintains their own isolated authorization session
+   *
+   * - For requiresAuth=true (admin-configured):
+   *   - Uses the UserSessionAuthorization table for token storage
+   *   - Tokens are managed separately from MCP SDK
+   *
+   * @param id - MCP server ID
+   * @param toolName - Name of the tool to call
+   * @param input - Tool input parameters
+   * @param userId - User ID for user session authorization
+   * @param userOAuthRepository - Repository for checking user authorization sessions
+   * @returns Tool call result or auth-required response
+   */
+  async toolCallWithUserAuth(
+    id: string,
+    toolName: string,
+    input: unknown,
+    userId: string,
+    userOAuthRepository: McpUserOAuthRepository,
+  ): Promise<ToolCallResult> {
+    // Get server configuration to check authorization requirements
+    const server = await this.storage.get(id);
+    if (!server) {
+      return {
+        isError: true,
+        error: {
+          message: `MCP server ${id} not found`,
+          name: "NOT_FOUND",
+        },
+        content: [],
+      };
+    }
+
+    // Check if server uses User Session Authorization (MCP SDK integrated)
+    // In this case, the MCP client handles auth through PgOAuthClientProvider
+    // which is user-aware when userSessionAuth is enabled
+    if (server.userSessionAuth) {
+      this.logger.info(
+        `Server ${server.name} uses User Session Authorization for user ${userId}`,
+      );
+      // The client was created with userId context, so MCP SDK handles token relay
+      // Each user's session is isolated - just execute the tool
+    }
+
+    // Check if server requires admin-configured authorization
+    if (server.requiresAuth && server.authProvider !== "none") {
+      // Check if user has valid tokens in UserSessionAuthorization
+      const hasValidTokens = await userOAuthRepository.hasValidTokens(
+        userId,
+        id,
+      );
+
+      if (!hasValidTokens) {
+        this.logger.info(
+          `User ${userId} needs authorization to MCP server ${server.name}`,
+        );
+        return {
+          isError: true,
+          requiresAuth: true,
+          mcpServerId: id,
+          mcpServerName: server.name,
+          authProvider: server.authProvider,
+          error: {
+            message: `Authorization required for ${server.name}. Please authorize to continue.`,
+            name: "AUTH_REQUIRED",
+          },
+          content: [
+            {
+              type: "text",
+              text: `🔐 Authorization required for **${server.name}**. Please click the authorize button to continue.`,
+            },
+          ],
+        };
+      }
+
+      // User has valid authorization - log and proceed
+      this.logger.info(
+        `User ${userId} authorized to ${server.name}, executing tool ${toolName}`,
+      );
+    }
+
+    // Execute the tool call
+    // For userSessionAuth servers, the MCP SDK handles token relay automatically
+    // For requiresAuth servers, tokens are available but relay is handled separately
+    return this.toolCall(id, toolName, input);
+  }
+
+  /**
+   * Get server configuration including auth settings
+   */
+  async getServerConfig(id: string): Promise<McpServerSelect | null> {
+    return this.storage.get(id);
+  }
+
+  /**
+   * Check if a user needs to authenticate to use tools from a specific MCP server
+   */
+  async userNeedsAuth(
+    userId: string,
+    mcpServerId: string,
+    userOAuthRepository: McpUserOAuthRepository,
+  ): Promise<boolean> {
+    const server = await this.storage.get(mcpServerId);
+    if (!server) return false;
+
+    if (!server.requiresAuth || server.authProvider === "none") {
+      return false;
+    }
+
+    const hasValidTokens = await userOAuthRepository.hasValidTokens(
+      userId,
+      mcpServerId,
+    );
+    return !hasValidTokens;
   }
 }
 

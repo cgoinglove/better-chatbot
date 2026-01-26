@@ -65,9 +65,16 @@ export default function SignIn({
   };
 
   const handleSocialSignIn = (provider: SocialAuthenticationProvider) => {
-    authClient.signIn.social({ provider }).catch((e) => {
-      toast.error(e.error);
-    });
+    // Okta uses genericOAuth plugin, not standard social sign-in
+    if (provider === "okta") {
+      authClient.signIn.oauth2({ providerId: "okta" }).catch((e) => {
+        toast.error(e.error || e.message || "Failed to sign in with Okta");
+      });
+    } else {
+      authClient.signIn.social({ provider }).catch((e) => {
+        toast.error(e.error);
+      });
+    }
   };
   return (
     <div className="w-full h-full flex flex-col p-4 md:p-8 justify-center">
@@ -169,6 +176,15 @@ export default function SignIn({
                   >
                     <MicrosoftIcon className="size-4 fill-foreground" />
                     Microsoft
+                  </Button>
+                )}
+                {socialAuthenticationProviders.includes("okta") && (
+                  <Button
+                    variant="outline"
+                    onClick={() => handleSocialSignIn("okta")}
+                    className="flex-1 w-full"
+                  >
+                    Okta
                   </Button>
                 )}
               </div>

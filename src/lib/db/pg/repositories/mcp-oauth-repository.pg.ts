@@ -3,18 +3,25 @@ import { pgDb as db } from "../db.pg";
 import { McpOAuthSessionTable } from "../schema.pg";
 import { eq, and, isNotNull, desc, isNull, ne } from "drizzle-orm";
 
-// OAuth repository implementation for multi-instance support
+// OAuth repository implementation for User Session Authorization Management
+// Supports both shared (server-level) and user-specific authorization sessions
+// When userSessionAuth is enabled on an MCP server, each user maintains their own session
 export const pgMcpOAuthRepository: McpOAuthRepository = {
   // 1. Query methods
 
-  // Get session with valid tokens (authenticated)
-  getAuthenticatedSession: async (mcpServerId) => {
+  // Get session with valid tokens (authorized)
+  // When userId is provided, looks for user-specific authorization session
+  // When userId is undefined, looks for shared/server-level session (userId is null)
+  getAuthenticatedSession: async (mcpServerId, userId) => {
     const [session] = await db
       .select()
       .from(McpOAuthSessionTable)
       .where(
         and(
           eq(McpOAuthSessionTable.mcpServerId, mcpServerId),
+          userId
+            ? eq(McpOAuthSessionTable.userId, userId)
+            : isNull(McpOAuthSessionTable.userId),
           isNotNull(McpOAuthSessionTable.tokens),
         ),
       )
@@ -85,15 +92,20 @@ export const pgMcpOAuthRepository: McpOAuthRepository = {
       .where(eq(McpOAuthSessionTable.state, state))
       .returning();
 
-    await db
-      .delete(McpOAuthSessionTable)
-      .where(
+    // Cleanup incomplete sessions for the same server and user
+    if (session) {
+      await db.delete(McpOAuthSessionTable).where(
         and(
           eq(McpOAuthSessionTable.mcpServerId, mcpServerId),
+          // Match the same user context (null for shared, specific userId for per-user)
+          session.userId
+            ? eq(McpOAuthSessionTable.userId, session.userId)
+            : isNull(McpOAuthSessionTable.userId),
           isNull(McpOAuthSessionTable.tokens),
           ne(McpOAuthSessionTable.state, state),
         ),
       );
+    }
 
     return session as McpOAuthSession;
   },
