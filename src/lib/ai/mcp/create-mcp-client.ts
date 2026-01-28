@@ -26,6 +26,7 @@ import {
 import { safe } from "ts-safe";
 import { BASE_URL, IS_MCP_SERVER_REMOTE_ONLY, IS_VERCEL_ENV } from "lib/const";
 import { UnauthorizedError } from "@modelcontextprotocol/sdk/client/auth.js";
+import { InvalidGrantError } from "@modelcontextprotocol/sdk/server/auth/errors.js";
 import { PgOAuthClientProvider } from "./pg-oauth-provider";
 import { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 
@@ -54,6 +55,7 @@ export class MCPClient {
   toolInfo: MCPToolInfo[] = [];
   private disconnectDebounce = createDebounce();
   private needOauthProvider = false;
+  private hasTriedRefreshTokenRecovery = false;
   private inProgressToolCallIds: string[] = [];
   constructor(
     private id: string,
@@ -258,6 +260,20 @@ export class MCPClient {
             return this.connect(oauthState); // Recursive call with OAuth
           }
 
+          if (
+            !this.hasTriedRefreshTokenRecovery &&
+            isRefreshTokenError(streamableHttpError)
+          ) {
+            this.logger.info(
+              "Refresh token expired during connect, clearing credentials and retrying",
+            );
+            this.hasTriedRefreshTokenRecovery = true;
+            await this.oauthProvider?.invalidateCredentials("all");
+            this.locker.unlock();
+            await this.disconnect();
+            return this.connect(oauthState);
+          }
+
           if (!isOAuthAuthorizationRequired(streamableHttpError)) {
             this.logger.warn(
               `Streamable HTTP connection failed, Because ${streamableHttpError.message}, falling back to SSE transport`,
@@ -302,6 +318,7 @@ export class MCPClient {
       );
       this.client = client;
       this.isConnected = true;
+      this.hasTriedRefreshTokenRecovery = false;
 
       this.scheduleAutoDisconnect();
     } catch (error) {
@@ -374,6 +391,21 @@ export class MCPClient {
           await this.disconnect();
           return execute();
         }
+        if (isSessionNotFoundError(err)) {
+          this.logger.info("Session not found, reconnecting...");
+          await this.disconnect();
+          return execute();
+        }
+        if (isRefreshTokenError(err)) {
+          this.logger.info("Refresh token expired, requires re-authorization");
+          await this.oauthProvider?.invalidateCredentials("all");
+          await this.disconnect();
+          try {
+            await this.connect();
+          } catch {
+            // Expected - triggers OAuth flow
+          }
+        }
         throw err;
       })
       .ifOk((v) => {
@@ -445,4 +477,19 @@ function isUnauthorized(error: any): boolean {
 
 function isOAuthAuthorizationRequired(error: any): boolean {
   return error instanceof OAuthAuthorizationRequiredError;
+}
+
+function isRefreshTokenError(error: any): boolean {
+  return (
+    error instanceof InvalidGrantError ||
+    error?.message?.includes("Refresh token") ||
+    error?.message?.includes("invalid_grant")
+  );
+}
+
+function isSessionNotFoundError(error: any): boolean {
+  return (
+    (error as any)?.code === 404 ||
+    error?.message?.includes("Session not found")
+  );
 }

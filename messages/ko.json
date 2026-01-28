@@ -372,7 +372,11 @@
     "mcpServerCustomization": "MCP 서버 지침 설정",
     "mcpServerCustomizationDescription": "MCP 서버 사용자 지정 지침은 MCP서버를 사용할 때 시스템 프롬프트에 추가됩니다.",
     "toolCustomizationInstructionsPlaceholder": "도구 사용자 지정 지침이 없습니다.",
-    "mcpServerCustomizationPlaceholder": "예) 이 MCP 서버의 툴중에 입력값이 email인 경우 항상 example@example.com 형식으로 입력해주세요."
+    "mcpServerCustomizationPlaceholder": "예) 이 MCP 서버의 툴중에 입력값이 email인 경우 항상 example@example.com 형식으로 입력해주세요.",
+    "authorizationRequired": "인증 필요",
+    "authorizationRequiredDescription": "{serverName}의 도구에 액세스하려면 인증이 필요합니다.",
+    "authorize": "인증",
+    "authorizationFailed": "인증 실패"
   },
   "Error": {},
   "Info": {
