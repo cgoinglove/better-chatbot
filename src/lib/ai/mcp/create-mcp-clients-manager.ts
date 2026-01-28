@@ -14,7 +14,6 @@ import {
   toAny,
 } from "lib/utils";
 import { safe } from "ts-safe";
-import { McpServerTable } from "lib/db/pg/schema.pg";
 import { createMCPToolId } from "./mcp-tool-id";
 import globalLogger from "logger";
 import { jsonSchema, ToolCallOptions } from "ai";
@@ -109,64 +108,89 @@ export class MCPClientsManager {
   /**
    * Returns all tools from all clients as a flat object
    */
-  async tools(): Promise<Record<string, VercelAIMcpTool>> {
+  async tools(userId?: string): Promise<Record<string, VercelAIMcpTool>> {
     await this.waitInitialized();
-    return Array.from(this.clients.entries()).reduce(
-      (acc, [id, client]) => {
-        if (!client.client?.toolInfo?.length) return acc;
-        const clientName = client.name;
-        return {
-          ...acc,
-          ...client.client.toolInfo.reduce(
-            (bcc, tool) => {
-              return {
-                ...bcc,
-                [createMCPToolId(clientName, tool.name)]:
-                  VercelAIMcpToolTag.create({
-                    description: tool.description,
-                    inputSchema: jsonSchema(
-                      toAny({
-                        ...tool.inputSchema,
-                        properties: tool.inputSchema?.properties ?? {},
-                        additionalProperties: false,
-                      }),
-                    ),
-                    _originToolName: tool.name,
-                    _mcpServerName: clientName,
-                    _mcpServerId: id,
-                    execute: (params, options: ToolCallOptions) => {
-                      options?.abortSignal?.throwIfAborted();
-                      return this.toolCall(id, tool.name, params);
-                    },
-                  }),
-              };
+    const configs = await this.storage.loadAll();
+
+    const tools: Record<string, VercelAIMcpTool> = {};
+
+    for (const config of configs) {
+      const { id, name, toolInfo: storedToolInfo, perUserAuth } = config;
+      const clientId = perUserAuth && userId ? `${id}:${userId}` : id;
+      const client = this.clients.get(clientId);
+
+      const toolInfo =
+        client?.client?.toolInfo && client.client.toolInfo.length > 0
+          ? client.client.toolInfo
+          : storedToolInfo || [];
+
+      if (!toolInfo.length) continue;
+
+      const clientName = name;
+      for (const tool of toolInfo) {
+        tools[createMCPToolId(clientName, tool.name)] =
+          VercelAIMcpToolTag.create({
+            description: tool.description,
+            inputSchema: jsonSchema(
+              toAny({
+                ...tool.inputSchema,
+                properties: tool.inputSchema?.properties ?? {},
+                additionalProperties: false,
+              }),
+            ),
+            _originToolName: tool.name,
+            _mcpServerName: clientName,
+            _mcpServerId: id,
+            execute: (params, options: ToolCallOptions) => {
+              options?.abortSignal?.throwIfAborted();
+              return this.toolCall(id, tool.name, params, userId);
             },
-            {} as Record<string, VercelAIMcpTool>,
-          ),
-        };
-      },
-      {} as Record<string, VercelAIMcpTool>,
-    );
+          });
+      }
+    }
+
+    return tools;
   }
   /**
    * Creates and adds a new client instance to memory only (no storage persistence)
    */
-  async addClient(id: string, name: string, serverConfig: MCPServerConfig) {
-    if (this.clients.has(id)) {
-      const prevClient = this.clients.get(id)!;
+  async addClient(
+    id: string,
+    name: string,
+    serverConfig: MCPServerConfig,
+    userId?: string,
+  ) {
+    const server = await this.storage.get(id);
+    const clientId = await this.getClientId(id, userId);
+    if (this.clients.has(clientId)) {
+      const prevClient = this.clients.get(clientId)!;
       void prevClient.client.disconnect();
     }
     const client = createMCPClient(id, name, serverConfig, {
       autoDisconnectSeconds: this.autoDisconnectSeconds,
+      userId,
+      perUserAuth: server?.perUserAuth ?? false,
+      onToolInfoUpdate: (toolInfo) => {
+        // Only update storage if it's the main client (not per-user)
+        // or if we want to share tool info across users
+        void this.storage.get(id).then((server) => {
+          if (server) {
+            void this.storage.save({
+              ...server,
+              toolInfo,
+            });
+          }
+        });
+      },
     });
-    this.clients.set(id, { client, name });
+    this.clients.set(clientId, { client, name });
     return client.connect();
   }
 
   /**
    * Persists a new client configuration to storage and adds the client instance to memory
    */
-  async persistClient(server: typeof McpServerTable.$inferInsert) {
+  async persistClient(server: McpServerInsert) {
     let id = server.name;
     if (this.storage) {
       const entity = await this.storage.save(server);
@@ -205,15 +229,18 @@ export class MCPClientsManager {
   /**
    * Refreshes an existing client with a new configuration or its existing config
    */
-  async refreshClient(id: string) {
+  async refreshClient(id: string, userId?: string) {
     await this.waitInitialized();
     const server = await this.storage.get(id);
     if (!server) {
       throw new Error(`Client ${id} not found`);
     }
-    this.logger.info(`Refreshing client ${server.name}`);
-    await this.addClient(id, server.name, server.config);
-    return this.clients.get(id)!;
+    this.logger.info(
+      `Refreshing client ${server.name}${userId ? ` for user ${userId}` : ""}`,
+    );
+    await this.addClient(id, server.name, server.config, userId);
+    const clientId = await this.getClientId(id, userId);
+    return this.clients.get(clientId)!;
   }
 
   async cleanup() {
@@ -222,43 +249,77 @@ export class MCPClientsManager {
     await Promise.allSettled(clients.map(({ client }) => client.disconnect()));
   }
 
-  async getClients() {
+  async getClients(userId?: string) {
     await this.waitInitialized();
-    return Array.from(this.clients.entries()).map(([id, { client }]) => ({
-      id,
-      client: client,
-    }));
-  }
-  async getClient(id: string) {
-    await this.waitInitialized();
-    const client = this.clients.get(id);
-    if (!client) {
-      await this.refreshClient(id);
+    const configs = await this.storage.loadAll();
+    const result: {
+      id: string;
+      clientId: string;
+      client: MCPClient;
+      name: string;
+    }[] = [];
+
+    for (const config of configs) {
+      const clientId =
+        config.perUserAuth && userId ? `${config.id}:${userId}` : config.id;
+      const client = this.clients.get(clientId);
+      if (client) {
+        result.push({
+          id: config.id,
+          clientId,
+          client: client.client,
+          name: client.name,
+        });
+      }
     }
 
-    return this.clients.get(id);
+    return result;
+  }
+
+  private async getClientId(id: string, userId?: string) {
+    const server = await this.storage.get(id);
+    if (!server) {
+      return id;
+    }
+    return server.perUserAuth && userId ? `${id}:${userId}` : id;
+  }
+
+  async getClient(id: string, userId?: string) {
+    await this.waitInitialized();
+    const server = await this.storage.get(id);
+    if (!server) {
+      throw new Error(`Client ${id} not found`);
+    }
+
+    const clientId = await this.getClientId(id, userId);
+
+    const client = this.clients.get(clientId);
+    if (!client) {
+      await this.addClient(id, server.name, server.config, userId);
+    }
+
+    return this.clients.get(clientId);
   }
   async toolCallByServerName(
     serverName: string,
     toolName: string,
     input: unknown,
+    userId?: string,
   ) {
-    const clients = await this.getClients();
-    const client = clients.find((c) => c.client.getInfo().name === serverName);
-    if (!client) {
-      if (this.storage) {
-        const servers = await this.storage.loadAll();
-        const server = servers.find((s) => s.name === serverName);
-        if (server) {
-          return this.toolCall(server.id, toolName, input);
-        }
-      }
+    const configs = await this.storage.loadAll();
+    const server = configs.find((s) => s.name === serverName);
+    if (!server) {
       throw new Error(`Client ${serverName} not found`);
     }
-    return this.toolCall(client.id, toolName, input);
+    return this.toolCall(server.id, toolName, input, userId);
   }
-  async toolCall(id: string, toolName: string, input: unknown) {
-    return safe(() => this.getClient(id))
+  async toolCall(
+    id: string,
+    toolName: string,
+    input: unknown,
+    userId?: string,
+  ) {
+    return safe(() => this.getClient(id, userId))
       .map((client) => {
         if (!client) throw new Error(`Client ${id} not found`);
         return client.client;

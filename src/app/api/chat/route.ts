@@ -204,8 +204,8 @@ export async function POST(request: Request) {
 
     const stream = createUIMessageStream({
       execute: async ({ writer: dataStream }) => {
-        const mcpClients = await mcpClientsManager.getClients();
-        const mcpTools = await mcpClientsManager.tools();
+        const mcpClients = await mcpClientsManager.getClients(session.user.id);
+        const mcpTools = await mcpClientsManager.tools(session.user.id);
         logger.info(
           `mcp-server count: ${mcpClients.length}, mcp-tools count :${Object.keys(mcpTools).length}`,
         );
@@ -213,6 +213,7 @@ export async function POST(request: Request) {
           .map(errorIf(() => !isToolCallAllowed && "Not allowed"))
           .map(() =>
             loadMcpTools({
+              userId: session.user.id,
               mentions,
               allowedMcpServers,
             }),
@@ -245,6 +246,7 @@ export async function POST(request: Request) {
               const output = await manualToolExecuteByLastMessage(
                 part,
                 { ...MCP_TOOLS, ...WORKFLOW_TOOLS, ...APP_DEFAULT_TOOLS },
+                session.user.id,
                 request.signal,
               );
               part.output = output;

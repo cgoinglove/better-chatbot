@@ -123,7 +123,7 @@ export default function EditAgent({
       });
 
       (mcpList as (MCPServerInfo & { id: string })[])?.forEach((mcp) => {
-        mcp.toolInfo.forEach((tool) => {
+        mcp.toolInfo?.forEach((tool) => {
           if (toolNames.includes(tool.name)) {
             allMentions.push({
               type: "mcpTool",

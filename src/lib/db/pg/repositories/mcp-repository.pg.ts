@@ -14,6 +14,8 @@ export const pgMcpRepository: MCPRepository = {
         config: server.config,
         userId: server.userId,
         visibility: server.visibility ?? "private",
+        perUserAuth: server.perUserAuth ?? false,
+        toolInfo: server.toolInfo ?? [],
         enabled: true,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -22,6 +24,8 @@ export const pgMcpRepository: MCPRepository = {
         target: [McpServerTable.id],
         set: {
           config: server.config,
+          perUserAuth: server.perUserAuth,
+          toolInfo: server.toolInfo,
           updatedAt: new Date(),
         },
       })
@@ -51,6 +55,8 @@ export const pgMcpRepository: MCPRepository = {
         name: McpServerTable.name,
         config: McpServerTable.config,
         enabled: McpServerTable.enabled,
+        perUserAuth: McpServerTable.perUserAuth,
+        toolInfo: McpServerTable.toolInfo,
         userId: McpServerTable.userId,
         visibility: McpServerTable.visibility,
         createdAt: McpServerTable.createdAt,
@@ -74,6 +80,13 @@ export const pgMcpRepository: MCPRepository = {
     await db
       .update(McpServerTable)
       .set({ visibility, updatedAt: new Date() })
+      .where(eq(McpServerTable.id, id));
+  },
+
+  async updatePerUserAuth(id, perUserAuth) {
+    await db
+      .update(McpServerTable)
+      .set({ perUserAuth, updatedAt: new Date() })
       .where(eq(McpServerTable.id, id));
   },
 

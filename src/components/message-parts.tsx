@@ -43,6 +43,9 @@ import { ChatMetadata, ChatModel, ManualToolConfirmTag } from "app-types/chat";
 import { useTranslations } from "next-intl";
 import { extractMCPToolId } from "lib/ai/mcp/mcp-tool-id";
 import { Separator } from "ui/separator";
+import { Alert, AlertDescription, AlertTitle } from "ui/alert";
+import { appStore } from "@/app/store";
+import { redriectMcpOauth } from "lib/ai/mcp/oauth-redirect";
 
 import { TextShimmer } from "ui/text-shimmer";
 import equal from "lib/equal";
@@ -62,7 +65,6 @@ import { WorkflowInvocation } from "./tool-invocation/workflow-invocation";
 import dynamic from "next/dynamic";
 import { notify } from "lib/notify";
 import { ModelProviderIcon } from "ui/model-provider-icon";
-import { appStore } from "@/app/store";
 import { BACKGROUND_COLORS, EMOJI_DATA } from "lib/const";
 
 type MessagePart = UIMessage["parts"][number];
@@ -162,6 +164,43 @@ export const UserMessagePart = memo(
       }
     }, [status]);
 
+    const mcpList = appStore((state) => state.mcpList);
+
+    const mentionAuthRequired = useMemo(() => {
+      if (!isLast) return null;
+      const mcpMentions = part.text.match(/mcp\("([^"]+)"\)/g);
+      const toolMentions = part.text.match(/tool\("([^"]+)"\)/g);
+
+      if (!mcpMentions && !toolMentions) return null;
+
+      const serverNames = new Set<string>();
+      mcpMentions?.forEach((m) => {
+        const name = m.match(/mcp\("([^"]+)"\)/)?.[1];
+        if (name) serverNames.add(name);
+      });
+      toolMentions?.forEach((m) => {
+        const toolName = m.match(/tool\("([^"]+)"\)/)?.[1];
+        if (toolName) {
+          const { serverName } = extractMCPToolId(toolName);
+          if (serverName) serverNames.add(serverName);
+        }
+      });
+
+      for (const serverName of serverNames) {
+        const server = mcpList.find((s) => s.name === serverName);
+        if (
+          server &&
+          (server.status === "authorizing" ||
+            (server.perUserAuth &&
+              !server.isAuthorized &&
+              server.status === "disconnected"))
+        ) {
+          return server;
+        }
+      }
+      return null;
+    }, [part.text, mcpList, isLast]);
+
     if (mode === "edit" && setMessages && sendMessage) {
       return (
         <div className="flex flex-row gap-2 items-start w-full">
@@ -212,6 +251,26 @@ export const UserMessagePart = memo(
             </Button>
           )}
         </div>
+        {mentionAuthRequired && (
+          <div className="w-full max-w-md mt-1">
+            <Alert
+              className="cursor-pointer hover:bg-accent/10 transition-colors border-primary/50 py-2"
+              onClick={async () => {
+                await redriectMcpOauth(mentionAuthRequired.id);
+              }}
+              role="button"
+              tabIndex={0}
+            >
+              <TriangleAlert className="size-4 text-primary" />
+              <AlertTitle className="text-xs">
+                Authorization Required: {mentionAuthRequired.name}
+              </AlertTitle>
+              <AlertDescription className="text-[10px] leading-tight">
+                Click here to authorize this MCP server.
+              </AlertDescription>
+            </Alert>
+          </div>
+        )}
         {isLast && (
           <div className="flex w-full justify-end md:opacity-0 group-hover/message:opacity-100 transition-opacity duration-300">
             <Tooltip>
@@ -1046,6 +1105,24 @@ export const ToolMessagePart = memo(
                   <WorkflowInvocation
                     result={result as VercelAIWorkflowToolStreamingResult}
                   />
+                ) : (result as any)?._mcpAuthRequired ? (
+                  <div className="mt-2">
+                    <Alert
+                      className="cursor-pointer hover:bg-accent/10 transition-colors border-primary/50"
+                      onClick={async () => {
+                        await redriectMcpOauth((result as any)._mcpServerId);
+                      }}
+                      role="button"
+                      tabIndex={0}
+                    >
+                      <TriangleAlert className="size-4 text-primary" />
+                      <AlertTitle>Authorization Required</AlertTitle>
+                      <AlertDescription>
+                        Click here to authorize this MCP server and access its
+                        tools.
+                      </AlertDescription>
+                    </Alert>
+                  </div>
                 ) : (
                   <div
                     className={cn(

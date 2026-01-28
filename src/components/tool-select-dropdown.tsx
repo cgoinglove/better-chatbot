@@ -605,13 +605,16 @@ function McpServerSelector() {
           id: server.id,
           serverName: server.name,
           checked: allowedTools.length > 0,
-          tools: server.toolInfo.map((tool) => ({
-            name: tool.name,
-            checked: allowedTools.includes(tool.name),
-            description: tool.description,
-          })),
+          tools:
+            server.toolInfo?.map((tool) => ({
+              name: tool.name,
+              checked: allowedTools.includes(tool.name),
+              description: tool.description,
+            })) ?? [],
           error: server.error,
           status: server.status,
+          perUserAuth: server.perUserAuth,
+          isAuthorized: server.isAuthorized,
         };
       });
   }, [mcpServerList, allowedMcpServers]);
@@ -653,7 +656,10 @@ function McpServerSelector() {
               className="flex items-center gap-2 font-semibold cursor-pointer"
               icon={
                 <div className="flex items-center gap-2 ml-auto">
-                  {server.status === "authorizing" ? (
+                  {server.status === "authorizing" ||
+                  (server.perUserAuth &&
+                    !server.isAuthorized &&
+                    server.status === "disconnected") ? (
                     <div className="flex items-center gap-1">
                       <ShieldAlertIcon className="size-3 text-muted-foreground" />
                     </div>
@@ -696,7 +702,12 @@ function McpServerSelector() {
               <DropdownMenuSubContent className="w-80 relative">
                 <McpServerToolSelector
                   tools={server.tools}
-                  isAuthorizing={server.status === "authorizing"}
+                  isAuthorizing={
+                    server.status === "authorizing" ||
+                    (server.perUserAuth &&
+                      !server.isAuthorized &&
+                      server.status === "disconnected")
+                  }
                   checked={server.checked}
                   serverId={server.id}
                   onClickAllChecked={(checked) => {
@@ -818,8 +829,12 @@ function McpServerToolSelector({
       <DropdownMenuSeparator />
       <div className="max-h-96 overflow-y-auto">
         {filteredTools.length === 0 ? (
-          <div className="text-sm text-muted-foreground w-full h-full flex items-center justify-center py-6">
-            {t("noResults")}
+          <div className="text-sm text-muted-foreground w-full h-full flex flex-col items-center justify-center py-6 px-4 text-center">
+            {isAuthorizing ? (
+              <p>Authorize to see available tools.</p>
+            ) : (
+              <p>{t("noResults")}</p>
+            )}
           </div>
         ) : (
           filteredTools.map((tool) => (
