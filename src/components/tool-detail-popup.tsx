@@ -228,7 +228,7 @@ export function ToolDetailPopupContent({
               "text-xs text-muted-foreground whitespace-pre-wrap break-words max-h-[120px] overflow-y-auto",
             )}
           >
-            {data?.prompt || "None"}
+            {data?.prompt || t("MCP.noInstructions")}
           </p>
         )}
       </div>

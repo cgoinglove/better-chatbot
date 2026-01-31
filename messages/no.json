@@ -248,7 +248,22 @@
         "webSearch": "Søk på nettet",
         "http": "HTTP-forespørsel",
         "code": "Kodekjøring"
-      }
+      },
+      "agent": "Agent",
+      "mention": "Nevning",
+      "tools": "Verktøy",
+      "tooManyToolsSelected": "For mange verktøy valgt, vennligst velg færre enn 128 verktøy",
+      "presetNamePlaceholder": "Navn",
+      "noMcpServersDetected": "Fant ingen MCP-servere.",
+      "addServer": "Legg til en server",
+      "error": "feil",
+      "authorizationRequired": "Autorisasjon kreves",
+      "clickToAuthorize": "Klikk her for å autorisere denne MCP-serveren og få tilgang til verktøyene.",
+      "auto": "Auto",
+      "manual": "Manuell",
+      "none": "Ingen",
+      "mentionOnly": "kun @nevning",
+      "noToolsAvailable": "Ingen verktøy tilgjengelig"
     },
     "VoiceChat": {
       "title": "Talechat-modus",
@@ -794,6 +809,7 @@
     "public": "Offentlig",
     "publicDescription": "Offentlig for alle brukere",
     "featured": "Fremhevet",
-    "featuredDescription": "Fremhevet for alle brukere"
+    "featuredDescription": "Fremhevet for alle brukere",
+    "noInstructions": "Ingen"
   }
 }
