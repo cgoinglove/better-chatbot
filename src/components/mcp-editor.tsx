@@ -9,6 +9,7 @@ import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
+import { Switch } from "./ui/switch";
 import JsonView from "./ui/json-view";
 import { toast } from "sonner";
 import { safe } from "ts-safe";
@@ -31,6 +32,7 @@ interface MCPEditorProps {
   initialConfig?: MCPServerConfig;
   name?: string;
   id?: string;
+  perUserAuth?: boolean;
 }
 
 const STDIO_ARGS_ENV_PLACEHOLDER = `/** STDIO Example */
@@ -54,6 +56,7 @@ export default function MCPEditor({
   initialConfig,
   name: initialName,
   id,
+  perUserAuth: initialPerUserAuth = false,
 }: MCPEditorProps) {
   const t = useTranslations();
   const shouldInsert = useMemo(() => isNull(id), [id]);
@@ -66,6 +69,7 @@ export default function MCPEditor({
 
   // State for form fields
   const [name, setName] = useState<string>(initialName ?? "");
+  const [perUserAuth, setPerUserAuth] = useState<boolean>(initialPerUserAuth);
   const router = useRouter();
   const [config, setConfig] = useState<MCPServerConfig>(
     initialConfig as MCPServerConfig,
@@ -146,6 +150,7 @@ export default function MCPEditor({
             name,
             config,
             id,
+            perUserAuth,
           }),
         }),
       )
@@ -195,6 +200,23 @@ export default function MCPEditor({
           />
           {nameError && <p className="text-xs text-destructive">{nameError}</p>}
         </div>
+
+        {/* Per-User Auth field */}
+        <div className="flex items-center justify-between space-x-2 rounded-lg border p-4">
+          <div className="space-y-0.5">
+            <Label htmlFor="per-user-auth">Per-User Authentication</Label>
+            <p className="text-sm text-muted-foreground">
+              When enabled, each user will need to provide their own credentials
+              for this MCP server.
+            </p>
+          </div>
+          <Switch
+            id="per-user-auth"
+            checked={perUserAuth}
+            onCheckedChange={setPerUserAuth}
+          />
+        </div>
+
         <div className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="config">Config</Label>

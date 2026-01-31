@@ -40,6 +40,10 @@ import { ExamplePlaceholder } from "ui/example-placeholder";
 import { Input } from "ui/input";
 import { appStore } from "@/app/store";
 import { useShallow } from "zustand/shallow";
+import { Switch } from "ui/switch";
+import { Label } from "ui/label";
+import { updatePerUserAuthAction } from "@/app/api/mcp/actions";
+import { useSWRConfig } from "swr";
 
 export function McpCustomizationPopup() {
   const [mcpCustomizationPopup, appStoreMutate] = appStore(
@@ -67,19 +71,33 @@ export function McpCustomizationPopup() {
 }
 
 export function McpServerCustomizationContent({
-  mcpServerInfo: { id, name, toolInfo, error },
+  mcpServerInfo: { id, name, toolInfo, error, perUserAuth },
   title,
 }: {
   mcpServerInfo: MCPServerInfo & { id: string };
   title?: ReactNode;
 }) {
   const t = useTranslations();
+  const { mutate } = useSWRConfig();
 
   const [prompt, setPrompt] = useState("");
   const [search, setSearch] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isPerUserAuthLoading, setIsPerUserAuthLoading] = useState(false);
 
   const [selectedTool, setSelectedTool] = useState<MCPToolInfo | null>(null);
+
+  const handlePerUserAuthChange = async (checked: boolean) => {
+    setIsPerUserAuthLoading(true);
+    try {
+      await updatePerUserAuthAction(id, checked);
+      mutate("/api/mcp/list");
+    } catch (e) {
+      handleErrorWithToast(e as any);
+    } finally {
+      setIsPerUserAuthLoading(false);
+    }
+  };
 
   const handleSave = () => {
     setIsProcessing(true);
@@ -150,7 +168,7 @@ export function McpServerCustomizationContent({
     const mcpToolCustomizationsMap = new Map(
       mcpToolCustomizations?.map((tool) => [tool.toolName, tool]),
     );
-    return toolInfo
+    return (toolInfo || [])
       .filter((tool) => tool.name.includes(search))
       .map((tool) => {
         return {
@@ -194,6 +212,38 @@ export function McpServerCustomizationContent({
         </DialogTitle>
         <DialogDescription>{/*  */}</DialogDescription>
       </DialogHeader>
+      <div className="flex flex-col gap-4 mb-6">
+        <div className="flex items-center justify-between p-4 rounded-lg border bg-accent/5">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-full bg-primary/10">
+              <Info className="size-4 text-primary" />
+            </div>
+            <div className="flex flex-col">
+              <Label
+                htmlFor="per-user-auth"
+                className="text-sm font-semibold cursor-pointer"
+              >
+                {t("MCP.perUserAuthentication")}
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                {t("MCP.perUserAuthenticationDescription")}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {isPerUserAuthLoading && (
+              <Loader className="size-3 animate-spin text-muted-foreground" />
+            )}
+            <Switch
+              id="per-user-auth"
+              checked={perUserAuth}
+              onCheckedChange={handlePerUserAuthChange}
+              disabled={isPerUserAuthLoading}
+            />
+          </div>
+        </div>
+      </div>
+
       <div className="flex items-center">
         <h5 className="mr-auto flex items-center py-2">
           <Tooltip>

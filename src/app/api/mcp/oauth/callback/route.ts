@@ -141,11 +141,17 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  const client = await mcpClientsManager.getClient(session.mcpServerId);
+  const client = await mcpClientsManager.getClient(
+    session.mcpServerId,
+    session.userId || undefined,
+  );
 
   try {
     await client?.client.finishAuth(callbackData.code, callbackData.state);
-    await mcpClientsManager.refreshClient(session.mcpServerId);
+    await mcpClientsManager.refreshClient(
+      session.mcpServerId,
+      session.userId || undefined,
+    );
 
     return createOAuthResponsePage({
       type: "success",

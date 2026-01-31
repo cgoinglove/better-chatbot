@@ -115,6 +115,7 @@ export function mergeSystemPrompt(
 export function manualToolExecuteByLastMessage(
   part: ToolUIPart,
   tools: Record<string, VercelAIMcpTool | VercelAIWorkflowTool | Tool>,
+  userId?: string,
   abortSignal?: AbortSignal,
 ) {
   const { input } = part;
@@ -141,6 +142,7 @@ export function manualToolExecuteByLastMessage(
           tool._mcpServerId,
           tool._originToolName,
           input,
+          userId,
         );
       }
       return tool.execute!(input, {
@@ -394,10 +396,11 @@ export const workflowToVercelAITools = (
 };
 
 export const loadMcpTools = (opt?: {
+  userId?: string;
   mentions?: ChatMention[];
   allowedMcpServers?: Record<string, AllowedMCPServer>;
 }) =>
-  safe(() => mcpClientsManager.tools())
+  safe(() => mcpClientsManager.tools(opt?.userId))
     .map((tools) => {
       if (opt?.mentions?.length) {
         return filterMCPToolsByMentions(tools, opt.mentions);
