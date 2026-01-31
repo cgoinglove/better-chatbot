@@ -113,6 +113,7 @@ export class MCPClientsManager {
     await this.waitInitialized();
     return Array.from(this.clients.entries()).reduce(
       (acc, [id, client]) => {
+        if (client.client?.status !== "connected") return acc;
         if (!client.client?.toolInfo?.length) return acc;
         const clientName = client.name;
         return {
