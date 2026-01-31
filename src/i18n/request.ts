@@ -20,6 +20,30 @@ export default getRequestConfig(async () => {
     locale,
     messages:
       locale === "en" ? defaultMessages : deepmerge(defaultMessages, messages),
+    formats: {
+      dateTime: {
+        // "Nov 20, 2020"
+        short: {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        },
+        // "November 20, 2020"
+        long: {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        },
+        // "Nov 20, 2020, 10:36 AM"
+        shortWithTime: {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+          hour: "numeric",
+          minute: "numeric",
+        },
+      },
+    },
     getMessageFallback({ key, namespace }) {
       return `${namespace}.${key}`;
     },

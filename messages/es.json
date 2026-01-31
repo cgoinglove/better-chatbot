@@ -490,7 +490,8 @@
         "failedToSaveImage": "Error al guardar imagen",
         "pleaseUploadValidImage": "Por favor sube una imagen válida (JPEG, PNG o WebP)",
         "imageSizeMustBeLessThan": "El tamaño de la imagen debe ser menor a 5MB",
-        "select": "Seleccionar"
+        "select": "Seleccionar",
+        "last30Days": "los últimos 30 días"
       }
     }
   }

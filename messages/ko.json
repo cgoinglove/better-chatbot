@@ -504,7 +504,8 @@
         "failedToSaveImage": "이미지 저장에 실패했습니다",
         "pleaseUploadValidImage": "유효한 이미지를 업로드하세요 (JPEG, PNG 또는 WebP)",
         "imageSizeMustBeLessThan": "이미지 크기는 5MB 미만이어야 합니다",
-        "select": "선택"
+        "select": "선택",
+        "last30Days": "최근 30일"
       }
     }
   }

@@ -43,7 +43,7 @@ export function UserStatisticsCard({ stats, view }: UserStatisticsCardProps) {
           {tCommon("usageStatistics")}
         </CardTitle>
         <p className="text-sm text-muted-foreground flex items-center gap-2">
-          {t("aiModelUsageFor", { period: stats.period })}
+          {t("aiModelUsageFor", { period: tCommon(stats.period) })}
         </p>
       </CardHeader>
 
@@ -253,7 +253,7 @@ export function UserStatisticsCard({ stats, view }: UserStatisticsCardProps) {
                   {tCommon("tokensAcross", {
                     tokens: stats.totalTokens.toLocaleString(),
                     count: stats.modelStats.length,
-                    period: stats.period.toLowerCase(),
+                    period: tCommon(stats.period),
                   })}
                   {stats.modelStats[0] && (
                     <>

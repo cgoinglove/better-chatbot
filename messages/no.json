@@ -628,6 +628,7 @@
         "avgTokensPerMessage": "Gj.sn. tokens/melding",
         "topModel": "Toppmodell",
         "summary": "Sammendrag",
+        "last30Days": "de siste 30 dagene",
         "tokensAcross": "{tokens} tokens på tvers av {count} modell{count, plural, =1 {} other {er}} i {period}.",
         "mostActive": "Mest aktiv: {model} ({tokens} tokens).",
         "summaryPrefix": "📊 Sammendrag: ",

@@ -14,8 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "ui/table";
-import { format } from "date-fns";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, getFormatter } from "next-intl/server";
 
 interface UserSessionsProps {
   userId: string;
@@ -30,6 +29,7 @@ export async function UserSessions({
     view === "admin" ? "User.Profile.admin" : "User.Profile.user",
   );
   const tCommon = await getTranslations("User.Profile.common");
+  const format = await getFormatter();
   const sessions = await getUserSessions(userId);
 
   return (
@@ -57,10 +57,16 @@ export async function UserSessions({
               {sessions.map((session) => (
                 <TableRow key={session.id}>
                   <TableCell>
-                    {format(new Date(session.createdAt), "PPp")}
+                    {format.dateTime(
+                      new Date(session.createdAt),
+                      "shortWithTime",
+                    )}
                   </TableCell>
                   <TableCell>
-                    {format(new Date(session.expiresAt), "PPp")}
+                    {format.dateTime(
+                      new Date(session.expiresAt),
+                      "shortWithTime",
+                    )}
                   </TableCell>
                   <TableCell className="font-mono text-xs">
                     {session.ipAddress || tCommon("unknown")}

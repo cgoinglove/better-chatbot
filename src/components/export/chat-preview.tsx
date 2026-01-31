@@ -5,15 +5,16 @@ import {
 import { PreviewMessage } from "../message";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
-import { formatDate } from "date-fns";
+import { getFormatter } from "next-intl/server";
 
 import Particles from "ui/particles";
 import Comments from "./comments";
 
-export default function ChatPreview({
+export default async function ChatPreview({
   thread,
   comments,
 }: { thread: ChatExportWithUser; comments: ChatExportCommentWithUser[] }) {
+  const format = await getFormatter();
   return (
     <div
       className="flex flex-col min-w-0 h-full relative"
@@ -32,7 +33,7 @@ export default function ChatPreview({
             {thread.title}
           </h1>
           <div className="text-xs text-muted-foreground flex items-center gap-2">
-            {formatDate(thread.exportedAt, "MMM d, yyyy")}
+            {format.dateTime(new Date(thread.exportedAt), "short")}
             <Tooltip>
               <TooltipTrigger asChild>
                 <div className="flex items-center gap-2 text-xs">
