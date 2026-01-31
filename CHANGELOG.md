@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.27.0](https://github.com/cgoinglove/better-chatbot/compare/v1.26.0...v1.27.0) (2026-01-31)
+
+
+### Features
+
+* add DISABLE_EMAIL_SIGN_UP to control email and OAuth signups separately ([#331](https://github.com/cgoinglove/better-chatbot/issues/331)) ([2811cf3](https://github.com/cgoinglove/better-chatbot/commit/2811cf3dbcce03da467cd958587473326dab9cc1))
+* add norwegian translation ([#341](https://github.com/cgoinglove/better-chatbot/issues/341)) ([64f88cc](https://github.com/cgoinglove/better-chatbot/commit/64f88cc37fab0613c0711d9b30bff84daae74839))
+
+
+### Bug Fixes
+
+* align chat messages with prompt input ([#366](https://github.com/cgoinglove/better-chatbot/issues/366)) ([e65be9f](https://github.com/cgoinglove/better-chatbot/commit/e65be9f584aa2dd62123431d72e1192b23ffb527))
+* blur prompt-input after submit to collapse mobile keyboard ([#337](https://github.com/cgoinglove/better-chatbot/issues/337)) ([aec3530](https://github.com/cgoinglove/better-chatbot/commit/aec35300c1ca7269aa5086a95f1a4f480b2564c7))
+* enter ([78573e4](https://github.com/cgoinglove/better-chatbot/commit/78573e4de8d509cf717123235e55e6d801eeb581))
+* **mcp:** improve 401 detection for OAuth flow trigger ([#362](https://github.com/cgoinglove/better-chatbot/issues/362)) ([a99dca9](https://github.com/cgoinglove/better-chatbot/commit/a99dca9a26117dec41611a1f40038b80026a675b))
+* preserve whitespace in chat input during editing ([#361](https://github.com/cgoinglove/better-chatbot/issues/361)) ([e914a30](https://github.com/cgoinglove/better-chatbot/commit/e914a30f66113c49b60ff3695b52db3d8d7e3a8f))
+* skip signup method selection when only email is enabled ([#338](https://github.com/cgoinglove/better-chatbot/issues/338)) ([7538bc8](https://github.com/cgoinglove/better-chatbot/commit/7538bc8babb0943f2857a9a9139bff79e2c5e486))
+* text message part inline buttons is not visible on mobile ([#334](https://github.com/cgoinglove/better-chatbot/issues/334)) ([666c395](https://github.com/cgoinglove/better-chatbot/commit/666c395865d03dd33884f9f17933b1a3659d44eb)), closes [#333](https://github.com/cgoinglove/better-chatbot/issues/333)
+* use translation for user settings menu item ([#339](https://github.com/cgoinglove/better-chatbot/issues/339)) ([eadc71a](https://github.com/cgoinglove/better-chatbot/commit/eadc71ae6d62ae297aeff44979591bd03a86b19d))
+
 ## [1.26.0](https://github.com/cgoinglove/better-chatbot/compare/v1.25.0...v1.26.0) (2025-11-07)
 
 
