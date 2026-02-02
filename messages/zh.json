@@ -357,7 +357,11 @@
     "mcpServerCustomization": "MCP 服务器自定义",
     "mcpServerCustomizationDescription": "MCP 服务器自定义指令将在 MCP 服务器可用时添加到系统提示中。",
     "toolCustomizationInstructionsPlaceholder": "工具自定义指令不可用。",
-    "mcpServerCustomizationPlaceholder": "例如：如果输入值是电子邮件，始终以 example@example.com 格式输入电子邮件。"
+    "mcpServerCustomizationPlaceholder": "例如：如果输入值是电子邮件，始终以 example@example.com 格式输入电子邮件。",
+    "authorizationRequired": "需要授权",
+    "authorizationRequiredDescription": "{serverName} 需要授权才能访问其工具。",
+    "authorize": "授权",
+    "authorizationFailed": "授权失败"
   },
   "Error": {},
   "Info": {

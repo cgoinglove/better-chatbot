@@ -358,7 +358,11 @@
     "mcpServerCustomization": "Personalización del Servidor MCP",
     "mcpServerCustomizationDescription": "Las instrucciones de personalización del servidor MCP se añadirán al prompt del sistema cuando el servidor MCP esté disponible.",
     "toolCustomizationInstructionsPlaceholder": "Las instrucciones de personalización de herramientas no están disponibles.",
-    "mcpServerCustomizationPlaceholder": "ej. Si el valor de entrada es email, siempre ingresa el email en el formato ejemplo@ejemplo.com."
+    "mcpServerCustomizationPlaceholder": "ej. Si el valor de entrada es email, siempre ingresa el email en el formato ejemplo@ejemplo.com.",
+    "authorizationRequired": "Autorización Requerida",
+    "authorizationRequiredDescription": "{serverName} requiere autorización para acceder a sus herramientas.",
+    "authorize": "Autorizar",
+    "authorizationFailed": "Error de autorización"
   },
   "Error": {},
   "Info": {
