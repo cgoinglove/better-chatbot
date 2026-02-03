@@ -247,7 +247,8 @@
         "visualization": "Data Visualization",
         "webSearch": "Search the Web",
         "http": "HTTP Request",
-        "code": "Code Execution"
+        "code": "Code Execution",
+        "fileGenerator": "File Generator"
       }
     },
     "VoiceChat": {

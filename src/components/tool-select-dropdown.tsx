@@ -9,6 +9,7 @@ import {
   ChartColumn,
   ChevronRight,
   CodeIcon,
+  FileIcon,
   GlobeIcon,
   HardDriveUploadIcon,
   ImagesIcon,
@@ -886,6 +887,9 @@ function AppDefaultToolKitSelector() {
           break;
         case AppDefaultToolkit.Code:
           icon = CodeIcon;
+          break;
+        case AppDefaultToolkit.FileGenerator:
+          icon = FileIcon;
           break;
       }
       return {
