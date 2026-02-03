@@ -11,6 +11,7 @@ import {
   ToolNodeData,
   HttpNodeData,
   TemplateNodeData,
+  ReplyInThreadNodeData,
 } from "lib/ai/workflow/workflow.interface";
 import { cleanVariableName } from "lib/utils";
 import { safe } from "ts-safe";
@@ -109,6 +110,8 @@ export const nodeValidate: NodeValidate<WorkflowNodeData> = ({
       return httpNodeValidate({ node, nodes, edges });
     case NodeKind.Template:
       return templateNodeValidate({ node, nodes, edges });
+    case NodeKind.ReplyInThread:
+      return replyInThreadNodeValidate({ node, nodes, edges });
   }
 };
 
@@ -269,4 +272,25 @@ export const templateNodeValidate: NodeValidate<TemplateNodeData> = ({
 
   // Template content can be undefined/empty - that's valid
   // The actual content validation is handled by the TipTap editor
+};
+
+export const replyInThreadNodeValidate: NodeValidate<ReplyInThreadNodeData> = ({
+  node,
+}) => {
+  if (!node.title) {
+    throw new Error("Reply-in-thread node requires a title");
+  }
+
+  if (!node.messages?.length) {
+    throw new Error("Reply-in-thread node must include at least one message");
+  }
+
+  node.messages.forEach((message, index) => {
+    if (!message.role) {
+      throw new Error(`Message #${index + 1} must have a role`);
+    }
+    if (!message.content) {
+      throw new Error(`Message #${index + 1} requires content`);
+    }
+  });
 };
