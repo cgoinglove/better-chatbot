@@ -33,7 +33,7 @@ import logger from "logger";
 import { JSONSchema7 } from "json-schema";
 import { ObjectJsonSchema7 } from "app-types/util";
 import { jsonSchemaToZod } from "lib/json-schema-to-zod";
-import { Agent } from "app-types/agent";
+import { Agent, AgentSummary } from "app-types/agent";
 
 export async function getUserId() {
   const session = await getSession();
@@ -224,6 +224,16 @@ export async function rememberAgentAction(
     await serverCache.set(key, cachedAgent);
   }
   return cachedAgent as Agent | undefined;
+}
+
+export async function rememberAvailableAgentsAction(userId: string) {
+  const key = CacheKeys.availableAgents(userId);
+  let cachedAgents = await serverCache.get<AgentSummary[] | null>(key);
+  if (!cachedAgents) {
+    cachedAgents = await agentRepository.selectAgents(userId, ["all"], 50);
+    await serverCache.set(key, cachedAgents, 1000 * 60 * 5); // 5 minutes cache
+  }
+  return cachedAgents ?? [];
 }
 
 export async function exportChatAction({

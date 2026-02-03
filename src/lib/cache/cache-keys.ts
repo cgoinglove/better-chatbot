@@ -4,4 +4,5 @@ export const CacheKeys = {
   mcpServerCustomizations: (userId: string) =>
     `mcp-server-customizations-${userId}`,
   agentInstructions: (agent: string) => `agent-instructions-${agent}`,
+  availableAgents: (userId: string) => `available-agents-${userId}`,
 };
