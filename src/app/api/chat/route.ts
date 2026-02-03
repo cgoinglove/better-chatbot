@@ -51,6 +51,7 @@ import { nanoBananaTool, openaiImageTool } from "lib/ai/tools/image";
 import { ImageToolName } from "lib/ai/tools";
 import { buildCsvIngestionPreviewParts } from "@/lib/ai/ingest/csv-ingest";
 import { serverFileStorage } from "lib/file-storage";
+import type { WorkflowExecutionContext } from "lib/ai/workflow/workflow.interface";
 
 const logger = globalLogger.withDefaults({
   message: colorize("blackBright", `Chat API: `),
@@ -65,6 +66,13 @@ export async function POST(request: Request) {
     if (!session?.user.id) {
       return new Response("Unauthorized", { status: 401 });
     }
+    const workflowContext: WorkflowExecutionContext = {
+      user: {
+        id: session.user.id,
+        name: session.user.name,
+        email: session.user.email,
+      },
+    };
     const {
       id,
       message,
@@ -225,6 +233,7 @@ export async function POST(request: Request) {
             loadWorkFlowTools({
               mentions,
               dataStream,
+              context: workflowContext,
             }),
           )
           .orElse({});

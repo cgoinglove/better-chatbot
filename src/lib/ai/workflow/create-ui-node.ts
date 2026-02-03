@@ -103,6 +103,25 @@ export function createUINode(
         content: [],
       },
     };
+  } else if (node.data.kind === NodeKind.ReplyInThread) {
+    node.data.outputSchema = structuredClone(
+      defaultReplyInThreadNodeOutputSchema,
+    );
+    node.data.messages = [
+      {
+        role: "user",
+      },
+    ];
+    node.data.title = {
+      type: "doc",
+      content: [],
+    };
+  } else if (node.data.kind === NodeKind.Scheduler) {
+    node.data.outputSchema = structuredClone(defaultSchedulerNodeOutputSchema);
+    node.data.cron = "0 * * * *";
+    node.data.timezone = "UTC";
+    node.data.enabled = true;
+    node.data.payload = {};
   }
 
   return node;
@@ -124,6 +143,45 @@ export const defaultTemplateNodeOutputSchema: ObjectJsonSchema7 = {
   type: "object",
   properties: {
     template: {
+      type: "string",
+    },
+  },
+};
+
+export const defaultReplyInThreadNodeOutputSchema: ObjectJsonSchema7 = {
+  type: "object",
+  properties: {
+    threadId: {
+      type: "string",
+    },
+    title: {
+      type: "string",
+    },
+    messageIds: {
+      type: "array",
+      items: {
+        type: "string",
+      },
+    },
+    messageCount: {
+      type: "number",
+    },
+  },
+};
+
+export const defaultSchedulerNodeOutputSchema: ObjectJsonSchema7 = {
+  type: "object",
+  properties: {
+    scheduleId: {
+      type: "string",
+    },
+    lastRunAt: {
+      type: "string",
+    },
+    nextRunAt: {
+      type: "string",
+    },
+    status: {
       type: "string",
     },
   },

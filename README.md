@@ -65,6 +65,7 @@ Built with Vercel AI SDK and Next.js, combining the best features of leading AI 
   - [🔐 OAuth Sign-In Setup](#-oauth-sign-in-setup)
   - [🕵🏿 Adding openAI like providers](#-adding-openai-like-providers)
   - [🧪 E2E Testing Guide](#-e2e-testing-guide)
+  - [🕒 Workflow Scheduler](#-workflow-scheduler)
 - [💡 Tips](#-tips)
   - [💬 Temporary Chat Windows](#-temporary-chat-windows)
 - [🗺️ Roadmap](#️-roadmap)
@@ -308,6 +309,10 @@ BETTER_AUTH_URL=
 # If you don't have PostgreSQL running locally, start it with: pnpm docker:pg
 POSTGRES_URL=postgres://your_username:your_password@localhost:5432/your_database_name
 
+# === Workflow Scheduler ===
+# Shared secret required by /api/workflow/schedules/dispatch
+WORKFLOW_SCHEDULER_SECRET=your_random_string
+
 # (Optional)
 # === Tools ===
 # Exa AI for web search and content extraction (optional, but recommended for @web and research features)
@@ -397,6 +402,10 @@ Step-by-step setup guides for running and configuring better-chatbot.
 #### [🧪 E2E Testing Guide](./docs/tips-guides/e2e-testing-guide.md)
 
 - Comprehensive end-to-end testing with Playwright including multi-user scenarios, agent visibility testing, and CI/CD integration
+
+#### [🕒 Workflow Scheduler](./docs/tips-guides/workflow-scheduler.md)
+
+- Configure Scheduler nodes, set the shared secret, and wire cron jobs to `/api/workflow/schedules/dispatch`
   <br/>
 
 ## 💡 Tips

@@ -146,7 +146,9 @@
       "code": "Execute custom code scripts with access to previous node data.\n\nRun JavaScript, Python, or other languages within your workflow (coming soon).",
       "http": "Fetch data from external APIs and web services via HTTP requests.\n\nIntegrate with REST APIs, webhooks, and third-party services.",
       "template": "Create dynamic documents by combining text with data from previous nodes.\n\nGenerate emails, reports, or formatted content using variable substitution.",
-      "condition": "Add conditional logic to branch your workflow based on data evaluation.\n\nCreate if-else logic to handle different scenarios and data conditions."
+      "condition": "Add conditional logic to branch your workflow based on data evaluation.\n\nCreate if-else logic to handle different scenarios and data conditions.",
+      "reply-in-thread": "Create a new chat thread for the current user with scripted messages.\n\nUse '/' mentions to inject data from previous nodes before saving the conversation.",
+      "scheduler": "Trigger workflows on a recurring schedule defined by cron expressions.\n\nUse timezone-aware schedules to automate recurring tasks without manual input."
     },
     "structuredOutputSwitchConfirm": "You currently have structured output enabled.\n What would you like to do?",
     "structuredOutputSwitchConfirmOk": "Edit Structured Output",
@@ -154,7 +156,22 @@
     "noTools": "No published workflows available.\nCreate workflows to build custom tools.",
     "arrangeNodes": "Auto Layout",
     "nodesArranged": "Layout applied successfully",
-    "visibilityUpdated": "Visibility updated successfully"
+    "visibilityUpdated": "Visibility updated successfully",
+    "schedulerCronExpression": "Cron expression",
+    "schedulerCronHelper": "Use standard 5-field cron syntax. Examples: '0 * * * *' or '0 9 * * MON'.",
+    "schedulerCronDocs": "Open crontab.guru",
+    "schedulerTimezone": "Timezone",
+    "schedulerTimezoneHelper": "Use an IANA timezone like 'UTC' or 'America/New_York'.",
+    "schedulerEnabled": "Enabled",
+    "schedulerEnabledDescription": "Paused schedules will not run.",
+    "schedulerPayload": "Payload",
+    "schedulerPayloadDescription": "JSON payload supplied as workflow input when the schedule triggers.",
+    "schedulerInvalidJson": "Please enter valid JSON.",
+    "schedulerStackCronLabel": "Cron",
+    "schedulerStackTimezoneLabel": "TZ",
+    "schedulerStackStatusLabel": "Status",
+    "schedulerStatusActive": "Active",
+    "schedulerStatusPaused": "Paused"
   },
   "Auth": {
     "SignIn": {
