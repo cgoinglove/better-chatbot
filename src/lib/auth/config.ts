@@ -2,9 +2,11 @@ import {
   GitHubConfigSchema,
   GoogleConfigSchema,
   MicrosoftConfigSchema,
+  OktaConfigSchema,
   GitHubConfig,
   GoogleConfig,
   MicrosoftConfig,
+  OktaConfig,
   AuthConfig,
   AuthConfigSchema,
 } from "app-types/authentication";
@@ -27,6 +29,7 @@ function parseSocialAuthConfigs() {
     github?: GitHubConfig;
     google?: GoogleConfig;
     microsoft?: MicrosoftConfig;
+    okta?: OktaConfig;
   } = {};
   // DISABLE_SIGN_UP only applies to OAuth signups, not email signups
   const disableSignUp = parseEnvBoolean(process.env.DISABLE_SIGN_UP);
@@ -91,6 +94,28 @@ function parseSocialAuthConfigs() {
         "Do not pass MICROSOFT_CLIENT_SECRET to the client",
         configs,
         configs.microsoft.clientSecret,
+      );
+    }
+  }
+
+  // Okta uses OIDC/OAuth 2.0 with issuer base URL like https://dev-xxxx.okta.com/oauth2/default
+  if (
+    process.env.OKTA_CLIENT_ID &&
+    process.env.OKTA_CLIENT_SECRET &&
+    process.env.OKTA_ISSUER
+  ) {
+    const oktaResult = OktaConfigSchema.safeParse({
+      clientId: process.env.OKTA_CLIENT_ID,
+      clientSecret: process.env.OKTA_CLIENT_SECRET,
+      issuer: process.env.OKTA_ISSUER,
+      disableSignUp,
+    });
+    if (oktaResult.success) {
+      configs.okta = oktaResult.data;
+      experimental_taintUniqueValue(
+        "Do not pass OKTA_CLIENT_SECRET to the client",
+        configs,
+        configs.okta.clientSecret,
       );
     }
   }
