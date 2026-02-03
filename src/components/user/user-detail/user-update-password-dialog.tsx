@@ -88,6 +88,11 @@ export function UpdateUserPasswordDialog({
         </AlertDialogHeader>
         <Form action={resetPasswordFormAction}>
           <input type="hidden" name="userId" value={userId} />
+          <input
+            type="hidden"
+            name="isCurrentUser"
+            value={isCurrentUser.toString()}
+          />
           <div className="space-y-4 my-4">
             {isCurrentUser && (
               <Input
