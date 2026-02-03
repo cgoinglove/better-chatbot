@@ -19,6 +19,7 @@ import {
   Package,
   Plus,
   ShieldAlertIcon,
+  SparklesIcon,
   Waypoints,
   Wrench,
   WrenchIcon,
@@ -886,6 +887,9 @@ function AppDefaultToolKitSelector() {
           break;
         case AppDefaultToolkit.Code:
           icon = CodeIcon;
+          break;
+        case AppDefaultToolkit.Automation:
+          icon = SparklesIcon;
           break;
       }
       return {

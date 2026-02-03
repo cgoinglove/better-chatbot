@@ -1,5 +1,6 @@
 import { Edge } from "@xyflow/react";
 import { JSONSchema7 } from "json-schema";
+import CronExpressionParser from "cron-parser";
 import {
   ConditionNodeData,
   OutputNodeData,
@@ -11,6 +12,8 @@ import {
   ToolNodeData,
   HttpNodeData,
   TemplateNodeData,
+  ReplyInThreadNodeData,
+  SchedulerNodeData,
 } from "lib/ai/workflow/workflow.interface";
 import { cleanVariableName } from "lib/utils";
 import { safe } from "ts-safe";
@@ -109,6 +112,10 @@ export const nodeValidate: NodeValidate<WorkflowNodeData> = ({
       return httpNodeValidate({ node, nodes, edges });
     case NodeKind.Template:
       return templateNodeValidate({ node, nodes, edges });
+    case NodeKind.ReplyInThread:
+      return replyInThreadNodeValidate({ node, nodes, edges });
+    case NodeKind.Scheduler:
+      return schedulerNodeValidate({ node, nodes, edges });
   }
 };
 
@@ -269,4 +276,56 @@ export const templateNodeValidate: NodeValidate<TemplateNodeData> = ({
 
   // Template content can be undefined/empty - that's valid
   // The actual content validation is handled by the TipTap editor
+};
+
+export const replyInThreadNodeValidate: NodeValidate<ReplyInThreadNodeData> = ({
+  node,
+}) => {
+  if (!node.title) {
+    throw new Error("Reply-in-thread node requires a title");
+  }
+
+  if (!node.messages?.length) {
+    throw new Error("Reply-in-thread node must include at least one message");
+  }
+
+  node.messages.forEach((message, index) => {
+    if (!message.role) {
+      throw new Error(`Message #${index + 1} must have a role`);
+    }
+    if (!message.content) {
+      throw new Error(`Message #${index + 1} requires content`);
+    }
+  });
+};
+
+export const schedulerNodeValidate: NodeValidate<SchedulerNodeData> = ({
+  node,
+}) => {
+  if (!node.cron || !node.cron.trim()) {
+    throw new Error("Scheduler node requires a cron expression");
+  }
+
+  try {
+    CronExpressionParser.parse(node.cron, {
+      currentDate: new Date(),
+      tz: node.timezone || "UTC",
+    });
+  } catch {
+    throw new Error("Invalid cron expression");
+  }
+
+  if (node.timezone) {
+    try {
+      new Intl.DateTimeFormat("en-US", {
+        timeZone: node.timezone,
+      }).format(new Date());
+    } catch {
+      throw new Error("Invalid timezone identifier");
+    }
+  }
+
+  if (node.payload !== undefined && typeof node.payload !== "object") {
+    throw new Error("Scheduler payload must be a JSON object");
+  }
 };
