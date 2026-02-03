@@ -51,21 +51,43 @@
       "noAccount": "アカウントをお持ちでない方は",
       "signUp": "サインアップ",
       "signIn": "サインイン",
-      "orContinueWith": "または次で続行"
+      "orContinueWith": "または次で続行",
+      "email": "メールアドレス",
+      "emailPlaceholder": "user@example.com",
+      "password": "パスワード"
     },
     "SignUp": {
       "title": "アカウントを作成",
+      "titleAdmin": "管理者アカウントを作成",
       "signIn": "サインイン",
+      "email": "メールアドレス",
+      "emailPlaceholder": "user@example.com",
+      "name": "名前",
+      "namePlaceholder": "山田太郎",
+      "password": "パスワード",
       "description": "アカウントにサインアップ",
+      "signUpDescription": "私たちと一緒に始めましょう",
+      "signUpDescriptionAdmin": "ようこそ、最初のユーザーです！あなたがシステムの管理者になります。",
       "step1": "メールアドレスを入力して、私たちとの旅を始めましょう",
       "step2": "チャット時にこの名前を使用します",
       "step3": "アカウントを保護するための強力なパスワードを作成してください",
+      "stepProgress": "ステップ {current} / {total}",
       "signUp": "サインアップ",
       "invalidEmail": "無効なメールアドレス",
       "emailAlreadyExists": "メールアドレスが既に存在します",
       "nameRequired": "名前が必要です",
       "passwordRequired": "パスワードが必要です",
-      "createAccount": "アカウントを作成"
+      "createAccount": "アカウントを作成",
+      "passwordHintLength": "8〜20文字",
+      "passwordHintLetter": "少なくとも1つの英字",
+      "passwordHintNumber": "少なくとも1つの数字"
+    },
+    "Error": {
+      "title": "認証エラー",
+      "signupDisabled": "サインアップは無効です",
+      "unauthorized": "認証が必要です",
+      "unknownError": "不明なエラー",
+      "goToHome": "ホームへ"
     },
     "Intro": {
       "description": "better-chatbot へようこそ。AIを活用した会話ツールを体験するためにサインインしてください。"

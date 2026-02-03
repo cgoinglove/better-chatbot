@@ -164,13 +164,20 @@
       "noAccount": "Har du ikke en konto? ",
       "signUp": "Registrer deg",
       "signIn": "Logg inn",
-      "orContinueWith": "ELLER FORTSETT MED"
+      "orContinueWith": "ELLER FORTSETT MED",
+      "email": "E-post",
+      "emailPlaceholder": "bruker@eksempel.no",
+      "password": "Passord"
     },
     "SignUp": {
       "title": "Opprett en konto",
       "titleAdmin": "Opprett en administratorkonto",
       "signIn": "Logg inn",
       "email": "E-post",
+      "emailPlaceholder": "bruker@eksempel.no",
+      "name": "Navn",
+      "namePlaceholder": "Ola Nordmann",
+      "password": "Passord",
       "description": "Registrer deg for kontoen din",
       "signUpDescription": "Start reisen din med oss",
       "signUpDescriptionAdmin": "Velkommen, første bruker! Du vil bli administrator for systemet.",
@@ -180,12 +187,23 @@
       "step1": "Start reisen din med oss ved å skrive inn e-postadressen din",
       "step2": "Jeg bruker dette navnet når vi chatter",
       "step3": "Opprett et sterkt passord for å sikre kontoen din",
+      "stepProgress": "Steg {current} av {total}",
       "signUp": "Registrer deg",
       "invalidEmail": "Ugyldig e-postadresse",
       "emailAlreadyExists": "E-postadressen finnes allerede",
       "nameRequired": "Navn er påkrevd",
       "passwordRequired": "Passord er påkrevd",
-      "createAccount": "Opprett konto"
+      "createAccount": "Opprett konto",
+      "passwordHintLength": "8-20 tegn",
+      "passwordHintLetter": "Minst én bokstav",
+      "passwordHintNumber": "Minst ett tall"
+    },
+    "Error": {
+      "title": "Autentiseringsfeil",
+      "signupDisabled": "Registrering er deaktivert",
+      "unauthorized": "Autentisering kreves",
+      "unknownError": "Ukjent feil",
+      "goToHome": "Gå til forsiden"
     },
     "Intro": {
       "description": "Velkommen til better-chatbot. Logg inn for å oppleve våre AI-drevne samtaleverktøy."

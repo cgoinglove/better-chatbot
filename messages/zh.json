@@ -52,21 +52,43 @@
       "noAccount": "没有账户？",
       "signUp": "注册",
       "signIn": "登录",
-      "orContinueWith": "或继续使用"
+      "orContinueWith": "或继续使用",
+      "email": "邮箱",
+      "emailPlaceholder": "user@example.com",
+      "password": "密码"
     },
     "SignUp": {
       "title": "创建账户",
+      "titleAdmin": "创建管理员账户",
       "signIn": "登录",
+      "email": "邮箱",
+      "emailPlaceholder": "user@example.com",
+      "name": "姓名",
+      "namePlaceholder": "张三",
+      "password": "密码",
       "description": "注册您的账户",
+      "signUpDescription": "与我们一起开始您的旅程",
+      "signUpDescriptionAdmin": "欢迎，第一位用户！您将成为系统管理员。",
       "step1": "通过输入您的邮箱地址开始您的旅程",
       "step2": "我会在聊天时使用这个名字",
       "step3": "创建一个强密码来保护您的账户",
+      "stepProgress": "第 {current} 步，共 {total} 步",
       "signUp": "注册",
       "invalidEmail": "无效的邮箱地址",
       "emailAlreadyExists": "邮箱已存在",
       "nameRequired": "姓名是必需的",
       "passwordRequired": "密码是必需的",
-      "createAccount": "创建账户"
+      "createAccount": "创建账户",
+      "passwordHintLength": "8-20个字符",
+      "passwordHintLetter": "至少一个字母",
+      "passwordHintNumber": "至少一个数字"
+    },
+    "Error": {
+      "title": "认证错误",
+      "signupDisabled": "注册已禁用",
+      "unauthorized": "需要认证",
+      "unknownError": "未知错误",
+      "goToHome": "返回首页"
     },
     "Intro": {
       "description": "欢迎来到 MCP 聊天机器人。登录以体验我们的 AI 驱动的对话工具。"
