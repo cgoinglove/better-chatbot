@@ -31,6 +31,9 @@ import { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 
 type ClientOptions = {
   autoDisconnectSeconds?: number;
+  userId?: string; // User ID for user session authorization
+  userSessionAuth?: boolean; // Whether this MCP server uses user session authorization
+  onToolInfoUpdate?: (toolInfo: MCPToolInfo[]) => void; // Callback when tool info is updated
 };
 
 const CONNET_TIMEOUT = IS_VERCEL_ENV ? 30000 : 120000;
@@ -68,6 +71,10 @@ export class MCPClient {
         `[${this.id.slice(0, 4)}] MCP Client ${this.name}: `,
       ),
     });
+    // Enable OAuth provider if user session authorization is configured
+    if (this.options.userSessionAuth) {
+      this.needOauthProvider = true;
+    }
   }
 
   get status() {
@@ -119,6 +126,7 @@ export class MCPClient {
       toolInfo: this.toolInfo,
       visibility: "private" as const,
       enabled: true,
+      userSessionAuth: this.options.userSessionAuth ?? false,
       userId: "", // This will be filled by the manager
     };
   }
@@ -135,6 +143,7 @@ export class MCPClient {
       this.oauthProvider = new PgOAuthClientProvider({
         name: this.name,
         mcpServerId: this.id,
+        userId: this.options.userId, // Pass userId for per-user authentication
         serverUrl: this.serverConfig.url,
         state: oauthState,
         _clientMetadata: {

@@ -7,6 +7,10 @@ import { pgWorkflowRepository } from "./pg/repositories/workflow-repository.pg";
 import { pgAgentRepository } from "./pg/repositories/agent-repository.pg";
 import { pgArchiveRepository } from "./pg/repositories/archive-repository.pg";
 import { pgMcpOAuthRepository } from "./pg/repositories/mcp-oauth-repository.pg";
+import {
+  pgUserSessionAuthorizationRepository,
+  pgMcpUserOAuthRepository,
+} from "./pg/repositories/mcp-user-oauth-repository.pg";
 import { pgBookmarkRepository } from "./pg/repositories/bookmark-repository.pg";
 import { pgChatExportRepository } from "./pg/repositories/chat-export-repository.pg";
 
@@ -18,6 +22,13 @@ export const mcpMcpToolCustomizationRepository =
 export const mcpServerCustomizationRepository =
   pgMcpServerCustomizationRepository;
 export const mcpOAuthRepository = pgMcpOAuthRepository;
+
+// User Session Authorization Repository
+// Manages per-user authorization sessions for MCP server access
+export const userSessionAuthorizationRepository =
+  pgUserSessionAuthorizationRepository;
+// Alias for backward compatibility
+export const mcpUserOAuthRepository = pgMcpUserOAuthRepository;
 
 export const workflowRepository = pgWorkflowRepository;
 export const agentRepository = pgAgentRepository;

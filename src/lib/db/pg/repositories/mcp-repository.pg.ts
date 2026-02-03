@@ -14,6 +14,11 @@ export const pgMcpRepository: MCPRepository = {
         config: server.config,
         userId: server.userId,
         visibility: server.visibility ?? "private",
+        userSessionAuth: server.userSessionAuth ?? false,
+        toolInfo: server.toolInfo ?? [],
+        requiresAuth: server.requiresAuth ?? false,
+        authProvider: server.authProvider ?? "none",
+        authConfig: server.authConfig,
         enabled: true,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -22,6 +27,11 @@ export const pgMcpRepository: MCPRepository = {
         target: [McpServerTable.id],
         set: {
           config: server.config,
+          userSessionAuth: server.userSessionAuth,
+          toolInfo: server.toolInfo,
+          requiresAuth: server.requiresAuth,
+          authProvider: server.authProvider,
+          authConfig: server.authConfig,
           updatedAt: new Date(),
         },
       })
@@ -53,6 +63,11 @@ export const pgMcpRepository: MCPRepository = {
         enabled: McpServerTable.enabled,
         userId: McpServerTable.userId,
         visibility: McpServerTable.visibility,
+        userSessionAuth: McpServerTable.userSessionAuth,
+        toolInfo: McpServerTable.toolInfo,
+        requiresAuth: McpServerTable.requiresAuth,
+        authProvider: McpServerTable.authProvider,
+        authConfig: McpServerTable.authConfig,
         createdAt: McpServerTable.createdAt,
         updatedAt: McpServerTable.updatedAt,
         userName: UserTable.name,
@@ -68,6 +83,13 @@ export const pgMcpRepository: MCPRepository = {
       )
       .orderBy(desc(McpServerTable.createdAt));
     return results;
+  },
+
+  async updateUserSessionAuth(id, userSessionAuth) {
+    await db
+      .update(McpServerTable)
+      .set({ userSessionAuth, updatedAt: new Date() })
+      .where(eq(McpServerTable.id, id));
   },
 
   async updateVisibility(id, visibility) {

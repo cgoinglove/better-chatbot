@@ -116,6 +116,10 @@ export function manualToolExecuteByLastMessage(
   part: ToolUIPart,
   tools: Record<string, VercelAIMcpTool | VercelAIWorkflowTool | Tool>,
   abortSignal?: AbortSignal,
+  userId?: string,
+  userOAuthRepository?: import(
+    "app-types/mcp",
+  ).UserSessionAuthorizationRepository,
 ) {
   const { input } = part;
 
@@ -137,6 +141,16 @@ export function manualToolExecuteByLastMessage(
           messages: [],
         });
       } else if (VercelAIMcpToolTag.isMaybe(tool)) {
+        // Use user-authenticated tool call if user context is available
+        if (userId && userOAuthRepository) {
+          return mcpClientsManager.toolCallWithUserAuth(
+            tool._mcpServerId,
+            tool._originToolName,
+            input,
+            userId,
+            userOAuthRepository,
+          );
+        }
         return mcpClientsManager.toolCall(
           tool._mcpServerId,
           tool._originToolName,

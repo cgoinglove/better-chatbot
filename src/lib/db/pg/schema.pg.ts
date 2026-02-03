@@ -1,6 +1,6 @@
 import { Agent } from "app-types/agent";
 import { UserPreferences } from "app-types/user";
-import { MCPServerConfig } from "app-types/mcp";
+import { MCPServerConfig, MCPToolInfo } from "app-types/mcp";
 import { sql } from "drizzle-orm";
 import {
   pgTable,
@@ -84,6 +84,9 @@ export const McpServerTable = pgTable("mcp_server", {
   name: text("name").notNull(),
   config: json("config").notNull().$type<MCPServerConfig>(),
   enabled: boolean("enabled").notNull().default(true),
+  // User Session Authorization - enables per-user session isolation via MCP SDK OAuth
+  // When enabled, each user maintains their own authorization session with this MCP server
+  userSessionAuth: boolean("user_session_auth").notNull().default(false),
   userId: uuid("user_id")
     .notNull()
     .references(() => UserTable.id, { onDelete: "cascade" }),
@@ -92,6 +95,21 @@ export const McpServerTable = pgTable("mcp_server", {
   })
     .notNull()
     .default("private"),
+  // Cached tool info from MCP server
+  toolInfo: json("tool_info").$type<MCPToolInfo[]>().default([]),
+  // Authentication configuration for MCP server (admin-configured)
+  requiresAuth: boolean("requires_auth").notNull().default(false),
+  authProvider: varchar("auth_provider", {
+    enum: ["okta", "oauth2", "none"],
+  })
+    .notNull()
+    .default("none"),
+  authConfig: json("auth_config").$type<{
+    issuer?: string; // e.g., https://your-domain.okta.com
+    clientId?: string;
+    scopes?: string[];
+    audience?: string;
+  }>(),
   createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
@@ -292,6 +310,13 @@ export const ArchiveItemTable = pgTable(
   (t) => [index("archive_item_item_id_idx").on(t.itemId)],
 );
 
+// ============================================================================
+// MCP OAUTH SESSION TABLE (User Session Authorization)
+// ============================================================================
+// Stores OAuth sessions for MCP server access with user session isolation.
+// When userId is set, this represents a user-specific authorization session.
+// When userId is null, this is a shared/server-level session.
+// ============================================================================
 export const McpOAuthSessionTable = pgTable(
   "mcp_oauth_session",
   {
@@ -299,6 +324,11 @@ export const McpOAuthSessionTable = pgTable(
     mcpServerId: uuid("mcp_server_id")
       .notNull()
       .references(() => McpServerTable.id, { onDelete: "cascade" }),
+    // User Session Authorization - when set, this session is isolated to a specific user
+    // Enables proper session governance and access control per user
+    userId: uuid("user_id").references(() => UserTable.id, {
+      onDelete: "cascade",
+    }),
     serverUrl: text("server_url").notNull(),
     clientInfo: json("client_info"),
     tokens: json("tokens"),
@@ -313,13 +343,71 @@ export const McpOAuthSessionTable = pgTable(
   },
   (t) => [
     index("mcp_oauth_session_server_id_idx").on(t.mcpServerId),
+    index("mcp_oauth_session_user_id_idx").on(t.userId),
     index("mcp_oauth_session_state_idx").on(t.state),
-    // Partial index for sessions with tokens for better performance
+    // Partial index for sessions with tokens - includes userId for user session authorization
     index("mcp_oauth_session_tokens_idx")
-      .on(t.mcpServerId)
+      .on(t.mcpServerId, t.userId)
       .where(isNotNull(t.tokens)),
   ],
 );
+
+// ============================================================================
+// USER SESSION AUTHORIZATION TABLE
+// ============================================================================
+// Stores per-user authorization sessions for MCP server access.
+// Each user has an isolated session per MCP server, ensuring proper
+// session isolation and access governance.
+// ============================================================================
+export const UserSessionAuthorizationTable = pgTable(
+  "user_session_authorization",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => UserTable.id, { onDelete: "cascade" }),
+    mcpServerId: uuid("mcp_server_id")
+      .notNull()
+      .references(() => McpServerTable.id, { onDelete: "cascade" }),
+    // OAuth tokens from the auth provider (Okta, etc.)
+    accessToken: text("access_token"),
+    refreshToken: text("refresh_token"),
+    idToken: text("id_token"),
+    tokenType: text("token_type").default("Bearer"),
+    expiresAt: timestamp("expires_at"),
+    scope: text("scope"),
+    // OAuth flow state management
+    state: text("state").unique(),
+    codeVerifier: text("code_verifier"),
+    // Metadata
+    createdAt: timestamp("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: timestamp("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (t) => [
+    // Unique constraint: one session per user per MCP server
+    unique("mcp_user_oauth_unique").on(t.userId, t.mcpServerId),
+    index("mcp_user_oauth_user_idx").on(t.userId),
+    index("mcp_user_oauth_server_idx").on(t.mcpServerId),
+    index("mcp_user_oauth_state_idx").on(t.state),
+    // Index for finding authenticated sessions
+    index("mcp_user_oauth_tokens_idx")
+      .on(t.userId, t.mcpServerId)
+      .where(isNotNull(t.accessToken)),
+  ],
+);
+
+// Alias for backward compatibility
+export const McpUserOAuthSessionTable = UserSessionAuthorizationTable;
+
+export type UserSessionAuthorizationEntity =
+  typeof UserSessionAuthorizationTable.$inferSelect;
+
+// Alias for backward compatibility
+export type McpUserOAuthSessionEntity = UserSessionAuthorizationEntity;
 
 export type McpServerEntity = typeof McpServerTable.$inferSelect;
 export type ChatThreadEntity = typeof ChatThreadTable.$inferSelect;

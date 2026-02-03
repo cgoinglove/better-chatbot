@@ -39,6 +39,17 @@ export type MCPToolInfo = {
   };
 };
 
+// Authentication provider types for MCP servers
+export type McpAuthProvider = "okta" | "oauth2" | "none";
+
+// Authentication configuration for MCP servers
+export type McpAuthConfig = {
+  issuer?: string; // e.g., https://your-domain.okta.com
+  clientId?: string;
+  scopes?: string[];
+  audience?: string;
+};
+
 export type MCPServerInfo = {
   id: string;
   name: string;
@@ -47,7 +58,12 @@ export type MCPServerInfo = {
   error?: unknown;
   enabled: boolean;
   userId: string;
-  status: "connected" | "disconnected" | "loading" | "authorizing";
+  status:
+    | "connected"
+    | "disconnected"
+    | "loading"
+    | "authorizing"
+    | "auth_required";
   toolInfo: MCPToolInfo[];
   createdAt?: Date | string;
   updatedAt?: Date | string;
@@ -60,6 +76,17 @@ export type MCPServerInfo = {
       backgroundColor?: string;
     };
   };
+  // User Session Authorization - enables per-user session isolation
+  // When true, each user maintains their own authorization session with this MCP server
+  userSessionAuth?: boolean;
+  // Indicates if the current user has an active authorized session
+  isAuthorized?: boolean;
+  // Authentication configuration (admin-configured)
+  requiresAuth?: boolean;
+  authProvider?: McpAuthProvider;
+  authConfig?: McpAuthConfig;
+  // Per-user authentication status (runtime)
+  userAuthStatus?: "authenticated" | "unauthenticated" | "expired";
 };
 
 export type McpServerInsert = {
@@ -68,13 +95,24 @@ export type McpServerInsert = {
   id?: string;
   userId: string;
   visibility?: "public" | "private";
+  userSessionAuth?: boolean; // User Session Authorization - per-user session isolation
+  toolInfo?: MCPToolInfo[];
+  requiresAuth?: boolean;
+  authProvider?: McpAuthProvider;
+  authConfig?: McpAuthConfig;
 };
+
 export type McpServerSelect = {
   name: string;
   config: MCPServerConfig;
   id: string;
   userId: string;
   visibility: "public" | "private";
+  userSessionAuth: boolean; // User Session Authorization - per-user session isolation
+  toolInfo?: MCPToolInfo[] | null;
+  requiresAuth: boolean;
+  authProvider: McpAuthProvider;
+  authConfig?: McpAuthConfig;
 };
 
 export type VercelAIMcpTool = Tool & {
@@ -94,6 +132,7 @@ export interface MCPRepository {
   deleteById(id: string): Promise<void>;
   existsByServerName(name: string): Promise<boolean>;
   updateVisibility(id: string, visibility: "public" | "private"): Promise<void>;
+  updateUserSessionAuth(id: string, userSessionAuth: boolean): Promise<void>;
 }
 
 export const McpToolCustomizationZodSchema = z.object({
@@ -241,6 +280,7 @@ export type CallToolResult = z.infer<typeof CallToolResultSchema>;
 export type McpOAuthSession = {
   id: string;
   mcpServerId: string;
+  userId?: string | null; // User Session Authorization - when set, session is user-specific
   serverUrl: string;
   clientInfo?: OAuthClientInformationFull;
   tokens?: OAuthTokens;
@@ -253,9 +293,12 @@ export type McpOAuthSession = {
 export type McpOAuthRepository = {
   // 1. Query methods
 
-  // Get session with valid tokens (authenticated)
+  // Get session with valid tokens (authorized)
+  // When userId is provided, looks for user-specific authorization session
+  // When userId is undefined, looks for shared/server-level session
   getAuthenticatedSession(
     mcpServerId: string,
+    userId?: string,
   ): Promise<McpOAuthSession | undefined>;
 
   // Get session by OAuth state (for callback handling)
@@ -285,3 +328,129 @@ export type McpOAuthRepository = {
   // Delete a session by its OAuth state
   deleteByState(state: string): Promise<void>;
 };
+
+// ============================================================================
+// USER SESSION AND AUTHORIZATION MANAGEMENT
+// ============================================================================
+// This section defines types for managing user sessions and authorization
+// for MCP server access. Each user maintains their own authorization state
+// per MCP server, ensuring session isolation and proper access governance.
+// ============================================================================
+
+/**
+ * User Session Authorization - stores user-specific authorization tokens for MCP servers
+ * Each user has an isolated session per MCP server they're authorized to access.
+ */
+export type UserSessionAuthorization = {
+  id: string;
+  userId: string;
+  mcpServerId: string;
+  accessToken?: string;
+  refreshToken?: string;
+  idToken?: string;
+  tokenType?: string;
+  expiresAt?: Date;
+  scope?: string;
+  state?: string;
+  codeVerifier?: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+// Alias for backward compatibility
+export type McpUserOAuthSession = UserSessionAuthorization;
+
+/**
+ * User Session Authorization Repository
+ * Manages user authorization sessions for MCP server access
+ */
+export type UserSessionAuthorizationRepository = {
+  // Query methods
+
+  /**
+   * Get authenticated session for a user and MCP server
+   * Returns the user's authorization if they have valid tokens
+   */
+  getAuthenticatedSession(
+    userId: string,
+    mcpServerId: string,
+  ): Promise<UserSessionAuthorization | undefined>;
+
+  /**
+   * Get session by OAuth state (for callback handling)
+   * Used during the OAuth flow to match callbacks to sessions
+   */
+  getSessionByState(
+    state: string,
+  ): Promise<UserSessionAuthorization | undefined>;
+
+  /**
+   * Check if user has valid (non-expired) tokens for an MCP server
+   * Returns true if the user is authorized and tokens haven't expired
+   */
+  hasValidTokens(userId: string, mcpServerId: string): Promise<boolean>;
+
+  /**
+   * Get all MCP servers the user is authorized to access
+   * Returns list of MCP server IDs where user has valid authorization
+   */
+  getAuthenticatedServersForUser(userId: string): Promise<string[]>;
+
+  // Create/Update methods
+
+  /**
+   * Create or update authorization session for user
+   * Used to initialize OAuth flow or update session state
+   */
+  upsertSession(
+    userId: string,
+    mcpServerId: string,
+    data: Partial<UserSessionAuthorization>,
+  ): Promise<UserSessionAuthorization>;
+
+  /**
+   * Save tokens after successful OAuth callback
+   * Stores the authorization tokens for the user's session
+   */
+  saveTokens(
+    state: string,
+    tokens: {
+      accessToken: string;
+      refreshToken?: string;
+      idToken?: string;
+      expiresAt?: Date;
+      scope?: string;
+    },
+  ): Promise<UserSessionAuthorization>;
+
+  /**
+   * Update session by OAuth state
+   * Used during OAuth flow to update session with new data
+   */
+  updateSessionByState(
+    state: string,
+    data: Partial<UserSessionAuthorization>,
+  ): Promise<UserSessionAuthorization>;
+
+  // Delete methods
+
+  /**
+   * Revoke user's authorization for a specific MCP server
+   */
+  deleteSession(userId: string, mcpServerId: string): Promise<void>;
+
+  /**
+   * Delete session by OAuth state
+   * Used for cleanup during OAuth flow errors
+   */
+  deleteByState(state: string): Promise<void>;
+
+  /**
+   * Revoke all user's MCP server authorizations
+   * Used when user logs out or account is deleted
+   */
+  deleteAllForUser(userId: string): Promise<void>;
+};
+
+// Alias for backward compatibility
+export type McpUserOAuthRepository = UserSessionAuthorizationRepository;

@@ -13,7 +13,11 @@ import { customModelProvider, isToolCallUnsupportedModel } from "lib/ai/models";
 
 import { mcpClientsManager } from "lib/ai/mcp/mcp-manager";
 
-import { agentRepository, chatRepository } from "lib/db/repository";
+import {
+  agentRepository,
+  chatRepository,
+  userSessionAuthorizationRepository,
+} from "lib/db/repository";
 import globalLogger from "logger";
 import {
   buildMcpServerCustomizationsSystemPrompt,
@@ -246,6 +250,8 @@ export async function POST(request: Request) {
                 part,
                 { ...MCP_TOOLS, ...WORKFLOW_TOOLS, ...APP_DEFAULT_TOOLS },
                 request.signal,
+                session.user.id,
+                userSessionAuthorizationRepository,
               );
               part.output = output;
 
