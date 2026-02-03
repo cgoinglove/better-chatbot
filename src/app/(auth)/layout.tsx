@@ -2,10 +2,16 @@ import { Think } from "ui/think";
 import { getTranslations } from "next-intl/server";
 import { FlipWords } from "ui/flip-words";
 import { BackgroundPaths } from "ui/background-paths";
+import { getSession } from "lib/auth/server";
+import { redirect } from "next/navigation";
 
 export default async function AuthLayout({
   children,
 }: { children: React.ReactNode }) {
+  const session = await getSession();
+  if (session) {
+    redirect("/");
+  }
   const t = await getTranslations("Auth.Intro");
   return (
     <main className="relative w-full flex flex-col h-screen">
