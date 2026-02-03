@@ -459,7 +459,9 @@
     },
     "arrangeNodes": "自動レイアウト",
     "nodesArranged": "レイアウトが正常に適用されました",
-    "visibilityUpdated": "公開設定が正常に更新されました"
+    "visibilityUpdated": "公開設定が正常に更新されました",
+    "deleted": "ワークフローが正常に削除されました",
+    "deleteConfirm": "このワークフローを削除してもよろしいですか？"
   },
   "User": {
     "Profile": {
