@@ -366,6 +366,22 @@ export function ChatMentionInputSuggestion({
           label = "table";
           description = "Create a table";
           break;
+        case DefaultToolName.CreateTimeline:
+          label = "timeline";
+          description = "Create a timeline visualization";
+          break;
+        case DefaultToolName.CreateSteps:
+          label = "steps";
+          description = "Create a step-by-step guide";
+          break;
+        case DefaultToolName.CreateImageGallery:
+          label = "image-gallery";
+          description = "Create an image gallery";
+          break;
+        case DefaultToolName.CreateCarousel:
+          label = "carousel";
+          description = "Create a carousel";
+          break;
         case DefaultToolName.WebSearch:
           label = "web-search";
           description = "Search the web";
