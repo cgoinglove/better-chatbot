@@ -1,6 +1,6 @@
 import { pgDb as db } from "../db.pg";
 import { LeadSchema } from "../schema.pg";
-import { eq, and, desc, sql, gte, count, sum } from "drizzle-orm";
+import { eq, and, desc, gte, count, sum } from "drizzle-orm";
 import type {
   SalesHunterRepository,
   Lead,
@@ -24,14 +24,16 @@ export const pgSalesHunterRepository: SalesHunterRepository = {
         phone: lead.phone,
         status: lead.status,
         score: lead.score,
-        estimatedValue: lead.estimatedValue != null ? String(lead.estimatedValue) : undefined,
+        estimatedValue:
+          lead.estimatedValue != null ? String(lead.estimatedValue) : undefined,
         data: lead.data,
         assignedTo: lead.assignedTo,
       })
       .returning();
     return {
       ...result,
-      estimatedValue: result.estimatedValue != null ? Number(result.estimatedValue) : null,
+      estimatedValue:
+        result.estimatedValue != null ? Number(result.estimatedValue) : null,
     } as Lead;
   },
 
@@ -61,7 +63,8 @@ export const pgSalesHunterRepository: SalesHunterRepository = {
 
     return results.map((r) => ({
       ...r,
-      estimatedValue: r.estimatedValue != null ? Number(r.estimatedValue) : null,
+      estimatedValue:
+        r.estimatedValue != null ? Number(r.estimatedValue) : null,
     })) as Lead[];
   },
 
@@ -73,7 +76,8 @@ export const pgSalesHunterRepository: SalesHunterRepository = {
     if (!result) return null;
     return {
       ...result,
-      estimatedValue: result.estimatedValue != null ? Number(result.estimatedValue) : null,
+      estimatedValue:
+        result.estimatedValue != null ? Number(result.estimatedValue) : null,
     } as Lead;
   },
 
@@ -93,7 +97,8 @@ export const pgSalesHunterRepository: SalesHunterRepository = {
       .returning();
     return {
       ...result,
-      estimatedValue: result.estimatedValue != null ? Number(result.estimatedValue) : null,
+      estimatedValue:
+        result.estimatedValue != null ? Number(result.estimatedValue) : null,
     } as Lead;
   },
 
@@ -150,7 +155,8 @@ export const pgSalesHunterRepository: SalesHunterRepository = {
 
     return results.map((r) => ({
       ...r,
-      estimatedValue: r.estimatedValue != null ? Number(r.estimatedValue) : null,
+      estimatedValue:
+        r.estimatedValue != null ? Number(r.estimatedValue) : null,
     })) as Lead[];
   },
 

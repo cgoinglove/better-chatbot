@@ -62,7 +62,7 @@ export default function AdminUsersPage() {
         setLoading(false);
       }
     },
-    [debouncedSearch]
+    [debouncedSearch],
   );
 
   useEffect(() => {
@@ -165,6 +165,7 @@ export default function AdminUsersPage() {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         {user.image ? (
+                          /* eslint-disable-next-line @next/next/no-img-element */
                           <img
                             src={user.image}
                             alt=""
@@ -214,8 +215,8 @@ export default function AdminUsersPage() {
           <div className="flex items-center justify-between px-6 py-4 border-t border-zinc-800">
             <p className="text-sm text-zinc-400">
               Showing {(pagination.page - 1) * pagination.limit + 1} to{" "}
-              {Math.min(pagination.page * pagination.limit, pagination.total)} of{" "}
-              {pagination.total} users
+              {Math.min(pagination.page * pagination.limit, pagination.total)}{" "}
+              of {pagination.total} users
             </p>
             <div className="flex items-center gap-2">
               <button

@@ -1,8 +1,4 @@
-import type {
-  PlatformRepository,
-  ActivityAction,
-  UsageResourceType,
-} from "app-types/platform";
+import type { PlatformRepository, UsageResourceType } from "app-types/platform";
 import { pgDb as db } from "../db.pg";
 import {
   TenantSchema,
@@ -79,7 +75,7 @@ export const pgPlatformRepository: PlatformRepository = {
       .select()
       .from(ConnectorSchema)
       .where(
-        and(eq(ConnectorSchema.id, id), eq(ConnectorSchema.tenantId, tenantId))
+        and(eq(ConnectorSchema.id, id), eq(ConnectorSchema.tenantId, tenantId)),
       );
     return (result as any) ?? null;
   },
@@ -89,7 +85,7 @@ export const pgPlatformRepository: PlatformRepository = {
       .update(ConnectorSchema)
       .set({ ...data, updatedAt: new Date() })
       .where(
-        and(eq(ConnectorSchema.id, id), eq(ConnectorSchema.tenantId, tenantId))
+        and(eq(ConnectorSchema.id, id), eq(ConnectorSchema.tenantId, tenantId)),
       )
       .returning();
     return result as any;
@@ -99,7 +95,7 @@ export const pgPlatformRepository: PlatformRepository = {
     await db
       .delete(ConnectorSchema)
       .where(
-        and(eq(ConnectorSchema.id, id), eq(ConnectorSchema.tenantId, tenantId))
+        and(eq(ConnectorSchema.id, id), eq(ConnectorSchema.tenantId, tenantId)),
       );
   },
 
@@ -123,9 +119,14 @@ export const pgPlatformRepository: PlatformRepository = {
 
   // ─── Configurable Agents ────────────────────────────────────────────────────
   async insertConfigurableAgent(agent) {
+    const { temperature, maxTokens, ...rest } = agent;
     const [result] = await db
       .insert(ConfigurableAgentSchema)
-      .values(agent)
+      .values({
+        ...rest,
+        temperature: temperature != null ? String(temperature) : null,
+        maxTokens: maxTokens ?? null,
+      })
       .returning();
     return result as any;
   },
@@ -134,7 +135,7 @@ export const pgPlatformRepository: PlatformRepository = {
     const conditions = vertical
       ? and(
           eq(ConfigurableAgentSchema.tenantId, tenantId),
-          eq(ConfigurableAgentSchema.vertical, vertical)
+          eq(ConfigurableAgentSchema.vertical, vertical),
         )
       : eq(ConfigurableAgentSchema.tenantId, tenantId);
 
@@ -153,21 +154,26 @@ export const pgPlatformRepository: PlatformRepository = {
       .where(
         and(
           eq(ConfigurableAgentSchema.id, id),
-          eq(ConfigurableAgentSchema.tenantId, tenantId)
-        )
+          eq(ConfigurableAgentSchema.tenantId, tenantId),
+        ),
       );
     return (result as any) ?? null;
   },
 
   async updateConfigurableAgent(id, tenantId, data) {
+    const { temperature, maxTokens, ...rest } = data;
+    const setData: Record<string, unknown> = { ...rest, updatedAt: new Date() };
+    if (temperature !== undefined)
+      setData.temperature = temperature != null ? String(temperature) : null;
+    if (maxTokens !== undefined) setData.maxTokens = maxTokens ?? null;
     const [result] = await db
       .update(ConfigurableAgentSchema)
-      .set({ ...data, updatedAt: new Date() })
+      .set(setData)
       .where(
         and(
           eq(ConfigurableAgentSchema.id, id),
-          eq(ConfigurableAgentSchema.tenantId, tenantId)
-        )
+          eq(ConfigurableAgentSchema.tenantId, tenantId),
+        ),
       )
       .returning();
     return result as any;
@@ -179,17 +185,14 @@ export const pgPlatformRepository: PlatformRepository = {
       .where(
         and(
           eq(ConfigurableAgentSchema.id, id),
-          eq(ConfigurableAgentSchema.tenantId, tenantId)
-        )
+          eq(ConfigurableAgentSchema.tenantId, tenantId),
+        ),
       );
   },
 
   // ─── Activity Log ───────────────────────────────────────────────────────────
   async insertActivityLog(log) {
-    const [result] = await db
-      .insert(ActivityLogSchema)
-      .values(log)
-      .returning();
+    const [result] = await db.insert(ActivityLogSchema).values(log).returning();
     return result as any;
   },
 
@@ -245,7 +248,7 @@ export const pgPlatformRepository: PlatformRepository = {
         resourceType: UsageRecordSchema.resourceType,
         totalQuantity:
           sql<number>`COALESCE(SUM(${UsageRecordSchema.quantity}), 0)`.mapWith(
-            Number
+            Number,
           ),
       })
       .from(UsageRecordSchema)
@@ -253,8 +256,8 @@ export const pgPlatformRepository: PlatformRepository = {
         and(
           eq(UsageRecordSchema.tenantId, tenantId),
           gte(UsageRecordSchema.recordedAt, periodStart),
-          lte(UsageRecordSchema.recordedAt, periodEnd)
-        )
+          lte(UsageRecordSchema.recordedAt, periodEnd),
+        ),
       )
       .groupBy(UsageRecordSchema.resourceType);
     return results as {
@@ -265,7 +268,11 @@ export const pgPlatformRepository: PlatformRepository = {
 
   // ─── Metrics ────────────────────────────────────────────────────────────────
   async insertMetric(metric) {
-    const [result] = await db.insert(MetricSchema).values(metric).returning();
+    const { metricValue, ...rest } = metric;
+    const [result] = await db
+      .insert(MetricSchema)
+      .values({ ...rest, metricValue: String(metricValue) })
+      .returning();
     return result as any;
   },
 
@@ -279,8 +286,8 @@ export const pgPlatformRepository: PlatformRepository = {
           eq(MetricSchema.vertical, vertical),
           eq(MetricSchema.metricKey, metricKey),
           gte(MetricSchema.recordedAt, periodStart),
-          lte(MetricSchema.recordedAt, periodEnd)
-        )
+          lte(MetricSchema.recordedAt, periodEnd),
+        ),
       )
       .orderBy(desc(MetricSchema.recordedAt));
     return results as any[];
@@ -288,9 +295,21 @@ export const pgPlatformRepository: PlatformRepository = {
 
   // ─── ROI Snapshots ──────────────────────────────────────────────────────────
   async insertROISnapshot(snapshot) {
+    const { periodStart, periodEnd, calculatedRoi, ...rest } = snapshot;
     const [result] = await db
       .insert(ROISnapshotSchema)
-      .values(snapshot)
+      .values({
+        ...rest,
+        periodStart:
+          periodStart instanceof Date
+            ? periodStart.toISOString().split("T")[0]
+            : periodStart,
+        periodEnd:
+          periodEnd instanceof Date
+            ? periodEnd.toISOString().split("T")[0]
+            : periodEnd,
+        calculatedRoi: calculatedRoi != null ? String(calculatedRoi) : null,
+      })
       .returning();
     return result as any;
   },
@@ -302,8 +321,8 @@ export const pgPlatformRepository: PlatformRepository = {
       .where(
         and(
           eq(ROISnapshotSchema.tenantId, tenantId),
-          eq(ROISnapshotSchema.vertical, vertical)
-        )
+          eq(ROISnapshotSchema.vertical, vertical),
+        ),
       )
       .orderBy(desc(ROISnapshotSchema.createdAt))
       .limit(limit);
