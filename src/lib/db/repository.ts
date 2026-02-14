@@ -22,3 +22,11 @@ export const workflowRepository = pgWorkflowRepository;
 export const agentRepository = pgAgentRepository;
 export const archiveRepository = pgArchiveRepository;
 export const bookmarkRepository = pgBookmarkRepository;
+
+import { pgPlatformRepository } from "./pg/repositories/platform-repository.pg";
+import { pgSalesHunterRepository } from "./pg/repositories/sales-hunter-repository.pg";
+import { pgBillingRepository } from "./pg/repositories/billing-repository.pg";
+
+export const platformRepository = pgPlatformRepository;
+export const salesHunterRepository = pgSalesHunterRepository;
+export const billingRepository = pgBillingRepository;

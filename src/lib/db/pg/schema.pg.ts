@@ -2,6 +2,19 @@ import { ChatMessage } from "app-types/chat";
 import { Agent } from "app-types/agent";
 import { UserPreferences } from "app-types/user";
 import { MCPServerConfig } from "app-types/mcp";
+import type {
+  ConnectorType,
+  ConnectorStatus,
+  AgentToolConfig,
+  Guardrail,
+  LeadStatus,
+  LeadSource,
+  ActivityAction,
+  UsageResourceType,
+  BillingPlan,
+  SubscriptionStatus,
+  DeploymentMode,
+} from "app-types/platform";
 import { sql } from "drizzle-orm";
 import {
   pgTable,
@@ -13,6 +26,9 @@ import {
   unique,
   varchar,
   index,
+  integer,
+  numeric,
+  date,
 } from "drizzle-orm/pg-core";
 import { isNotNull } from "drizzle-orm";
 import { DBWorkflow, DBEdge, DBNode } from "app-types/workflow";
@@ -318,3 +334,379 @@ export type McpServerCustomizationEntity =
 export type ArchiveEntity = typeof ArchiveSchema.$inferSelect;
 export type ArchiveItemEntity = typeof ArchiveItemSchema.$inferSelect;
 export type BookmarkEntity = typeof BookmarkSchema.$inferSelect;
+
+// ============================================================================
+// PLATFORM TABLES
+// ============================================================================
+
+export const TenantSchema = pgTable(
+  "tenant",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    name: text("name").notNull(),
+    slug: text("slug").notNull().unique(),
+    deploymentMode: varchar("deployment_mode", {
+      enum: ["single-tenant", "multi-tenant"],
+    })
+      .notNull()
+      .default("single-tenant")
+      .$type<DeploymentMode>(),
+    enabledVerticals: json("enabled_verticals")
+      .notNull()
+      .default([])
+      .$type<string[]>(),
+    settings: json("settings")
+      .notNull()
+      .default({})
+      .$type<Record<string, unknown>>(),
+    createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (t) => [index("tenant_slug_idx").on(t.slug)],
+);
+
+export const ConnectorSchema = pgTable(
+  "connector",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => TenantSchema.id, { onDelete: "cascade" }),
+    type: varchar("type", {
+      enum: [
+        "salesforce",
+        "hubspot",
+        "csv-import",
+        "api-generic",
+        "edi-837",
+        "edi-835",
+      ],
+    })
+      .notNull()
+      .$type<ConnectorType>(),
+    name: text("name").notNull(),
+    config: json("config")
+      .notNull()
+      .default({})
+      .$type<Record<string, unknown>>(),
+    status: varchar("status", {
+      enum: ["disconnected", "connected", "syncing", "error"],
+    })
+      .notNull()
+      .default("disconnected")
+      .$type<ConnectorStatus>(),
+    lastSyncAt: timestamp("last_sync_at"),
+    createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (t) => [index("connector_tenant_id_idx").on(t.tenantId)],
+);
+
+export const ConnectorSyncLogSchema = pgTable(
+  "connector_sync_log",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    connectorId: uuid("connector_id")
+      .notNull()
+      .references(() => ConnectorSchema.id, { onDelete: "cascade" }),
+    status: varchar("status", {
+      enum: ["running", "completed", "failed"],
+    }).notNull(),
+    recordsProcessed: integer("records_processed").notNull().default(0),
+    recordsFailed: integer("records_failed").notNull().default(0),
+    errorMessage: text("error_message"),
+    startedAt: timestamp("started_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    completedAt: timestamp("completed_at"),
+  },
+  (t) => [index("sync_log_connector_id_idx").on(t.connectorId)],
+);
+
+export const PipelineSchema = pgTable(
+  "pipeline",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => TenantSchema.id, { onDelete: "cascade" }),
+    connectorId: uuid("connector_id").references(() => ConnectorSchema.id, {
+      onDelete: "set null",
+    }),
+    name: text("name").notNull(),
+    schedule: text("schedule"),
+    transformConfig: json("transform_config")
+      .notNull()
+      .default({})
+      .$type<Record<string, unknown>>(),
+    status: varchar("status", {
+      enum: ["idle", "running", "completed", "failed"],
+    })
+      .notNull()
+      .default("idle"),
+    lastRunAt: timestamp("last_run_at"),
+    createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (t) => [index("pipeline_tenant_id_idx").on(t.tenantId)],
+);
+
+export const PipelineRunSchema = pgTable(
+  "pipeline_run",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    pipelineId: uuid("pipeline_id")
+      .notNull()
+      .references(() => PipelineSchema.id, { onDelete: "cascade" }),
+    status: varchar("status", {
+      enum: ["running", "completed", "failed"],
+    }).notNull(),
+    recordsProcessed: integer("records_processed").notNull().default(0),
+    errorMessage: text("error_message"),
+    startedAt: timestamp("started_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    completedAt: timestamp("completed_at"),
+  },
+  (t) => [index("pipeline_run_pipeline_id_idx").on(t.pipelineId)],
+);
+
+export const ConfigurableAgentSchema = pgTable(
+  "configurable_agent",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => TenantSchema.id, { onDelete: "cascade" }),
+    vertical: varchar("vertical", { length: 100 }).notNull(),
+    agentType: varchar("agent_type", { length: 100 }).notNull(),
+    name: text("name").notNull(),
+    description: text("description"),
+    systemPrompt: text("system_prompt").notNull(),
+    tools: json("tools").notNull().default([]).$type<AgentToolConfig[]>(),
+    guardrails: json("guardrails").notNull().default([]).$type<Guardrail[]>(),
+    model: text("model"),
+    temperature: numeric("temperature"),
+    maxTokens: integer("max_tokens"),
+    config: json("config")
+      .notNull()
+      .default({})
+      .$type<Record<string, unknown>>(),
+    enabled: boolean("enabled").notNull().default(true),
+    createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (t) => [
+    index("configurable_agent_tenant_idx").on(t.tenantId),
+    index("configurable_agent_vertical_idx").on(t.vertical),
+    index("configurable_agent_type_idx").on(t.tenantId, t.vertical, t.agentType),
+  ],
+);
+
+export const LeadSchema = pgTable(
+  "lead",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => TenantSchema.id, { onDelete: "cascade" }),
+    externalId: text("external_id"),
+    source: varchar("source", {
+      enum: [
+        "salesforce",
+        "hubspot",
+        "manual",
+        "csv-import",
+        "ai-prospected",
+        "web-form",
+        "referral",
+      ],
+    })
+      .notNull()
+      .$type<LeadSource>(),
+    firstName: text("first_name").notNull(),
+    lastName: text("last_name").notNull(),
+    email: text("email"),
+    company: text("company"),
+    title: text("title"),
+    phone: text("phone"),
+    status: varchar("status", {
+      enum: [
+        "new",
+        "contacted",
+        "qualified",
+        "proposal",
+        "negotiation",
+        "won",
+        "lost",
+        "disqualified",
+      ],
+    })
+      .notNull()
+      .default("new")
+      .$type<LeadStatus>(),
+    score: integer("score"),
+    estimatedValue: numeric("estimated_value"),
+    data: json("data")
+      .notNull()
+      .default({})
+      .$type<Record<string, unknown>>(),
+    assignedTo: uuid("assigned_to").references(() => UserSchema.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (t) => [
+    index("lead_tenant_id_idx").on(t.tenantId),
+    index("lead_status_idx").on(t.tenantId, t.status),
+    index("lead_external_id_idx").on(t.tenantId, t.externalId),
+    index("lead_assigned_to_idx").on(t.assignedTo),
+  ],
+);
+
+export const ActivityLogSchema = pgTable(
+  "activity_log",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => TenantSchema.id, { onDelete: "cascade" }),
+    userId: uuid("user_id").references(() => UserSchema.id, {
+      onDelete: "set null",
+    }),
+    action: text("action").notNull().$type<ActivityAction>(),
+    resourceType: text("resource_type").notNull(),
+    resourceId: text("resource_id"),
+    metadata: json("metadata")
+      .notNull()
+      .default({})
+      .$type<Record<string, unknown>>(),
+    ipAddress: text("ip_address"),
+    createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (t) => [
+    index("activity_log_tenant_idx").on(t.tenantId),
+    index("activity_log_user_idx").on(t.userId),
+    index("activity_log_action_idx").on(t.action),
+    index("activity_log_created_at_idx").on(t.createdAt),
+  ],
+);
+
+export const UsageRecordSchema = pgTable(
+  "usage_record",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => TenantSchema.id, { onDelete: "cascade" }),
+    userId: uuid("user_id").references(() => UserSchema.id, {
+      onDelete: "set null",
+    }),
+    resourceType: varchar("resource_type", {
+      enum: [
+        "ai-tokens",
+        "ai-requests",
+        "connector-sync",
+        "storage-bytes",
+        "workflow-execution",
+        "api-call",
+      ],
+    })
+      .notNull()
+      .$type<UsageResourceType>(),
+    quantity: integer("quantity").notNull(),
+    metadata: json("metadata")
+      .notNull()
+      .default({})
+      .$type<Record<string, unknown>>(),
+    recordedAt: timestamp("recorded_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (t) => [
+    index("usage_record_tenant_idx").on(t.tenantId),
+    index("usage_record_type_idx").on(t.tenantId, t.resourceType),
+    index("usage_record_date_idx").on(t.recordedAt),
+  ],
+);
+
+export const MetricSchema = pgTable(
+  "metric",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => TenantSchema.id, { onDelete: "cascade" }),
+    vertical: text("vertical").notNull(),
+    metricKey: text("metric_key").notNull(),
+    metricValue: numeric("metric_value").notNull(),
+    metadata: json("metadata")
+      .notNull()
+      .default({})
+      .$type<Record<string, unknown>>(),
+    recordedAt: timestamp("recorded_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (t) => [
+    index("metric_tenant_vertical_idx").on(t.tenantId, t.vertical),
+    index("metric_key_idx").on(t.tenantId, t.vertical, t.metricKey),
+    index("metric_recorded_at_idx").on(t.recordedAt),
+  ],
+);
+
+export const ROISnapshotSchema = pgTable(
+  "roi_snapshot",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => TenantSchema.id, { onDelete: "cascade" }),
+    vertical: text("vertical").notNull(),
+    periodStart: date("period_start").notNull(),
+    periodEnd: date("period_end").notNull(),
+    metrics: json("metrics").notNull().$type<Record<string, number>>(),
+    calculatedRoi: numeric("calculated_roi"),
+    createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (t) => [
+    index("roi_snapshot_tenant_vertical_idx").on(t.tenantId, t.vertical),
+  ],
+);
+
+export const BillingSubscriptionSchema = pgTable(
+  "billing_subscription",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => TenantSchema.id, { onDelete: "cascade" }),
+    clerkSubscriptionId: text("clerk_subscription_id").notNull().unique(),
+    plan: varchar("plan", {
+      enum: ["starter", "professional", "enterprise"],
+    })
+      .notNull()
+      .$type<BillingPlan>(),
+    status: varchar("status", {
+      enum: ["active", "past_due", "canceled", "trialing", "incomplete"],
+    })
+      .notNull()
+      .$type<SubscriptionStatus>(),
+    currentPeriodStart: timestamp("current_period_start").notNull(),
+    currentPeriodEnd: timestamp("current_period_end").notNull(),
+    canceledAt: timestamp("canceled_at"),
+    createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (t) => [
+    index("billing_sub_tenant_idx").on(t.tenantId),
+    index("billing_sub_clerk_idx").on(t.clerkSubscriptionId),
+  ],
+);
+
+// Platform entity types
+export type TenantEntity = typeof TenantSchema.$inferSelect;
+export type ConnectorEntity = typeof ConnectorSchema.$inferSelect;
+export type ConnectorSyncLogEntity = typeof ConnectorSyncLogSchema.$inferSelect;
+export type PipelineEntity = typeof PipelineSchema.$inferSelect;
+export type PipelineRunEntity = typeof PipelineRunSchema.$inferSelect;
+export type ConfigurableAgentEntity = typeof ConfigurableAgentSchema.$inferSelect;
+export type LeadEntity = typeof LeadSchema.$inferSelect;
+export type ActivityLogEntity = typeof ActivityLogSchema.$inferSelect;
+export type UsageRecordEntity = typeof UsageRecordSchema.$inferSelect;
+export type MetricEntity = typeof MetricSchema.$inferSelect;
+export type ROISnapshotEntity = typeof ROISnapshotSchema.$inferSelect;
+export type BillingSubscriptionEntity = typeof BillingSubscriptionSchema.$inferSelect;
