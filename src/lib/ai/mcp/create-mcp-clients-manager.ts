@@ -1,6 +1,8 @@
 import {
   VercelAIMcpToolTag,
+  type MCPConnectionStatus,
   type MCPServerConfig,
+  type MCPToolInfo,
   type McpServerInsert,
   type McpServerSelect,
   type VercelAIMcpTool,
@@ -37,6 +39,11 @@ export interface MCPConfigStorage {
   delete(id: string): Promise<void>;
   has(id: string): Promise<boolean>;
   get(id: string): Promise<McpServerSelect | null>;
+  updateToolInfo?(id: string, toolInfo: MCPToolInfo[]): Promise<void>;
+  updateConnectionStatus?(
+    id: string,
+    status: MCPConnectionStatus,
+  ): Promise<void>;
 }
 
 export class MCPClientsManager {
@@ -91,10 +98,27 @@ export class MCPClientsManager {
           await this.storage.init(this);
           const configs = await this.storage.loadAll();
           await Promise.all(
-            configs.map(({ id, name, config }) =>
-              this.addClient(id, name, config).catch(() => {
-                `ignore error`;
-              }),
+            configs.map(
+              ({ id, name, config, toolInfo, lastConnectionStatus }) => {
+                if (toolInfo?.length) {
+                  this.logger.info(
+                    `Loading cached tool info for ${name} (${toolInfo.length} tools)`,
+                  );
+                  this.addClientWithCachedToolInfo(id, name, config, toolInfo);
+                  return Promise.resolve();
+                }
+                // Skip auto-connect for servers that previously failed
+                // — user can manually refresh these from the UI
+                if (lastConnectionStatus === "error") {
+                  this.logger.info(
+                    `Skipping auto-connect for ${name} (last status: error)`,
+                  );
+                  return Promise.resolve();
+                }
+                return this.addClient(id, name, config).catch(() => {
+                  `ignore error`;
+                });
+              },
             ),
           );
         }
@@ -149,6 +173,33 @@ export class MCPClientsManager {
     );
   }
   /**
+   * Creates a client with cached tool info but does NOT connect.
+   * The connection will happen lazily when a tool is actually called.
+   */
+  private addClientWithCachedToolInfo(
+    id: string,
+    name: string,
+    serverConfig: MCPServerConfig,
+    cachedToolInfo: MCPToolInfo[],
+  ) {
+    if (this.clients.has(id)) {
+      const prevClient = this.clients.get(id)!;
+      void prevClient.client.disconnect();
+    }
+    const client = createMCPClient(id, name, serverConfig, {
+      autoDisconnectSeconds: this.autoDisconnectSeconds,
+      initialToolInfo: cachedToolInfo,
+      onToolInfoUpdate: (toolInfo) => {
+        this.storage?.updateToolInfo?.(id, toolInfo);
+      },
+      onConnectionStatusChange: (status) => {
+        this.storage?.updateConnectionStatus?.(id, status);
+      },
+    });
+    this.clients.set(id, { client, name });
+  }
+
+  /**
    * Creates and adds a new client instance to memory only (no storage persistence)
    */
   async addClient(id: string, name: string, serverConfig: MCPServerConfig) {
@@ -158,6 +209,12 @@ export class MCPClientsManager {
     }
     const client = createMCPClient(id, name, serverConfig, {
       autoDisconnectSeconds: this.autoDisconnectSeconds,
+      onToolInfoUpdate: (toolInfo) => {
+        this.storage?.updateToolInfo?.(id, toolInfo);
+      },
+      onConnectionStatusChange: (status) => {
+        this.storage?.updateConnectionStatus?.(id, status);
+      },
     });
     this.clients.set(id, { client, name });
     return client.connect();

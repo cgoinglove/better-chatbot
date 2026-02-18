@@ -57,5 +57,25 @@ export function createDbBasedMCPConfigsStorage(): MCPConfigStorage {
     async get(id) {
       return mcpRepository.selectById(id);
     },
+    async updateToolInfo(id, toolInfo) {
+      try {
+        await mcpRepository.updateToolInfo(id, toolInfo);
+      } catch (error) {
+        logger.error(
+          `Failed to update tool info for MCP server "${id}":`,
+          error,
+        );
+      }
+    },
+    async updateConnectionStatus(id, status) {
+      try {
+        await mcpRepository.updateConnectionStatus(id, status);
+      } catch (error) {
+        logger.error(
+          `Failed to update connection status for MCP server "${id}":`,
+          error,
+        );
+      }
+    },
   };
 }

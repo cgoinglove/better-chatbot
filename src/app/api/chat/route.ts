@@ -11,8 +11,6 @@ import {
 
 import { customModelProvider, isToolCallUnsupportedModel } from "lib/ai/models";
 
-import { mcpClientsManager } from "lib/ai/mcp/mcp-manager";
-
 import { agentRepository, chatRepository } from "lib/db/repository";
 import globalLogger from "logger";
 import {
@@ -204,11 +202,6 @@ export async function POST(request: Request) {
 
     const stream = createUIMessageStream({
       execute: async ({ writer: dataStream }) => {
-        const mcpClients = await mcpClientsManager.getClients();
-        const mcpTools = await mcpClientsManager.tools();
-        logger.info(
-          `mcp-server count: ${mcpClients.length}, mcp-tools count :${Object.keys(mcpTools).length}`,
-        );
         const MCP_TOOLS = await safe()
           .map(errorIf(() => !isToolCallAllowed && "Not allowed"))
           .map(() =>

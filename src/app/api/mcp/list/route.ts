@@ -19,23 +19,13 @@ export async function GET() {
     memoryClients.map(({ id, client }) => [id, client] as const),
   );
 
+  // Add servers that exist in DB but not yet in memory
   const addTargets = servers.filter((server) => !memoryMap.has(server.id));
-
-  const serverIds = new Set(servers.map((s) => s.id));
-  const removeTargets = memoryClients.filter(({ id }) => !serverIds.has(id));
 
   if (addTargets.length > 0) {
     // no need to wait for this
     Promise.allSettled(
       addTargets.map((server) => mcpClientsManager.refreshClient(server.id)),
-    );
-  }
-  if (removeTargets.length > 0) {
-    // no need to wait for this
-    Promise.allSettled(
-      removeTargets.map((client) =>
-        mcpClientsManager.disconnectClient(client.id),
-      ),
     );
   }
 
@@ -48,9 +38,10 @@ export async function GET() {
       // Hide config from non-owners to prevent credential exposure
       config: isOwner ? server.config : undefined,
       enabled: info?.enabled ?? true,
-      status: info?.status ?? "connected",
+      status: info?.status ?? "disconnected",
+      lastConnectionStatus: server.lastConnectionStatus,
       error: info?.error,
-      toolInfo: info?.toolInfo ?? [],
+      toolInfo: info?.toolInfo ?? server.toolInfo ?? [],
     };
     return mcpInfo;
   });

@@ -153,8 +153,63 @@ describe("MCPClientsManager", () => {
         "test-server",
         "test-server",
         mockServerConfig,
-        { autoDisconnectSeconds: 1800 },
+        expect.objectContaining({ autoDisconnectSeconds: 1800 }),
       );
+      expect(mockClient.connect).toHaveBeenCalled();
+    });
+
+    it("should use cached tool info and skip connect", async () => {
+      const cachedToolInfo = [
+        { name: "cached-tool", description: "A cached tool" },
+      ];
+      vi.mocked(mockStorage.loadAll).mockResolvedValue([
+        { ...mockServer, toolInfo: cachedToolInfo },
+      ]);
+
+      await manager.init();
+
+      expect(mockStorage.loadAll).toHaveBeenCalled();
+      expect(mockCreateMCPClient).toHaveBeenCalledWith(
+        "test-server",
+        "test-server",
+        mockServerConfig,
+        expect.objectContaining({
+          autoDisconnectSeconds: 1800,
+          initialToolInfo: cachedToolInfo,
+          onToolInfoUpdate: expect.any(Function),
+        }),
+      );
+      expect(mockClient.connect).not.toHaveBeenCalled();
+    });
+
+    it("should fall back to connect when no cached tool info", async () => {
+      vi.mocked(mockStorage.loadAll).mockResolvedValue([
+        { ...mockServer, toolInfo: null },
+      ]);
+
+      await manager.init();
+
+      expect(mockClient.connect).toHaveBeenCalled();
+    });
+
+    it("should skip auto-connect when lastConnectionStatus is error", async () => {
+      vi.mocked(mockStorage.loadAll).mockResolvedValue([
+        { ...mockServer, toolInfo: null, lastConnectionStatus: "error" },
+      ]);
+
+      await manager.init();
+
+      expect(mockCreateMCPClient).not.toHaveBeenCalled();
+      expect(mockClient.connect).not.toHaveBeenCalled();
+    });
+
+    it("should connect when lastConnectionStatus is connected but no toolInfo", async () => {
+      vi.mocked(mockStorage.loadAll).mockResolvedValue([
+        { ...mockServer, toolInfo: null, lastConnectionStatus: "connected" },
+      ]);
+
+      await manager.init();
+
       expect(mockClient.connect).toHaveBeenCalled();
     });
 
@@ -178,7 +233,7 @@ describe("MCPClientsManager", () => {
         "new-server",
         "new-server",
         mockServerConfig,
-        { autoDisconnectSeconds: 1800 },
+        expect.objectContaining({ autoDisconnectSeconds: 1800 }),
       );
       expect(mockClient.connect).toHaveBeenCalled();
     });
@@ -225,7 +280,7 @@ describe("MCPClientsManager", () => {
         "new-server-id",
         "new-server",
         mockServerConfig,
-        { autoDisconnectSeconds: 1800 },
+        expect.objectContaining({ autoDisconnectSeconds: 1800 }),
       );
     });
 
@@ -245,7 +300,7 @@ describe("MCPClientsManager", () => {
         "memory-1",
         "new-server",
         mockServerConfig,
-        { autoDisconnectSeconds: 1800 },
+        expect.objectContaining({ autoDisconnectSeconds: 1800 }),
       );
     });
   });
@@ -314,7 +369,7 @@ describe("MCPClientsManager", () => {
         "test-server",
         "test-server",
         updatedConfig,
-        { autoDisconnectSeconds: 1800 },
+        expect.objectContaining({ autoDisconnectSeconds: 1800 }),
       );
     });
 
@@ -415,6 +470,49 @@ describe("MCPClientsManager", () => {
 
       const clients = await manager.getClients();
       expect(clients).toEqual([]);
+    });
+  });
+
+  describe("onToolInfoUpdate callback", () => {
+    it("should persist tool info to storage when callback fires", async () => {
+      mockStorage.updateToolInfo = vi.fn().mockResolvedValue(undefined);
+      manager = new MCPClientsManager(mockStorage);
+      await manager.init();
+
+      await manager.addClient("test-server", "test-server", mockServerConfig);
+
+      const createCall = vi.mocked(mockCreateMCPClient).mock.calls.at(-1)!;
+      const options = createCall[3] as any;
+      expect(options.onToolInfoUpdate).toBeDefined();
+
+      const newToolInfo = [{ name: "new-tool", description: "New tool" }];
+      options.onToolInfoUpdate(newToolInfo);
+
+      expect(mockStorage.updateToolInfo).toHaveBeenCalledWith(
+        "test-server",
+        newToolInfo,
+      );
+    });
+  });
+
+  describe("onConnectionStatusChange callback", () => {
+    it("should persist connection status to storage when callback fires", async () => {
+      mockStorage.updateConnectionStatus = vi.fn().mockResolvedValue(undefined);
+      manager = new MCPClientsManager(mockStorage);
+      await manager.init();
+
+      await manager.addClient("test-server", "test-server", mockServerConfig);
+
+      const createCall = vi.mocked(mockCreateMCPClient).mock.calls.at(-1)!;
+      const options = createCall[3] as any;
+      expect(options.onConnectionStatusChange).toBeDefined();
+
+      options.onConnectionStatusChange("connected");
+
+      expect(mockStorage.updateConnectionStatus).toHaveBeenCalledWith(
+        "test-server",
+        "connected",
+      );
     });
   });
 

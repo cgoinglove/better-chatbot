@@ -31,6 +31,9 @@ import { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 
 type ClientOptions = {
   autoDisconnectSeconds?: number;
+  initialToolInfo?: MCPToolInfo[];
+  onToolInfoUpdate?: (toolInfo: MCPToolInfo[]) => void;
+  onConnectionStatusChange?: (status: "connected" | "error") => void;
 };
 
 const CONNET_TIMEOUT = IS_VERCEL_ENV ? 30000 : 120000;
@@ -68,6 +71,9 @@ export class MCPClient {
         `[${this.id.slice(0, 4)}] MCP Client ${this.name}: `,
       ),
     });
+    if (options.initialToolInfo?.length) {
+      this.toolInfo = options.initialToolInfo;
+    }
   }
 
   get status() {
@@ -309,12 +315,14 @@ export class MCPClient {
       this.isConnected = false;
       this.error = errorToString(error);
       this.transport = undefined;
+      this.options.onConnectionStatusChange?.("error");
       throw error;
     } finally {
       this.locker.unlock();
     }
 
     await this.updateToolInfo();
+    this.options.onConnectionStatusChange?.("connected");
 
     return this.client;
   }
@@ -349,6 +357,7 @@ export class MCPClient {
             inputSchema: tool.inputSchema,
           }) as MCPToolInfo,
       );
+      this.options.onToolInfoUpdate?.(this.toolInfo);
     }
   }
 

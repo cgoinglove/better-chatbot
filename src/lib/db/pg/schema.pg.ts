@@ -1,6 +1,6 @@
 import { Agent } from "app-types/agent";
 import { UserPreferences } from "app-types/user";
-import { MCPServerConfig } from "app-types/mcp";
+import { MCPServerConfig, MCPToolInfo } from "app-types/mcp";
 import { sql } from "drizzle-orm";
 import {
   pgTable,
@@ -92,6 +92,11 @@ export const McpServerTable = pgTable("mcp_server", {
   })
     .notNull()
     .default("private"),
+  toolInfo: json("tool_info").$type<MCPToolInfo[]>(),
+  toolInfoUpdatedAt: timestamp("tool_info_updated_at"),
+  lastConnectionStatus: varchar("last_connection_status", {
+    enum: ["connected", "error"],
+  }),
   createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });

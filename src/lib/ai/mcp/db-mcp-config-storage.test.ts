@@ -10,6 +10,8 @@ vi.mock("lib/db/repository", () => ({
     save: vi.fn(),
     deleteById: vi.fn(),
     selectById: vi.fn(),
+    updateToolInfo: vi.fn(),
+    updateConnectionStatus: vi.fn(),
   },
 }));
 
@@ -202,6 +204,55 @@ describe("DB-based MCP Config Storage", () => {
       const result = await storage.get("non-existent");
 
       expect(result).toBeNull();
+    });
+  });
+
+  describe("updateToolInfo", () => {
+    it("should update tool info in database", async () => {
+      const toolInfo = [{ name: "test-tool", description: "Test" }];
+      vi.mocked(mockMcpRepository.updateToolInfo).mockResolvedValue(undefined);
+
+      await storage.updateToolInfo!("test-server", toolInfo);
+
+      expect(mockMcpRepository.updateToolInfo).toHaveBeenCalledWith(
+        "test-server",
+        toolInfo,
+      );
+    });
+
+    it("should swallow errors gracefully", async () => {
+      vi.mocked(mockMcpRepository.updateToolInfo).mockRejectedValue(
+        new Error("DB error"),
+      );
+
+      await expect(
+        storage.updateToolInfo!("test-server", []),
+      ).resolves.toBeUndefined();
+    });
+  });
+
+  describe("updateConnectionStatus", () => {
+    it("should update connection status in database", async () => {
+      vi.mocked(mockMcpRepository.updateConnectionStatus).mockResolvedValue(
+        undefined,
+      );
+
+      await storage.updateConnectionStatus!("test-server", "connected");
+
+      expect(mockMcpRepository.updateConnectionStatus).toHaveBeenCalledWith(
+        "test-server",
+        "connected",
+      );
+    });
+
+    it("should swallow errors gracefully", async () => {
+      vi.mocked(mockMcpRepository.updateConnectionStatus).mockRejectedValue(
+        new Error("DB error"),
+      );
+
+      await expect(
+        storage.updateConnectionStatus!("test-server", "error"),
+      ).resolves.toBeUndefined();
     });
   });
 
