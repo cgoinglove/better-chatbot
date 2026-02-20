@@ -192,14 +192,15 @@ describe("MCPClientsManager", () => {
       expect(mockClient.connect).toHaveBeenCalled();
     });
 
-    it("should skip auto-connect when lastConnectionStatus is error", async () => {
+    it("should register but not connect when lastConnectionStatus is error", async () => {
       vi.mocked(mockStorage.loadAll).mockResolvedValue([
         { ...mockServer, toolInfo: null, lastConnectionStatus: "error" },
       ]);
 
       await manager.init();
 
-      expect(mockCreateMCPClient).not.toHaveBeenCalled();
+      // Client is created (registered in memory) but NOT connected
+      expect(mockCreateMCPClient).toHaveBeenCalled();
       expect(mockClient.connect).not.toHaveBeenCalled();
     });
 

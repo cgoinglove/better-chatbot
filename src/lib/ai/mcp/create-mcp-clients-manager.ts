@@ -107,12 +107,13 @@ export class MCPClientsManager {
                   this.addClientWithCachedToolInfo(id, name, config, toolInfo);
                   return Promise.resolve();
                 }
-                // Skip auto-connect for servers that previously failed
+                // Register errored servers without connecting
                 // — user can manually refresh these from the UI
                 if (lastConnectionStatus === "error") {
                   this.logger.info(
-                    `Skipping auto-connect for ${name} (last status: error)`,
+                    `Registering ${name} without connect (last status: error)`,
                   );
+                  this.addClientWithCachedToolInfo(id, name, config, []);
                   return Promise.resolve();
                 }
                 return this.addClient(id, name, config).catch(() => {
