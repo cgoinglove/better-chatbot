@@ -142,7 +142,7 @@ describe("MCPClientsManager", () => {
       await expect(manager.init()).resolves.toBeUndefined();
     });
 
-    it("should initialize with storage and register all configs without connecting", async () => {
+    it("should initialize with storage and connect new servers", async () => {
       vi.mocked(mockStorage.loadAll).mockResolvedValue([mockServer]);
 
       await manager.init();
@@ -155,11 +155,11 @@ describe("MCPClientsManager", () => {
         mockServerConfig,
         expect.objectContaining({ autoDisconnectSeconds: 1800 }),
       );
-      // init never connects — connections are fully lazy
-      expect(mockClient.connect).not.toHaveBeenCalled();
+      // New servers (no cache, no error) connect during init
+      expect(mockClient.connect).toHaveBeenCalled();
     });
 
-    it("should pass cached tool info as initialToolInfo", async () => {
+    it("should use cached tool info and skip connect", async () => {
       const cachedToolInfo = [
         { name: "cached-tool", description: "A cached tool" },
       ];
@@ -181,22 +181,14 @@ describe("MCPClientsManager", () => {
       expect(mockClient.connect).not.toHaveBeenCalled();
     });
 
-    it("should register with empty toolInfo when no cache exists", async () => {
+    it("should connect when no cached tool info exists", async () => {
       vi.mocked(mockStorage.loadAll).mockResolvedValue([
         { ...mockServer, toolInfo: null },
       ]);
 
       await manager.init();
 
-      expect(mockCreateMCPClient).toHaveBeenCalledWith(
-        "test-server",
-        "test-server",
-        mockServerConfig,
-        expect.objectContaining({
-          initialToolInfo: [],
-        }),
-      );
-      expect(mockClient.connect).not.toHaveBeenCalled();
+      expect(mockClient.connect).toHaveBeenCalled();
     });
 
     it("should register errored servers without connecting", async () => {

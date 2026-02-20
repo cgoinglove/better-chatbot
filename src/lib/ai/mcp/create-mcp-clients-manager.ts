@@ -97,30 +97,32 @@ export class MCPClientsManager {
         if (this.storage) {
           await this.storage.init(this);
           const configs = await this.storage.loadAll();
-          // Register all servers without connecting.
-          // Connections happen lazily on first tool call.
-          for (const {
-            id,
-            name,
-            config,
-            toolInfo,
-            lastConnectionStatus,
-          } of configs) {
-            if (toolInfo?.length) {
-              this.logger.info(
-                `Loading cached tool info for ${name} (${toolInfo.length} tools)`,
-              );
-            } else if (lastConnectionStatus === "error") {
-              this.logger.info(
-                `Registering ${name} without tools (last status: error)`,
-              );
-            } else {
-              this.logger.info(
-                `Registering ${name} without tools (no cache yet)`,
-              );
-            }
-            this.addClientWithCachedToolInfo(id, name, config, toolInfo ?? []);
-          }
+          await Promise.all(
+            configs.map(
+              ({ id, name, config, toolInfo, lastConnectionStatus }) => {
+                if (toolInfo?.length) {
+                  this.logger.info(
+                    `Loading cached tool info for ${name} (${toolInfo.length} tools)`,
+                  );
+                  this.addClientWithCachedToolInfo(id, name, config, toolInfo);
+                  return Promise.resolve();
+                }
+                // Register errored servers without connecting
+                // — user can manually refresh these from the UI
+                if (lastConnectionStatus === "error") {
+                  this.logger.info(
+                    `Registering ${name} without connect (last status: error)`,
+                  );
+                  this.addClientWithCachedToolInfo(id, name, config, []);
+                  return Promise.resolve();
+                }
+                // New servers or servers without cache — connect in background
+                return this.addClient(id, name, config).catch(() => {
+                  `ignore error`;
+                });
+              },
+            ),
+          );
         }
       })
       .watch(() => {

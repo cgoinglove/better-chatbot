@@ -12,11 +12,11 @@ export async function register() {
         process.exit(1);
       });
     }
-    // Init MCP manager on all environments
-    // With cached tool info, this only does a DB read (no MCP server connections)
+    // Init MCP manager on all environments (fire-and-forget).
+    // Cached servers are available instantly; new servers connect in background.
     const initMCPManager = await import("./lib/ai/mcp/mcp-manager").then(
       (m) => m.initMCPManager,
     );
-    await initMCPManager();
+    void initMCPManager();
   }
 }
