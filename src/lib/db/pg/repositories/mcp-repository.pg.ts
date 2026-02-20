@@ -53,8 +53,6 @@ export const pgMcpRepository: MCPRepository = {
         enabled: McpServerTable.enabled,
         userId: McpServerTable.userId,
         visibility: McpServerTable.visibility,
-        toolInfo: McpServerTable.toolInfo,
-        toolInfoUpdatedAt: McpServerTable.toolInfoUpdatedAt,
         lastConnectionStatus: McpServerTable.lastConnectionStatus,
         createdAt: McpServerTable.createdAt,
         updatedAt: McpServerTable.updatedAt,
