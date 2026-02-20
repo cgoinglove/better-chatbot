@@ -41,7 +41,7 @@ export async function GET() {
       status: info?.status ?? "disconnected",
       lastConnectionStatus: server.lastConnectionStatus,
       error: info?.error,
-      toolInfo: info?.toolInfo ?? server.toolInfo ?? [],
+      toolInfo: info?.toolInfo ?? [],
     };
     return mcpInfo;
   });
