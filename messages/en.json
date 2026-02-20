@@ -794,6 +794,10 @@
     "public": "Featured",
     "publicDescription": "Featured for all users to use",
     "featured": "Featured",
-    "featuredDescription": "Featured for all users to use"
+    "featuredDescription": "Featured for all users to use",
+    "authorizationRequired": "Authorization Required",
+    "authorizationRequiredDescription": "{serverName} requires authorization to access its tools.",
+    "authorize": "Authorize",
+    "authorizationFailed": "Authorization failed"
   }
 }
