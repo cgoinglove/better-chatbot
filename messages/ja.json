@@ -112,6 +112,8 @@
       "autoToolModeDescription": "あなたに尋ねることなく、ツールをいつ使用するかを決定します",
       "manualToolModeDescription": "ツールを使用する前にあなたの許可を求めます",
       "noneToolModeDescription": "ツールを使用しません。@mentionは引き続き利用可能です。",
+      "codemode": "コードモード",
+      "codemodeToolModeDescription": "LLMがTypeScriptコードを書いてツールをオーケストレーションします。",
       "toolsSetup": "ツール設定",
       "preset": "プリセット",
       "toolPresets": "ツールプリセット",
@@ -161,7 +163,6 @@
     },
     "Thread": {
       "chat": "チャット",
-
       "renameChat": "名前を変更",
       "deleteChat": "チャットを削除",
       "deleteUnarchivedChats": "アーカイブされていないチャットをすべて削除",
@@ -181,7 +182,6 @@
       "createLink": "リンクを作成",
       "linkCopied": "リンクがコピーされました"
     },
-
     "ChatPreferences": {
       "title": "チャット設定",
       "whatShouldWeCallYou": "何とお呼びすればよろしいですか？",

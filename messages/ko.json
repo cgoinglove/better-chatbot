@@ -113,6 +113,8 @@
       "autoToolModeDescription": "도구 사용 여부를 자동으로 결정합니다",
       "manualToolModeDescription": "도구 사용 여부를 물어봅니다",
       "noneToolModeDescription": "도구를 사용하지 않습니다. @mention은 여전히 가능합니다.",
+      "codemode": "코드 모드",
+      "codemodeToolModeDescription": "LLM이 TypeScript 코드를 작성해 도구를 오케스트레이션합니다.",
       "toolsSetup": "도구 설정",
       "preset": "프리셋",
       "toolPresets": "도구 프리셋",
@@ -162,7 +164,6 @@
     },
     "Thread": {
       "chat": "채팅",
-
       "renameChat": "채팅 이름 변경",
       "deleteChat": "채팅 삭제",
       "deleteUnarchivedChats": "아카이브되지 않은 채팅 모두 삭제",
@@ -182,7 +183,6 @@
       "createLink": "링크 만들기",
       "linkCopied": "링크가 복사되었습니다"
     },
-
     "ChatPreferences": {
       "title": "채팅 환경설정",
       "whatShouldWeCallYou": "뭐라고 불러드릴까요?",
