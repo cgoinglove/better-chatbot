@@ -7,8 +7,9 @@ import {
   mergeSystemPrompt,
 } from "../shared.chat";
 import {
+  buildCurrentDateTimeSystemPrompt,
   buildMcpServerCustomizationsSystemPrompt,
-  buildSpeechSystemPrompt,
+  buildSpeechSystemStaticPrompt,
 } from "lib/ai/prompts";
 
 import { safe } from "ts-safe";
@@ -84,13 +85,15 @@ export async function POST(request: NextRequest) {
     );
 
     const systemPrompt = mergeSystemPrompt(
-      buildSpeechSystemPrompt(
+      buildSpeechSystemStaticPrompt(
         session.user,
         userPreferences ?? undefined,
         agent,
       ),
       buildMcpServerCustomizationsSystemPrompt(mcpServerCustomizations),
     );
+
+    const dynamicSystemPrompt = buildCurrentDateTimeSystemPrompt();
 
     const bindingTools = [...openAITools, ...DEFAULT_VOICE_TOOLS];
 
@@ -107,7 +110,7 @@ export async function POST(request: NextRequest) {
         input_audio_transcription: {
           model: "whisper-1",
         },
-        instructions: systemPrompt,
+        instructions: systemPrompt + "\n\n" + dynamicSystemPrompt,
         tools: bindingTools,
       }),
     });

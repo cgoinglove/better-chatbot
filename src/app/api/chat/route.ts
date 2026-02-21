@@ -14,8 +14,9 @@ import { customModelProvider, isToolCallUnsupportedModel } from "lib/ai/models";
 import { agentRepository, chatRepository } from "lib/db/repository";
 import globalLogger from "logger";
 import {
+  buildCurrentDateTimeSystemPrompt,
   buildMcpServerCustomizationsSystemPrompt,
-  buildUserSystemPrompt,
+  buildUserSystemStaticPrompt,
   buildToolCallUnsupportedModelSystemPrompt,
 } from "lib/ai/prompts";
 import {
@@ -263,10 +264,12 @@ export async function POST(request: Request) {
           .orElse({});
 
         const systemPrompt = mergeSystemPrompt(
-          buildUserSystemPrompt(session.user, userPreferences, agent),
+          buildUserSystemStaticPrompt(session.user, userPreferences, agent),
           buildMcpServerCustomizationsSystemPrompt(mcpServerCustomizations),
           !supportToolCall && buildToolCallUnsupportedModelSystemPrompt,
         );
+
+        const dynamicSystemPrompt = buildCurrentDateTimeSystemPrompt();
 
         const IMAGE_TOOL: Record<string, Tool> = useImageTool
           ? {
@@ -318,7 +321,10 @@ export async function POST(request: Request) {
         const result = streamText({
           model,
           system: systemPrompt,
-          messages: convertToModelMessages(messages),
+          messages: [
+            { role: "system", content: dynamicSystemPrompt },
+            ...convertToModelMessages(messages),
+          ],
           experimental_transform: smoothStream({ chunking: "word" }),
           maxRetries: 2,
           tools: vercelAITooles,
