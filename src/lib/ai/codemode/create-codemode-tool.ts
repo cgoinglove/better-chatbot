@@ -1,6 +1,5 @@
 import "server-only";
 import { tool as createTool, Tool } from "ai";
-import { createCodeTool } from "@cloudflare/codemode/ai";
 import { z } from "zod";
 import { getCodemodeExecutor } from "./executor";
 
@@ -126,6 +125,28 @@ interface ToolTypeEntry {
   originalName: string;
   description: string;
   typeDef: string;
+}
+
+/**
+ * Normalise LLM-generated code into a single async arrow function.
+ *
+ * - If the code is already an arrow function expression, return as-is.
+ * - Otherwise wrap everything in `async () => { … }`.
+ *
+ * Uses lightweight regex detection instead of a full AST parser to avoid
+ * pulling in `acorn` as a direct dependency.
+ */
+function normalizeCode(code: string): string {
+  const trimmed = code.trim();
+  if (!trimmed) return "async () => {}";
+
+  // Detect if the code is already a (possibly async) arrow function expression.
+  // Matches patterns like: `async () => { ... }`, `() => { ... }`, `async (x) => ...`
+  if (/^(async\s+)?\(.*?\)\s*=>/.test(trimmed)) {
+    return trimmed;
+  }
+
+  return `async () => {\n${trimmed}\n}`;
 }
 
 /**
@@ -256,11 +277,39 @@ export function buildCodemodeTools(
   });
 
   // 2. Executor tool — runs generated code (compact tool directory in description)
-  const executeTool = createCodeTool({
-    tools,
-    executor,
+  const executeTool = createTool({
     description: buildExecuteDescription(index),
-  }) as Tool;
+    inputSchema: z.object({
+      code: z.string().describe("JavaScript async arrow function to execute"),
+    }),
+    execute: async ({ code }) => {
+      // Build fns map: sanitized tool name → execute function
+      const fns: Record<string, (...args: unknown[]) => Promise<unknown>> = {};
+      for (const [name, t] of Object.entries(tools)) {
+        const exec = "execute" in t ? (t as any).execute : undefined;
+        if (exec) fns[sanitizeName(name)] = exec;
+      }
+
+      const normalizedCode = normalizeCode(code);
+      const executeResult = await executor.execute(normalizedCode, fns);
+
+      if (executeResult.error) {
+        const logCtx = executeResult.logs?.length
+          ? `\n\nConsole output:\n${executeResult.logs.join("\n")}`
+          : "";
+        throw new Error(
+          `Code execution failed: ${executeResult.error}${logCtx}`,
+        );
+      }
+
+      const output: Record<string, unknown> = {
+        code,
+        result: executeResult.result,
+      };
+      if (executeResult.logs) output.logs = executeResult.logs;
+      return output;
+    },
+  });
 
   return {
     codemode_explore: exploreTool,
