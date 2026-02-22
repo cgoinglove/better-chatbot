@@ -46,10 +46,12 @@ export type MCPServerInfo = {
   visibility: "public" | "private";
   error?: unknown;
   enabled: boolean;
+  perUserAuth: boolean;
+  isAuthorized?: boolean;
   userId: string;
   status: "connected" | "disconnected" | "loading" | "authorizing";
   lastConnectionStatus?: MCPConnectionStatus | null;
-  toolInfo: MCPToolInfo[];
+  toolInfo?: MCPToolInfo[];
   createdAt?: Date | string;
   updatedAt?: Date | string;
   userName?: string | null;
@@ -69,6 +71,8 @@ export type McpServerInsert = {
   id?: string;
   userId: string;
   visibility?: "public" | "private";
+  perUserAuth?: boolean;
+  toolInfo?: MCPToolInfo[];
 };
 export type MCPConnectionStatus = "connected" | "error";
 
@@ -78,6 +82,7 @@ export type McpServerSelect = {
   id: string;
   userId: string;
   visibility: "public" | "private";
+  perUserAuth: boolean;
   toolInfo?: MCPToolInfo[] | null;
   toolInfoUpdatedAt?: Date | null;
   lastConnectionStatus?: MCPConnectionStatus | null;
@@ -100,6 +105,7 @@ export interface MCPRepository {
   deleteById(id: string): Promise<void>;
   existsByServerName(name: string): Promise<boolean>;
   updateVisibility(id: string, visibility: "public" | "private"): Promise<void>;
+  updatePerUserAuth(id: string, perUserAuth: boolean): Promise<void>;
   updateToolInfo(id: string, toolInfo: MCPToolInfo[]): Promise<void>;
   updateConnectionStatus(
     id: string,
@@ -245,6 +251,8 @@ export const CallToolResultSchema = z.object({
   content: z.array(ContentUnion).default([]),
   structuredContent: z.object({}).passthrough().optional(),
   isError: z.boolean().optional(),
+  _mcpAuthRequired: z.boolean().optional(),
+  _mcpServerId: z.string().optional(),
 });
 
 export type CallToolResult = z.infer<typeof CallToolResultSchema>;
@@ -252,6 +260,7 @@ export type CallToolResult = z.infer<typeof CallToolResultSchema>;
 export type McpOAuthSession = {
   id: string;
   mcpServerId: string;
+  userId?: string | null;
   serverUrl: string;
   clientInfo?: OAuthClientInformationFull;
   tokens?: OAuthTokens;
@@ -267,6 +276,7 @@ export type McpOAuthRepository = {
   // Get session with valid tokens (authenticated)
   getAuthenticatedSession(
     mcpServerId: string,
+    userId?: string,
   ): Promise<McpOAuthSession | undefined>;
 
   // Get session by OAuth state (for callback handling)

@@ -31,6 +31,8 @@ import { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 
 type ClientOptions = {
   autoDisconnectSeconds?: number;
+  userId?: string;
+  perUserAuth?: boolean;
   initialToolInfo?: MCPToolInfo[];
   onToolInfoUpdate?: (toolInfo: MCPToolInfo[]) => void;
   onConnectionStatusChange?: (status: "connected" | "error") => void;
@@ -71,6 +73,9 @@ export class MCPClient {
         `[${this.id.slice(0, 4)}] MCP Client ${this.name}: `,
       ),
     });
+    if (this.options.perUserAuth) {
+      this.needOauthProvider = true;
+    }
     if (options.initialToolInfo?.length) {
       this.toolInfo = options.initialToolInfo;
     }
@@ -125,6 +130,7 @@ export class MCPClient {
       toolInfo: this.toolInfo,
       visibility: "private" as const,
       enabled: true,
+      perUserAuth: this.options.perUserAuth ?? false,
       userId: "", // This will be filled by the manager
     };
   }
@@ -141,6 +147,7 @@ export class MCPClient {
       this.oauthProvider = new PgOAuthClientProvider({
         name: this.name,
         mcpServerId: this.id,
+        userId: this.options.userId,
         serverUrl: this.serverConfig.url,
         state: oauthState,
         _clientMetadata: {
@@ -365,14 +372,28 @@ export class MCPClient {
     const id = generateUUID();
     this.inProgressToolCallIds.push(id);
     const execute = async () => {
-      const client = await this.connect();
-      if (this.status === "authorizing") {
-        throw new Error("OAuth authorization required. Try Refresh MCP Client");
+      try {
+        const client = await this.connect();
+        return await client?.callTool({
+          name: toolName,
+          arguments: input as Record<string, unknown>,
+        });
+      } catch (err) {
+        if (this.status === "authorizing") {
+          return {
+            isError: true,
+            content: [
+              {
+                type: "text",
+                text: "OAuth authorization required",
+              },
+            ],
+            _mcpAuthRequired: true,
+            _mcpServerId: this.id,
+          };
+        }
+        throw err;
       }
-      return client?.callTool({
-        name: toolName,
-        arguments: input as Record<string, unknown>,
-      });
     };
     return safe(() => this.logger.info("tool call", toolName))
       .ifOk(() => this.scheduleAutoDisconnect()) // disconnect if autoDisconnectSeconds is set
