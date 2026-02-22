@@ -164,7 +164,7 @@ export function AppSidebarUserInner(props: {
               data-testid="user-settings-menu-item"
             >
               <Settings className="size-4 text-foreground" />
-              <span>User Settings</span>
+              <span>{t("userSettings")}</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={logout} className="cursor-pointer">

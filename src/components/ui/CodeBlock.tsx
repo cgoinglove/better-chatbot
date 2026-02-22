@@ -30,7 +30,7 @@ export function CodeBlock({
       .map(async () => {
         const out = await codeToHast(code || "", {
           lang: lang,
-          theme: theme == "dark" ? "dark-plus" : "github-light",
+          theme: theme == "dark" ? "github-dark" : "github-light",
         });
         return toJsxRuntime(out, {
           Fragment,

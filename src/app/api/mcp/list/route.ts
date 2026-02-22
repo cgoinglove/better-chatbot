@@ -19,6 +19,7 @@ export async function GET() {
     memoryClientsBefore.map(({ id, client }) => [id, client] as const),
   );
 
+  // Add servers that exist in DB but not yet in memory
   const addTargets = servers.filter((server) => !memoryMap.has(server.id));
 
   const serverIds = new Set(servers.map((s) => s.id));
@@ -33,6 +34,7 @@ export async function GET() {
       ),
     );
   }
+
   if (removeTargets.length > 0) {
     await Promise.allSettled(
       removeTargets.map((client) =>
@@ -72,6 +74,7 @@ export async function GET() {
       config: isOwner ? server.config : undefined,
       enabled: info?.enabled ?? true,
       status: info?.status ?? "disconnected",
+      lastConnectionStatus: server.lastConnectionStatus,
       error: info?.error,
       isAuthorized: authStatusMap.get(server.id),
       toolInfo:

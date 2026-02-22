@@ -1,4 +1,7 @@
+"use client";
+
 import { ChevronDownIcon, WrenchIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { PropsWithChildren } from "react";
 import { Button } from "ui/button";
 
@@ -32,12 +35,13 @@ export function EnabledToolsDropdown({
   tools?: EnabledTools[];
   side?: "left" | "right" | "top" | "bottom";
 }>) {
+  const t = useTranslations();
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         {children || (
           <Button variant={"secondary"}>
-            Tool <ChevronDownIcon />
+            {t("Common.tool")} <ChevronDownIcon />
           </Button>
         )}
       </DropdownMenuTrigger>
@@ -76,7 +80,7 @@ export function EnabledToolsDropdown({
             <DropdownMenuItem>
               <div className="flex flex-col items-center justify-center h-full">
                 <p className="text-sm text-muted-foreground">
-                  No tools available
+                  {t("Chat.Tool.noToolsAvailable")}
                 </p>
               </div>
             </DropdownMenuItem>

@@ -11,8 +11,6 @@ import {
 
 import { customModelProvider, isToolCallUnsupportedModel } from "lib/ai/models";
 
-import { mcpClientsManager } from "lib/ai/mcp/mcp-manager";
-
 import { agentRepository, chatRepository } from "lib/db/repository";
 import globalLogger from "logger";
 import {
@@ -51,6 +49,7 @@ import { nanoBananaTool, openaiImageTool } from "lib/ai/tools/image";
 import { ImageToolName } from "lib/ai/tools";
 import { buildCsvIngestionPreviewParts } from "@/lib/ai/ingest/csv-ingest";
 import { serverFileStorage } from "lib/file-storage";
+import { mcpClientsManager } from "lib/ai/mcp/mcp-manager";
 
 const logger = globalLogger.withDefaults({
   message: colorize("blackBright", `Chat API: `),

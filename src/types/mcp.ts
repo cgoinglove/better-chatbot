@@ -50,6 +50,7 @@ export type MCPServerInfo = {
   isAuthorized?: boolean;
   userId: string;
   status: "connected" | "disconnected" | "loading" | "authorizing";
+  lastConnectionStatus?: MCPConnectionStatus | null;
   toolInfo?: MCPToolInfo[];
   createdAt?: Date | string;
   updatedAt?: Date | string;
@@ -73,6 +74,8 @@ export type McpServerInsert = {
   perUserAuth?: boolean;
   toolInfo?: MCPToolInfo[];
 };
+export type MCPConnectionStatus = "connected" | "error";
+
 export type McpServerSelect = {
   name: string;
   config: MCPServerConfig;
@@ -81,6 +84,8 @@ export type McpServerSelect = {
   visibility: "public" | "private";
   perUserAuth: boolean;
   toolInfo?: MCPToolInfo[] | null;
+  toolInfoUpdatedAt?: Date | null;
+  lastConnectionStatus?: MCPConnectionStatus | null;
 };
 
 export type VercelAIMcpTool = Tool & {
@@ -101,6 +106,11 @@ export interface MCPRepository {
   existsByServerName(name: string): Promise<boolean>;
   updateVisibility(id: string, visibility: "public" | "private"): Promise<void>;
   updatePerUserAuth(id: string, perUserAuth: boolean): Promise<void>;
+  updateToolInfo(id: string, toolInfo: MCPToolInfo[]): Promise<void>;
+  updateConnectionStatus(
+    id: string,
+    status: MCPConnectionStatus,
+  ): Promise<void>;
 }
 
 export const McpToolCustomizationZodSchema = z.object({

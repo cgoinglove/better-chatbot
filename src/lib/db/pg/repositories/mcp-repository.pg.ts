@@ -59,6 +59,7 @@ export const pgMcpRepository: MCPRepository = {
         toolInfo: McpServerTable.toolInfo,
         userId: McpServerTable.userId,
         visibility: McpServerTable.visibility,
+        lastConnectionStatus: McpServerTable.lastConnectionStatus,
         createdAt: McpServerTable.createdAt,
         updatedAt: McpServerTable.updatedAt,
         userName: UserTable.name,
@@ -101,6 +102,27 @@ export const pgMcpRepository: MCPRepository = {
       .where(eq(McpServerTable.name, name));
     return result;
   },
+  async updateToolInfo(id, toolInfo) {
+    await db
+      .update(McpServerTable)
+      .set({
+        toolInfo,
+        toolInfoUpdatedAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(eq(McpServerTable.id, id));
+  },
+
+  async updateConnectionStatus(id, status) {
+    await db
+      .update(McpServerTable)
+      .set({
+        lastConnectionStatus: status,
+        updatedAt: new Date(),
+      })
+      .where(eq(McpServerTable.id, id));
+  },
+
   async existsByServerName(name) {
     const [result] = await db
       .select({ id: McpServerTable.id })

@@ -1,6 +1,6 @@
 {
-  "id": "5bb111d7-7542-4861-91cd-2ea5288ad2eb",
-  "prevId": "38d89506-17d0-44ef-89dd-625725e3bbfd",
+  "id": "eabb417d-1d9f-4511-8146-124d84520909",
+  "prevId": "5bb111d7-7542-4861-91cd-2ea5288ad2eb",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -708,6 +708,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
         "server_url": {
           "name": "server_url",
           "type": "text",
@@ -769,6 +775,21 @@
           "method": "btree",
           "with": {}
         },
+        "mcp_oauth_session_user_id_idx": {
+          "name": "mcp_oauth_session_user_id_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "mcp_oauth_session_state_idx": {
           "name": "mcp_oauth_session_state_idx",
           "columns": [
@@ -792,6 +813,12 @@
               "isExpression": false,
               "asc": true,
               "nulls": "last"
+            },
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
             }
           ],
           "isUnique": false,
@@ -807,6 +834,15 @@
           "tableFrom": "mcp_oauth_session",
           "tableTo": "mcp_server",
           "columnsFrom": ["mcp_server_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "mcp_oauth_session_user_id_user_id_fk": {
+          "name": "mcp_oauth_session_user_id_user_id_fk",
+          "tableFrom": "mcp_oauth_session",
+          "tableTo": "user",
+          "columnsFrom": ["user_id"],
           "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
@@ -931,6 +967,13 @@
           "notNull": true,
           "default": true
         },
+        "per_user_auth": {
+          "name": "per_user_auth",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
         "user_id": {
           "name": "user_id",
           "type": "uuid",
@@ -948,7 +991,8 @@
           "name": "tool_info",
           "type": "json",
           "primaryKey": false,
-          "notNull": false
+          "notNull": false,
+          "default": "'[]'::json"
         },
         "tool_info_updated_at": {
           "name": "tool_info_updated_at",

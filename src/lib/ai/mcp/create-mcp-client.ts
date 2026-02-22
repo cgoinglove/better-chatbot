@@ -33,7 +33,9 @@ type ClientOptions = {
   autoDisconnectSeconds?: number;
   userId?: string;
   perUserAuth?: boolean;
+  initialToolInfo?: MCPToolInfo[];
   onToolInfoUpdate?: (toolInfo: MCPToolInfo[]) => void;
+  onConnectionStatusChange?: (status: "connected" | "error") => void;
 };
 
 const CONNET_TIMEOUT = IS_VERCEL_ENV ? 30000 : 120000;
@@ -73,6 +75,9 @@ export class MCPClient {
     });
     if (this.options.perUserAuth) {
       this.needOauthProvider = true;
+    }
+    if (options.initialToolInfo?.length) {
+      this.toolInfo = options.initialToolInfo;
     }
   }
 
@@ -317,12 +322,14 @@ export class MCPClient {
       this.isConnected = false;
       this.error = errorToString(error);
       this.transport = undefined;
+      this.options.onConnectionStatusChange?.("error");
       throw error;
     } finally {
       this.locker.unlock();
     }
 
     await this.updateToolInfo();
+    this.options.onConnectionStatusChange?.("connected");
 
     return this.client;
   }
@@ -457,10 +464,12 @@ function isUnauthorized(error: any): boolean {
   return (
     error instanceof UnauthorizedError ||
     error?.status === 401 ||
+    error?.code === 401 ||
     error?.message?.includes("401") ||
     error?.message?.includes("Unauthorized") ||
     error?.message?.includes("invalid_token") ||
-    error?.message?.includes("HTTP 401")
+    error?.message?.includes("HTTP 401") ||
+    error?.message?.includes("Authentication required")
   );
 }
 

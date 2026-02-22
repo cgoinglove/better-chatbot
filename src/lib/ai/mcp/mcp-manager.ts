@@ -12,6 +12,7 @@ declare global {
 
 if (!globalThis.__mcpClientsManager__) {
   // Choose the appropriate storage implementation based on environment
+  // NOTE: FILE_BASED_MCP_CONFIG is deprecated and will be removed in a future version.
   const storage = FILE_BASED_MCP_CONFIG
     ? createFileBasedMCPConfigsStorage()
     : createDbBasedMCPConfigsStorage();

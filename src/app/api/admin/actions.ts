@@ -29,7 +29,7 @@ export const updateUserRolesAction = validatedActionWithAdminPermission(
       };
     }
     await auth.api.setRole({
-      body: { userId, role },
+      body: { userId, role: role as "user" | "admin" },
       headers: await headers(),
     });
     await auth.api.revokeUserSessions({

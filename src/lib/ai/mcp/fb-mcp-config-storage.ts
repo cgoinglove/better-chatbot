@@ -20,6 +20,7 @@ const logger = defaultLogger.withDefaults({
 
 /**
  * Creates a file-based implementation of MCPServerStorage
+ * @deprecated Use createDbBasedMCPConfigsStorage instead. This will be removed in a future version.
  */
 export function createFileBasedMCPConfigsStorage(
   path?: string,
@@ -198,7 +199,9 @@ function fillMcpServerTable(
     visibility: server.visibility || "private",
     enabled: true,
     perUserAuth: server.perUserAuth ?? false,
-    toolInfo: server.toolInfo ?? [],
+    toolInfo: server.toolInfo ?? null,
+    toolInfoUpdatedAt: server.toolInfoUpdatedAt ?? null,
+    lastConnectionStatus: server.lastConnectionStatus ?? null,
     createdAt: new Date(),
     updatedAt: new Date(),
   };

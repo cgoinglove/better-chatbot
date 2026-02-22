@@ -94,6 +94,10 @@ export const McpServerTable = pgTable("mcp_server", {
     .notNull()
     .default("private"),
   toolInfo: json("tool_info").$type<MCPToolInfo[]>().default([]),
+  toolInfoUpdatedAt: timestamp("tool_info_updated_at"),
+  lastConnectionStatus: varchar("last_connection_status", {
+    enum: ["connected", "error"],
+  }),
   createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
