@@ -10,6 +10,7 @@ import {
   Check,
   CheckIcon,
   ClipboardCheck,
+  Code2,
   Infinity,
   PenOff,
   Settings2,
@@ -57,7 +58,9 @@ export const ToolModeDropdown = ({ disabled }: { disabled?: boolean }) => {
                 ? "manual"
                 : toolChoice == "manual"
                   ? "none"
-                  : "auto",
+                  : toolChoice == "none"
+                    ? "codemode"
+                    : "auto",
           };
         });
         setToolChoiceChangeInfo(true);
@@ -168,6 +171,23 @@ export const ToolModeDropdown = ({ disabled }: { disabled?: boolean }) => {
 
               <p className="text-xs text-muted-foreground">
                 {t("noneToolModeDescription")}
+              </p>
+            </div>
+          </DropdownMenuItem>
+          <div className="px-2 py-1">
+            <DropdownMenuSeparator />
+          </div>
+          <DropdownMenuItem
+            onClick={() => appStoreMutate({ toolChoice: "codemode" })}
+          >
+            <div className="flex flex-col gap-2 w-full">
+              <div className="flex items-center gap-2">
+                <Code2 />
+                <span className="font-bold">{t("codemode")}</span>
+                {toolChoice == "codemode" && <Check className="ml-auto" />}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {t("codemodeToolModeDescription")}
               </p>
             </div>
           </DropdownMenuItem>

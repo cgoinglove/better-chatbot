@@ -7,7 +7,7 @@ import { tag } from "lib/tag";
 export type ChatMetadata = {
   usage?: LanguageModelUsage;
   chatModel?: ChatModel;
-  toolChoice?: "auto" | "none" | "manual";
+  toolChoice?: "auto" | "none" | "manual" | "codemode";
   toolCount?: number;
   agentId?: string;
 };
@@ -102,7 +102,7 @@ export const chatApiSchemaRequestBodySchema = z.object({
       model: z.string(),
     })
     .optional(),
-  toolChoice: z.enum(["auto", "none", "manual"]),
+  toolChoice: z.enum(["auto", "none", "manual", "codemode"]),
   mentions: z.array(ChatMentionSchema).optional(),
   imageTool: z.object({ model: z.string().optional() }).optional(),
   allowedMcpServers: z.record(z.string(), AllowedMCPServerZodSchema).optional(),
