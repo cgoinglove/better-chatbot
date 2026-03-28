@@ -4,7 +4,7 @@ import { UserPreferences } from "app-types/user";
 import { User } from "better-auth";
 import { createMCPToolId } from "./mcp/mcp-tool-id";
 import { format } from "date-fns";
-import { Agent } from "app-types/agent";
+import { Agent, AgentSummary } from "app-types/agent";
 
 export const CREATE_THREAD_TITLE_PROMPT = `
 You are a chat title generation expert.
@@ -52,6 +52,7 @@ export const buildUserSystemPrompt = (
   user?: User,
   userPreferences?: UserPreferences,
   agent?: Agent,
+  availableAgents?: AgentSummary[],
 ) => {
   const assistantName =
     agent?.name || userPreferences?.botName || "better-chatbot";
@@ -98,6 +99,25 @@ You can assist with:
 - Using available tools and resources to complete tasks
 - Adapting communication to user preferences and context
 </general_capabilities>`;
+
+  // Available agents section (only when no agent is selected)
+  if (!agent && availableAgents && availableAgents.length > 0) {
+    const agentsList = availableAgents
+      .map((a) => {
+        const desc = a.description ? `: ${a.description}` : "";
+        return `- **${a.name}**${desc}`;
+      })
+      .join("\n");
+
+    prompt += `
+
+<available_agents>
+The user has access to the following specialized agents:
+${agentsList}
+
+If the user's request would benefit from a specialized agent's expertise, you may suggest they select one. Users can select an agent by typing @ followed by the agent name, from the tools menu, or from the agents menu in the sidebar. Only suggest an agent if it's clearly relevant to what they're asking about.
+</available_agents>`;
+  }
 
   // Communication preferences
   const displayName = userPreferences?.displayName || user?.name;

@@ -40,6 +40,7 @@ import {
 } from "./shared.chat";
 import {
   rememberAgentAction,
+  rememberAvailableAgentsAction,
   rememberMcpServerCustomizationsAction,
 } from "./actions";
 import { getSession } from "auth/server";
@@ -262,8 +263,18 @@ export async function POST(request: Request) {
           .map((v) => filterMcpServerCustomizations(MCP_TOOLS!, v))
           .orElse({});
 
+        // Fetch available agents only when no agent is selected
+        const availableAgents = !agent
+          ? await rememberAvailableAgentsAction(session.user.id)
+          : undefined;
+
         const systemPrompt = mergeSystemPrompt(
-          buildUserSystemPrompt(session.user, userPreferences, agent),
+          buildUserSystemPrompt(
+            session.user,
+            userPreferences,
+            agent,
+            availableAgents,
+          ),
           buildMcpServerCustomizationsSystemPrompt(mcpServerCustomizations),
           !supportToolCall && buildToolCallUnsupportedModelSystemPrompt,
         );
