@@ -37,7 +37,11 @@ import {
   VercelAIWorkflowToolTag,
 } from "app-types/workflow";
 import { createWorkflowExecutor } from "lib/ai/workflow/executor/workflow-executor";
-import { NodeKind } from "lib/ai/workflow/workflow.interface";
+import {
+  NodeKind,
+  WorkflowExecutionContext,
+  withWorkflowContext,
+} from "lib/ai/workflow/workflow.interface";
 import { mcpClientsManager } from "lib/ai/mcp/mcp-manager";
 import { APP_DEFAULT_TOOL_KIT } from "lib/ai/tools/tool-kit";
 import { AppDefaultToolkit } from "lib/ai/tools";
@@ -225,12 +229,14 @@ export const workflowToVercelAITool = ({
   schema,
   dataStream,
   name,
+  context,
 }: {
   id: string;
   name: string;
   description?: string;
   schema: ObjectJsonSchema7;
   dataStream: UIMessageStreamWriter;
+  context?: WorkflowExecutionContext;
 }): VercelAIWorkflowTool => {
   const toolName = name
     .replace(/[^a-zA-Z0-9\s]/g, "")
@@ -316,9 +322,14 @@ export const workflowToVercelAITool = ({
               output: toolResult,
             });
           });
+          const runtimeQuery = withWorkflowContext(
+            (query ?? undefined) as Record<string, unknown> | undefined,
+            context,
+          );
+
           return executor.run(
             {
-              query: query ?? ({} as any),
+              query: runtimeQuery,
             },
             {
               disableHistory: true,
@@ -376,12 +387,14 @@ export const workflowToVercelAITools = (
     schema: ObjectJsonSchema7;
   }[],
   dataStream: UIMessageStreamWriter,
+  context?: WorkflowExecutionContext,
 ) => {
   return workflows
     .map((v) =>
       workflowToVercelAITool({
         ...v,
         dataStream,
+        context,
       }),
     )
     .reduce(
@@ -409,6 +422,7 @@ export const loadMcpTools = (opt?: {
 export const loadWorkFlowTools = (opt: {
   mentions?: ChatMention[];
   dataStream: UIMessageStreamWriter;
+  context?: WorkflowExecutionContext;
 }) =>
   safe(() =>
     opt?.mentions?.length
@@ -422,7 +436,7 @@ export const loadWorkFlowTools = (opt: {
         )
       : [],
   )
-    .map((tools) => workflowToVercelAITools(tools, opt.dataStream))
+    .map((tools) => workflowToVercelAITools(tools, opt.dataStream, opt.context))
     .orElse({} as Record<string, VercelAIWorkflowTool>);
 
 export const loadAppDefaultTools = (opt?: {
