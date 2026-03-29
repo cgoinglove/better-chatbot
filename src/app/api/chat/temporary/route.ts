@@ -7,7 +7,10 @@ import {
 } from "ai";
 import { customModelProvider } from "lib/ai/models";
 import globalLogger from "logger";
-import { buildUserSystemPrompt } from "lib/ai/prompts";
+import {
+  buildCurrentDateTimeSystemPrompt,
+  buildUserSystemStaticPrompt,
+} from "lib/ai/prompts";
 import { getUserPreferences } from "lib/user/server";
 
 import { colorize } from "consola/utils";
@@ -40,10 +43,16 @@ export async function POST(request: Request) {
 
     return streamText({
       model,
-      system: `${buildUserSystemPrompt(session.user, userPreferences)} ${
-        instructions ? `\n\n${instructions}` : ""
-      }`.trim(),
-      messages: convertToModelMessages(messages),
+      system: [
+        buildUserSystemStaticPrompt(session.user, userPreferences),
+        instructions,
+      ]
+        .filter(Boolean)
+        .join("\n\n"),
+      messages: [
+        { role: "system", content: buildCurrentDateTimeSystemPrompt() },
+        ...convertToModelMessages(messages),
+      ],
       experimental_transform: smoothStream({ chunking: "word" }),
     }).toUIMessageStreamResponse();
   } catch (error: any) {
