@@ -164,13 +164,20 @@
       "noAccount": "Don't have an account? ",
       "signUp": "Sign up",
       "signIn": "Sign in",
-      "orContinueWith": "OR CONTINUE WITH"
+      "orContinueWith": "OR CONTINUE WITH",
+      "email": "Email",
+      "emailPlaceholder": "user@example.com",
+      "password": "Password"
     },
     "SignUp": {
       "title": "Create an account",
       "titleAdmin": "Create an Admin Account",
       "signIn": "Sign in",
       "email": "Email",
+      "emailPlaceholder": "user@example.com",
+      "name": "Name",
+      "namePlaceholder": "John Doe",
+      "password": "Password",
       "description": "Sign up to your account",
       "signUpDescription": "Start your journey with us",
       "signUpDescriptionAdmin": "Welcome first user! You will be the admin of the system.",
@@ -180,12 +187,23 @@
       "step1": "Start your journey with us by entering your email address",
       "step2": "I'll use this name when we chat",
       "step3": "Create a strong password to secure your account",
+      "stepProgress": "Step {current} of {total}",
       "signUp": "Sign Up",
       "invalidEmail": "Invalid email address",
       "emailAlreadyExists": "Email already exists",
       "nameRequired": "Name is required",
       "passwordRequired": "Password is required",
-      "createAccount": "Create account"
+      "createAccount": "Create account",
+      "passwordHintLength": "8-20 characters",
+      "passwordHintLetter": "At least one letter",
+      "passwordHintNumber": "At least one number"
+    },
+    "Error": {
+      "title": "Auth Error",
+      "signupDisabled": "Signup is disabled",
+      "unauthorized": "Authentication required",
+      "unknownError": "Unknown error",
+      "goToHome": "Go to home"
     },
     "Intro": {
       "description": "Welcome to better-chatbot. Sign in to experience our AI-powered conversational tools."

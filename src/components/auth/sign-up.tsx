@@ -33,7 +33,9 @@ export default function SignUpPage({
       try {
         await authClient.signIn.social({ provider });
       } catch (e) {
-        toast.error(e instanceof Error ? e.message : "Unknown error");
+        toast.error(
+          e instanceof Error ? e.message : t("Auth.Error.unknownError"),
+        );
       }
     });
   };
