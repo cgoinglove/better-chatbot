@@ -49,6 +49,7 @@ import { nanoBananaTool, openaiImageTool } from "lib/ai/tools/image";
 import { ImageToolName } from "lib/ai/tools";
 import { buildCsvIngestionPreviewParts } from "@/lib/ai/ingest/csv-ingest";
 import { serverFileStorage } from "lib/file-storage";
+import { mcpClientsManager } from "lib/ai/mcp/mcp-manager";
 
 const logger = globalLogger.withDefaults({
   message: colorize("blackBright", `Chat API: `),
@@ -202,10 +203,16 @@ export async function POST(request: Request) {
 
     const stream = createUIMessageStream({
       execute: async ({ writer: dataStream }) => {
+        const mcpClients = await mcpClientsManager.getClients(session.user.id);
+        const mcpTools = await mcpClientsManager.tools(session.user.id);
+        logger.info(
+          `mcp-server count: ${mcpClients.length}, mcp-tools count :${Object.keys(mcpTools).length}`,
+        );
         const MCP_TOOLS = await safe()
           .map(errorIf(() => !isToolCallAllowed && "Not allowed"))
           .map(() =>
             loadMcpTools({
+              userId: session.user.id,
               mentions,
               allowedMcpServers,
             }),
@@ -238,6 +245,7 @@ export async function POST(request: Request) {
               const output = await manualToolExecuteByLastMessage(
                 part,
                 { ...MCP_TOOLS, ...WORKFLOW_TOOLS, ...APP_DEFAULT_TOOLS },
+                session.user.id,
                 request.signal,
               );
               part.output = output;
