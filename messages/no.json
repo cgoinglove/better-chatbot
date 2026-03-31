@@ -154,7 +154,9 @@
     "noTools": "Ingen publiserte arbeidsflyter tilgjengelig.\nOpprett arbeidsflyter for å bygge egendefinerte verktøy.",
     "arrangeNodes": "Automatisk layout",
     "nodesArranged": "Layout anvendt",
-    "visibilityUpdated": "Synlighet oppdatert"
+    "visibilityUpdated": "Synlighet oppdatert",
+    "deleted": "Arbeidsflyt slettet",
+    "deleteConfirm": "Er du sikker på at du vil slette denne arbeidsflyten?"
   },
   "Auth": {
     "SignIn": {
