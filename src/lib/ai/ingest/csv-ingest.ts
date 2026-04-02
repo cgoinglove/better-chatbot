@@ -44,7 +44,11 @@ export const buildCsvIngestionPreviewParts = async (
           maxRows: 50,
           maxCols: 12,
         });
-        const text = formatCsvPreviewText(attachment.filename || key, preview);
+        const text = formatCsvPreviewText(
+          attachment.filename || key,
+          preview,
+          attachment.url,
+        );
         return {
           type: "text",
           text,

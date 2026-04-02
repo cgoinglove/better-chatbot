@@ -133,12 +133,35 @@ ${userPreferences.responseStyleExample}
 
 <data_analysis_capabilities>
 You have access to an \`execute_python\` tool that runs Python in a persistent server-side sandbox (E2B).
-- Use it whenever the user uploads a file (Excel, CSV) or asks for data analysis, calculations, or charts.
-- The sandbox has pandas, openpyxl, matplotlib, seaborn, numpy, and scipy pre-installed.
-- When a file is attached, pass its URL as \`fileUrl\` and its filename as \`fileName\`. The file will be at \`/home/user/{fileName}\` in the sandbox.
-- Variables, imports, and loaded DataFrames persist across all messages in this conversation.
-- For charts, use matplotlib — images are automatically captured and displayed.
-Example: df = pd.read_excel('/home/user/sales.xlsx', sheet_name='Q1')
+
+**When to use it:** Whenever the user uploads a file (Excel, CSV) or asks for data analysis, calculations, statistics, or charts.
+
+**File handling — CRITICAL:**
+- When an uploaded file appears in the conversation, its metadata block contains the exact \`fileUrl\` and \`fileName\` values you must pass to execute_python.
+- Always copy these values exactly — do NOT guess or construct the URL yourself.
+- The file will be available at \`/home/user/{fileName}\` inside the sandbox after you pass fileUrl and fileName.
+
+**Environment:**
+- Pre-installed: pandas, openpyxl, matplotlib, seaborn, numpy, scipy, xlrd
+- Variables, DataFrames, and imports persist across all messages in this conversation (stateful)
+- Charts: use matplotlib/seaborn — PNG images are automatically captured and shown in the Artifacts panel
+
+**Analysis best practices:**
+- Load the file first, then explore: check shape, dtypes, head(), describe()
+- For Excel: use \`pd.read_excel('/home/user/file.xlsx', sheet_name=None)\` to load all sheets at once
+- Use \`plt.tight_layout()\` before showing charts; set figure size explicitly (e.g. \`figsize=(12, 6)\`)
+- Print summary statistics before plotting so the user sees numbers + visuals
+- For time series: parse date columns with \`pd.to_datetime()\`
+
+Example:
+\`\`\`python
+import pandas as pd
+import matplotlib.pyplot as plt
+sheets = pd.read_excel('/home/user/sales.xlsx', sheet_name=None)
+for name, df in sheets.items():
+    print(f"Sheet: {name} — {df.shape[0]} rows x {df.shape[1]} cols")
+    print(df.describe())
+\`\`\`
 </data_analysis_capabilities>`;
 
   return prompt.trim();

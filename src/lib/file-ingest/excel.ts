@@ -31,17 +31,27 @@ export function parseExcelPreview(content: Buffer): ExcelPreview {
 export function formatExcelPreviewText(
   name: string,
   preview: ExcelPreview,
+  fileUrl?: string,
 ): string {
   const lines: string[] = [
-    `Excel file: ${name} — ${preview.totalSheets} sheet(s)`,
+    `<uploaded_file>`,
+    `filename: ${name}`,
+    `type: Excel (${preview.totalSheets} sheet${preview.totalSheets !== 1 ? "s" : ""})`,
   ];
+  if (fileUrl) {
+    lines.push(`fileUrl: ${fileUrl}`);
+  }
+  lines.push(`sheets:`);
   for (const sheet of preview.sheets) {
     lines.push(
-      `  Sheet "${sheet.name}": ${sheet.rowCount} rows, columns: ${sheet.columns.join(", ")}`,
+      `  - "${sheet.name}": ${sheet.rowCount} rows | columns: ${sheet.columns.join(", ")}`,
     );
   }
-  lines.push(
-    `\nTo analyze this file, use the execute_python tool with fileUrl and fileName parameters.`,
-  );
+  if (fileUrl) {
+    lines.push(
+      `\nIMPORTANT: To analyze this file, call execute_python with fileUrl="${fileUrl}" and fileName="${name}". The file will be available at /home/user/${name}.`,
+    );
+  }
+  lines.push(`</uploaded_file>`);
   return lines.join("\n");
 }

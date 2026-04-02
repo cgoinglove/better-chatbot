@@ -24,7 +24,8 @@ describe("buildCsvIngestionPreviewParts", () => {
     expect(parts).toHaveLength(1);
     expect(parts[0].type).toBe("text");
     expect(parts[0].ingestionPreview).toBe(true);
-    expect(parts[0].text).toContain("rows: 3");
+    expect(parts[0].text).toContain("data.csv");
+    expect(parts[0].text).toContain("https://example.com/uploads/data.csv");
     expect(parts[0].text).toContain("| col1 | col2 |");
   });
 

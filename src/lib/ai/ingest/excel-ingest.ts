@@ -46,6 +46,7 @@ export const buildExcelIngestionPreviewParts = async (
         const text = formatExcelPreviewText(
           attachment.filename || key,
           preview,
+          attachment.url,
         );
         return { type: "text" as const, text, ingestionPreview: true as const };
       } catch {

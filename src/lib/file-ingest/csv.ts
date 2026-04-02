@@ -93,6 +93,10 @@ export function parseCsvPreview(
 export const formatCsvPreviewText = (
   name: string,
   preview: CsvPreview,
+  fileUrl?: string,
 ): string => {
-  return `Here is a preview of ${name} (rows: ${preview.totalRows}, cols: ${preview.columns}). Summarize or analyze as needed.\n\n${preview.markdownTable}`;
+  const header = fileUrl
+    ? `<uploaded_file>\nfilename: ${name}\ntype: CSV (${preview.totalRows} rows, ${preview.columns} columns)\nfileUrl: ${fileUrl}\n\nIMPORTANT: To analyze this file, call execute_python with fileUrl="${fileUrl}" and fileName="${name}".\n</uploaded_file>\n\nPreview:\n`
+    : `Here is a preview of ${name} (rows: ${preview.totalRows}, cols: ${preview.columns}). Summarize or analyze as needed.\n\n`;
+  return `${header}${preview.markdownTable}`;
 };

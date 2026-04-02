@@ -49,4 +49,18 @@ describe("formatExcelPreviewText", () => {
     expect(text).toContain("Date");
     expect(text).toContain("Amount");
   });
+
+  it("includes fileUrl and IMPORTANT instruction when url provided", () => {
+    const buf = makeExcelBuffer({
+      Sheet1: [["Col"], [1]],
+    });
+    const preview = parseExcelPreview(buf);
+    const url = "https://blob.vercel-storage.com/uploads/uuid-sales.xlsx";
+    const text = formatExcelPreviewText("sales.xlsx", preview, url);
+
+    expect(text).toContain(`fileUrl: ${url}`);
+    expect(text).toContain("IMPORTANT");
+    expect(text).toContain('fileUrl="');
+    expect(text).toContain('fileName="sales.xlsx"');
+  });
 });
