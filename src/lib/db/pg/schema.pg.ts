@@ -192,6 +192,27 @@ export const AgentTable = pgTable("agent", {
   updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
+export const AgentFileTable = pgTable(
+  "agent_file",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    agentId: uuid("agent_id")
+      .notNull()
+      .references(() => AgentTable.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => UserTable.id, { onDelete: "cascade" }),
+    storageKey: text("storage_key").notNull(),
+    filename: text("filename").notNull(),
+    contentType: text("content_type").notNull(),
+    size: integer("size").notNull(),
+    createdAt: timestamp("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (t) => [index("agent_file_agent_id_idx").on(t.agentId)],
+);
+
 export const BookmarkTable = pgTable(
   "bookmark",
   {
@@ -464,6 +485,7 @@ export type ProjectEntity = typeof ProjectTable.$inferSelect;
 export type ProjectFileEntity = typeof ProjectFileTable.$inferSelect;
 
 export type AgentEntity = typeof AgentTable.$inferSelect;
+export type AgentFileEntity = typeof AgentFileTable.$inferSelect;
 export type UserEntity = typeof UserTable.$inferSelect;
 export type SessionEntity = typeof SessionTable.$inferSelect;
 
@@ -2846,3 +2868,38 @@ export type ComplianceBurdenEntity = typeof ComplianceBurdenSchema.$inferSelect;
 export type OutreachSequenceEntity = typeof OutreachSequenceSchema.$inferSelect;
 export type CustomerHealthEntity = typeof CustomerHealthSchema.$inferSelect;
 export type DealAnalysisEntity = typeof DealAnalysisSchema.$inferSelect;
+
+// Issue Reports
+export const IssueReportSchema = pgTable(
+  "issue_report",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    userId: uuid("user_id").references(() => UserTable.id, {
+      onDelete: "set null",
+    }),
+    title: text("title").notNull(),
+    description: text("description").notNull(),
+    category: varchar("category", {
+      enum: ["bug", "feature", "question", "other"],
+    })
+      .notNull()
+      .default("bug"),
+    status: varchar("status", {
+      enum: ["new", "reviewing", "resolved"],
+    })
+      .notNull()
+      .default("new"),
+    userEmail: text("user_email"),
+    userName: text("user_name"),
+    pageUrl: text("page_url"),
+    createdAt: timestamp("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (t) => [
+    index("issue_report_user_id_idx").on(t.userId),
+    index("issue_report_status_idx").on(t.status),
+  ],
+);
+
+export type IssueReportEntity = typeof IssueReportSchema.$inferSelect;
