@@ -5,6 +5,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import {
   AudioWaveformIcon,
   ChevronDown,
+  FolderIcon,
   MessageCircleDashed,
   PanelLeft,
 } from "lucide-react";
@@ -12,6 +13,7 @@ import { Button } from "ui/button";
 import { Separator } from "ui/separator";
 
 import { useEffect, useMemo } from "react";
+import Link from "next/link";
 import { ThreadDropdown } from "../thread-dropdown";
 import { appStore } from "@/app/store";
 import { usePathname, useSearchParams } from "next/navigation";
@@ -21,6 +23,7 @@ import { useTranslations } from "next-intl";
 import { TextShimmer } from "ui/text-shimmer";
 import { buildReturnUrl } from "lib/admin/navigation-utils";
 import { BackButton } from "@/components/layouts/back-button";
+import { useProject } from "@/hooks/queries/use-project";
 
 export function AppHeader() {
   const t = useTranslations();
@@ -186,6 +189,8 @@ function ThreadDropdownComponent() {
     return threadList.find((thread) => thread.id === currentThreadId);
   }, [threadList, currentThreadId]);
 
+  const { project } = useProject(currentThread?.projectId);
+
   useEffect(() => {
     if (currentThread?.id) {
       document.title = currentThread.title || "New Chat";
@@ -199,6 +204,19 @@ function ThreadDropdownComponent() {
       <div className="w-1 h-4">
         <Separator orientation="vertical" />
       </div>
+
+      {project && (
+        <>
+          <Link
+            href={`/projects/${project.id}`}
+            className="flex items-center gap-1.5 text-sm text-blue-400 hover:text-blue-300 transition-colors"
+          >
+            <FolderIcon className="size-3.5" />
+            <span className="font-medium">{project.name}</span>
+          </Link>
+          <span className="text-muted-foreground text-sm">/</span>
+        </>
+      )}
 
       <ThreadDropdown
         threadId={currentThread.id}

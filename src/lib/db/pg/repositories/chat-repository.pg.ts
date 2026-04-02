@@ -87,6 +87,7 @@ export const pgChatRepository: ChatRepository = {
         title: ChatThreadTable.title,
         createdAt: ChatThreadTable.createdAt,
         userId: ChatThreadTable.userId,
+        projectId: ChatThreadTable.projectId,
         lastMessageAt: sql<string>`MAX(${ChatMessageTable.createdAt})`.as(
           "last_message_at",
         ),
@@ -105,6 +106,7 @@ export const pgChatRepository: ChatRepository = {
         id: row.threadId,
         title: row.title,
         userId: row.userId,
+        projectId: row.projectId,
         createdAt: row.createdAt,
         lastMessageAt: row.lastMessageAt
           ? new Date(row.lastMessageAt).getTime()
