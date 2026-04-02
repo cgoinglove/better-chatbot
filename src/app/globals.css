@@ -3,6 +3,10 @@
 /* Individual theme variants - themes from  https://github.com/rawestmoreland/theme-generator/blob/main/src/app/globals.css */
 
 @theme inline {
+  --color-yale-blue: #1d4372;
+  --color-yale-blue-light: #2a5a9e;
+  --color-yale-blue-muted: rgba(29, 67, 114, 0.3);
+  --color-yale-blue-border: rgba(29, 67, 114, 0.5);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);

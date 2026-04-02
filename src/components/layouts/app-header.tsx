@@ -209,7 +209,7 @@ function ThreadDropdownComponent() {
         <>
           <Link
             href={`/projects/${project.id}`}
-            className="flex items-center gap-1.5 text-sm text-blue-400 hover:text-blue-300 transition-colors"
+            className="flex items-center gap-1.5 text-sm text-yale-blue transition-colors"
           >
             <FolderIcon className="size-3.5" />
             <span className="font-medium">{project.name}</span>

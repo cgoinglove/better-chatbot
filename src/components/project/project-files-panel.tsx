@@ -124,7 +124,7 @@ export function ProjectFilesPanel({
       <div
         className={cn(
           "flex flex-col items-center justify-center rounded-lg border border-dashed border-border/60 p-4 text-center transition-colors cursor-pointer",
-          isDragOver && "border-blue-400 bg-blue-900/10",
+          isDragOver && "border-yale-blue bg-yale-blue/10",
           isUploading && "opacity-50 pointer-events-none",
         )}
         onDragOver={(e) => {

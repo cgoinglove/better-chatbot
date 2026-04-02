@@ -45,7 +45,7 @@ export function ProjectDetail({ project, files, threads }: ProjectDetailProps) {
         <div className="p-6 border-b border-border/60">
           <div className="flex items-center gap-3 mb-4">
             <h1 className="text-2xl font-bold flex items-center gap-2">
-              <FolderIcon className="size-6 text-blue-400" />
+              <FolderIcon className="size-6 text-yale-blue" />
               {project.name}
             </h1>
             <DropdownMenu>

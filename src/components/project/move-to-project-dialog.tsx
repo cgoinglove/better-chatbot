@@ -95,7 +95,7 @@ export function MoveToProjectDialog({
                 className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm text-left hover:bg-accent/50 transition-colors ${selected === p.id ? "bg-accent/30" : ""}`}
                 onClick={() => setSelected(p.id)}
               >
-                <FolderIcon className="size-3.5 text-blue-400 shrink-0" />
+                <FolderIcon className="size-3.5 text-yale-blue shrink-0" />
                 <span className="truncate">{p.name}</span>
                 {selected === p.id && (
                   <CheckIcon className="size-3.5 ml-auto text-primary shrink-0" />

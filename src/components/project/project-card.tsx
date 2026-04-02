@@ -47,7 +47,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
     >
       <div className="flex items-start justify-between mb-2">
         <div className="flex items-center gap-2">
-          <FolderIcon className="size-4 text-blue-400 shrink-0" />
+          <FolderIcon className="size-4 shrink-0 text-yale-blue" />
           <span className="font-semibold text-sm truncate">{project.name}</span>
         </div>
         <DropdownMenu>
