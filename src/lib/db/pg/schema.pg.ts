@@ -124,32 +124,44 @@ export const ProjectTable = pgTable("project", {
   updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
-export const ProjectFileTable = pgTable("project_file", {
-  id: uuid("id").primaryKey().notNull().defaultRandom(),
-  projectId: uuid("project_id")
-    .notNull()
-    .references(() => ProjectTable.id, { onDelete: "cascade" }),
-  userId: uuid("user_id")
-    .notNull()
-    .references(() => UserTable.id, { onDelete: "cascade" }),
-  storageKey: text("storage_key").notNull(),
-  filename: text("filename").notNull(),
-  contentType: text("content_type").notNull(),
-  size: integer("size").notNull(),
-  createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
-});
+export const ProjectFileTable = pgTable(
+  "project_file",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    projectId: uuid("project_id")
+      .notNull()
+      .references(() => ProjectTable.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => UserTable.id, { onDelete: "cascade" }),
+    storageKey: text("storage_key").notNull(),
+    filename: text("filename").notNull(),
+    contentType: text("content_type").notNull(),
+    size: integer("size").notNull(),
+    createdAt: timestamp("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (t) => [index("project_file_project_id_idx").on(t.projectId)],
+);
 
-export const ChatThreadTable = pgTable("chat_thread", {
-  id: uuid("id").primaryKey().notNull().defaultRandom(),
-  title: text("title").notNull(),
-  userId: uuid("user_id")
-    .notNull()
-    .references(() => UserTable.id, { onDelete: "cascade" }),
-  projectId: uuid("project_id").references(() => ProjectTable.id, {
-    onDelete: "set null",
-  }),
-  createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
-});
+export const ChatThreadTable = pgTable(
+  "chat_thread",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    title: text("title").notNull(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => UserTable.id, { onDelete: "cascade" }),
+    projectId: uuid("project_id").references(() => ProjectTable.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (t) => [index("chat_thread_project_id_idx").on(t.projectId)],
+);
 
 export const ChatMessageTable = pgTable("chat_message", {
   id: text("id").primaryKey().notNull(),
@@ -447,6 +459,9 @@ export const McpOAuthSessionTable = pgTable(
 export type McpServerEntity = typeof McpServerTable.$inferSelect;
 export type ChatThreadEntity = typeof ChatThreadTable.$inferSelect;
 export type ChatMessageEntity = typeof ChatMessageTable.$inferSelect;
+
+export type ProjectEntity = typeof ProjectTable.$inferSelect;
+export type ProjectFileEntity = typeof ProjectFileTable.$inferSelect;
 
 export type AgentEntity = typeof AgentTable.$inferSelect;
 export type UserEntity = typeof UserTable.$inferSelect;
