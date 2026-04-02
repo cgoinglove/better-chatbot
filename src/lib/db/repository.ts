@@ -55,3 +55,6 @@ export const industryRepository = pgIndustryRepository;
 export const prospectingRepository = pgProspectingRepository;
 export const contactIntelligenceRepository = pgContactIntelligenceRepository;
 export const stateResearchRepository = pgStateResearchRepository;
+
+import { pgPluginRepository } from "./pg/repositories/plugin-repository.pg";
+export const pluginRepository = pgPluginRepository;
