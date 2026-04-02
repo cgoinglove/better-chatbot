@@ -59,6 +59,7 @@ import {
 } from "lib/keyboard-shortcuts";
 
 import { WorkflowInvocation } from "./tool-invocation/workflow-invocation";
+import { ExecutePythonInvocation } from "./tool-invocation/execute-python";
 import dynamic from "next/dynamic";
 import { notify } from "lib/notify";
 import { ModelProviderIcon } from "ui/model-provider-icon";
@@ -889,6 +890,10 @@ export const ToolMessagePart = memo(
             type="javascript"
           />
         );
+      }
+
+      if (toolName === DefaultToolName.ExecutePython) {
+        return <ExecutePythonInvocation part={part} />;
       }
 
       if (toolName === DefaultToolName.PythonExecution) {
