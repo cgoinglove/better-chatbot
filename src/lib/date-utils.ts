@@ -1,4 +1,6 @@
 // src/lib/date-utils.ts
+
+/** Converts a Date to a human-readable relative string (e.g. "2 days ago"). Assumes date is in the past. */
 export function formatTimeAgo(date: Date): string {
   const now = new Date();
   const diffInMs = now.getTime() - date.getTime();

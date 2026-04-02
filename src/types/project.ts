@@ -31,7 +31,7 @@ export interface ProjectSummary {
   threadCount: number;
 }
 
-export interface ProjectRepository {
+export type ProjectRepository = {
   insertProject(
     data: Omit<Project, "id" | "createdAt" | "updatedAt">,
   ): Promise<Project>;
@@ -52,11 +52,16 @@ export interface ProjectRepository {
   selectProjectFileById(
     id: string,
     projectId: string,
+    userId: string,
   ): Promise<ProjectFile | null>;
-  deleteProjectFile(id: string, projectId: string): Promise<void>;
+  deleteProjectFile(
+    id: string,
+    projectId: string,
+    userId: string,
+  ): Promise<void>;
   updateProjectMemory(
     id: string,
     userId: string,
     memory: string,
   ): Promise<void>;
-}
+};
