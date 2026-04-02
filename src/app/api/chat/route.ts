@@ -16,8 +16,10 @@ import { mcpClientsManager } from "lib/ai/mcp/mcp-manager";
 import {
   agentRepository,
   chatRepository,
+  pluginRepository,
   projectRepository,
 } from "lib/db/repository";
+import { dedupePluginsById } from "lib/plugins/plugin-utils";
 import globalLogger from "logger";
 import {
   buildMcpServerCustomizationsSystemPrompt,
@@ -106,6 +108,7 @@ export async function POST(request: Request) {
       imageTool,
       mentions = [],
       attachments = [],
+      activePluginId,
     } = chatApiSchemaRequestBodySchema.parse(json);
 
     const model = customModelProvider.getModel(chatModel);
@@ -236,6 +239,22 @@ export async function POST(request: Request) {
 
     const agent = await rememberAgentAction(agentId, session.user.id);
 
+    const tenantId =
+      request.headers.get("x-tenant-id") ??
+      "00000000-0000-0000-0000-000000000000";
+
+    const enabledPlugins = await pluginRepository.listEnabledPluginsForUser(
+      session.user.id,
+      tenantId,
+    );
+    const oneConvPlugin = activePluginId
+      ? await pluginRepository.getPluginById(activePluginId, session.user.id)
+      : null;
+    const activePlugins = dedupePluginsById([
+      ...enabledPlugins,
+      ...(oneConvPlugin ? [oneConvPlugin] : []),
+    ]);
+
     const agentFiles = agent?.id
       ? await agentRepository.selectAgentFiles(agent.id)
       : [];
@@ -331,7 +350,12 @@ export async function POST(request: Request) {
           .orElse({});
 
         const systemPrompt = mergeSystemPrompt(
-          buildUserSystemPrompt(session.user, userPreferences, agent),
+          buildUserSystemPrompt(
+            session.user,
+            userPreferences,
+            agent,
+            activePlugins,
+          ),
           buildMcpServerCustomizationsSystemPrompt(mcpServerCustomizations),
           !supportToolCall && buildToolCallUnsupportedModelSystemPrompt,
           projectContext?.instructions

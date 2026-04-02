@@ -5,6 +5,8 @@ import { User } from "better-auth";
 import { createMCPToolId } from "./mcp/mcp-tool-id";
 import { format } from "date-fns";
 import { Agent } from "app-types/agent";
+import { buildPluginsSystemPrompt } from "lib/plugins/plugin-utils";
+import type { PluginWithUserState } from "app-types/plugin";
 
 export const CREATE_THREAD_TITLE_PROMPT = `
 You are a chat title generation expert.
@@ -52,6 +54,7 @@ export const buildUserSystemPrompt = (
   user?: User,
   userPreferences?: UserPreferences,
   agent?: Agent,
+  activePlugins?: PluginWithUserState[],
 ) => {
   const assistantName =
     agent?.name || userPreferences?.botName || "better-chatbot";
@@ -204,6 +207,14 @@ for name, df in sheets.items():
     print(df.describe())
 \`\`\`
 </data_analysis_capabilities>`;
+
+  // Active plugin system prompts
+  if (activePlugins && activePlugins.length > 0) {
+    const pluginsBlock = buildPluginsSystemPrompt(activePlugins);
+    if (pluginsBlock) {
+      prompt += `\n\n${pluginsBlock}`;
+    }
+  }
 
   return prompt.trim();
 };

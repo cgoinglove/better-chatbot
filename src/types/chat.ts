@@ -90,6 +90,18 @@ export const ChatMentionSchema = z.discriminatedUnion("type", [
       })
       .nullish(),
   }),
+  z.object({
+    type: z.literal("plugin"),
+    pluginId: z.string(),
+    name: z.string(),
+  }),
+  z.object({
+    type: z.literal("skill"),
+    pluginId: z.string(),
+    skillId: z.string(),
+    name: z.string(),
+    prompt: z.string(),
+  }),
 ]);
 
 export type ChatMention = z.infer<typeof ChatMentionSchema>;
@@ -109,6 +121,7 @@ export const chatApiSchemaRequestBodySchema = z.object({
   allowedMcpServers: z.record(z.string(), AllowedMCPServerZodSchema).optional(),
   allowedAppDefaultToolkit: z.array(z.string()).optional(),
   attachments: z.array(ChatAttachmentSchema).optional(),
+  activePluginId: z.string().uuid().optional(),
 });
 
 export type ChatApiSchemaRequestBody = z.infer<
