@@ -110,6 +110,7 @@ import { DBWorkflow, DBEdge, DBNode } from "app-types/workflow";
 import { UIMessage } from "ai";
 import { ChatMetadata } from "app-types/chat";
 import { TipTapMentionJsonContent } from "@/types/util";
+import type { PluginSkill, PluginCommand } from "app-types/plugin";
 
 export const ProjectTable = pgTable("project", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
@@ -251,6 +252,71 @@ export const McpServerTable = pgTable("mcp_server", {
   createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
+
+export const PluginTable = pgTable(
+  "plugin",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    tenantId: uuid("tenant_id"),
+    userId: uuid("user_id").references(() => UserTable.id, {
+      onDelete: "cascade",
+    }),
+    name: text("name").notNull(),
+    description: text("description").notNull().default(""),
+    category: varchar("category", {
+      enum: ["productivity", "research", "legal", "sales", "hr", "custom"],
+    })
+      .notNull()
+      .default("custom"),
+    icon: text("icon").notNull().default("Sparkles"),
+    color: text("color").notNull().default("bg-blue-500/10 text-blue-500"),
+    systemPromptAddition: text("system_prompt_addition").notNull().default(""),
+    skills: json("skills").notNull().default([]).$type<PluginSkill[]>(),
+    commands: json("commands").notNull().default([]).$type<PluginCommand[]>(),
+    isBuiltIn: boolean("is_built_in").notNull().default(false),
+    isPublic: boolean("is_public").notNull().default(false),
+    version: text("version").notNull().default("1.0.0"),
+    createdAt: timestamp("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: timestamp("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (t) => [
+    index("plugin_tenant_id_idx").on(t.tenantId),
+    index("plugin_user_id_idx").on(t.userId),
+  ],
+);
+
+export const UserPluginTable = pgTable(
+  "user_plugin",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => UserTable.id, { onDelete: "cascade" }),
+    pluginId: uuid("plugin_id")
+      .notNull()
+      .references(() => PluginTable.id, { onDelete: "cascade" }),
+    enabled: boolean("enabled").notNull().default(false),
+    isPinned: boolean("is_pinned").notNull().default(false),
+    customSystemPrompt: text("custom_system_prompt"),
+    createdAt: timestamp("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: timestamp("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (t) => [
+    unique().on(t.userId, t.pluginId),
+    index("user_plugin_user_id_idx").on(t.userId),
+  ],
+);
+
+export type PluginEntity = typeof PluginTable.$inferSelect;
+export type UserPluginEntity = typeof UserPluginTable.$inferSelect;
 
 export const UserTable = pgTable("user", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),

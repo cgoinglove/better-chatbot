@@ -120,6 +120,13 @@
       "when": 1775134574741,
       "tag": "0016_salty_blue_blade",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1775146231779,
+      "tag": "0017_next_paladin",
+      "breakpoints": true
     }
   ]
 }
