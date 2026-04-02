@@ -65,3 +65,6 @@ certificates
 node-compile-cache/
 tsx-0/
 public/uploads
+
+# git worktrees
+.worktrees/
