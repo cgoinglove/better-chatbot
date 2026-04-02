@@ -146,7 +146,6 @@
     },
     "Thread": {
       "chat": "チャット",
-
       "renameChat": "名前を変更",
       "deleteChat": "チャットを削除",
       "deleteUnarchivedChats": "アーカイブされていないチャットをすべて削除",
@@ -167,7 +166,6 @@
       "linkCopied": "リンクがコピーされました",
       "moveToProject": "プロジェクトに移動"
     },
-
     "ChatPreferences": {
       "title": "チャット設定",
       "whatShouldWeCallYou": "何とお呼びすればよろしいですか？",
@@ -241,7 +239,8 @@
     "joinCommunity": "コミュニティに参加",
     "workflow": "ワークフロー",
     "projects": "プロジェクト",
-    "userSettings": "ユーザー設定"
+    "userSettings": "ユーザー設定",
+    "connectors": "コネクター"
   },
   "Archive": {
     "title": "アーカイブ",

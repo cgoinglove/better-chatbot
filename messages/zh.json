@@ -240,7 +240,8 @@
     "joinCommunity": "加入社区",
     "workflow": "工作流",
     "projects": "项目",
-    "userSettings": "用户设置"
+    "userSettings": "用户设置",
+    "connectors": "连接器"
   },
   "Archive": {
     "title": "归档",

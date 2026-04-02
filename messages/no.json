@@ -382,7 +382,8 @@
     "showLessChats": "Vis færre",
     "reportAnIssue": "Rapporter et problem",
     "joinCommunity": "Bli med i fellesskapet",
-    "userSettings": "Brukerinnstillinger"
+    "userSettings": "Brukerinnstillinger",
+    "connectors": "Koblinger"
   },
   "Archive": {
     "title": "Arkiv",

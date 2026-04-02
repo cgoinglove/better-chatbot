@@ -147,7 +147,6 @@
     },
     "Thread": {
       "chat": "채팅",
-
       "renameChat": "채팅 이름 변경",
       "deleteChat": "채팅 삭제",
       "deleteUnarchivedChats": "아카이브되지 않은 채팅 모두 삭제",
@@ -168,7 +167,6 @@
       "linkCopied": "링크가 복사되었습니다",
       "moveToProject": "프로젝트로 이동"
     },
-
     "ChatPreferences": {
       "title": "채팅 환경설정",
       "whatShouldWeCallYou": "뭐라고 불러드릴까요?",
@@ -256,7 +254,8 @@
     "showLessChats": "간략히 보기",
     "reportAnIssue": "도움 받기",
     "joinCommunity": "커뮤니티 가입",
-    "userSettings": "사용자 설정"
+    "userSettings": "사용자 설정",
+    "connectors": "커넥터"
   },
   "Archive": {
     "title": "아카이브",

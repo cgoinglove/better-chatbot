@@ -382,7 +382,8 @@
     "showLessChats": "Show less",
     "reportAnIssue": "Report an issue",
     "joinCommunity": "Join Community",
-    "userSettings": "User Settings"
+    "userSettings": "User Settings",
+    "connectors": "Connectors"
   },
   "Archive": {
     "title": "Archive",

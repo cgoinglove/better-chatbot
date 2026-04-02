@@ -146,7 +146,6 @@
     },
     "Thread": {
       "chat": "Chat",
-
       "renameChat": "Renombrar",
       "deleteChat": "Eliminar Chat",
       "deleteUnarchivedChats": "Eliminar Todos los Chats No Archivados",
@@ -167,7 +166,6 @@
       "linkCopied": "Enlace copiado",
       "moveToProject": "Mover al proyecto"
     },
-
     "ChatPreferences": {
       "title": "Preferencias de Chat",
       "whatShouldWeCallYou": "¿Cómo deberíamos llamarte?",
@@ -235,14 +233,14 @@
     "theme": "Tema",
     "signOut": "Cerrar sesión",
     "language": "Idioma",
-
     "showAllChats": "Ver Todos los Chats",
     "showLessChats": "Mostrar menos",
     "reportAnIssue": "Reportar un problema",
     "joinCommunity": "Unirse a la Comunidad",
     "workflow": "Flujo de Trabajo",
     "projects": "Proyectos",
-    "userSettings": "Configuración de Usuario"
+    "userSettings": "Configuración de Usuario",
+    "connectors": "Conectores"
   },
   "Archive": {
     "title": "Archivo",
