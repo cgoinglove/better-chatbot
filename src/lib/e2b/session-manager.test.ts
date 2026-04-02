@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import {
   getOrCreateSession,
   refreshSession,
@@ -18,7 +18,6 @@ vi.mock("lib/cache", () => ({
 vi.mock("@e2b/code-interpreter", () => ({
   Sandbox: {
     create: vi.fn().mockResolvedValue({ sandboxId: "sandbox-abc123" }),
-    connect: vi.fn().mockResolvedValue({ sandboxId: "sandbox-abc123" }),
   },
 }));
 
@@ -28,14 +27,15 @@ import { Sandbox } from "@e2b/code-interpreter";
 describe("getOrCreateSession", () => {
   beforeEach(() => vi.clearAllMocks());
 
+  afterEach(() => vi.unstubAllEnvs());
+
   it("creates a new sandbox when no session exists", async () => {
+    vi.stubEnv("E2B_API_KEY", "test-api-key");
     vi.mocked(serverCache.get).mockResolvedValue(undefined);
 
     const sandboxId = await getOrCreateSession("thread-1");
 
-    expect(Sandbox.create).toHaveBeenCalledWith({
-      apiKey: expect.any(String),
-    });
+    expect(Sandbox.create).toHaveBeenCalledWith({ apiKey: "test-api-key" });
     expect(serverCache.set).toHaveBeenCalledWith(
       "e2b:thread-1",
       "sandbox-abc123",
@@ -51,6 +51,16 @@ describe("getOrCreateSession", () => {
 
     expect(Sandbox.create).not.toHaveBeenCalled();
     expect(sandboxId).toBe("sandbox-existing");
+  });
+
+  it("throws when E2B_API_KEY is not set", async () => {
+    vi.stubEnv("E2B_API_KEY", undefined as unknown as string);
+    vi.mocked(serverCache.get).mockResolvedValue(undefined);
+
+    await expect(getOrCreateSession("thread-1")).rejects.toThrow(
+      "E2B_API_KEY environment variable is not set",
+    );
+    expect(Sandbox.create).not.toHaveBeenCalled();
   });
 });
 
