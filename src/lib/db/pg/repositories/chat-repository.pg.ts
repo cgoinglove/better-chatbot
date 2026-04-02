@@ -20,6 +20,7 @@ export const pgChatRepository: ChatRepository = {
         title: thread.title,
         userId: thread.userId,
         id: thread.id,
+        projectId: thread.projectId ?? null,
       })
       .returning();
     return result;

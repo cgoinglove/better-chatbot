@@ -14,14 +14,9 @@ export function NewChatInProjectButton({
 }: NewChatInProjectButtonProps) {
   const router = useRouter();
 
-  const startNewChat = async () => {
+  const startNewChat = () => {
     const threadId = generateUUID();
-    await fetch(`/api/threads/${threadId}/project`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ projectId }),
-    });
-    router.push(`/chat/${threadId}`);
+    router.push(`/chat/${threadId}?projectId=${projectId}`);
   };
 
   return (
