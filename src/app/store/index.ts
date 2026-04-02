@@ -7,6 +7,7 @@ import { WorkflowSummary } from "app-types/workflow";
 import { AppDefaultToolkit } from "lib/ai/tools";
 import { AgentSummary } from "app-types/agent";
 import { ArchiveWithItemCount } from "app-types/archive";
+import type { ArtifactData } from "lib/e2b/types";
 
 export interface UploadedFile {
   id: string;
@@ -65,6 +66,7 @@ export interface AppState {
     };
   };
   pendingThreadMention?: ChatMention;
+  activeArtifact: ArtifactData | null;
 }
 
 export interface AppDispatch {
@@ -108,6 +110,7 @@ const initialState: AppState = {
     },
   },
   pendingThreadMention: undefined,
+  activeArtifact: null,
 };
 
 export const appStore = create<AppState & AppDispatch>()(
