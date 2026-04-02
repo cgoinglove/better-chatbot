@@ -1,6 +1,16 @@
-import { Agent, AgentRepository, AgentSummary } from "app-types/agent";
+import {
+  Agent,
+  AgentFile,
+  AgentRepository,
+  AgentSummary,
+} from "app-types/agent";
 import { pgDb as db } from "../db.pg";
-import { AgentTable, BookmarkTable, UserTable } from "../schema.pg";
+import {
+  AgentTable,
+  AgentFileTable,
+  BookmarkTable,
+  UserTable,
+} from "../schema.pg";
 import { and, desc, eq, ne, or, sql } from "drizzle-orm";
 import { generateUUID } from "lib/utils";
 
@@ -249,5 +259,57 @@ export const pgAgentRepository: AgentRepository = {
     if (userId == agent.userId) return true;
     if (agent.visibility === "public" && !destructive) return true;
     return false;
+  },
+
+  async insertAgentFile(data) {
+    const [result] = await db
+      .insert(AgentFileTable)
+      .values({
+        id: generateUUID(),
+        agentId: data.agentId,
+        userId: data.userId,
+        storageKey: data.storageKey,
+        filename: data.filename,
+        contentType: data.contentType,
+        size: data.size,
+        createdAt: new Date(),
+      })
+      .returning();
+    return result as AgentFile;
+  },
+
+  async selectAgentFiles(agentId) {
+    const result = await db
+      .select()
+      .from(AgentFileTable)
+      .where(eq(AgentFileTable.agentId, agentId))
+      .orderBy(AgentFileTable.createdAt);
+    return result as AgentFile[];
+  },
+
+  async selectAgentFileById(id, agentId, userId) {
+    const [result] = await db
+      .select()
+      .from(AgentFileTable)
+      .where(
+        and(
+          eq(AgentFileTable.id, id),
+          eq(AgentFileTable.agentId, agentId),
+          eq(AgentFileTable.userId, userId),
+        ),
+      );
+    return (result as AgentFile) ?? null;
+  },
+
+  async deleteAgentFile(id, agentId, userId) {
+    await db
+      .delete(AgentFileTable)
+      .where(
+        and(
+          eq(AgentFileTable.id, id),
+          eq(AgentFileTable.agentId, agentId),
+          eq(AgentFileTable.userId, userId),
+        ),
+      );
   },
 };
