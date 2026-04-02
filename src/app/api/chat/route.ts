@@ -236,6 +236,10 @@ export async function POST(request: Request) {
 
     const agent = await rememberAgentAction(agentId, session.user.id);
 
+    const agentFiles = agent?.id
+      ? await agentRepository.selectAgentFiles(agent.id)
+      : [];
+
     if (agent?.instructions?.mentions) {
       mentions.push(...agent.instructions.mentions);
     }
@@ -409,6 +413,34 @@ export async function POST(request: Request) {
             messages[0] = {
               ...messages[0],
               parts: [...validParts, ...(messages[0].parts ?? [])],
+            };
+          }
+        }
+
+        if (agentFiles.length > 0) {
+          const agentFileParts = await Promise.all(
+            agentFiles.map(async (f) => {
+              try {
+                const url = await serverFileStorage.getSourceUrl(f.storageKey);
+                if (!url) return null;
+                return {
+                  type: "file" as const,
+                  url,
+                  mediaType: f.contentType,
+                  filename: f.filename,
+                };
+              } catch {
+                return null;
+              }
+            }),
+          );
+          const validAgentFileParts = agentFileParts.filter(
+            (p): p is NonNullable<typeof p> => p !== null,
+          );
+          if (validAgentFileParts.length > 0 && messages.length > 0) {
+            messages[0] = {
+              ...messages[0],
+              parts: [...validAgentFileParts, ...(messages[0].parts ?? [])],
             };
           }
         }
