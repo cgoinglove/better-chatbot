@@ -8,6 +8,8 @@ import { appStore } from "@/app/store";
 import { useCopy } from "@/hooks/use-copy";
 import type { ArtifactData, ArtifactContentType } from "lib/e2b/types";
 import { MermaidDiagram } from "./mermaid-diagram";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 // Wrap a React/JSX snippet in a full HTML page with CDN deps so it renders in an iframe
 function wrapReactForIframe(code: string): string {
@@ -80,6 +82,18 @@ function CodeTab({ code }: { code: string }) {
 }
 
 function PreviewTab({ artifact }: { artifact: ArtifactData }) {
+  if (artifact.contentType === "markdown" && artifact.stdout) {
+    return (
+      <div className="flex-1 overflow-auto p-6">
+        <div className="prose prose-sm dark:prose-invert max-w-none">
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {artifact.stdout}
+          </ReactMarkdown>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex-1 overflow-auto p-4 space-y-4">
       {artifact.stdout && (

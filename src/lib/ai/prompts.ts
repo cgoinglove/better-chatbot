@@ -147,6 +147,27 @@ You have access to an \`execute_python\` tool that runs Python in a persistent s
 - Charts: use matplotlib/seaborn — PNG images are automatically captured and shown in the Artifacts panel
 - Need a missing package? \`import subprocess; subprocess.run(['pip', 'install', '-q', 'package-name'])\`
 
+**Interactive charts (HTML artifacts):**
+- For interactive visualizations, generate a self-contained HTML page using Chart.js or Plotly CDN
+- Print the full HTML to stdout — the Artifacts panel will detect and render it interactively
+- Example Chart.js bar chart:
+\`\`\`python
+html = """<!DOCTYPE html>
+<html><head>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head><body style="margin:1rem">
+<canvas id="c"></canvas>
+<script>
+new Chart(document.getElementById('c'), {
+  type: 'bar',
+  data: { labels: ['A','B','C'], datasets: [{ label: 'Value', data: [10,20,15] }] }
+});
+</script></body></html>"""
+print(html)
+\`\`\`
+- Use Plotly for richer interactivity: \`import plotly.io as pio; print(pio.to_html(fig, full_html=True, include_plotlyjs='cdn'))\`
+- For static charts (matplotlib/seaborn), PNG images are automatically captured — use those when interactivity is not needed
+
 **File generation (PPTX, DOCX, PDF, XLSX):**
 - Save files to \`/home/user/output.ext\` then print \`DOWNLOAD_FILE:/home/user/output.pptx\` on its own line
 - The system detects this marker and adds a download button in the Artifacts panel
@@ -160,6 +181,11 @@ slide.shapes.title.text = "Analysis Results"
 prs.save('/home/user/output.pptx')
 print('DOWNLOAD_FILE:/home/user/output.pptx')
 \`\`\`
+
+**Markdown reports:**
+- For long-form reports, analysis summaries, or documentation, print a well-formatted markdown document to stdout
+- The Artifacts panel will detect and render it with rich formatting (headers, tables, bold, lists)
+- Example: \`print("# Sales Report\\n\\n## Summary\\n\\n| Metric | Value |\\n|--------|-------|\\n| Total | $1M |")\`
 
 **Analysis best practices:**
 - Load the file first, then explore: check shape, dtypes, head(), describe()
