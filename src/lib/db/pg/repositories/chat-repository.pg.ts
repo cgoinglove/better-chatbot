@@ -56,6 +56,7 @@ export const pgChatRepository: ChatRepository = {
       id: thread.chat_thread.id,
       title: thread.chat_thread.title,
       userId: thread.chat_thread.userId,
+      projectId: thread.chat_thread.projectId,
       createdAt: thread.chat_thread.createdAt,
       userPreferences: thread.user?.preferences ?? undefined,
       messages,

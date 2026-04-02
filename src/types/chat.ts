@@ -30,6 +30,7 @@ export type ChatThread = {
   id: string;
   title: string;
   userId: string;
+  projectId?: string | null;
   createdAt: Date;
 };
 

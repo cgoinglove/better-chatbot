@@ -54,6 +54,8 @@ type Props = {
   threadId: string;
   initialMessages: Array<UIMessage>;
   selectedChatModel?: string;
+  projectId?: string;
+  projectName?: string;
 };
 
 const LightRays = dynamic(() => import("ui/light-rays"), {
@@ -70,7 +72,12 @@ const firstTimeStorage = getStorageManager("IS_FIRST");
 const isFirstTime = firstTimeStorage.get() ?? true;
 firstTimeStorage.set(false);
 
-export default function ChatBot({ threadId, initialMessages }: Props) {
+export default function ChatBot({
+  threadId,
+  initialMessages,
+  projectId: _projectId,
+  projectName,
+}: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isAtBottom, setIsAtBottom] = useState(true);
   const { uploadFiles } = useThreadFileUploader(threadId);
@@ -421,6 +428,14 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
               <span className="text-sm text-muted-foreground">
                 Drop files to upload
               </span>
+            </div>
+          </div>
+        )}
+        {projectName && (
+          <div className="w-full max-w-3xl mx-auto px-6 pt-2 z-20">
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs text-primary">
+              <span className="font-medium">Project:</span>
+              <span>{projectName}</span>
             </div>
           </div>
         )}

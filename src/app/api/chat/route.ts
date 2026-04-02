@@ -13,7 +13,11 @@ import { customModelProvider, isToolCallUnsupportedModel } from "lib/ai/models";
 
 import { mcpClientsManager } from "lib/ai/mcp/mcp-manager";
 
-import { agentRepository, chatRepository } from "lib/db/repository";
+import {
+  agentRepository,
+  chatRepository,
+  projectRepository,
+} from "lib/db/repository";
 import globalLogger from "logger";
 import {
   buildMcpServerCustomizationsSystemPrompt,
@@ -96,6 +100,17 @@ export async function POST(request: Request) {
     if (thread!.userId !== session.user.id) {
       return new Response("Forbidden", { status: 403 });
     }
+
+    const projectContext = thread?.projectId
+      ? await projectRepository.selectProjectById(
+          thread.projectId,
+          session.user.id,
+        )
+      : null;
+
+    const projectFiles = projectContext
+      ? await projectRepository.selectProjectFiles(thread!.projectId!)
+      : [];
 
     const messages: UIMessage[] = (thread?.messages ?? []).map((m) => {
       return {
@@ -289,6 +304,12 @@ export async function POST(request: Request) {
           buildUserSystemPrompt(session.user, userPreferences, agent),
           buildMcpServerCustomizationsSystemPrompt(mcpServerCustomizations),
           !supportToolCall && buildToolCallUnsupportedModelSystemPrompt,
+          projectContext?.instructions
+            ? `Project instructions:\n${projectContext.instructions}`
+            : false,
+          projectContext?.memory
+            ? `Project memory (key facts from prior conversations):\n${projectContext.memory}`
+            : false,
         );
 
         const IMAGE_TOOL: Record<string, Tool> = useImageTool
@@ -337,6 +358,34 @@ export async function POST(request: Request) {
           );
         }
         logger.info(`model: ${chatModel?.provider}/${chatModel?.model}`);
+
+        if (projectFiles.length > 0) {
+          const projectFileParts = await Promise.all(
+            projectFiles.map(async (f) => {
+              try {
+                const url = await serverFileStorage.getSourceUrl(f.storageKey);
+                if (!url) return null;
+                return {
+                  type: "file" as const,
+                  url,
+                  mediaType: f.contentType,
+                  filename: f.filename,
+                };
+              } catch {
+                return null;
+              }
+            }),
+          );
+          const validParts = projectFileParts.filter(
+            (p): p is NonNullable<typeof p> => p !== null,
+          );
+          if (validParts.length > 0 && messages.length > 0) {
+            messages[0] = {
+              ...messages[0],
+              parts: [...validParts, ...(messages[0].parts ?? [])],
+            };
+          }
+        }
 
         const result = streamText({
           model,
@@ -391,6 +440,39 @@ export async function POST(request: Request) {
           agentRepository.updateAgent(agent.id, session.user.id, {
             updatedAt: new Date(),
           } as any);
+        }
+
+        if (
+          projectContext &&
+          responseMessage.parts.some((p) => p.type === "text")
+        ) {
+          void (async () => {
+            try {
+              const lastExchange = messages.slice(-2).map((m) => ({
+                role: m.role,
+                text: (m.parts ?? [])
+                  .filter((p) => p.type === "text")
+                  .map((p) => (p as { type: "text"; text: string }).text)
+                  .join(""),
+              }));
+
+              const { generateText } = await import("ai");
+              const { text: newMemory } = await generateText({
+                model,
+                system: `You maintain a project memory. Given the existing memory and a new conversation exchange, update the memory to include any new facts, decisions, or context worth remembering. Keep the total under 500 words. Return ONLY the updated memory text.`,
+                prompt: `Existing memory:\n${projectContext.memory || "(none)"}\n\nNew exchange:\n${lastExchange.map((m) => `${m.role}: ${m.text}`).join("\n\n")}`,
+                maxOutputTokens: 600,
+              });
+
+              await projectRepository.updateProjectMemory(
+                projectContext.id,
+                session.user.id,
+                newMemory,
+              );
+            } catch (err) {
+              logger.error("Project memory update failed:", err);
+            }
+          })();
         }
       },
       onError: handleError,
