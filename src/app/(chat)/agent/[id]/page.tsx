@@ -17,7 +17,7 @@ export default async function AgentPage({
 
   // For new agents, pass no initial data
   if (id === "new") {
-    return <EditAgent userId={session.user.id} />;
+    return <EditAgent userId={session.user.id} initialFiles={[]} />;
   }
 
   // Fetch the agent data on the server
@@ -30,6 +30,10 @@ export default async function AgentPage({
   const isOwner = agent.userId === session.user.id;
   const hasEditAccess = isOwner || agent.visibility === "public";
 
+  const initialFiles = isOwner
+    ? await agentRepository.selectAgentFiles(id)
+    : [];
+
   return (
     <EditAgent
       key={id}
@@ -38,6 +42,7 @@ export default async function AgentPage({
       isOwner={isOwner}
       hasEditAccess={hasEditAccess}
       isBookmarked={agent.isBookmarked || false}
+      initialFiles={initialFiles}
     />
   );
 }

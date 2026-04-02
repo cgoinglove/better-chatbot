@@ -41,6 +41,8 @@ import {
   WeatherExample,
 } from "lib/ai/agent/example";
 import { notify } from "lib/notify";
+import { AgentFilesPanel } from "./agent-files-panel";
+import type { AgentFile } from "app-types/agent";
 
 const defaultConfig = (): PartialBy<
   Omit<Agent, "createdAt" | "updatedAt" | "userId">,
@@ -72,6 +74,7 @@ interface EditAgentProps {
   isOwner?: boolean;
   hasEditAccess?: boolean;
   isBookmarked?: boolean;
+  initialFiles?: AgentFile[];
 }
 
 export default function EditAgent({
@@ -79,6 +82,7 @@ export default function EditAgent({
   userId,
   isOwner = true,
   hasEditAccess = true,
+  initialFiles = [],
 }: EditAgentProps) {
   const t = useTranslations();
   const mutateAgents = useMutateAgents();
@@ -528,6 +532,20 @@ export default function EditAgent({
               />
             )}
           </div>
+
+          {initialAgent && isOwner && (
+            <div className="flex flex-col gap-2">
+              <Label className="text-base">Agent Files</Label>
+              <p className="text-xs text-muted-foreground">
+                Files uploaded here are provided to the agent as context in
+                every chat.
+              </p>
+              <AgentFilesPanel
+                agentId={initialAgent.id}
+                initialFiles={initialFiles}
+              />
+            </div>
+          )}
         </div>
 
         {hasEditAccess && (
