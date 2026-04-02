@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import type { Lead, LeadStatus } from "app-types/platform";
 
 type PipelineData = {
@@ -110,7 +110,10 @@ export default function SalesDashboardPage() {
   }
 
   const totalLeads = pipeline
-    ? (Object.values(pipeline.leadCounts) as number[]).reduce((sum: number, c: number) => sum + c, 0)
+    ? (Object.values(pipeline.leadCounts) as number[]).reduce(
+        (sum: number, c: number) => sum + c,
+        0,
+      )
     : 0;
   const wonCount = pipeline?.leadCounts.won ?? 0;
   const lostCount = pipeline?.leadCounts.lost ?? 0;
@@ -124,10 +127,7 @@ export default function SalesDashboardPage() {
     "negotiation",
   ];
   const activeLeads = pipeline
-    ? activeStatuses.reduce(
-        (sum, s) => sum + (pipeline.leadCounts[s] ?? 0),
-        0,
-      )
+    ? activeStatuses.reduce((sum, s) => sum + (pipeline.leadCounts[s] ?? 0), 0)
     : 0;
   const winRate =
     activeLeads + closedCount > 0
@@ -144,10 +144,7 @@ export default function SalesDashboardPage() {
     "won",
   ];
   const maxCount = pipeline
-    ? Math.max(
-        ...funnelStatuses.map((s) => pipeline.leadCounts[s] ?? 0),
-        1,
-      )
+    ? Math.max(...funnelStatuses.map((s) => pipeline.leadCounts[s] ?? 0), 1)
     : 1;
 
   return (

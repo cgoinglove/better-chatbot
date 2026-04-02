@@ -476,6 +476,47 @@ export type ArchiveEntity = typeof ArchiveTable.$inferSelect;
 export type ArchiveItemEntity = typeof ArchiveItemTable.$inferSelect;
 export type BookmarkEntity = typeof BookmarkTable.$inferSelect;
 
+export const ChatExportTable = pgTable("chat_export", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  title: text("title").notNull(),
+  exporterId: uuid("exporter_id")
+    .notNull()
+    .references(() => UserTable.id, { onDelete: "cascade" }),
+  originalThreadId: uuid("original_thread_id"),
+  messages: json("messages").notNull().$type<
+    Array<{
+      id: string;
+      role: UIMessage["role"];
+      parts: UIMessage["parts"];
+      metadata?: ChatMetadata;
+    }>
+  >(),
+  exportedAt: timestamp("exported_at")
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
+  expiresAt: timestamp("expires_at"),
+});
+
+export const ChatExportCommentTable = pgTable("chat_export_comment", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  exportId: uuid("export_id")
+    .notNull()
+    .references(() => ChatExportTable.id, { onDelete: "cascade" }),
+  authorId: uuid("author_id")
+    .notNull()
+    .references(() => UserTable.id, { onDelete: "cascade" }),
+  parentId: uuid("parent_id").references(() => ChatExportCommentTable.id, {
+    onDelete: "cascade",
+  }),
+  content: json("content").notNull().$type<TipTapMentionJsonContent>(),
+  createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+
+export type ChatExportEntity = typeof ChatExportTable.$inferSelect;
+export type ChatExportCommentEntity =
+  typeof ChatExportCommentTable.$inferSelect;
+
 // ============================================================================
 // PLATFORM TABLES
 // ============================================================================

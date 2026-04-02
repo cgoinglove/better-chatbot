@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import type { Lead, LeadStatus } from "app-types/platform";
 
 type LeadsResponse = {
@@ -98,7 +98,10 @@ export default function PipelinePage() {
   return (
     <div className="h-full flex flex-col">
       <div className="flex-1 overflow-x-auto">
-        <div className="inline-flex gap-4 min-w-full pb-4" style={{ minHeight: "calc(100vh - 200px)" }}>
+        <div
+          className="inline-flex gap-4 min-w-full pb-4"
+          style={{ minHeight: "calc(100vh - 200px)" }}
+        >
           {PIPELINE_STATUSES.map((status) => {
             const columnLeads = groupedLeads[status] || [];
             const totalValue = columnLeads.reduce(

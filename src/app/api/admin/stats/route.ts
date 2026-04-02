@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { pgDb } from "lib/db/pg/db.pg";
 import {
-  UserSchema,
-  SessionSchema,
+  UserTable,
+  SessionTable,
   LeadSchema,
   UsageRecordSchema,
   ConnectorSchema,
@@ -22,17 +22,18 @@ export async function GET() {
       aiRequestsResult,
       connectorsResult,
     ] = await Promise.all([
-      pgDb.select({ count: count() }).from(UserSchema),
+      pgDb.select({ count: count() }).from(UserTable),
       pgDb
         .select({ count: count() })
-        .from(SessionSchema)
-        .where(gte(SessionSchema.expiresAt, now)),
+        .from(SessionTable)
+        .where(gte(SessionTable.expiresAt, now)),
       pgDb.select({ count: count() }).from(LeadSchema),
       pgDb
         .select({
-          total: sql<number>`COALESCE(SUM(CAST(${LeadSchema.estimatedValue} AS numeric)), 0)`.mapWith(
-            Number
-          ),
+          total:
+            sql<number>`COALESCE(SUM(CAST(${LeadSchema.estimatedValue} AS numeric)), 0)`.mapWith(
+              Number,
+            ),
         })
         .from(LeadSchema),
       pgDb
@@ -41,8 +42,8 @@ export async function GET() {
         .where(
           and(
             eq(UsageRecordSchema.resourceType, "ai-requests"),
-            gte(UsageRecordSchema.recordedAt, monthStart)
-          )
+            gte(UsageRecordSchema.recordedAt, monthStart),
+          ),
         ),
       pgDb.select({ count: count() }).from(ConnectorSchema),
     ]);
@@ -57,10 +58,10 @@ export async function GET() {
         totalConnectors: connectorsResult[0]?.count ?? 0,
       },
     });
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json(
       { error: "Failed to fetch stats" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

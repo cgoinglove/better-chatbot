@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { ConfigurableAgent, AgentToolConfig } from "app-types/platform";
 
 const MODEL_OPTIONS = [
@@ -106,9 +106,7 @@ export default function AgentsPage() {
 
       if (res.ok) {
         const updated: ConfigurableAgent = await res.json();
-        setAgents((prev) =>
-          prev.map((a) => (a.id === agentId ? updated : a)),
-        );
+        setAgents((prev) => prev.map((a) => (a.id === agentId ? updated : a)));
       }
     } catch (error) {
       console.error("Failed to save agent:", error);
@@ -216,9 +214,7 @@ export default function AgentsPage() {
 
                 {/* Configure Button */}
                 <button
-                  onClick={() =>
-                    setExpandedId(isExpanded ? null : agent.id)
-                  }
+                  onClick={() => setExpandedId(isExpanded ? null : agent.id)}
                   className="mt-4 text-sm text-blue-400 hover:text-blue-300 font-medium transition-colors"
                 >
                   {isExpanded ? "Close Configuration" : "Configure"}

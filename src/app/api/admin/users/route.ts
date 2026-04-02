@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { pgDb } from "lib/db/pg/db.pg";
-import { UserSchema } from "lib/db/pg/schema.pg";
+import { UserTable } from "lib/db/pg/schema.pg";
 import { desc, count, like, or } from "drizzle-orm";
 
 export async function GET(req: NextRequest) {
@@ -13,31 +13,28 @@ export async function GET(req: NextRequest) {
   try {
     const conditions = search
       ? or(
-          like(UserSchema.name, `%${search}%`),
-          like(UserSchema.email, `%${search}%`)
+          like(UserTable.name, `%${search}%`),
+          like(UserTable.email, `%${search}%`),
         )
       : undefined;
 
     const [users, totalResult] = await Promise.all([
       pgDb
         .select({
-          id: UserSchema.id,
-          name: UserSchema.name,
-          email: UserSchema.email,
-          emailVerified: UserSchema.emailVerified,
-          image: UserSchema.image,
-          createdAt: UserSchema.createdAt,
-          updatedAt: UserSchema.updatedAt,
+          id: UserTable.id,
+          name: UserTable.name,
+          email: UserTable.email,
+          emailVerified: UserTable.emailVerified,
+          image: UserTable.image,
+          createdAt: UserTable.createdAt,
+          updatedAt: UserTable.updatedAt,
         })
-        .from(UserSchema)
+        .from(UserTable)
         .where(conditions)
-        .orderBy(desc(UserSchema.createdAt))
+        .orderBy(desc(UserTable.createdAt))
         .limit(limit)
         .offset(offset),
-      pgDb
-        .select({ count: count() })
-        .from(UserSchema)
-        .where(conditions),
+      pgDb.select({ count: count() }).from(UserTable).where(conditions),
     ]);
 
     return NextResponse.json({
@@ -49,10 +46,10 @@ export async function GET(req: NextRequest) {
         totalPages: Math.ceil((totalResult[0]?.count ?? 0) / limit),
       },
     });
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json(
       { error: "Failed to fetch users" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

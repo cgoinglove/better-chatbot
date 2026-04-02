@@ -1,11 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2017",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -29,27 +25,13 @@
       }
     ],
     "paths": {
-      "ui/*": [
-        "./src/components/ui/*"
-      ],
-      "auth/*": [
-        "./src/lib/auth/*"
-      ],
-      "app-types/*": [
-        "./src/types/*"
-      ],
-      "logger": [
-        "./src/lib/logger.ts"
-      ],
-      "lib/*": [
-        "./src/lib/*"
-      ],
-      "load-env": [
-        "./src/lib/load-env.ts"
-      ],
-      "@/*": [
-        "./src/*"
-      ]
+      "ui/*": ["./src/components/ui/*"],
+      "auth/*": ["./src/lib/auth/*"],
+      "app-types/*": ["./src/types/*"],
+      "logger": ["./src/lib/logger.ts"],
+      "lib/*": ["./src/lib/*"],
+      "load-env": ["./src/lib/load-env.ts"],
+      "@/*": ["./src/*"]
     }
   },
   "include": [
@@ -64,7 +46,5 @@
     "tests/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],
-  "exclude": [
-    "node_modules"
-  ]
+  "exclude": ["node_modules"]
 }
