@@ -1,46 +1,89 @@
-import type { ReactNode } from "react";
-import type { Project } from "app-types/project";
+"use client";
+import { useRouter } from "next/navigation";
+import { FolderIcon, MoreHorizontalIcon } from "lucide-react";
+import { Button } from "ui/button";
+import type { Project, ProjectFile } from "app-types/project";
 import type { ChatThread } from "app-types/chat";
 import { ProjectChatList } from "./project-chat-list";
 import { ProjectSidebar } from "./project-sidebar";
+import { NewChatInProjectButton } from "./new-chat-in-project-button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "ui/dropdown-menu";
+import { toast } from "sonner";
 
 interface ProjectDetailProps {
   project: Project;
+  files: ProjectFile[];
   threads: ChatThread[];
-  filesPanel: ReactNode;
 }
 
-export function ProjectDetail({
-  project,
-  threads,
-  filesPanel,
-}: ProjectDetailProps) {
+export function ProjectDetail({ project, files, threads }: ProjectDetailProps) {
+  const router = useRouter();
+
+  const handleDelete = async () => {
+    if (!confirm(`Delete "${project.name}"? This cannot be undone.`)) return;
+    try {
+      const res = await fetch(`/api/projects/${project.id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error();
+      toast.success("Project deleted");
+      router.push("/projects");
+    } catch {
+      toast.error("Failed to delete project");
+    }
+  };
+
   return (
-    <div className="flex h-full overflow-hidden">
-      {/* Center: chat list */}
-      <main className="flex-1 flex flex-col min-w-0 p-6 overflow-y-auto">
-        <div className="max-w-2xl mx-auto w-full flex flex-col gap-6">
-          <div className="flex flex-col gap-1">
-            <h1 className="text-2xl font-bold">{project.name}</h1>
-            {project.description && (
-              <p className="text-muted-foreground text-sm">
-                {project.description}
-              </p>
-            )}
+    <div className="flex flex-1 overflow-hidden">
+      {/* Center column */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="p-6 border-b border-border/60">
+          <div className="flex items-center gap-3 mb-4">
+            <h1 className="text-2xl font-bold flex items-center gap-2">
+              <FolderIcon className="size-6 text-blue-400" />
+              {project.name}
+            </h1>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="size-7">
+                  <MoreHorizontalIcon className="size-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                <DropdownMenuItem
+                  onClick={handleDelete}
+                  className="text-destructive focus:text-destructive"
+                >
+                  Delete project
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
+
+          {project.description && (
+            <p className="text-sm text-muted-foreground mb-4">
+              {project.description}
+            </p>
+          )}
+
+          <NewChatInProjectButton
+            projectId={project.id}
+            projectName={project.name}
+          />
+        </div>
+
+        <div className="flex-1 overflow-y-auto">
           <ProjectChatList threads={threads} projectId={project.id} />
         </div>
-      </main>
+      </div>
 
       {/* Right sidebar */}
-      <div className="w-72 shrink-0">
-        <ProjectSidebar
-          projectId={project.id}
-          memory={project.memory}
-          instructions={project.instructions}
-          filesPanel={filesPanel}
-        />
-      </div>
+      <ProjectSidebar project={project} files={files} />
     </div>
   );
 }

@@ -1,31 +1,25 @@
-import type { ReactNode } from "react";
 import { ProjectMemoryPanel } from "./project-memory-panel";
 import { ProjectInstructionsPanel } from "./project-instructions-panel";
+import { ProjectFilesPanel } from "./project-files-panel";
 import { Separator } from "ui/separator";
+import type { Project, ProjectFile } from "app-types/project";
 
 interface ProjectSidebarProps {
-  projectId: string;
-  memory: string | null;
-  instructions: string | null;
-  filesPanel: ReactNode;
+  project: Project;
+  files: ProjectFile[];
 }
 
-export function ProjectSidebar({
-  projectId,
-  memory,
-  instructions,
-  filesPanel,
-}: ProjectSidebarProps) {
+export function ProjectSidebar({ project, files }: ProjectSidebarProps) {
   return (
-    <aside className="flex flex-col gap-4 p-4 border-l border-border/50 h-full overflow-y-auto">
-      <ProjectMemoryPanel projectId={projectId} memory={memory} />
+    <aside className="w-72 shrink-0 border-l border-border/60 bg-sidebar p-4 flex flex-col gap-4 overflow-y-auto">
+      <ProjectMemoryPanel projectId={project.id} memory={project.memory} />
       <Separator />
       <ProjectInstructionsPanel
-        projectId={projectId}
-        instructions={instructions}
+        projectId={project.id}
+        instructions={project.instructions}
       />
       <Separator />
-      {filesPanel}
+      <ProjectFilesPanel projectId={project.id} initialFiles={files} />
     </aside>
   );
 }
