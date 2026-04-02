@@ -240,7 +240,8 @@
     "workflow": "ワークフロー",
     "projects": "プロジェクト",
     "userSettings": "ユーザー設定",
-    "connectors": "コネクター"
+    "connectors": "コネクター",
+    "customize": "カスタマイズ"
   },
   "Archive": {
     "title": "アーカイブ",

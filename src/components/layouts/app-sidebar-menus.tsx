@@ -23,6 +23,7 @@ import {
   FolderOpenIcon,
   FolderSearchIcon,
   PlusIcon,
+  SlidersHorizontalIcon,
   Waypoints,
 } from "lucide-react";
 import { useCallback, useState } from "react";
@@ -87,7 +88,7 @@ export function AppSidebarMenus({ user }: { user?: BasicUser }) {
                   isActive={pathname.startsWith("/projects")}
                   className="font-semibold"
                 >
-                  <FolderIcon className="size-4" />
+                  <FolderIcon className="size-4 text-yale-blue" />
                   {t("Layout.projects")}
                 </SidebarMenuButton>
               </Link>
@@ -101,6 +102,21 @@ export function AppSidebarMenus({ user }: { user?: BasicUser }) {
                 <SidebarMenuButton className="font-semibold">
                   <Waypoints className="size-4" />
                   {t("Layout.workflow")}
+                </SidebarMenuButton>
+              </Link>
+            </SidebarMenuItem>
+          </Tooltip>
+        </SidebarMenu>
+        <SidebarMenu>
+          <Tooltip>
+            <SidebarMenuItem>
+              <Link href="/customize">
+                <SidebarMenuButton
+                  isActive={pathname.startsWith("/customize")}
+                  className="font-semibold"
+                >
+                  <SlidersHorizontalIcon className="size-4" />
+                  {t("Layout.customize")}
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
@@ -173,7 +189,7 @@ export function AppSidebarMenus({ user }: { user?: BasicUser }) {
         <SidebarMenu>
           <Tooltip>
             <SidebarMenuItem>
-              <Link href="/mcp">
+              <Link href="/customize?tab=connectors">
                 <SidebarMenuButton className="font-semibold">
                   <MCPIcon className="size-4 fill-accent-foreground" />
                   {t("Layout.connectors")}

@@ -240,7 +240,8 @@
     "workflow": "Flux de Travail",
     "projects": "Projets",
     "userSettings": "Paramètres Utilisateur",
-    "connectors": "Connecteurs"
+    "connectors": "Connecteurs",
+    "customize": "Personnaliser"
   },
   "Archive": {
     "title": "Archive",

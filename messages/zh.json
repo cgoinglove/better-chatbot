@@ -241,7 +241,8 @@
     "workflow": "工作流",
     "projects": "项目",
     "userSettings": "用户设置",
-    "connectors": "连接器"
+    "connectors": "连接器",
+    "customize": "自定义"
   },
   "Archive": {
     "title": "归档",
