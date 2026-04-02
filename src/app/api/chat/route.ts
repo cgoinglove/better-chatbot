@@ -51,6 +51,7 @@ import { nanoBananaTool, openaiImageTool } from "lib/ai/tools/image";
 import { ImageToolName } from "lib/ai/tools";
 import { buildCsvIngestionPreviewParts } from "@/lib/ai/ingest/csv-ingest";
 import { serverFileStorage } from "lib/file-storage";
+import { createExecutePythonTool } from "lib/ai/tools/code/execute-python-server";
 
 const logger = globalLogger.withDefaults({
   message: colorize("blackBright", `Chat API: `),
@@ -195,6 +196,10 @@ export async function POST(request: Request) {
       (toolChoice != "none" || mentions.length > 0) &&
       !useImageTool;
 
+    const EXECUTE_PYTHON_TOOL: Record<string, Tool> = isToolCallAllowed
+      ? { execute_python: createExecutePythonTool(thread!.id) }
+      : {};
+
     const metadata: ChatMetadata = {
       agentId: agent?.id,
       toolChoice: toolChoice,
@@ -328,7 +333,7 @@ export async function POST(request: Request) {
           messages: convertToModelMessages(messages),
           experimental_transform: smoothStream({ chunking: "word" }),
           maxRetries: 2,
-          tools: vercelAITooles,
+          tools: { ...EXECUTE_PYTHON_TOOL, ...vercelAITooles },
           stopWhen: stepCountIs(10),
           toolChoice: "auto",
           abortSignal: request.signal,

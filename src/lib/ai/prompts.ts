@@ -129,6 +129,18 @@ ${userPreferences.responseStyleExample}
 </communication_preferences>`;
   }
 
+  prompt += `
+
+<data_analysis_capabilities>
+You have access to an \`execute_python\` tool that runs Python in a persistent server-side sandbox (E2B).
+- Use it whenever the user uploads a file (Excel, CSV) or asks for data analysis, calculations, or charts.
+- The sandbox has pandas, openpyxl, matplotlib, seaborn, numpy, and scipy pre-installed.
+- When a file is attached, pass its URL as \`fileUrl\` and its filename as \`fileName\`. The file will be at \`/home/user/{fileName}\` in the sandbox.
+- Variables, imports, and loaded DataFrames persist across all messages in this conversation.
+- For charts, use matplotlib — images are automatically captured and displayed.
+Example: df = pd.read_excel('/home/user/sales.xlsx', sheet_name='Q1')
+</data_analysis_capabilities>`;
+
   return prompt.trim();
 };
 
