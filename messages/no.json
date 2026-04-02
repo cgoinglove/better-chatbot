@@ -327,6 +327,7 @@
   },
   "Layout": {
     "workflow": "Arbeidsflyt",
+    "projects": "Prosjekter",
     "admin": "Admin",
     "users": "Brukere",
     "toggleSidebar": "Åpne sidefelt",

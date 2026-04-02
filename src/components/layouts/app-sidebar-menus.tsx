@@ -14,11 +14,12 @@ import { SidebarGroupContent } from "ui/sidebar";
 import { SidebarGroup } from "ui/sidebar";
 import Link from "next/link";
 import { getShortcutKeyList, Shortcuts } from "lib/keyboard-shortcuts";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { MCPIcon } from "ui/mcp-icon";
 import { WriteIcon } from "ui/write-icon";
 import {
+  FolderIcon,
   FolderOpenIcon,
   FolderSearchIcon,
   PlusIcon,
@@ -34,6 +35,7 @@ import { AppSidebarAdmin } from "./app-sidebar-menu-admin";
 
 export function AppSidebarMenus({ user }: { user?: BasicUser }) {
   const router = useRouter();
+  const pathname = usePathname();
   const t = useTranslations("");
   const { setOpenMobile } = useSidebar();
   const [expandedArchive, setExpandedArchive] = useState(false);
@@ -96,6 +98,21 @@ export function AppSidebarMenus({ user }: { user?: BasicUser }) {
                 <SidebarMenuButton className="font-semibold">
                   <Waypoints className="size-4" />
                   {t("Layout.workflow")}
+                </SidebarMenuButton>
+              </Link>
+            </SidebarMenuItem>
+          </Tooltip>
+        </SidebarMenu>
+        <SidebarMenu>
+          <Tooltip>
+            <SidebarMenuItem>
+              <Link href="/projects">
+                <SidebarMenuButton
+                  isActive={pathname.startsWith("/projects")}
+                  className="font-semibold"
+                >
+                  <FolderIcon className="size-4" />
+                  {t("Layout.projects")}
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>

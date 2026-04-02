@@ -327,6 +327,7 @@
   },
   "Layout": {
     "workflow": "Workflow",
+    "projects": "Projects",
     "admin": "Admin",
     "users": "Users",
     "toggleSidebar": "Toggle Sidebar",

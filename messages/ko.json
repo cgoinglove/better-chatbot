@@ -208,6 +208,7 @@
   },
   "Layout": {
     "workflow": "워크플로우",
+    "projects": "프로젝트",
     "toggleSidebar": "사이드바 토글",
     "newChat": "새 채팅",
     "mcpConfiguration": "MCP 설정",
