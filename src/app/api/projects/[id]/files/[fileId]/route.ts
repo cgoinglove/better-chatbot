@@ -23,8 +23,8 @@ export async function DELETE(
   );
   if (!file) return new Response("Not Found", { status: 404 });
 
-  await serverFileStorage.delete(file.storageKey);
   await projectRepository.deleteProjectFile(fileId, projectId, session.user.id);
+  await serverFileStorage.delete(file.storageKey);
 
   return new Response(null, { status: 204 });
 }
