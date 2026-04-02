@@ -5,8 +5,8 @@ import {
   ProjectSummary,
 } from "app-types/project";
 import { pgDb as db } from "../db.pg";
-import { ProjectTable, ProjectFileTable, ChatThreadTable } from "../schema.pg";
-import { and, eq, count, desc } from "drizzle-orm";
+import { ProjectTable, ProjectFileTable } from "../schema.pg";
+import { and, eq, desc, sql } from "drizzle-orm";
 import { generateUUID } from "lib/utils";
 
 export const pgProjectRepository: ProjectRepository = {
@@ -42,17 +42,17 @@ export const pgProjectRepository: ProjectRepository = {
         name: ProjectTable.name,
         description: ProjectTable.description,
         updatedAt: ProjectTable.updatedAt,
-        fileCount: count(ProjectFileTable.id),
-        threadCount: count(ChatThreadTable.id),
+        fileCount: sql<number>`(
+          SELECT COUNT(*) FROM project_file
+          WHERE project_file.project_id = ${ProjectTable.id}
+        )`,
+        threadCount: sql<number>`(
+          SELECT COUNT(*) FROM chat_thread
+          WHERE chat_thread.project_id = ${ProjectTable.id}
+        )`,
       })
       .from(ProjectTable)
-      .leftJoin(
-        ProjectFileTable,
-        eq(ProjectTable.id, ProjectFileTable.projectId),
-      )
-      .leftJoin(ChatThreadTable, eq(ProjectTable.id, ChatThreadTable.projectId))
       .where(eq(ProjectTable.userId, userId))
-      .groupBy(ProjectTable.id)
       .orderBy(desc(ProjectTable.updatedAt));
 
     return result.map((row) => ({
