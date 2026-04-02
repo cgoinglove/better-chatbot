@@ -72,6 +72,17 @@ export type Agent = AgentSummary & {
   instructions: z.infer<typeof AgentInstructionsSchema>;
 };
 
+export interface AgentFile {
+  id: string;
+  agentId: string;
+  userId: string;
+  storageKey: string;
+  filename: string;
+  contentType: string;
+  size: number;
+  createdAt: Date;
+}
+
 export type AgentRepository = {
   insertAgent(agent: z.infer<typeof AgentCreateSchema>): Promise<Agent>;
 
@@ -98,6 +109,20 @@ export type AgentRepository = {
     userId: string,
     destructive?: boolean,
   ): Promise<boolean>;
+
+  insertAgentFile(
+    data: Omit<AgentFile, "id" | "createdAt">,
+  ): Promise<AgentFile>;
+
+  selectAgentFiles(agentId: string): Promise<AgentFile[]>;
+
+  selectAgentFileById(
+    id: string,
+    agentId: string,
+    userId: string,
+  ): Promise<AgentFile | null>;
+
+  deleteAgentFile(id: string, agentId: string, userId: string): Promise<void>;
 };
 
 export const AgentGenerateSchema = z.object({
