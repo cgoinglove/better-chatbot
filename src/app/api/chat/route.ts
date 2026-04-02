@@ -50,6 +50,7 @@ import { generateUUID } from "lib/utils";
 import { nanoBananaTool, openaiImageTool } from "lib/ai/tools/image";
 import { ImageToolName } from "lib/ai/tools";
 import { buildCsvIngestionPreviewParts } from "@/lib/ai/ingest/csv-ingest";
+import { buildExcelIngestionPreviewParts } from "@/lib/ai/ingest/excel-ingest";
 import { serverFileStorage } from "lib/file-storage";
 import { createExecutePythonTool } from "lib/ai/tools/code/execute-python-server";
 
@@ -108,11 +109,21 @@ export async function POST(request: Request) {
     if (messages.at(-1)?.id == message.id) {
       messages.pop();
     }
-    const ingestionPreviewParts = await buildCsvIngestionPreviewParts(
-      attachments,
-      (key) => serverFileStorage.download(key),
-    );
-    if (ingestionPreviewParts.length) {
+    const [ingestionPreviewParts, excelIngestionPreviewParts] =
+      await Promise.all([
+        buildCsvIngestionPreviewParts(attachments, (key) =>
+          serverFileStorage.download(key),
+        ),
+        buildExcelIngestionPreviewParts(attachments, (key) =>
+          serverFileStorage.download(key),
+        ),
+      ]);
+    const allIngestionParts = [
+      ...ingestionPreviewParts,
+      ...excelIngestionPreviewParts,
+    ];
+
+    if (allIngestionParts.length) {
       const baseParts = [...message.parts];
       let insertionIndex = -1;
       for (let i = baseParts.length - 1; i >= 0; i -= 1) {
@@ -122,10 +133,10 @@ export async function POST(request: Request) {
         }
       }
       if (insertionIndex !== -1) {
-        baseParts.splice(insertionIndex, 0, ...ingestionPreviewParts);
+        baseParts.splice(insertionIndex, 0, ...allIngestionParts);
         message.parts = baseParts;
       } else {
-        message.parts = [...baseParts, ...ingestionPreviewParts];
+        message.parts = [...baseParts, ...allIngestionParts];
       }
     }
 
