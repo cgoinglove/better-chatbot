@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, Circle, Clock, Lightbulb, Zap } from "lucide-react";
+import { CheckCircle2, Clock, Lightbulb, Zap } from "lucide-react";
 
 type FeatureStatus = "shipped" | "in-progress" | "planned" | "backlog";
 
