@@ -37,6 +37,9 @@ import { pgSalesIntelligenceRepository } from "./pg/repositories/sales-intellige
 
 export const salesIntelligenceRepository = pgSalesIntelligenceRepository;
 
+import { pgProjectRepository } from "./pg/repositories/project-repository.pg";
+export const projectRepository = pgProjectRepository;
+
 import { pgRBACRepository } from "./pg/repositories/rbac-repository.pg";
 import { pgKnowledgeRepository } from "./pg/repositories/knowledge-repository.pg";
 import { pgCompanyIntelligenceRepository } from "./pg/repositories/company-intelligence-repository.pg";
@@ -52,4 +55,3 @@ export const industryRepository = pgIndustryRepository;
 export const prospectingRepository = pgProspectingRepository;
 export const contactIntelligenceRepository = pgContactIntelligenceRepository;
 export const stateResearchRepository = pgStateResearchRepository;
-
