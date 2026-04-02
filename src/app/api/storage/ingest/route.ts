@@ -1,12 +1,16 @@
 import { NextResponse } from "next/server";
 import { serverFileStorage } from "lib/file-storage";
 import { parseCsvPreview, formatCsvPreviewText } from "lib/file-ingest/csv";
+import {
+  parseExcelPreview,
+  formatExcelPreviewText,
+} from "lib/file-ingest/excel";
 import { storageKeyFromUrl } from "lib/file-storage/storage-utils";
 
 type Body = {
-  key?: string; // storage key (preferred)
-  url?: string; // will be converted to key if possible
-  type?: "csv" | "auto";
+  key?: string;
+  url?: string;
+  type?: "csv" | "excel" | "auto";
   maxRows?: number;
   maxCols?: number;
 };
@@ -27,31 +31,40 @@ export async function POST(req: Request) {
     );
   }
 
-  // Infer type from extension when auto
   const type = body.type || "auto";
+  const isExcel =
+    type === "excel" ||
+    /\.(xlsx|xls)$/i.test(key) ||
+    /(^|[?&])contentType=application\/vnd/i.test(body.url || "");
   const isCsv =
-    type === "csv" ||
-    /\.(csv)$/i.test(key) ||
-    /(^|[?&])contentType=text\/csv(&|$)/i.test(body.url || "");
+    !isExcel &&
+    (type === "csv" ||
+      /\.(csv)$/i.test(key) ||
+      /(^|[?&])contentType=text\/csv(&|$)/i.test(body.url || "") ||
+      /(^|[?&])content-type=text\/csv(&|$)/i.test(body.url || ""));
 
-  if (!isCsv) {
+  if (!isExcel && !isCsv) {
     return NextResponse.json(
       {
         error: "Unsupported file type for ingest",
-        solution:
-          "Currently supported: CSV. Convert your spreadsheet to CSV or paste sample rows.",
+        solution: "Supported: CSV, XLSX, XLS",
       },
       { status: 400 },
     );
   }
 
   const buf = await serverFileStorage.download(key);
+
+  if (isExcel) {
+    const preview = parseExcelPreview(buf);
+    const text = formatExcelPreviewText(body.key || key, preview);
+    return NextResponse.json({ ok: true, type: "excel", key, preview, text });
+  }
+
   const preview = parseCsvPreview(buf, {
     maxRows: Math.min(200, Math.max(1, body.maxRows ?? 50)),
     maxCols: Math.min(40, Math.max(1, body.maxCols ?? 12)),
   });
-
   const text = formatCsvPreviewText(key, preview);
-
   return NextResponse.json({ ok: true, type: "csv", key, preview, text });
 }

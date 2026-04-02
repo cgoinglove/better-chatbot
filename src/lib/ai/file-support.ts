@@ -28,8 +28,8 @@ const DEFAULT_FILE_PART_MIME_SET = new Set<string>(
 export const INGEST_SUPPORTED_MIME = new Set<string>([
   "text/csv",
   "application/csv",
-  // Future: xlsx when server-side parser is added
-  // "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // .xlsx
+  "application/vnd.ms-excel", // .xls
 ]);
 
 export const isFilePartSupported = (
