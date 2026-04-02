@@ -57,6 +57,31 @@ import { buildCsvIngestionPreviewParts } from "@/lib/ai/ingest/csv-ingest";
 import { buildExcelIngestionPreviewParts } from "@/lib/ai/ingest/excel-ingest";
 import { serverFileStorage } from "lib/file-storage";
 import { createExecutePythonTool } from "lib/ai/tools/code/execute-python-server";
+import type { E2BExecutionResult } from "lib/e2b/types";
+
+/**
+ * Strip base64 images from execute_python tool results in the message history.
+ * Images can be 50k+ tokens each — the model only needs stdout/stderr to
+ * continue analysis. Images are already shown in the ArtifactsPanel on the client.
+ * In AI SDK v5, tool parts have type "tool-{toolName}" and result is in `output`.
+ */
+function stripImagesFromHistory(messages: UIMessage[]): UIMessage[] {
+  return messages.map((msg) => {
+    if (msg.role !== "assistant") return msg;
+    const parts = msg.parts?.map((part: any) => {
+      if (
+        part.type === "tool-execute_python" &&
+        part.state === "output-available" &&
+        part.output?.images?.length
+      ) {
+        const output = part.output as E2BExecutionResult;
+        return { ...part, output: { ...output, images: [] } };
+      }
+      return part;
+    });
+    return { ...msg, parts };
+  });
+}
 
 const logger = globalLogger.withDefaults({
   message: colorize("blackBright", `Chat API: `),
@@ -391,7 +416,7 @@ export async function POST(request: Request) {
         const result = streamText({
           model,
           system: systemPrompt,
-          messages: convertToModelMessages(messages),
+          messages: convertToModelMessages(stripImagesFromHistory(messages)),
           experimental_transform: smoothStream({ chunking: "word" }),
           maxRetries: 2,
           tools: { ...EXECUTE_PYTHON_TOOL, ...vercelAITooles },
