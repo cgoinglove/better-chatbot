@@ -23,6 +23,7 @@ vi.mock("@e2b/code-interpreter", () => ({
 
 import { createExecutePythonTool } from "./execute-python-server";
 import { Sandbox } from "@e2b/code-interpreter";
+import type { E2BExecutionResult } from "lib/e2b/types";
 
 describe("createExecutePythonTool", () => {
   beforeEach(() => vi.clearAllMocks());
@@ -34,10 +35,10 @@ describe("createExecutePythonTool", () => {
 
   it("executes code and returns stdout", async () => {
     const tool = createExecutePythonTool("thread-1");
-    const result = await tool.execute!(
+    const result = (await tool.execute!(
       { code: "print('hello world')" },
       {} as any,
-    );
+    )) as E2BExecutionResult;
 
     expect(result.stdout).toBe("hello world\n");
     expect(result.stderr).toBe("");
@@ -47,6 +48,7 @@ describe("createExecutePythonTool", () => {
 
   it("uploads file when fileUrl and fileName provided", async () => {
     global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
       arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(8)),
     }) as any;
 

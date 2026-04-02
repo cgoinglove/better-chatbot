@@ -8,7 +8,7 @@ export function createExecutePythonTool(threadId: string) {
   return tool({
     description:
       "Execute Python code in a persistent server-side sandbox. Use for data analysis, Excel/CSV file processing, and chart generation. Files uploaded via fileUrl are available at /home/user/{fileName}. Variables and imports persist across messages in this conversation.",
-    parameters: z.object({
+    inputSchema: z.object({
       code: z.string().describe("Python code to execute"),
       fileUrl: z
         .string()
@@ -31,6 +31,11 @@ export function createExecutePythonTool(threadId: string) {
 
       if (fileUrl && fileName) {
         const response = await fetch(fileUrl);
+        if (!response.ok) {
+          throw new Error(
+            `Failed to fetch file from ${fileUrl}: ${response.status} ${response.statusText}`,
+          );
+        }
         const buffer = await response.arrayBuffer();
         await sandbox.files.write(`/home/user/${fileName}`, buffer);
       }
