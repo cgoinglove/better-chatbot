@@ -25,7 +25,10 @@ export function ProjectsGrid({ initialProjects }: ProjectsGridProps) {
     <div className="container mx-auto p-6 max-w-5xl">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Projects</h1>
-        <Button onClick={() => setDialogOpen(true)}>
+        <Button
+          onClick={() => setDialogOpen(true)}
+          className="bg-yale-blue hover:bg-yale-blue/90 text-white"
+        >
           <PlusIcon className="size-4 mr-1.5" />
           New project
         </Button>

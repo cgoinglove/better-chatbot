@@ -82,6 +82,21 @@ export function AppSidebarMenus({ user }: { user?: BasicUser }) {
         <SidebarMenu>
           <Tooltip>
             <SidebarMenuItem>
+              <Link href="/projects">
+                <SidebarMenuButton
+                  isActive={pathname.startsWith("/projects")}
+                  className="font-semibold"
+                >
+                  <FolderIcon className="size-4" />
+                  {t("Layout.projects")}
+                </SidebarMenuButton>
+              </Link>
+            </SidebarMenuItem>
+          </Tooltip>
+        </SidebarMenu>
+        <SidebarMenu>
+          <Tooltip>
+            <SidebarMenuItem>
               <Link href="/mcp">
                 <SidebarMenuButton className="font-semibold">
                   <MCPIcon className="size-4 fill-accent-foreground" />
@@ -98,21 +113,6 @@ export function AppSidebarMenus({ user }: { user?: BasicUser }) {
                 <SidebarMenuButton className="font-semibold">
                   <Waypoints className="size-4" />
                   {t("Layout.workflow")}
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
-          </Tooltip>
-        </SidebarMenu>
-        <SidebarMenu>
-          <Tooltip>
-            <SidebarMenuItem>
-              <Link href="/projects">
-                <SidebarMenuButton
-                  isActive={pathname.startsWith("/projects")}
-                  className="font-semibold"
-                >
-                  <FolderIcon className="size-4" />
-                  {t("Layout.projects")}
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
