@@ -586,6 +586,8 @@ export function ChatMentionInputSuggestion({
       defaultTool: { title: "App Tools", items: [] as MentionItemType[] },
       mcp: { title: "MCP Tools", items: [] as MentionItemType[] },
       mcpTool: { title: "MCP Tools", items: [] as MentionItemType[] },
+      plugin: { title: "Plugins", items: [] as MentionItemType[] },
+      skill: { title: "Skills", items: [] as MentionItemType[] },
     };
 
     allMentions.forEach((mention) => {
@@ -797,6 +799,48 @@ export function ChatMentionInputSuggestion({
                     </div>
                   </div>
                 )}
+                {groupedMentions.plugin.items.length > 0 && (
+                  <div className="p-2 border-t">
+                    <div className="text-xs font-medium text-muted-foreground px-2 py-1.5">
+                      {groupedMentions.plugin.title}
+                    </div>
+                    <div className="space-y-1">
+                      {groupedMentions.plugin.items.map((item) => (
+                        <MentionItem
+                          key={item.id}
+                          item={item}
+                          isSelected={
+                            allMentions[selectedIndex]?.id === item.id
+                          }
+                          ref={(el) => {
+                            itemRefs.current[item.id] = el;
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {groupedMentions.skill.items.length > 0 && (
+                  <div className="p-2 border-t">
+                    <div className="text-xs font-medium text-muted-foreground px-2 py-1.5">
+                      {groupedMentions.skill.title}
+                    </div>
+                    <div className="space-y-1">
+                      {groupedMentions.skill.items.map((item) => (
+                        <MentionItem
+                          key={item.id}
+                          item={item}
+                          isSelected={
+                            allMentions[selectedIndex]?.id === item.id
+                          }
+                          ref={(el) => {
+                            itemRefs.current[item.id] = el;
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               // Desktop horizontal layout
@@ -912,6 +956,55 @@ export function ChatMentionInputSuggestion({
                     </div>
                   </div>
                 </div>
+
+                {/* Plugins & Skills Column */}
+                {(groupedMentions.plugin.items.length > 0 ||
+                  groupedMentions.skill.items.length > 0) && (
+                  <div className="flex-1 border-l overflow-y-auto">
+                    {groupedMentions.plugin.items.length > 0 && (
+                      <div className="p-2">
+                        <div className="text-xs font-medium text-muted-foreground px-2 py-1.5">
+                          {groupedMentions.plugin.title}
+                        </div>
+                        <div className="space-y-1">
+                          {groupedMentions.plugin.items.map((item) => (
+                            <MentionItem
+                              key={item.id}
+                              item={item}
+                              isSelected={
+                                allMentions[selectedIndex]?.id === item.id
+                              }
+                              ref={(el) => {
+                                itemRefs.current[item.id] = el;
+                              }}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {groupedMentions.skill.items.length > 0 && (
+                      <div className="p-2 border-t">
+                        <div className="text-xs font-medium text-muted-foreground px-2 py-1.5">
+                          {groupedMentions.skill.title}
+                        </div>
+                        <div className="space-y-1">
+                          {groupedMentions.skill.items.map((item) => (
+                            <MentionItem
+                              key={item.id}
+                              item={item}
+                              isSelected={
+                                allMentions[selectedIndex]?.id === item.id
+                              }
+                              ref={(el) => {
+                                itemRefs.current[item.id] = el;
+                              }}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </div>

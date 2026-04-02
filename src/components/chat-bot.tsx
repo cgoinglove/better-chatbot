@@ -202,6 +202,12 @@ export default function ChatBot({
           (p) => (p as any)?.type === "file",
         );
 
+        const pluginMention = latestRef.current.mentions?.find(
+          (m) => m.type === "plugin",
+        );
+        const activePluginId =
+          pluginMention?.type === "plugin" ? pluginMention.pluginId : undefined;
+
         const requestBody: ChatApiSchemaRequestBody = {
           ...body,
           id,
@@ -221,6 +227,7 @@ export default function ChatBot({
             model: latestRef.current.threadImageToolModel[threadId],
           },
           attachments,
+          activePluginId,
         };
         return { body: requestBody };
       },

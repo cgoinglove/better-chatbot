@@ -57,6 +57,8 @@ import { toast } from "sonner";
 import { isFilePartSupported, isIngestSupported } from "@/lib/ai/file-support";
 import { useChatModels } from "@/hooks/queries/use-chat-models";
 import { ProjectBadge } from "./project/project-badge";
+import { useEnabledPlugins } from "@/hooks/queries/use-plugins";
+import { findCommandBySlug } from "lib/plugins/plugin-utils";
 
 interface PromptInputProps {
   placeholder?: string;
@@ -103,6 +105,7 @@ export default function PromptInput({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { uploadFiles } = useThreadFileUploader(threadId);
   const { data: providers } = useChatModels();
+  const { data: enabledPlugins = [] } = useEnabledPlugins();
 
   const [
     globalModel,
@@ -389,6 +392,21 @@ export default function PromptInput({
     }));
   };
 
+  const handleInputChange = useCallback(
+    (newValue: string) => {
+      const slashMatch = newValue.match(/^\/([a-z0-9-]+) /);
+      if (slashMatch) {
+        const command = findCommandBySlug(slashMatch[1], enabledPlugins);
+        if (command) {
+          setInput(command.prompt);
+          return;
+        }
+      }
+      setInput(newValue);
+    },
+    [enabledPlugins, setInput],
+  );
+
   // Handle ESC key to clear mentions
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -482,13 +500,14 @@ export default function PromptInput({
               <div className="relative min-h-[2rem]">
                 <ChatMentionInput
                   input={input}
-                  onChange={setInput}
+                  onChange={handleInputChange}
                   onChangeMention={onChangeMention}
                   onEnter={submit}
                   placeholder={placeholder ?? t("placeholder")}
                   ref={editorRef}
                   disabledMention={disabledMention}
                   onFocus={onFocus}
+                  onSetInput={setInput}
                 />
               </div>
               <div className="flex w-full items-center z-30">
