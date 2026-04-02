@@ -285,7 +285,8 @@
       "sharePublicLinkDescription": "Alle meldinger lagt til etter deling forblir private.",
       "creatingLink": "Oppretter lenke...",
       "createLink": "Opprett lenke",
-      "linkCopied": "Lenke kopiert"
+      "linkCopied": "Lenke kopiert",
+      "moveToProject": "Flytt til prosjekt"
     },
     "ChatPreferences": {
       "title": "Chatpreferanser",

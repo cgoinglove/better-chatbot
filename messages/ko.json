@@ -165,7 +165,8 @@
       "sharePublicLinkDescription": "공유 후 추가되는 모든 메시지는 비공개로 유지됩니다.",
       "creatingLink": "링크 생성 중...",
       "createLink": "링크 만들기",
-      "linkCopied": "링크가 복사되었습니다"
+      "linkCopied": "링크가 복사되었습니다",
+      "moveToProject": "프로젝트로 이동"
     },
 
     "ChatPreferences": {

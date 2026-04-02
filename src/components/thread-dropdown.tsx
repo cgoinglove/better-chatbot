@@ -218,7 +218,7 @@ export function ThreadDropdown({
                   onClick={() => setMoveToProjectOpen(true)}
                 >
                   <FolderIcon className="text-foreground" />
-                  <span className="mr-4">Move to project</span>
+                  <span className="mr-4">{t("Chat.Thread.moveToProject")}</span>
                 </CommandItem>
               </CommandGroup>
               <CommandSeparator />

@@ -285,7 +285,8 @@
       "sharePublicLinkDescription": "All messages added after sharing will remain private.",
       "creatingLink": "Creating link...",
       "createLink": "Create Link",
-      "linkCopied": "Link copied"
+      "linkCopied": "Link copied",
+      "moveToProject": "Move to project"
     },
     "ChatPreferences": {
       "title": "Chat Preferences",

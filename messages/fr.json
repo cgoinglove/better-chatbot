@@ -164,7 +164,8 @@
       "sharePublicLinkDescription": "Tous les messages ajoutés après le partage resteront privés.",
       "creatingLink": "Création du lien...",
       "createLink": "Créer le Lien",
-      "linkCopied": "Lien copié"
+      "linkCopied": "Lien copié",
+      "moveToProject": "Déplacer vers le projet"
     },
 
     "ChatPreferences": {
