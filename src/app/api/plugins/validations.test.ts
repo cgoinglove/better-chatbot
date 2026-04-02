@@ -7,6 +7,18 @@ import {
 } from "./validations";
 
 // A-05: POST body validation
+describe("updatePluginSchema", () => {
+  it("accepts partial plugin update", () => {
+    const result = updatePluginSchema.safeParse({ name: "Updated Name" });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects invalid category on update", () => {
+    const result = updatePluginSchema.safeParse({ category: "invalid" });
+    expect(result.success).toBe(false);
+  });
+});
+
 describe("insertPluginSchema", () => {
   it("accepts valid plugin body", () => {
     const result = insertPluginSchema.safeParse({

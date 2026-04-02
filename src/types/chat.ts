@@ -94,6 +94,7 @@ export const ChatMentionSchema = z.discriminatedUnion("type", [
     type: z.literal("plugin"),
     pluginId: z.string(),
     name: z.string(),
+    description: z.string().optional(),
   }),
   z.object({
     type: z.literal("skill"),
@@ -101,6 +102,7 @@ export const ChatMentionSchema = z.discriminatedUnion("type", [
     skillId: z.string(),
     name: z.string(),
     prompt: z.string(),
+    description: z.string().optional(),
   }),
 ]);
 

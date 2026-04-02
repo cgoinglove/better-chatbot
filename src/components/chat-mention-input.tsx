@@ -28,6 +28,7 @@ import { DefaultToolIcon } from "./default-tool-icon";
 import equal from "lib/equal";
 import { EMOJI_DATA } from "lib/const";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useEnabledPlugins } from "@/hooks/queries/use-plugins";
 
 type MentionItemType = {
   id: string;
@@ -48,6 +49,7 @@ interface ChatMentionInputProps {
   ref?: RefObject<Editor | null>;
   onFocus?: () => void;
   onBlur?: () => void;
+  onSetInput?: (text: string) => void;
 }
 
 export default function ChatMentionInput({
@@ -60,6 +62,7 @@ export default function ChatMentionInput({
   disabledMention,
   onFocus,
   onBlur,
+  onSetInput,
 }: ChatMentionInputProps) {
   const latestMentions = useRef<string[]>([]);
 
@@ -80,6 +83,16 @@ export default function ChatMentionInput({
     [onChange, onChangeMention],
   );
 
+  // Wrap Suggestion so we can pass onSetInput via closure
+  const BoundSuggestion = useMemo(() => {
+    if (!onSetInput) return ChatMentionInputSuggestion;
+    const WrappedSuggestion = (
+      props: React.ComponentProps<typeof ChatMentionInputSuggestion>,
+    ) => <ChatMentionInputSuggestion {...props} onSetInput={onSetInput} />;
+    WrappedSuggestion.displayName = "BoundChatMentionInputSuggestion";
+    return WrappedSuggestion;
+  }, [onSetInput]);
+
   return (
     <MentionInput
       content={input}
@@ -89,7 +102,7 @@ export default function ChatMentionInput({
       disabledMention={disabledMention}
       onChange={handleChange}
       MentionItem={ChatMentionInputMentionItem}
-      Suggestion={ChatMentionInputSuggestion}
+      Suggestion={BoundSuggestion}
       editorRef={ref}
       onFocus={onFocus}
       onBlur={onBlur}
@@ -142,6 +155,7 @@ export function ChatMentionInputSuggestion({
   children,
   style,
   disabledType,
+  onSetInput,
 }: {
   onClose: () => void;
   onSelectMention: (item: { label: string; id: string }) => void;
@@ -153,7 +167,8 @@ export function ChatMentionInputSuggestion({
   onOpenChange?: (open: boolean) => void;
   children?: React.ReactNode;
   style?: React.CSSProperties;
-  disabledType?: ("mcp" | "workflow" | "defaultTool" | "agent")[];
+  disabledType?: ("mcp" | "workflow" | "defaultTool" | "agent" | "plugin")[];
+  onSetInput?: (text: string) => void;
 }) {
   const t = useTranslations("Common");
   const [mcpList, workflowList, agentList] = appStore(
@@ -163,6 +178,7 @@ export function ChatMentionInputSuggestion({
       state.agentList,
     ]),
   );
+  const { data: enabledPlugins = [] } = useEnabledPlugins();
   const [searchValue, setSearchValue] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
   const itemRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
@@ -425,6 +441,97 @@ export function ChatMentionInputSuggestion({
       });
   }, [selectedIds, disabledType, searchValue]);
 
+  const pluginMentions = useMemo(() => {
+    if (disabledType?.includes("plugin")) return [];
+    if (!enabledPlugins.length) return [];
+
+    const items: MentionItemType[] = [];
+
+    for (const plugin of enabledPlugins) {
+      if (
+        searchValue &&
+        !plugin.name.toLowerCase().includes(searchValue.toLowerCase()) &&
+        !plugin.skills.some((s) =>
+          s.name.toLowerCase().includes(searchValue.toLowerCase()),
+        )
+      ) {
+        continue;
+      }
+
+      // Plugin-level mention (activates the plugin for the conversation)
+      if (
+        !searchValue ||
+        plugin.name.toLowerCase().includes(searchValue.toLowerCase())
+      ) {
+        const pluginId = JSON.stringify({
+          type: "plugin",
+          pluginId: plugin.id,
+          name: plugin.name,
+        });
+        items.push({
+          id: `plugin-${plugin.id}`,
+          type: "plugin",
+          label: plugin.name,
+          onSelect: () =>
+            onSelectMention({
+              label: `plugin("${plugin.name}")`,
+              id: pluginId,
+            }),
+          icon: (
+            <span className="text-base leading-none">
+              {plugin.icon || "🔌"}
+            </span>
+          ),
+          suffix: selectedIds?.includes(pluginId) ? (
+            <CheckIcon className="size-3 ml-auto" />
+          ) : plugin.skills.length > 0 ? (
+            <span className="ml-auto text-xs text-muted-foreground">
+              {plugin.skills.length} skill
+              {plugin.skills.length !== 1 ? "s" : ""}
+            </span>
+          ) : undefined,
+        });
+      }
+
+      // Skill-level mentions (pre-fill input with prompt, client-side only)
+      for (const skill of plugin.skills) {
+        if (
+          searchValue &&
+          !skill.name.toLowerCase().includes(searchValue.toLowerCase())
+        ) {
+          continue;
+        }
+        items.push({
+          id: `skill-${plugin.id}-${skill.id}`,
+          type: "skill",
+          label: skill.name,
+          onSelect: () => {
+            if (onSetInput) {
+              onSetInput(skill.prompt);
+            }
+            onClose();
+          },
+          icon: <HammerIcon className="size-3.5 text-muted-foreground" />,
+          suffix: (
+            <span className="ml-auto text-xs text-muted-foreground truncate max-w-[120px]">
+              {plugin.name}
+            </span>
+          ),
+        });
+      }
+    }
+
+    return items;
+  }, [
+    enabledPlugins,
+    disabledType,
+    searchValue,
+    selectedIds,
+    onSelectMention,
+    onSetInput,
+    onClose,
+  ]);
+
   const trigger = useMemo(() => {
     if (children) return children;
     return (
@@ -445,8 +552,15 @@ export function ChatMentionInputSuggestion({
       ...workflowMentions,
       ...defaultToolMentions,
       ...mcpMentions,
+      ...pluginMentions,
     ];
-  }, [agentMentions, workflowMentions, defaultToolMentions, mcpMentions]);
+  }, [
+    agentMentions,
+    workflowMentions,
+    defaultToolMentions,
+    mcpMentions,
+    pluginMentions,
+  ]);
 
   // Reset selected index when mentions change
   useEffect(() => {
