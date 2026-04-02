@@ -433,14 +433,6 @@ export default function ChatBot({
               </div>
             </div>
           )}
-          {projectName && (
-            <div className="w-full max-w-3xl mx-auto px-6 pt-2 z-20">
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs text-primary">
-                <span className="font-medium">Project:</span>
-                <span>{projectName}</span>
-              </div>
-            </div>
-          )}
           {emptyMessage ? (
             <ChatGreeting />
           ) : (
@@ -516,6 +508,7 @@ export default function ChatBot({
               isLoading={isLoading || isPendingToolCall}
               onStop={stop}
               onFocus={isFirstTime ? undefined : handleFocus}
+              projectName={projectName}
             />
           </div>
           <DeleteThreadPopup

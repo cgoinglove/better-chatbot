@@ -56,6 +56,7 @@ import { FileUIPart, TextUIPart } from "ai";
 import { toast } from "sonner";
 import { isFilePartSupported, isIngestSupported } from "@/lib/ai/file-support";
 import { useChatModels } from "@/hooks/queries/use-chat-models";
+import { ProjectBadge } from "./project/project-badge";
 
 interface PromptInputProps {
   placeholder?: string;
@@ -71,6 +72,7 @@ interface PromptInputProps {
   threadId?: string;
   disabledMention?: boolean;
   onFocus?: () => void;
+  projectName?: string;
 }
 
 const ChatMentionInput = dynamic(() => import("./chat-mention-input"), {
@@ -94,6 +96,7 @@ export default function PromptInput({
   voiceDisabled,
   threadId,
   disabledMention,
+  projectName,
 }: PromptInputProps) {
   const t = useTranslations("Chat");
   const [isUploadDropdownOpen, setIsUploadDropdownOpen] = useState(false);
@@ -498,6 +501,10 @@ export default function PromptInput({
                   onChange={handleFileSelect}
                   disabled={!threadId}
                 />
+
+                {projectName && (
+                  <ProjectBadge name={projectName} className="mr-1" />
+                )}
 
                 <DropdownMenu
                   open={isUploadDropdownOpen}
