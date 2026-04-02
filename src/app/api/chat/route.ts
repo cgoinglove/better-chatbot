@@ -222,9 +222,10 @@ export async function POST(request: Request) {
       (toolChoice != "none" || mentions.length > 0) &&
       !useImageTool;
 
-    const EXECUTE_PYTHON_TOOL: Record<string, Tool> = isToolCallAllowed
-      ? { execute_python: createExecutePythonTool(thread!.id) }
-      : {};
+    const EXECUTE_PYTHON_TOOL: Record<string, Tool> =
+      isToolCallAllowed && process.env.E2B_API_KEY
+        ? { execute_python: createExecutePythonTool(thread!.id) }
+        : {};
 
     const metadata: ChatMetadata = {
       agentId: agent?.id,

@@ -25,9 +25,10 @@ export function createExecutePythonTool(threadId: string) {
       fileName,
     }): Promise<E2BExecutionResult> => {
       const sandboxId = await getOrCreateSession(threadId);
-      const sandbox = await Sandbox.connect(sandboxId, {
-        apiKey: process.env.E2B_API_KEY!,
-      });
+      const apiKey = process.env.E2B_API_KEY;
+      if (!apiKey)
+        throw new Error("E2B_API_KEY environment variable is not set");
+      const sandbox = await Sandbox.connect(sandboxId, { apiKey });
 
       if (fileUrl && fileName) {
         const response = await fetch(fileUrl);

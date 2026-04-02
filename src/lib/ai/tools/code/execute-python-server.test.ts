@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 vi.mock("lib/e2b/session-manager", () => ({
   getOrCreateSession: vi.fn().mockResolvedValue("sandbox-abc"),
@@ -26,7 +26,11 @@ import { Sandbox } from "@e2b/code-interpreter";
 import type { E2BExecutionResult } from "lib/e2b/types";
 
 describe("createExecutePythonTool", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.stubEnv("E2B_API_KEY", "test-key");
+  });
+  afterEach(() => vi.unstubAllEnvs());
 
   it("returns a tool with execute function", () => {
     const tool = createExecutePythonTool("thread-1");
