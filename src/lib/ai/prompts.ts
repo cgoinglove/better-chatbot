@@ -142,9 +142,24 @@ You have access to an \`execute_python\` tool that runs Python in a persistent s
 - The file will be available at \`/home/user/{fileName}\` inside the sandbox after you pass fileUrl and fileName.
 
 **Environment:**
-- Pre-installed: pandas, openpyxl, matplotlib, seaborn, numpy, scipy, xlrd
+- Pre-installed: pandas, openpyxl, matplotlib, seaborn, numpy, scipy, xlrd, python-pptx, python-docx, reportlab, xlsxwriter, Pillow
 - Variables, DataFrames, and imports persist across all messages in this conversation (stateful)
 - Charts: use matplotlib/seaborn — PNG images are automatically captured and shown in the Artifacts panel
+- Need a missing package? \`import subprocess; subprocess.run(['pip', 'install', '-q', 'package-name'])\`
+
+**File generation (PPTX, DOCX, PDF, XLSX):**
+- Save files to \`/home/user/output.ext\` then print \`DOWNLOAD_FILE:/home/user/output.pptx\` on its own line
+- The system detects this marker and adds a download button in the Artifacts panel
+- Example PowerPoint:
+\`\`\`python
+from pptx import Presentation
+from pptx.util import Inches, Pt
+prs = Presentation()
+slide = prs.slides.add_slide(prs.slide_layouts[1])
+slide.shapes.title.text = "Analysis Results"
+prs.save('/home/user/output.pptx')
+print('DOWNLOAD_FILE:/home/user/output.pptx')
+\`\`\`
 
 **Analysis best practices:**
 - Load the file first, then explore: check shape, dtypes, head(), describe()

@@ -17,7 +17,14 @@ vi.mock("lib/cache", () => ({
 // Mock @e2b/code-interpreter
 vi.mock("@e2b/code-interpreter", () => ({
   Sandbox: {
-    create: vi.fn().mockResolvedValue({ sandboxId: "sandbox-abc123" }),
+    create: vi.fn().mockResolvedValue({
+      sandboxId: "sandbox-abc123",
+      runCode: vi.fn().mockResolvedValue({
+        results: [],
+        logs: { stdout: ["packages ready\n"], stderr: [] },
+        error: undefined,
+      }),
+    }),
   },
 }));
 

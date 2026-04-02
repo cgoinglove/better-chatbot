@@ -16,6 +16,11 @@ export async function getOrCreateSession(threadId: string): Promise<string> {
   }
   const sandbox = await Sandbox.create({ apiKey });
 
+  // Pre-install file generation libraries so Python can create PPTX, DOCX, PDF, Excel
+  await sandbox.runCode(
+    "import subprocess; result = subprocess.run(['pip', 'install', '-q', 'python-pptx', 'python-docx', 'reportlab', 'xlsxwriter', 'Pillow'], capture_output=True, text=True); print('packages ready')",
+  );
+
   await serverCache.set(
     CacheKeys.e2bSession(threadId),
     sandbox.sandboxId,

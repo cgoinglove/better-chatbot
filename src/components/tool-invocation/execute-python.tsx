@@ -5,6 +5,7 @@ import { BarChart2, Loader } from "lucide-react";
 import { Button } from "ui/button";
 import { appStore } from "@/app/store";
 import type { E2BExecutionResult } from "lib/e2b/types";
+import { detectArtifactContentType } from "lib/e2b/types";
 import { generateUUID } from "lib/utils";
 
 interface ExecutePythonInvocationProps {
@@ -29,6 +30,7 @@ export function ExecutePythonInvocation({
       activeArtifact: {
         id: part.toolCallId ?? generateUUID(),
         code: input.code,
+        contentType: detectArtifactContentType(input.code),
         stdout: result.stdout,
         stderr: result.stderr,
         images: result.images,
@@ -36,6 +38,8 @@ export function ExecutePythonInvocation({
           ? `${input.fileName} analysis`
           : "Python analysis",
         sessionId: result.sessionId,
+        downloadUrl: (result as any).downloadUrl,
+        downloadFilename: (result as any).downloadFilename,
       },
     });
   };

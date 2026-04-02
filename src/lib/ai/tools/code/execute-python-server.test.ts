@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
+vi.mock("@vercel/blob", () => ({
+  put: vi.fn().mockResolvedValue({ url: "https://blob.example.com/file.pptx" }),
+}));
+
 vi.mock("lib/e2b/session-manager", () => ({
   getOrCreateSession: vi.fn().mockResolvedValue("sandbox-abc"),
   refreshSession: vi.fn(),
