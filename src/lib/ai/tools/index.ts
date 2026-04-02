@@ -15,6 +15,7 @@ export enum DefaultToolName {
   Http = "http",
   JavascriptExecution = "mini-javascript-execution",
   PythonExecution = "python-execution",
+  ExecutePython = "execute_python", // E2B server-side tool
 }
 
 export const SequentialThinkingToolName = "sequential-thinking";
