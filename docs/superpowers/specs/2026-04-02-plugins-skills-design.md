@@ -370,6 +370,83 @@ Seed script: `scripts/seed-plugins.ts` — seeds the 10 default org plugins (Cus
 
 ---
 
+## Test Scenarios (Red-Light List)
+
+All tests are written as failing tests first (red), then implementation makes them pass (green).
+
+### Repository layer
+
+| # | Scenario | Red-light assertion |
+|---|----------|-------------------|
+| R-01 | `listPluginsForUser` returns both personal and org plugins | Returns array containing personal plugin (userId match) AND org plugin (tenantId match) |
+| R-02 | `listEnabledPluginsForUser` excludes disabled plugins | Does NOT return plugin where `UserPluginTable.enabled = false` |
+| R-03 | `listPluginsForUser` merges userState correctly | Plugin with no `UserPluginTable` row has `userState: null` |
+| R-04 | `enablePlugin` creates UserPlugin row with enabled=true | Row exists with `enabled = true` after call |
+| R-05 | `disablePlugin` sets enabled=false (does not delete row) | Row still exists with `enabled = false` |
+| R-06 | `insertPlugin` with userId=null and isBuiltIn=true creates org plugin | Plugin retrievable by tenantId with `isBuiltIn = true` |
+| R-07 | `getPluginById` returns null for plugin not belonging to user/tenant | Returns null when userId and tenantId don't match |
+| R-08 | `upsertUserPlugin` with customSystemPrompt overrides default | `userState.customSystemPrompt` returned in subsequent `getPluginById` |
+
+### API layer
+
+| # | Scenario | Red-light assertion |
+|---|----------|-------------------|
+| A-01 | `GET /api/plugins` returns 401 for unauthenticated request | Response status 401 |
+| A-02 | `GET /api/plugins` returns merged personal + org list | Response array has both plugin types |
+| A-03 | `GET /api/plugins?scope=personal` returns only personal plugins | No org plugins in response |
+| A-04 | `GET /api/plugins?enabled=true` returns only enabled plugins | All returned plugins have `userState.enabled = true` |
+| A-05 | `POST /api/plugins` creates personal plugin for current user | Created plugin has `userId = session.user.id` |
+| A-06 | `PATCH /api/plugins/[id]` by non-owner returns 403 | Response status 403 |
+| A-07 | `POST /api/plugins/[id]/enable` creates or updates UserPlugin enabled=true | Subsequent GET returns `userState.enabled = true` |
+| A-08 | `POST /api/plugins/seed` returns 403 for non-admin user | Response status 403 |
+| A-09 | `DELETE /api/plugins/[id]` for built-in org plugin by non-admin returns 403 | Response status 403 |
+
+### System prompt injection
+
+| # | Scenario | Red-light assertion |
+|---|----------|-------------------|
+| S-01 | `buildUserSystemPrompt` with no activePlugins has no `<active_plugins>` block | Output string does not contain `<active_plugins>` |
+| S-02 | `buildUserSystemPrompt` with one plugin includes its systemPromptAddition | Output contains `<plugin name="Customer Success">` and the addition text |
+| S-03 | `buildUserSystemPrompt` uses `customSystemPrompt` override when present | Output contains override text, NOT plugin's default `systemPromptAddition` |
+| S-04 | `buildUserSystemPrompt` with multiple plugins includes all | Output contains two `<plugin>` blocks |
+| S-05 | Duplicate plugin IDs (enabled + activePluginId) are deduped | Output contains plugin system prompt exactly once |
+
+### Chat integration
+
+| # | Scenario | Red-light assertion |
+|---|----------|-------------------|
+| C-01 | Chat request with `activePluginId` injects that plugin's prompt | AI receives system prompt containing plugin's addition |
+| C-02 | Chat request with no `activePluginId` and no enabled plugins has no plugin block | System prompt has no `<active_plugins>` section |
+
+### UI components (React Testing Library)
+
+| # | Scenario | Red-light assertion |
+|---|----------|-------------------|
+| U-01 | `PluginSelector` renders "+ Plugin" button when no plugin active | Button with text matching /plugin/i present in DOM |
+| U-02 | `PluginSelector` shows active plugin pill with dismiss × when plugin selected | Pill with plugin name and × button rendered |
+| U-03 | Clicking × on pill clears active plugin | `onPluginChange(null)` called |
+| U-04 | Skill chips render when plugin is active | Chip buttons matching skill names present |
+| U-05 | Clicking a skill chip calls `onSkillSelect` with skill prompt | Callback called with skill's `prompt` string |
+| U-06 | No skill chips rendered when no plugin active | Chip container not in DOM |
+
+### Slash commands
+
+| # | Scenario | Red-light assertion |
+|---|----------|-------------------|
+| SL-01 | Typing `/qbr-prep` shows matching command in suggestions | Dropdown shows "QBR Preparation" suggestion |
+| SL-02 | Selecting a command suggestion replaces input with command's prompt | Input value equals command `prompt` text |
+| SL-03 | Typing `/nonexistent` shows no suggestions | Suggestions dropdown not rendered |
+
+### /customize page (integration)
+
+| # | Scenario | Red-light assertion |
+|---|----------|-------------------|
+| P-01 | `/customize` redirects unauthenticated user to `/login` | Response is redirect to /login |
+| P-02 | `/customize` renders Skills tab by default | Page contains "Skills" heading |
+| P-03 | Connectors tab renders MCP dashboard | `MCPDashboard` component present when tab=connectors |
+
+---
+
 ## Scope Boundaries
 
 **In scope:**
