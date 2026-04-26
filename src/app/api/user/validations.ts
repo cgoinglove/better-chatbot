@@ -34,7 +34,7 @@ export const DeleteUserSchema = z.object({
 export const UpdateUserPasswordSchema = z
   .object({
     userId: z.string().uuid("Invalid user ID"),
-    isCurrentUser: z.boolean(),
+    isCurrentUser: z.string().transform((val) => val === "true"),
     newPassword: passwordSchema,
     confirmPassword: passwordSchema,
     currentPassword: z.string().optional(),
