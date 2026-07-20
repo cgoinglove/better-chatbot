@@ -56,6 +56,9 @@ export async function generateTitleFromUserMessageAction({
 
   const { text: title } = await generateText({
     model,
+    experimental_telemetry: {
+      isEnabled: process.env.AGENTPOND_ENABLED === "true",
+    },
     system: CREATE_THREAD_TITLE_PROMPT,
     prompt,
   });

@@ -114,6 +114,9 @@ export const llmNodeExecutor: NodeExecutor<LLMNodeData> = async ({
   if (isTextResponse) {
     const response = await generateText({
       model,
+      experimental_telemetry: {
+        isEnabled: process.env.AGENTPOND_ENABLED === "true",
+      },
       messages: convertToModelMessages(messages),
     });
     return {
@@ -215,6 +218,9 @@ export const toolNodeExecutor: NodeExecutor<ToolNodeData> = async ({
 
     const response = await generateText({
       model: customModelProvider.getModel(node.model),
+      experimental_telemetry: {
+        isEnabled: process.env.AGENTPOND_ENABLED === "true",
+      },
       toolChoice: "required", // Force the model to call the tool
       prompt: prompt || "",
       tools: {

@@ -317,6 +317,9 @@ export async function POST(request: Request) {
 
         const result = streamText({
           model,
+          experimental_telemetry: {
+            isEnabled: process.env.AGENTPOND_ENABLED === "true",
+          },
           system: systemPrompt,
           messages: convertToModelMessages(messages),
           experimental_transform: smoothStream({ chunking: "word" }),

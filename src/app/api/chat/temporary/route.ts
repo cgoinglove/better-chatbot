@@ -40,6 +40,9 @@ export async function POST(request: Request) {
 
     return streamText({
       model,
+      experimental_telemetry: {
+        isEnabled: process.env.AGENTPOND_ENABLED === "true",
+      },
       system: `${buildUserSystemPrompt(session.user, userPreferences)} ${
         instructions ? `\n\n${instructions}` : ""
       }`.trim(),

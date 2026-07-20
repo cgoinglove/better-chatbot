@@ -38,6 +38,9 @@ export async function POST(request: Request) {
 
     const result = streamText({
       model: customModelProvider.getModel(chatModel),
+      experimental_telemetry: {
+        isEnabled: process.env.AGENTPOND_ENABLED === "true",
+      },
       system: CREATE_THREAD_TITLE_PROMPT,
       experimental_transform: smoothStream({ chunking: "word" }),
       prompt: message,

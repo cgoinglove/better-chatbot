@@ -2,6 +2,11 @@ import { IS_VERCEL_ENV } from "lib/const";
 
 export async function register() {
   if (process.env.NEXT_RUNTIME === "nodejs") {
+    if (process.env.AGENTPOND_ENABLED === "true") {
+      const { registerAgentPond } = await import("./lib/ai/agentpond");
+      registerAgentPond();
+    }
+
     // Enable proxy support for undici (used by AI SDK) via HTTP_PROXY/HTTPS_PROXY env vars
     const proxyUrl =
       process.env.HTTPS_PROXY ||

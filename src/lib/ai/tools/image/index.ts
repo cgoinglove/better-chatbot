@@ -153,6 +153,9 @@ export const openaiImageTool = createTool({
       .reverse() as ModelMessage[];
     const result = await generateText({
       model: openai("gpt-4.1-mini"),
+      experimental_telemetry: {
+        isEnabled: process.env.AGENTPOND_ENABLED === "true",
+      },
       abortSignal,
       messages: latestMessages,
       tools: {

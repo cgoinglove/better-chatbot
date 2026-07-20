@@ -44,6 +44,27 @@ Database, file storage, and caching are all available on free tiers.
 
    <img width="1712" alt="step6" src="https://github.com/user-attachments/assets/2d197389-a865-46ac-9156-40cad64258ca" />
 
+## Optional AgentPond tracing
+
+To export OpenInference AI traces directly to a private Vercel Blob store,
+initialize AgentPond 0.6 from the project root:
+
+```bash
+npx agentpond@0.6.0 init --platform vercel
+```
+
+Follow the generated prompt, ensure the connected Blob store is private,
+enable access to Vercel System Environment Variables, and set
+`AGENTPOND_ENABLED=true`. The integration is disabled by default and does not
+add an ingestion endpoint.
+
+After exercising an AI request, inspect the selected Vercel target:
+
+```bash
+npx agentpond@0.6.0 sync
+npx agentpond@0.6.0 traces list --limit 10
+```
+
 ---
 
 ## Notes
