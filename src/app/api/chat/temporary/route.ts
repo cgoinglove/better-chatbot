@@ -42,6 +42,8 @@ export async function POST(request: Request) {
       model,
       experimental_telemetry: {
         isEnabled: process.env.AGENTPOND_ENABLED === "true",
+        recordInputs: true,
+        recordOutputs: true,
       },
       system: `${buildUserSystemPrompt(session.user, userPreferences)} ${
         instructions ? `\n\n${instructions}` : ""

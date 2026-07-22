@@ -155,6 +155,8 @@ export const openaiImageTool = createTool({
       model: openai("gpt-4.1-mini"),
       experimental_telemetry: {
         isEnabled: process.env.AGENTPOND_ENABLED === "true",
+        recordInputs: true,
+        recordOutputs: true,
       },
       abortSignal,
       messages: latestMessages,

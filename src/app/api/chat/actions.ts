@@ -58,6 +58,8 @@ export async function generateTitleFromUserMessageAction({
     model,
     experimental_telemetry: {
       isEnabled: process.env.AGENTPOND_ENABLED === "true",
+      recordInputs: true,
+      recordOutputs: true,
     },
     system: CREATE_THREAD_TITLE_PROMPT,
     prompt,

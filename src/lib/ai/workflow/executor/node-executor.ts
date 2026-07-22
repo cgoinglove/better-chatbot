@@ -116,6 +116,8 @@ export const llmNodeExecutor: NodeExecutor<LLMNodeData> = async ({
       model,
       experimental_telemetry: {
         isEnabled: process.env.AGENTPOND_ENABLED === "true",
+        recordInputs: true,
+        recordOutputs: true,
       },
       messages: convertToModelMessages(messages),
     });
@@ -220,6 +222,8 @@ export const toolNodeExecutor: NodeExecutor<ToolNodeData> = async ({
       model: customModelProvider.getModel(node.model),
       experimental_telemetry: {
         isEnabled: process.env.AGENTPOND_ENABLED === "true",
+        recordInputs: true,
+        recordOutputs: true,
       },
       toolChoice: "required", // Force the model to call the tool
       prompt: prompt || "",

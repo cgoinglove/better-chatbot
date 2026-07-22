@@ -40,6 +40,8 @@ export async function POST(request: Request) {
       model: customModelProvider.getModel(chatModel),
       experimental_telemetry: {
         isEnabled: process.env.AGENTPOND_ENABLED === "true",
+        recordInputs: true,
+        recordOutputs: true,
       },
       system: CREATE_THREAD_TITLE_PROMPT,
       experimental_transform: smoothStream({ chunking: "word" }),

@@ -58,6 +58,13 @@ enable access to Vercel System Environment Variables, and set
 `AGENTPOND_ENABLED=true`. The integration is disabled by default and does not
 add an ingestion endpoint.
 
+The AI SDK telemetry settings explicitly enable `recordInputs` and
+`recordOutputs`. This records input and output values for each instrumented
+call, which may include prompts, messages, tool data, and generated content. A
+private Blob store restricts access but does not redact these values. Review
+the [Vercel AI SDK telemetry documentation](https://ai-sdk.dev/docs/ai-sdk-core/telemetry)
+before enabling tracing.
+
 After exercising an AI request, inspect the selected Vercel target:
 
 ```bash
