@@ -1,21 +1,22 @@
+import { DEFAULT_USER_ROLE, USER_ROLES } from "app-types/roles";
 // Base auth instance without "server-only" - can be used in seed scripts
-import { betterAuth, type BetterAuthOptions } from "better-auth";
+import { type BetterAuthOptions, betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
 import { admin as adminPlugin } from "better-auth/plugins";
 import { pgDb } from "lib/db/pg/db.pg";
-import { headers } from "next/headers";
 import {
   AccountTable,
   SessionTable,
   UserTable,
   VerificationTable,
 } from "lib/db/pg/schema.pg";
-import { getAuthConfig } from "./config";
-import logger from "logger";
 import { userRepository } from "lib/db/repository";
-import { DEFAULT_USER_ROLE, USER_ROLES } from "app-types/roles";
-import { admin, editor, user, ac } from "./roles";
+import logger from "logger";
+import { headers } from "next/headers";
+import { getAuthConfig } from "./config";
+import { getFirstName } from "./name";
+import { ac, admin, editor, user } from "./roles";
 
 const {
   emailAndPasswordEnabled,
@@ -59,13 +60,14 @@ const options = {
   databaseHooks: {
     user: {
       create: {
-        before: async (user) => {
+        before: async (user, context) => {
           // This hook ONLY runs during user creation (sign-up), not on sign-in
           // Use our optimized getIsFirstUser function with caching
           const isFirstUser = await getIsFirstUser();
 
           // Set role based on whether this is the first user
           const role = isFirstUser ? USER_ROLES.ADMIN : DEFAULT_USER_ROLE;
+          const isSocialSignUp = context?.path.startsWith("/callback/");
 
           logger.info(
             `User creation hook: ${user.email} will get role: ${role} (isFirstUser: ${isFirstUser})`,
@@ -74,6 +76,7 @@ const options = {
           return {
             data: {
               ...user,
+              ...(isSocialSignUp && { name: getFirstName(user.name) }),
               role,
             },
           };

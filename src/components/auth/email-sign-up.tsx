@@ -1,9 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { existsByEmailAction, signUpAction } from "@/app/api/auth/actions";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
@@ -11,15 +9,17 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useObjectState } from "@/hooks/use-object-state";
+import { UserZodSchema } from "app-types/user";
 import { cn } from "lib/utils";
-import { ChevronLeft, Loader, Check, X } from "lucide-react";
+import { Check, ChevronLeft, Loader, X } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { safe } from "ts-safe";
-import { UserZodSchema } from "app-types/user";
-import { existsByEmailAction, signUpAction } from "@/app/api/auth/actions";
-import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
 
 export default function EmailSignUp({
   isFirstUser,
@@ -161,7 +161,7 @@ export default function EmailSignUp({
           )}
           {step === 2 && (
             <div className={cn("flex flex-col gap-2")}>
-              <Label htmlFor="name">Full Name</Label>
+              <Label htmlFor="name">Name</Label>
               <Input
                 id="name"
                 type="text"
