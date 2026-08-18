@@ -6,6 +6,8 @@ import { createMCPToolId } from "./mcp/mcp-tool-id";
 import { format } from "date-fns";
 import { Agent } from "app-types/agent";
 
+const CURRENT_DATE_FORMAT = "EEEE, MMMM d, yyyy";
+
 export const CREATE_THREAD_TITLE_PROMPT = `
 You are a chat title generation expert.
 
@@ -53,17 +55,32 @@ export const buildUserSystemPrompt = (
   userPreferences?: UserPreferences,
   agent?: Agent,
 ) => {
+  return [
+    buildUserSystemStaticPrompt(user, userPreferences, agent),
+    buildCurrentDateSystemPrompt(),
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+};
+
+export const buildCurrentDateSystemPrompt = () => {
+  const currentDate = format(new Date(), CURRENT_DATE_FORMAT);
+  return `The current date is ${currentDate}.`;
+};
+
+export const buildUserSystemStaticPrompt = (
+  user?: User,
+  userPreferences?: UserPreferences,
+  agent?: Agent,
+) => {
   const assistantName =
     agent?.name || userPreferences?.botName || "better-chatbot";
-  const currentTime = format(new Date(), "EEEE, MMMM d, yyyy 'at' h:mm:ss a");
 
-  let prompt = `You are ${assistantName}`;
+  let prompt = `You are ${assistantName}.`;
 
   if (agent?.instructions?.role) {
-    prompt += `. You are an expert in ${agent.instructions.role}`;
+    prompt += ` You are an expert in ${agent.instructions.role}.`;
   }
-
-  prompt += `. The current date and time is ${currentTime}.`;
 
   // Agent-specific instructions as primary core
   if (agent?.instructions?.systemPrompt) {
@@ -137,8 +154,20 @@ export const buildSpeechSystemPrompt = (
   userPreferences?: UserPreferences,
   agent?: Agent,
 ) => {
+  return [
+    buildSpeechSystemStaticPrompt(user, userPreferences, agent),
+    buildCurrentDateSystemPrompt(),
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+};
+
+export const buildSpeechSystemStaticPrompt = (
+  user: User,
+  userPreferences?: UserPreferences,
+  agent?: Agent,
+) => {
   const assistantName = agent?.name || userPreferences?.botName || "Assistant";
-  const currentTime = format(new Date(), "EEEE, MMMM d, yyyy 'at' h:mm:ss a");
 
   let prompt = `You are ${assistantName}`;
 
@@ -146,7 +175,7 @@ export const buildSpeechSystemPrompt = (
     prompt += `. You are an expert in ${agent.instructions.role}`;
   }
 
-  prompt += `. The current date and time is ${currentTime}.`;
+  prompt += ".";
 
   // Agent-specific instructions as primary core
   if (agent?.instructions?.systemPrompt) {
