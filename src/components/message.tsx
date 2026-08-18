@@ -19,6 +19,37 @@ import { Button } from "ui/button";
 import { useTranslations } from "next-intl";
 import { ChatMetadata } from "app-types/chat";
 
+type MessagePart = UIMessage["parts"][number];
+
+type IngestionPreviewPart = Extract<MessagePart, { type: "text" }> & {
+  ingestionPreview?: boolean;
+};
+
+type CustomSourceUrlPart = {
+  type: "source-url";
+  url: string;
+  title?: string;
+  mediaType?: string;
+};
+
+type DisplayMessagePart = MessagePart | CustomSourceUrlPart;
+
+function isIngestionPreviewPart(
+  part: MessagePart,
+): part is IngestionPreviewPart {
+  return (
+    part.type === "text" &&
+    "ingestionPreview" in part &&
+    part.ingestionPreview === true
+  );
+}
+
+function isSourceUrlPart(
+  part: DisplayMessagePart,
+): part is CustomSourceUrlPart {
+  return part.type === "source-url" && "url" in part;
+}
+
 interface Props {
   message: UIMessage;
   prevMessage?: UIMessage;
@@ -52,8 +83,8 @@ const PurePreviewMessage = ({
   const partsForDisplay = useMemo(
     () =>
       message.parts.filter(
-        (part) => !(part.type === "text" && (part as any).ingestionPreview),
-      ),
+        (part) => !isIngestionPreviewPart(part),
+      ) as DisplayMessagePart[],
     [message.parts],
   );
 
@@ -121,6 +152,16 @@ const PurePreviewMessage = ({
               );
             }
 
+            if (isSourceUrlPart(part)) {
+              return (
+                <SourceUrlMessagePart
+                  key={key}
+                  part={part}
+                  isUserMessage={isUserMessage}
+                />
+              );
+            }
+
             if (isToolUIPart(part)) {
               const isLast = isLastMessage && isLastPart;
               const isManualToolInvocation =
@@ -135,6 +176,8 @@ const PurePreviewMessage = ({
                   isLast={isLast}
                   readonly={readonly}
                   messageId={message.id}
+                  prevMessage={prevMessage}
+                  threadId={threadId}
                   isManualToolInvocation={isManualToolInvocation}
                   showActions={
                     !readonly &&
@@ -144,6 +187,7 @@ const PurePreviewMessage = ({
                   key={key}
                   part={part}
                   setMessages={setMessages}
+                  sendMessage={sendMessage}
                 />
               );
             } else if (part.type === "step-start") {
@@ -153,14 +197,6 @@ const PurePreviewMessage = ({
                 <FileMessagePart
                   key={key}
                   part={part}
-                  isUserMessage={isUserMessage}
-                />
-              );
-            } else if ((part as any).type === "source-url") {
-              return (
-                <SourceUrlMessagePart
-                  key={key}
-                  part={part as any}
                   isUserMessage={isUserMessage}
                 />
               );

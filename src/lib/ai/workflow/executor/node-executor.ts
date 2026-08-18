@@ -31,6 +31,7 @@ import {
   exaContentsToolForWorkflow,
 } from "lib/ai/tools/web/web-search";
 import { mcpClientsManager } from "lib/ai/mcp/mcp-manager";
+import type { MCPUserContext } from "lib/ai/mcp/create-mcp-clients-manager";
 
 /**
  * Interface for node executor functions.
@@ -42,6 +43,7 @@ import { mcpClientsManager } from "lib/ai/mcp/mcp-manager";
 export type NodeExecutor<T extends WorkflowNodeData = any> = (input: {
   node: T;
   state: WorkflowRuntimeState;
+  mcpContext?: MCPUserContext;
 }) =>
   | Promise<{
       input?: any; // Input data used by this node (for debugging/history)
@@ -184,6 +186,7 @@ export const conditionNodeExecutor: NodeExecutor<ConditionNodeData> = async ({
 export const toolNodeExecutor: NodeExecutor<ToolNodeData> = async ({
   node,
   state,
+  mcpContext,
 }) => {
   const result: {
     input: any;
@@ -233,10 +236,14 @@ export const toolNodeExecutor: NodeExecutor<ToolNodeData> = async ({
 
   // Execute the tool based on its type
   if (node.tool.type == "mcp-tool") {
+    if (!mcpContext) {
+      throw new Error("MCP tool execution requires authenticated user context");
+    }
     const toolResult = (await mcpClientsManager.toolCall(
       node.tool.serverId,
       node.tool.id,
       result.input.parameter,
+      mcpContext,
     )) as any;
     if (toolResult.isError) {
       throw new Error(

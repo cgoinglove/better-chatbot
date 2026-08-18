@@ -15,8 +15,9 @@ export const notImplementedToast = () => {
   );
 };
 
-export const handleErrorWithToast = (error: Error, id?: string) => {
-  toast.error(`${error?.name || "Error"}`, {
+export const handleErrorWithToast = (error: unknown, id?: string) => {
+  const errorName = error instanceof Error ? error.name : "Error";
+  toast.error(errorName, {
     description: (
       <div className="my-4 max-h-[340px] overflow-y-auto">
         <JsonView data={errorToString(error)} />

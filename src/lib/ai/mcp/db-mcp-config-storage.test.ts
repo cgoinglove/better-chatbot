@@ -44,6 +44,7 @@ describe("DB-based MCP Config Storage", () => {
     enabled: true,
     userId: "test-user-id",
     visibility: "private" as const,
+    perUserAuth: false,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -106,6 +107,7 @@ describe("DB-based MCP Config Storage", () => {
         ...serverToSave,
         userId: "test-user-id",
         visibility: "private" as const,
+        perUserAuth: false,
       });
 
       const serverWithUserId = {

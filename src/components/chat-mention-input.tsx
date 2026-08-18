@@ -8,7 +8,12 @@ import React, {
   useEffect,
 } from "react";
 
-import { CheckIcon, HammerIcon, SearchIcon } from "lucide-react";
+import {
+  CheckIcon,
+  HammerIcon,
+  SearchIcon,
+  ShieldAlertIcon,
+} from "lucide-react";
 import { MCPIcon } from "ui/mcp-icon";
 
 import { ChatMention } from "app-types/chat";
@@ -170,16 +175,14 @@ export function ChatMentionInputSuggestion({
 
   const mcpMentions = useMemo(() => {
     if (disabledType?.includes("mcp")) return [];
-    const filtered = mcpList
-      ?.filter((mcp) => mcp.toolInfo?.length)
-      .filter((mcp) => {
-        if (!searchValue) return true;
-        const search = searchValue.toLowerCase();
-        return (
-          mcp.name.toLowerCase().includes(search) ||
-          mcp.toolInfo?.some((tool) => tool.name.toLowerCase().includes(search))
-        );
-      });
+    const filtered = mcpList?.filter((mcp) => {
+      if (!searchValue) return true;
+      const search = searchValue.toLowerCase();
+      return (
+        mcp.name.toLowerCase().includes(search) ||
+        mcp.toolInfo?.some((tool) => tool.name.toLowerCase().includes(search))
+      );
+    });
 
     return (
       filtered?.flatMap((mcp) => {
@@ -198,6 +201,12 @@ export function ChatMentionInputSuggestion({
           !searchValue ||
           mcp.name.toLowerCase().includes(searchValue.toLowerCase())
         ) {
+          const needsAuth =
+            mcp.status === "authorizing" ||
+            (mcp.perUserAuth &&
+              !mcp.isAuthorized &&
+              mcp.status === "disconnected");
+
           items.push({
             id: `${mcp.id}-mcp`,
             type: "mcp",
@@ -211,14 +220,25 @@ export function ChatMentionInputSuggestion({
             suffix: selectedIds?.includes(mcpId) ? (
               <CheckIcon className="size-3 ml-auto" />
             ) : (
-              <span className="ml-auto text-xs text-muted-foreground">
-                {mcp.toolInfo?.length} tools
-              </span>
+              <div className="ml-auto flex items-center gap-2">
+                {needsAuth && (
+                  <ShieldAlertIcon className="size-3 text-warning" />
+                )}
+                <span className="text-xs text-muted-foreground">
+                  {mcp.toolInfo?.length} tools
+                </span>
+              </div>
             ),
           });
         }
 
         // Add tool items
+        const needsAuth =
+          mcp.status === "authorizing" ||
+          (mcp.perUserAuth &&
+            !mcp.isAuthorized &&
+            mcp.status === "disconnected");
+
         const toolItems =
           mcp.toolInfo
             ?.filter(
@@ -244,9 +264,11 @@ export function ChatMentionInputSuggestion({
                     id: toolId,
                   }),
                 icon: <HammerIcon className="size-3.5" />,
-                suffix: selectedIds?.includes(toolId) && (
+                suffix: selectedIds?.includes(toolId) ? (
                   <CheckIcon className="size-3 ml-auto" />
-                ),
+                ) : needsAuth ? (
+                  <ShieldAlertIcon className="size-3 text-warning ml-auto" />
+                ) : null,
               };
             }) || [];
 

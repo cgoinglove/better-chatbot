@@ -23,6 +23,7 @@ vi.mock("lib/utils", () => ({
     isLocked: false,
   })),
   generateUUID: vi.fn(() => "mock-uuid-12345678"),
+  toAny: vi.fn((value) => value),
 }));
 
 vi.mock("ts-safe", () => ({
@@ -65,9 +66,15 @@ describe("MCPClientsManager", () => {
     enabled: true,
     userId: "test-user-id",
     visibility: "private" as const,
+    perUserAuth: false,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
+
+  const mockContext = (servers: any[] = [mockServer]) => ({
+    userId: "test-user-id",
+    servers,
+  });
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -260,6 +267,7 @@ describe("MCPClientsManager", () => {
         ...serverToSave,
         id: "new-server-id",
         visibility: "private" as const,
+        perUserAuth: false,
       });
 
       await manager.persistClient(serverToSave);
@@ -270,6 +278,40 @@ describe("MCPClientsManager", () => {
         "new-server",
         mockServerConfig,
         expect.objectContaining({ autoDisconnectSeconds: 1800 }),
+      );
+    });
+
+    it("should persist per-user auth client with creator context", async () => {
+      const serverToSave = {
+        name: "new-server",
+        config: mockServerConfig,
+        userId: "test-user-id",
+        perUserAuth: true,
+      };
+
+      vi.mocked(mockStorage.save).mockResolvedValue({
+        ...serverToSave,
+        id: "new-server-id",
+        visibility: "private" as const,
+      });
+      vi.mocked(mockStorage.get).mockResolvedValue({
+        ...serverToSave,
+        id: "new-server-id",
+        visibility: "private" as const,
+      });
+
+      const result = await manager.persistClient(serverToSave);
+
+      expect(result).toEqual({ client: mockClient, name: "new-server" });
+      expect(mockCreateMCPClient).toHaveBeenCalledWith(
+        "new-server-id",
+        "new-server",
+        mockServerConfig,
+        expect.objectContaining({
+          autoDisconnectSeconds: 1800,
+          perUserAuth: true,
+          userId: "test-user-id",
+        }),
       );
     });
 
@@ -351,9 +393,8 @@ describe("MCPClientsManager", () => {
       const newClient = { ...mockClient };
       vi.mocked(mockCreateMCPClient).mockReturnValue(newClient);
 
-      await manager.refreshClient("test-server");
+      await manager.refreshClient("test-server", mockContext([updatedServer]));
 
-      expect(mockStorage.get).toHaveBeenCalledWith("test-server");
       expect(mockCreateMCPClient).toHaveBeenCalledWith(
         "test-server",
         "test-server",
@@ -363,17 +404,15 @@ describe("MCPClientsManager", () => {
     });
 
     it("should throw error for non-existent client", async () => {
-      await expect(manager.refreshClient("non-existent")).rejects.toThrow(
-        "Client non-existent not found",
-      );
+      await expect(
+        manager.refreshClient("non-existent", mockContext()),
+      ).rejects.toThrow("MCP server non-existent is not accessible");
     });
 
     it("should throw error when storage client not found", async () => {
-      vi.mocked(mockStorage.get).mockResolvedValue(null);
-
-      await expect(manager.refreshClient("test-server")).rejects.toThrow(
-        "Client test-server not found",
-      );
+      await expect(
+        manager.refreshClient("test-server", mockContext([])),
+      ).rejects.toThrow("MCP server test-server is not accessible");
     });
   });
 
@@ -384,24 +423,53 @@ describe("MCPClientsManager", () => {
     });
 
     it("should return empty array when no clients", async () => {
-      const clients = await manager.getClients();
+      const clients = await manager.getClients(mockContext([]));
       expect(clients).toEqual([]);
     });
 
     it("should return all clients", async () => {
       await manager.addClient("server1", "server1", mockServerConfig);
       await manager.addClient("server2", "server2", mockServerConfig);
+      vi.mocked(mockStorage.loadAll).mockResolvedValue([
+        {
+          ...mockServer,
+          id: "server1",
+          name: "server1",
+        },
+        {
+          ...mockServer,
+          id: "server2",
+          name: "server2",
+        },
+      ]);
 
-      const clients = await manager.getClients();
+      const clients = await manager.getClients(
+        mockContext([
+          {
+            ...mockServer,
+            id: "server1",
+            name: "server1",
+          },
+          {
+            ...mockServer,
+            id: "server2",
+            name: "server2",
+          },
+        ]),
+      );
 
       expect(clients).toHaveLength(2);
-      expect(clients[0]).toEqual({
+      expect(clients[0]).toMatchObject({
         id: "server1",
+        clientId: "server1",
         client: mockClient,
+        name: "server1",
       });
-      expect(clients[1]).toEqual({
+      expect(clients[1]).toMatchObject({
         id: "server2",
+        clientId: "server2",
         client: mockClient,
+        name: "server2",
       });
     });
   });
@@ -413,7 +481,7 @@ describe("MCPClientsManager", () => {
     });
 
     it("should return empty object when no clients", async () => {
-      const tools = await manager.tools();
+      const tools = await manager.tools(mockContext([]));
       expect(tools).toEqual({});
     });
 
@@ -432,8 +500,106 @@ describe("MCPClientsManager", () => {
       vi.mocked(mockCreateMCPClient).mockReturnValue(clientWithoutTools);
       await manager.addClient("empty-server", "empty-server", mockServerConfig);
 
-      const tools = await manager.tools();
+      const tools = await manager.tools(
+        mockContext([
+          {
+            ...mockServer,
+            id: "empty-server",
+            name: "empty-server",
+          },
+        ]),
+      );
       expect(tools).toEqual({});
+    });
+
+    it("should expose cached public per-user tools without connecting", async () => {
+      const cachedToolInfo = [
+        {
+          name: "cached-tool",
+          description: "Cached public tool",
+          inputSchema: { type: "object" },
+        },
+      ];
+      const server = {
+        ...mockServer,
+        id: "shared-per-user",
+        name: "shared-per-user",
+        userId: "owner-user-id",
+        visibility: "public" as const,
+        perUserAuth: true,
+        toolInfo: cachedToolInfo,
+      };
+
+      const tools = await manager.tools(mockContext([server]));
+
+      expect(mockCreateMCPClient).toHaveBeenCalledWith(
+        "shared-per-user",
+        "shared-per-user",
+        mockServerConfig,
+        expect.objectContaining({
+          autoDisconnectSeconds: 1800,
+          initialToolInfo: cachedToolInfo,
+          perUserAuth: true,
+          userId: "test-user-id",
+        }),
+      );
+      expect(mockClient.connect).not.toHaveBeenCalled();
+      expect(Object.keys(tools)).toEqual(["shared-per-user:cached-tool"]);
+      expect(tools["shared-per-user:cached-tool"]).toMatchObject({
+        _mcpServerId: "shared-per-user",
+        _mcpServerName: "shared-per-user",
+        _originToolName: "cached-tool",
+      });
+    });
+
+    it("should not pre-authorize uncached per-user servers during discovery", async () => {
+      const server = {
+        ...mockServer,
+        id: "uncached-per-user",
+        name: "uncached-per-user",
+        visibility: "public" as const,
+        perUserAuth: true,
+        toolInfo: null,
+      };
+
+      const tools = await manager.tools(mockContext([server]));
+
+      expect(mockCreateMCPClient).not.toHaveBeenCalled();
+      expect(mockClient.connect).not.toHaveBeenCalled();
+      expect(tools).toEqual({});
+    });
+
+    it("should discover uncached shared-auth tools by connecting", async () => {
+      mockClient.toolInfo = [
+        {
+          name: "live-tool",
+          description: "Live tool",
+          inputSchema: { type: "object" },
+        },
+      ];
+      const server = {
+        ...mockServer,
+        id: "shared-auth",
+        name: "shared-auth",
+        visibility: "public" as const,
+        perUserAuth: false,
+        toolInfo: null,
+      };
+
+      const tools = await manager.tools(mockContext([server]));
+
+      expect(mockCreateMCPClient).toHaveBeenCalledWith(
+        "shared-auth",
+        "shared-auth",
+        mockServerConfig,
+        expect.objectContaining({
+          autoDisconnectSeconds: 1800,
+          perUserAuth: false,
+          userId: "test-user-id",
+        }),
+      );
+      expect(mockClient.connect).toHaveBeenCalled();
+      expect(Object.keys(tools)).toEqual(["shared-auth:live-tool"]);
     });
   });
 
@@ -457,7 +623,7 @@ describe("MCPClientsManager", () => {
 
       await manager.cleanup();
 
-      const clients = await manager.getClients();
+      const clients = await manager.getClients(mockContext());
       expect(clients).toEqual([]);
     });
   });

@@ -32,6 +32,7 @@ export class PgOAuthClientProvider implements OAuthClientProvider {
     private config: {
       name: string;
       mcpServerId: string;
+      userId?: string;
       serverUrl: string;
       _clientMetadata: OAuthClientMetadata;
       onRedirectToAuthorization: (authUrl: URL) => Promise<void>;
@@ -62,24 +63,31 @@ export class PgOAuthClientProvider implements OAuthClientProvider {
       }
     }
     // 1. Check for authenticated session first
+    this.logger.info(
+      `Checking for authenticated session: server=${this.config.mcpServerId}, user=${this.config.userId}`,
+    );
     const authenticated = await pgMcpOAuthRepository.getAuthenticatedSession(
       this.config.mcpServerId,
+      this.config.userId,
     );
     if (authenticated) {
       this.currentOAuthState = authenticated.state || "";
       this.cachedAuthData = authenticated;
       this.initialized = true;
-      this.logger.info("Using existing authenticated session");
+      this.logger.info(
+        `Using existing authenticated session: state=${this.currentOAuthState}`,
+      );
       return;
     }
 
-    // 2. Always create a new in-progress session when not authenticated
+    this.logger.info("No authenticated session found, creating new one");
     this.currentOAuthState = generateUUID();
     this.cachedAuthData = await pgMcpOAuthRepository.createSession(
       this.config.mcpServerId,
       {
         state: this.currentOAuthState,
         serverUrl: this.config.serverUrl,
+        userId: this.config.userId,
       },
     );
     this.initialized = true;

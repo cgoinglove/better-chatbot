@@ -72,10 +72,14 @@ export function createFileBasedMCPConfigsStorage(
       const fileConfig = await readConfigFile();
 
       const fileConfigs = fileConfig.sort((a, b) => a.id.localeCompare(b.id));
+      const context = {
+        userId: "file-based-user",
+        servers: fileConfigs,
+      };
 
       // Get current manager configs
       const managerConfigs = await manager
-        .getClients()
+        .getClients(context)
         .then((clients) =>
           clients.map(({ client, id }) => ({
             id,
@@ -97,14 +101,14 @@ export function createFileBasedMCPConfigsStorage(
       if (shouldRefresh) {
         const refreshPromises = fileConfigs.map(
           async ({ id, name, config }) => {
-            const managerConfig = await manager.getClient(id);
+            const managerConfig = await manager.getClient(id, context);
             if (!managerConfig) {
               logger.debug(`Adding MCP client ${id}`);
               return manager.addClient(id, name, config);
             }
             if (!equal(managerConfig.client.getInfo().config, config)) {
               logger.debug(`Refreshing MCP client ${id}`);
-              return manager.refreshClient(id);
+              return manager.refreshClient(id, context);
             }
           },
         );
@@ -198,6 +202,7 @@ function fillMcpServerTable(
     userId: server.userId || "file-based-user",
     visibility: server.visibility || "private",
     enabled: true,
+    perUserAuth: server.perUserAuth ?? false,
     toolInfo: server.toolInfo ?? null,
     toolInfoUpdatedAt: server.toolInfoUpdatedAt ?? null,
     lastConnectionStatus: server.lastConnectionStatus ?? null,

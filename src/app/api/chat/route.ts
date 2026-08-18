@@ -11,7 +11,11 @@ import {
 
 import { customModelProvider, isToolCallUnsupportedModel } from "lib/ai/models";
 
-import { agentRepository, chatRepository } from "lib/db/repository";
+import {
+  agentRepository,
+  chatRepository,
+  mcpRepository,
+} from "lib/db/repository";
 import globalLogger from "logger";
 import {
   buildMcpServerCustomizationsSystemPrompt,
@@ -23,6 +27,7 @@ import {
   ChatMention,
   ChatMetadata,
 } from "app-types/chat";
+import { isMcpAuthRequiredToolResult } from "app-types/mcp";
 
 import { errorIf, safe } from "ts-safe";
 
@@ -53,6 +58,47 @@ import { serverFileStorage } from "lib/file-storage";
 const logger = globalLogger.withDefaults({
   message: colorize("blackBright", `Chat API: `),
 });
+
+type ChatSourceUrlPart = {
+  type: "source-url";
+  url: string;
+  mediaType?: string;
+  title?: string;
+};
+
+type ChatFileAttachmentPart = {
+  type: "file";
+  url: string;
+  mediaType?: string;
+  filename?: string;
+};
+
+type ChatAttachmentPart = ChatFileAttachmentPart | ChatSourceUrlPart;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function isExistingAttachmentPart(part: unknown): part is ChatAttachmentPart {
+  if (!isRecord(part)) {
+    return false;
+  }
+
+  return (
+    (part.type === "file" || part.type === "source-url") &&
+    typeof part.url === "string"
+  );
+}
+
+function stopWhenMcpAuthRequired({
+  steps,
+}: { steps: Array<{ toolResults: Array<unknown> }> }) {
+  const lastStep = steps[steps.length - 1];
+  if (!lastStep) return false;
+  return lastStep.toolResults.some((tr: any) =>
+    isMcpAuthRequiredToolResult(tr?.output),
+  );
+}
 
 export async function POST(request: Request) {
   try {
@@ -128,15 +174,18 @@ export async function POST(request: Request) {
 
     if (attachments.length) {
       const firstTextIndex = message.parts.findIndex(
-        (part: any) => part?.type === "text",
+        (part) => part.type === "text",
       );
-      const attachmentParts: any[] = [];
+      const attachmentParts: ChatAttachmentPart[] = [];
 
       attachments.forEach((attachment) => {
-        const exists = message.parts.some(
-          (part: any) =>
-            part?.type === attachment.type && part?.url === attachment.url,
-        );
+        const exists = message.parts.some((part) => {
+          return (
+            isExistingAttachmentPart(part) &&
+            part.type === attachment.type &&
+            part.url === attachment.url
+          );
+        });
         if (exists) return;
 
         if (attachment.type === "file") {
@@ -162,9 +211,12 @@ export async function POST(request: Request) {
             ...message.parts.slice(0, firstTextIndex),
             ...attachmentParts,
             ...message.parts.slice(firstTextIndex),
-          ];
+          ] as UIMessage["parts"];
         } else {
-          message.parts = [...message.parts, ...attachmentParts];
+          message.parts = [
+            ...message.parts,
+            ...attachmentParts,
+          ] as UIMessage["parts"];
         }
       }
     }
@@ -202,10 +254,16 @@ export async function POST(request: Request) {
 
     const stream = createUIMessageStream({
       execute: async ({ writer: dataStream }) => {
+        const mcpContext = {
+          userId: session.user.id,
+          servers: await mcpRepository.selectAllForUser(session.user.id),
+        };
+
         const MCP_TOOLS = await safe()
           .map(errorIf(() => !isToolCallAllowed && "Not allowed"))
           .map(() =>
             loadMcpTools({
+              mcpContext,
               mentions,
               allowedMcpServers,
             }),
@@ -218,6 +276,7 @@ export async function POST(request: Request) {
             loadWorkFlowTools({
               mentions,
               dataStream,
+              mcpContext,
             }),
           )
           .orElse({});
@@ -233,11 +292,12 @@ export async function POST(request: Request) {
           .orElse({});
         const inProgressToolParts = extractInProgressToolPart(message);
         if (inProgressToolParts.length) {
-          await Promise.all(
+          const manualToolOutputs = await Promise.all(
             inProgressToolParts.map(async (part) => {
               const output = await manualToolExecuteByLastMessage(
                 part,
                 { ...MCP_TOOLS, ...WORKFLOW_TOOLS, ...APP_DEFAULT_TOOLS },
+                mcpContext,
                 request.signal,
               );
               part.output = output;
@@ -247,8 +307,12 @@ export async function POST(request: Request) {
                 toolCallId: part.toolCallId,
                 output,
               });
+              return output;
             }),
           );
+          if (manualToolOutputs.some(isMcpAuthRequiredToolResult)) {
+            return;
+          }
         }
 
         const userPreferences = thread?.userPreferences || undefined;
@@ -322,7 +386,7 @@ export async function POST(request: Request) {
           experimental_transform: smoothStream({ chunking: "word" }),
           maxRetries: 2,
           tools: vercelAITooles,
-          stopWhen: stepCountIs(10),
+          stopWhen: [stepCountIs(10), stopWhenMcpAuthRequired],
           toolChoice: "auto",
           abortSignal: request.signal,
         });
@@ -365,9 +429,7 @@ export async function POST(request: Request) {
         }
 
         if (agent) {
-          agentRepository.updateAgent(agent.id, session.user.id, {
-            updatedAt: new Date(),
-          } as any);
+          await agentRepository.updateAgent(agent.id, session.user.id, {});
         }
       },
       onError: handleError,
@@ -377,8 +439,13 @@ export async function POST(request: Request) {
     return createUIMessageStreamResponse({
       stream,
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error(error);
-    return Response.json({ message: error.message }, { status: 500 });
+    return Response.json(
+      {
+        message: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 },
+    );
   }
 }

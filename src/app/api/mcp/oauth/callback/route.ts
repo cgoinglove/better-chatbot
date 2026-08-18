@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { mcpOAuthRepository } from "@/lib/db/repository";
+import { mcpOAuthRepository, mcpRepository } from "@/lib/db/repository";
 import { mcpClientsManager } from "lib/ai/mcp/mcp-manager";
 
 import globalLogger from "logger";
@@ -11,7 +11,7 @@ interface OAuthResponseOptions {
   heading: string;
   message: string;
   postMessageType: string;
-  postMessageData: Record<string, any>;
+  postMessageData: Record<string, boolean | string | undefined>;
   statusCode: number;
 }
 
@@ -141,11 +141,33 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  const client = await mcpClientsManager.getClient(session.mcpServerId);
+  if (!session.userId) {
+    return createOAuthResponsePage({
+      type: "error",
+      title: "OAuth Error",
+      heading: "Authentication Failed",
+      message: "OAuth session is missing a user",
+      postMessageType: "MCP_OAUTH_ERROR",
+      postMessageData: {
+        error: "invalid_session",
+        error_description: "OAuth session is missing a user",
+      },
+      statusCode: 400,
+    });
+  }
+
+  const context = {
+    userId: session.userId,
+    servers: await mcpRepository.selectAllForUser(session.userId),
+  };
+  const client = await mcpClientsManager.getClient(
+    session.mcpServerId,
+    context,
+  );
 
   try {
     await client?.client.finishAuth(callbackData.code, callbackData.state);
-    await mcpClientsManager.refreshClient(session.mcpServerId);
+    await mcpClientsManager.refreshClient(session.mcpServerId, context);
 
     return createOAuthResponsePage({
       type: "success",
@@ -158,13 +180,17 @@ export async function GET(request: NextRequest) {
       },
       statusCode: 200,
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("OAuth callback failed", error);
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Failed to complete the authentication process";
     return createOAuthResponsePage({
       type: "error",
       title: "OAuth Error",
       heading: "Authentication Failed",
-      message: error.message || "Failed to complete the authentication process",
+      message,
       postMessageType: "MCP_OAUTH_ERROR",
       postMessageData: {
         error: "auth_failed",

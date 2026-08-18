@@ -16,12 +16,32 @@ import {
   toAny,
 } from "lib/utils";
 import { safe } from "ts-safe";
-import { McpServerTable } from "lib/db/pg/schema.pg";
 import { createMCPToolId } from "./mcp-tool-id";
 import globalLogger from "logger";
 import { jsonSchema, ToolCallOptions } from "ai";
 import { createMemoryMCPConfigStorage } from "./memory-mcp-config-storage";
 import { colorize } from "consola/utils";
+
+export type MCPUserContext = {
+  userId: string;
+  servers: McpServerSelect[];
+};
+
+type TextToolContent = {
+  type: "text";
+  text: string;
+};
+
+function isTextToolContent(content: unknown): content is TextToolContent {
+  return (
+    typeof content === "object" &&
+    content !== null &&
+    "type" in content &&
+    "text" in content &&
+    content.type === "text" &&
+    typeof content.text === "string"
+  );
+}
 
 /**
  * Interface for storage of MCP server configurations.
@@ -98,30 +118,36 @@ export class MCPClientsManager {
           await this.storage.init(this);
           const configs = await this.storage.loadAll();
           await Promise.all(
-            configs.map(
-              ({ id, name, config, toolInfo, lastConnectionStatus }) => {
-                if (toolInfo?.length) {
-                  this.logger.info(
-                    `Loading cached tool info for ${name} (${toolInfo.length} tools)`,
-                  );
-                  this.addClientWithCachedToolInfo(id, name, config, toolInfo);
-                  return Promise.resolve();
-                }
-                // Register errored servers without connecting
-                // — user can manually refresh these from the UI
-                if (lastConnectionStatus === "error") {
-                  this.logger.info(
-                    `Registering ${name} without connect (last status: error)`,
-                  );
-                  this.addClientWithCachedToolInfo(id, name, config, []);
-                  return Promise.resolve();
-                }
-                // New servers or servers without cache — connect in background
-                return this.addClient(id, name, config).catch(() => {
-                  `ignore error`;
-                });
-              },
-            ),
+            configs.map((server) => {
+              const { id, name, config, toolInfo, lastConnectionStatus } =
+                server;
+              if (server.perUserAuth) {
+                this.logger.info(
+                  `Skipping global client for per-user MCP server ${name}`,
+                );
+                return Promise.resolve();
+              }
+              if (toolInfo?.length) {
+                this.logger.info(
+                  `Loading cached tool info for ${name} (${toolInfo.length} tools)`,
+                );
+                this.addClientWithCachedToolInfo(server);
+                return Promise.resolve();
+              }
+              // Register errored servers without connecting
+              // — user can manually refresh these from the UI
+              if (lastConnectionStatus === "error") {
+                this.logger.info(
+                  `Registering ${name} without connect (last status: error)`,
+                );
+                this.addClientWithCachedToolInfo(server);
+                return Promise.resolve();
+              }
+              // New servers or servers without cache — connect in background
+              return this.addClient(id, name, config).catch(() => {
+                `ignore error`;
+              });
+            }),
           );
         }
       })
@@ -135,82 +161,128 @@ export class MCPClientsManager {
   /**
    * Returns all tools from all clients as a flat object
    */
-  async tools(): Promise<Record<string, VercelAIMcpTool>> {
-    await this.waitInitialized();
-    return Array.from(this.clients.entries()).reduce(
-      (acc, [id, client]) => {
-        if (!client.client?.toolInfo?.length) return acc;
-        const clientName = client.name;
-        return {
-          ...acc,
-          ...client.client.toolInfo.reduce(
-            (bcc, tool) => {
-              return {
-                ...bcc,
-                [createMCPToolId(clientName, tool.name)]:
-                  VercelAIMcpToolTag.create({
-                    description: tool.description,
-                    inputSchema: jsonSchema(
-                      toAny({
-                        ...tool.inputSchema,
-                        properties: tool.inputSchema?.properties ?? {},
-                        additionalProperties: false,
-                      }),
-                    ),
-                    _originToolName: tool.name,
-                    _mcpServerName: clientName,
-                    _mcpServerId: id,
-                    execute: (params, options: ToolCallOptions) => {
-                      options?.abortSignal?.throwIfAborted();
-                      return this.toolCall(id, tool.name, params);
-                    },
-                  }),
-              };
+  async tools(
+    context: MCPUserContext,
+  ): Promise<Record<string, VercelAIMcpTool>> {
+    await this.ensureClientsForContext(context);
+
+    const tools: Record<string, VercelAIMcpTool> = {};
+
+    for (const config of context.servers) {
+      const { id, name, toolInfo: storedToolInfo } = config;
+      const clientId = this.getClientIdForServer(config, context.userId);
+      const client = this.clients.get(clientId);
+
+      const toolInfo =
+        client?.client?.toolInfo && client.client.toolInfo.length > 0
+          ? client.client.toolInfo
+          : storedToolInfo || [];
+
+      if (!toolInfo.length) continue;
+
+      const clientName = name;
+      for (const tool of toolInfo) {
+        tools[createMCPToolId(clientName, tool.name)] =
+          VercelAIMcpToolTag.create({
+            description: tool.description,
+            inputSchema: jsonSchema(
+              toAny({
+                ...tool.inputSchema,
+                properties: tool.inputSchema?.properties ?? {},
+                additionalProperties: false,
+              }),
+            ),
+            _originToolName: tool.name,
+            _mcpServerName: clientName,
+            _mcpServerId: id,
+            execute: (params, options: ToolCallOptions) => {
+              options?.abortSignal?.throwIfAborted();
+              return this.toolCall(id, tool.name, params, context);
             },
-            {} as Record<string, VercelAIMcpTool>,
-          ),
-        };
-      },
-      {} as Record<string, VercelAIMcpTool>,
-    );
+          });
+      }
+    }
+
+    return tools;
   }
   /**
    * Creates a client with cached tool info but does NOT connect.
    * The connection will happen lazily when a tool is actually called.
    */
   private addClientWithCachedToolInfo(
-    id: string,
-    name: string,
-    serverConfig: MCPServerConfig,
-    cachedToolInfo: MCPToolInfo[],
+    server: McpServerSelect,
+    userId?: string,
   ) {
-    if (this.clients.has(id)) {
-      const prevClient = this.clients.get(id)!;
+    const clientId = this.getClientIdForServer(server, userId);
+    if (this.clients.has(clientId)) {
+      const prevClient = this.clients.get(clientId)!;
       void prevClient.client.disconnect();
     }
-    const client = createMCPClient(id, name, serverConfig, {
+    const client = createMCPClient(server.id, server.name, server.config, {
       autoDisconnectSeconds: this.autoDisconnectSeconds,
-      initialToolInfo: cachedToolInfo,
+      initialToolInfo: server.toolInfo ?? [],
+      userId,
+      perUserAuth: server.perUserAuth,
       onToolInfoUpdate: (toolInfo) => {
-        this.storage?.updateToolInfo?.(id, toolInfo);
+        this.storage?.updateToolInfo?.(server.id, toolInfo);
       },
       onConnectionStatusChange: (status) => {
-        this.storage?.updateConnectionStatus?.(id, status);
+        this.storage?.updateConnectionStatus?.(server.id, status);
       },
     });
-    this.clients.set(id, { client, name });
+    this.clients.set(clientId, { client, name: server.name });
+  }
+
+  async ensureClientsForContext(context: MCPUserContext) {
+    await this.waitInitialized();
+    await Promise.allSettled(
+      context.servers.map(async (server) => {
+        const clientId = this.getClientIdForServer(server, context.userId);
+        if (this.clients.has(clientId)) return;
+
+        if (
+          server.toolInfo?.length ||
+          (!server.perUserAuth && server.lastConnectionStatus === "error")
+        ) {
+          this.addClientWithCachedToolInfo(server, context.userId);
+          return;
+        }
+
+        if (server.perUserAuth) {
+          return;
+        }
+
+        await this.addClient(
+          server.id,
+          server.name,
+          server.config,
+          context.userId,
+        ).catch(() => {
+          `ignore error`;
+        });
+      }),
+    );
   }
 
   /**
    * Creates and adds a new client instance to memory only (no storage persistence)
    */
-  async addClient(id: string, name: string, serverConfig: MCPServerConfig) {
-    if (this.clients.has(id)) {
-      const prevClient = this.clients.get(id)!;
+  async addClient(
+    id: string,
+    name: string,
+    serverConfig: MCPServerConfig,
+    userId?: string,
+  ) {
+    const server = await this.storage.get(id);
+    const clientId = server ? this.getClientIdForServer(server, userId) : id;
+    if (this.clients.has(clientId)) {
+      const prevClient = this.clients.get(clientId)!;
       void prevClient.client.disconnect();
     }
     const client = createMCPClient(id, name, serverConfig, {
       autoDisconnectSeconds: this.autoDisconnectSeconds,
+      userId,
+      perUserAuth: server?.perUserAuth ?? false,
       onToolInfoUpdate: (toolInfo) => {
         this.storage?.updateToolInfo?.(id, toolInfo);
       },
@@ -218,27 +290,29 @@ export class MCPClientsManager {
         this.storage?.updateConnectionStatus?.(id, status);
       },
     });
-    this.clients.set(id, { client, name });
+    this.clients.set(clientId, { client, name });
     return client.connect();
   }
 
   /**
    * Persists a new client configuration to storage and adds the client instance to memory
    */
-  async persistClient(server: typeof McpServerTable.$inferInsert) {
-    let id = server.name;
-    if (this.storage) {
-      const entity = await this.storage.save(server);
-      id = entity.id;
-    }
-    await this.addClient(id, server.name, server.config).catch((err) => {
+  async persistClient(server: McpServerInsert) {
+    const entity = await this.storage.save(server);
+    await this.addClient(
+      entity.id,
+      entity.name,
+      entity.config,
+      entity.userId,
+    ).catch((err) => {
       if (!server.id) {
-        void this.removeClient(id);
+        void this.removeClient(entity.id);
       }
       throw err;
     });
 
-    return this.clients.get(id)!;
+    const clientId = this.getClientIdForServer(entity, entity.userId);
+    return this.clients.get(clientId)!;
   }
 
   /**
@@ -250,7 +324,7 @@ export class MCPClientsManager {
         await this.storage.delete(id);
       }
     }
-    this.disconnectClient(id);
+    this.disconnectServer(id);
   }
 
   async disconnectClient(id: string) {
@@ -261,18 +335,27 @@ export class MCPClientsManager {
     }
   }
 
+  async disconnectServer(id: string) {
+    const clientIds = Array.from(this.clients.keys()).filter(
+      (clientId) => clientId === id || clientId.startsWith(`${id}:`),
+    );
+    await Promise.allSettled(
+      clientIds.map((clientId) => this.disconnectClient(clientId)),
+    );
+  }
+
   /**
    * Refreshes an existing client with a new configuration or its existing config
    */
-  async refreshClient(id: string) {
+  async refreshClient(id: string, context: MCPUserContext) {
     await this.waitInitialized();
-    const server = await this.storage.get(id);
-    if (!server) {
-      throw new Error(`Client ${id} not found`);
-    }
-    this.logger.info(`Refreshing client ${server.name}`);
-    await this.addClient(id, server.name, server.config);
-    return this.clients.get(id)!;
+    const server = this.requireAccessibleServer(context, id);
+    this.logger.info(
+      `Refreshing client ${server.name} for user ${context.userId}`,
+    );
+    await this.addClient(id, server.name, server.config, context.userId);
+    const clientId = this.getClientIdForServer(server, context.userId);
+    return this.clients.get(clientId)!;
   }
 
   async cleanup() {
@@ -281,43 +364,83 @@ export class MCPClientsManager {
     await Promise.allSettled(clients.map(({ client }) => client.disconnect()));
   }
 
-  async getClients() {
+  async getClients(context: MCPUserContext) {
     await this.waitInitialized();
-    return Array.from(this.clients.entries()).map(([id, { client }]) => ({
-      id,
-      client: client,
-    }));
-  }
-  async getClient(id: string) {
-    await this.waitInitialized();
-    const client = this.clients.get(id);
-    if (!client) {
-      await this.refreshClient(id);
+    const result: {
+      id: string;
+      clientId: string;
+      client: MCPClient;
+      name: string;
+    }[] = [];
+
+    for (const config of context.servers) {
+      const clientId = this.getClientIdForServer(config, context.userId);
+      const client = this.clients.get(clientId);
+      if (client) {
+        result.push({
+          id: config.id,
+          clientId,
+          client: client.client,
+          name: client.name,
+        });
+      }
     }
 
-    return this.clients.get(id);
+    return result;
+  }
+
+  private getClientIdForServer(server: McpServerSelect, userId?: string) {
+    if (!server.perUserAuth) {
+      return server.id;
+    }
+    if (!userId) {
+      throw new Error(
+        `MCP server ${server.id} requires authenticated user context`,
+      );
+    }
+    return `${server.id}:${userId}`;
+  }
+
+  private requireAccessibleServer(context: MCPUserContext, id: string) {
+    const server = context.servers.find((s) => s.id === id);
+    if (!server) {
+      throw new Error(`MCP server ${id} is not accessible`);
+    }
+    return server;
+  }
+
+  async getClient(id: string, context: MCPUserContext) {
+    await this.waitInitialized();
+    const server = this.requireAccessibleServer(context, id);
+
+    const clientId = this.getClientIdForServer(server, context.userId);
+
+    const client = this.clients.get(clientId);
+    if (!client) {
+      await this.addClient(id, server.name, server.config, context.userId);
+    }
+
+    return this.clients.get(clientId);
   }
   async toolCallByServerName(
     serverName: string,
     toolName: string,
     input: unknown,
+    context: MCPUserContext,
   ) {
-    const clients = await this.getClients();
-    const client = clients.find((c) => c.client.getInfo().name === serverName);
-    if (!client) {
-      if (this.storage) {
-        const servers = await this.storage.loadAll();
-        const server = servers.find((s) => s.name === serverName);
-        if (server) {
-          return this.toolCall(server.id, toolName, input);
-        }
-      }
-      throw new Error(`Client ${serverName} not found`);
+    const server = context.servers.find((s) => s.name === serverName);
+    if (!server) {
+      throw new Error(`MCP server ${serverName} is not accessible`);
     }
-    return this.toolCall(client.id, toolName, input);
+    return this.toolCall(server.id, toolName, input, context);
   }
-  async toolCall(id: string, toolName: string, input: unknown) {
-    return safe(() => this.getClient(id))
+  async toolCall(
+    id: string,
+    toolName: string,
+    input: unknown,
+    context: MCPUserContext,
+  ) {
+    return safe(() => this.getClient(id, context))
       .map((client) => {
         if (!client) throw new Error(`Client ${id} not found`);
         return client.client;
@@ -327,10 +450,11 @@ export class MCPClientsManager {
         if (res?.content && Array.isArray(res.content)) {
           const parsedResult = {
             ...res,
-            content: res.content.map((c: any) => {
-              if (c?.type === "text" && c?.text) {
+            content: res.content.map((c: unknown) => {
+              if (isTextToolContent(c)) {
                 const parsed = safeJSONParse(c.text);
                 return {
+                  ...c,
                   type: "text",
                   text: parsed.success ? parsed.value : c.text,
                 };

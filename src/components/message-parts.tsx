@@ -1,5 +1,6 @@
 "use client";
 
+import { mutate } from "swr";
 import { FileUIPart, getToolName, ToolUIPart, UIMessage } from "ai";
 import {
   Check,
@@ -42,7 +43,11 @@ import { ChatMetadata, ChatModel, ManualToolConfirmTag } from "app-types/chat";
 
 import { useTranslations } from "next-intl";
 import { extractMCPToolId } from "lib/ai/mcp/mcp-tool-id";
+import { isMcpAuthRequiredToolResult } from "app-types/mcp";
 import { Separator } from "ui/separator";
+import { appStore } from "@/app/store";
+import { useMcpList } from "@/hooks/queries/use-mcp-list";
+import { MCPAuthDialog } from "./mcp-auth-dialog";
 
 import { TextShimmer } from "ui/text-shimmer";
 import equal from "lib/equal";
@@ -62,8 +67,11 @@ import { WorkflowInvocation } from "./tool-invocation/workflow-invocation";
 import dynamic from "next/dynamic";
 import { notify } from "lib/notify";
 import { ModelProviderIcon } from "ui/model-provider-icon";
-import { appStore } from "@/app/store";
 import { BACKGROUND_COLORS, EMOJI_DATA } from "lib/const";
+import type { PieChartProps } from "./tool-invocation/pie-chart";
+import type { BarChartProps } from "./tool-invocation/bar-chart";
+import type { LineChartProps } from "./tool-invocation/line-chart";
+import type { InteractiveTableProps } from "./tool-invocation/interactive-table";
 
 type MessagePart = UIMessage["parts"][number];
 type TextMessagePart = Extract<MessagePart, { type: "text" }>;
@@ -100,13 +108,51 @@ interface ToolMessagePartProps {
   showActions: boolean;
   isLast?: boolean;
   isManualToolInvocation?: boolean;
+  prevMessage?: UIMessage;
+  threadId?: string;
   addToolResult?: UseChatHelpers<UIMessage>["addToolResult"];
   isError?: boolean;
   setMessages?: UseChatHelpers<UIMessage>["setMessages"];
+  sendMessage?: UseChatHelpers<UIMessage>["sendMessage"];
   readonly?: boolean;
 }
 
 const MAX_TEXT_LENGTH = 600;
+
+async function replayMessageAfterMcpAuth({
+  replayMessage,
+  blockedMessageId,
+  threadId,
+  setMessages,
+  sendMessage,
+}: {
+  replayMessage?: UIMessage;
+  blockedMessageId: string;
+  threadId?: string;
+  setMessages?: UseChatHelpers<UIMessage>["setMessages"];
+  sendMessage?: UseChatHelpers<UIMessage>["sendMessage"];
+}) {
+  if (!replayMessage || !setMessages || !sendMessage) {
+    return;
+  }
+
+  if (threadId) {
+    await deleteMessagesByChatIdAfterTimestampAction(blockedMessageId);
+  }
+
+  setMessages((messages) => {
+    const replayIndex = messages.findIndex((m) => m.id === replayMessage.id);
+
+    if (replayIndex === -1) {
+      return messages;
+    }
+
+    return messages.slice(0, replayIndex);
+  });
+
+  sendMessage(replayMessage);
+}
+
 export const UserMessagePart = memo(
   function UserMessagePart({
     part,
@@ -751,10 +797,14 @@ export const ToolMessagePart = memo(
     addToolResult,
     isError,
     messageId,
+    prevMessage,
+    threadId,
     setMessages,
+    sendMessage,
     isManualToolInvocation,
   }: ToolMessagePartProps) => {
     const t = useTranslations("");
+    const { data: mcpList } = useMcpList();
 
     const { output, toolCallId, state, input, errorText } = part;
 
@@ -828,7 +878,7 @@ export const ToolMessagePart = memo(
     }, [messageId]);
 
     const onToolCallDirect = useCallback(
-      (result: any) => {
+      (result: unknown) => {
         addToolResult?.({
           tool: toolName,
           toolCallId,
@@ -906,24 +956,30 @@ export const ToolMessagePart = memo(
         switch (toolName) {
           case DefaultToolName.CreatePieChart:
             return (
-              <PieChart key={`${toolCallId}-${toolName}`} {...(input as any)} />
+              <PieChart
+                key={`${toolCallId}-${toolName}`}
+                {...(input as PieChartProps)}
+              />
             );
           case DefaultToolName.CreateBarChart:
             return (
-              <BarChart key={`${toolCallId}-${toolName}`} {...(input as any)} />
+              <BarChart
+                key={`${toolCallId}-${toolName}`}
+                {...(input as BarChartProps)}
+              />
             );
           case DefaultToolName.CreateLineChart:
             return (
               <LineChart
                 key={`${toolCallId}-${toolName}`}
-                {...(input as any)}
+                {...(input as LineChartProps)}
               />
             );
           case DefaultToolName.CreateTable:
             return (
               <InteractiveTable
                 key={`${toolCallId}-${toolName}`}
-                {...(input as any)}
+                {...(input as InteractiveTableProps)}
               />
             );
         }
@@ -934,6 +990,16 @@ export const ToolMessagePart = memo(
     const { serverName: mcpServerName, toolName: mcpToolName } = useMemo(() => {
       return extractMCPToolId(toolName);
     }, [toolName]);
+
+    useEffect(() => {
+      if (
+        mcpServerName &&
+        (output as any)?.isError &&
+        !isMcpAuthRequiredToolResult(output)
+      ) {
+        mutate("/api/mcp/list");
+      }
+    }, [mcpServerName, output]);
 
     const isExpanded = useMemo(() => {
       return expanded || result === null || isWorkflowTool;
@@ -947,8 +1013,33 @@ export const ToolMessagePart = memo(
       return !isCompleted && isLast;
     }, [isWorkflowTool, isCompleted, result, isLast]);
 
+    const authRequiredOutput = isMcpAuthRequiredToolResult(output)
+      ? output
+      : null;
+    const showAuthDialog = isLast && !!authRequiredOutput;
+    const authServer = showAuthDialog
+      ? mcpList?.find((s) => s.id === authRequiredOutput._mcpServerId)
+      : undefined;
+
     return (
       <div className="group w-full">
+        {showAuthDialog && (
+          <MCPAuthDialog
+            serverId={authRequiredOutput._mcpServerId}
+            serverName={mcpServerName}
+            isAuthorized={authServer?.isAuthorized}
+            onAuthorized={() =>
+              replayMessageAfterMcpAuth({
+                replayMessage: prevMessage,
+                blockedMessageId: messageId,
+                threadId,
+                setMessages,
+                sendMessage,
+              })
+            }
+          />
+        )}
+
         {CustomToolComponent ? (
           CustomToolComponent
         ) : (

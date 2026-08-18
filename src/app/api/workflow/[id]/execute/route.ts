@@ -1,6 +1,6 @@
 import { getSession } from "auth/server";
 import { createWorkflowExecutor } from "lib/ai/workflow/executor/workflow-executor";
-import { workflowRepository } from "lib/db/repository";
+import { mcpRepository, workflowRepository } from "lib/db/repository";
 import { encodeWorkflowEvent } from "lib/ai/workflow/shared.workflow";
 import logger from "logger";
 import { colorize } from "consola/utils";
@@ -32,6 +32,10 @@ export async function POST(
     edges: workflow.edges,
     nodes: workflow.nodes,
     logger: wfLogger,
+    mcpContext: {
+      userId: session.user.id,
+      servers: await mcpRepository.selectAllForUser(session.user.id),
+    },
   });
 
   const encoder = new TextEncoder();

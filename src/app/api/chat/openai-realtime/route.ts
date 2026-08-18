@@ -21,6 +21,7 @@ import globalLogger from "lib/logger";
 import { colorize } from "consola/utils";
 import { getUserPreferences } from "lib/user/server";
 import { ChatMention } from "app-types/chat";
+import { mcpRepository } from "lib/db/repository";
 
 const logger = globalLogger.withDefaults({
   message: colorize("blackBright", `OpenAI Realtime API: `),
@@ -56,7 +57,13 @@ export async function POST(request: NextRequest) {
 
     const enabledMentions = agent ? agent.instructions.mentions : mentions;
 
-    const allowedMcpTools = await loadMcpTools({ mentions: enabledMentions });
+    const allowedMcpTools = await loadMcpTools({
+      mcpContext: {
+        userId: session.user.id,
+        servers: await mcpRepository.selectAllForUser(session.user.id),
+      },
+      mentions: enabledMentions,
+    });
 
     const toolNames = Object.keys(allowedMcpTools ?? {});
 
@@ -131,10 +138,21 @@ function vercelAIToolToOpenAITool(tool: VercelAIMcpTool, name: string) {
     name,
     type: "function",
     description: tool.description,
-    parameters: (tool.inputSchema as any).jsonSchema ?? {
-      type: "object",
-      properties: {},
-      required: [],
-    },
+    parameters: getToolJsonSchema(tool.inputSchema),
+  };
+}
+
+function getToolJsonSchema(inputSchema: unknown) {
+  if (
+    typeof inputSchema === "object" &&
+    inputSchema !== null &&
+    "jsonSchema" in inputSchema
+  ) {
+    return inputSchema.jsonSchema;
+  }
+  return {
+    type: "object",
+    properties: {},
+    required: [],
   };
 }

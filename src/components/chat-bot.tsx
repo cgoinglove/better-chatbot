@@ -18,6 +18,7 @@ import {
   TextUIPart,
   UIMessage,
 } from "ai";
+import { isMcpAuthRequiredToolResult } from "app-types/mcp";
 
 import { safe } from "ts-safe";
 import { mutate } from "swr";
@@ -49,6 +50,7 @@ import { getStorageManager } from "lib/browser-stroage";
 import { AnimatePresence, motion } from "framer-motion";
 import { useThreadFileUploader } from "@/hooks/use-thread-file-uploader";
 import { useFileDragOverlay } from "@/hooks/use-file-drag-overlay";
+import { useMcpList } from "@/hooks/queries/use-mcp-list";
 
 type Props = {
   threadId: string;
@@ -71,6 +73,7 @@ const isFirstTime = firstTimeStorage.get() ?? true;
 firstTimeStorage.set(false);
 
 export default function ChatBot({ threadId, initialMessages }: Props) {
+  useMcpList();
   const containerRef = useRef<HTMLDivElement>(null);
   const [isAtBottom, setIsAtBottom] = useState(true);
   const { uploadFiles } = useThreadFileUploader(threadId);
@@ -155,7 +158,16 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
     stop,
   } = useChat({
     id: threadId,
-    sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
+    sendAutomaticallyWhen: ({ messages }) => {
+      if (!lastAssistantMessageIsCompleteWithToolCalls({ messages }))
+        return false;
+      const lastMsg = messages[messages.length - 1];
+      if (!lastMsg || lastMsg.role !== "assistant") return false;
+      const hasAuthRequired = lastMsg.parts.some(
+        (p) => isToolUIPart(p) && isMcpAuthRequiredToolResult(p.output),
+      );
+      return !hasAuthRequired;
+    },
     transport: new DefaultChatTransport({
       prepareSendMessagesRequest: ({ messages, body, id }) => {
         if (window.location.pathname !== `/chat/${threadId}`) {

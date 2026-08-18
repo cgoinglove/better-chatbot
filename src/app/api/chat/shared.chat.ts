@@ -41,6 +41,7 @@ import { NodeKind } from "lib/ai/workflow/workflow.interface";
 import { mcpClientsManager } from "lib/ai/mcp/mcp-manager";
 import { APP_DEFAULT_TOOL_KIT } from "lib/ai/tools/tool-kit";
 import { AppDefaultToolkit } from "lib/ai/tools";
+import type { MCPUserContext } from "lib/ai/mcp/create-mcp-clients-manager";
 
 export function filterMCPToolsByMentions(
   tools: Record<string, VercelAIMcpTool>,
@@ -115,6 +116,7 @@ export function mergeSystemPrompt(
 export function manualToolExecuteByLastMessage(
   part: ToolUIPart,
   tools: Record<string, VercelAIMcpTool | VercelAIWorkflowTool | Tool>,
+  mcpContext: MCPUserContext,
   abortSignal?: AbortSignal,
 ) {
   const { input } = part;
@@ -141,6 +143,7 @@ export function manualToolExecuteByLastMessage(
           tool._mcpServerId,
           tool._originToolName,
           input,
+          mcpContext,
         );
       }
       return tool.execute!(input, {
@@ -225,12 +228,14 @@ export const workflowToVercelAITool = ({
   schema,
   dataStream,
   name,
+  mcpContext,
 }: {
   id: string;
   name: string;
   description?: string;
   schema: ObjectJsonSchema7;
   dataStream: UIMessageStreamWriter;
+  mcpContext: MCPUserContext;
 }): VercelAIWorkflowTool => {
   const toolName = name
     .replace(/[^a-zA-Z0-9\s]/g, "")
@@ -264,6 +269,7 @@ export const workflowToVercelAITool = ({
           const executor = createWorkflowExecutor({
             nodes: workflow.nodes,
             edges: workflow.edges,
+            mcpContext,
           });
           toolResult.workflowIcon = workflow.icon;
 
@@ -376,12 +382,14 @@ export const workflowToVercelAITools = (
     schema: ObjectJsonSchema7;
   }[],
   dataStream: UIMessageStreamWriter,
+  mcpContext: MCPUserContext,
 ) => {
   return workflows
     .map((v) =>
       workflowToVercelAITool({
         ...v,
         dataStream,
+        mcpContext,
       }),
     )
     .reduce(
@@ -393,11 +401,12 @@ export const workflowToVercelAITools = (
     );
 };
 
-export const loadMcpTools = (opt?: {
+export const loadMcpTools = (opt: {
+  mcpContext: MCPUserContext;
   mentions?: ChatMention[];
   allowedMcpServers?: Record<string, AllowedMCPServer>;
 }) =>
-  safe(() => mcpClientsManager.tools())
+  safe(() => mcpClientsManager.tools(opt.mcpContext))
     .map((tools) => {
       if (opt?.mentions?.length) {
         return filterMCPToolsByMentions(tools, opt.mentions);
@@ -409,6 +418,7 @@ export const loadMcpTools = (opt?: {
 export const loadWorkFlowTools = (opt: {
   mentions?: ChatMention[];
   dataStream: UIMessageStreamWriter;
+  mcpContext: MCPUserContext;
 }) =>
   safe(() =>
     opt?.mentions?.length
@@ -422,7 +432,9 @@ export const loadWorkFlowTools = (opt: {
         )
       : [],
   )
-    .map((tools) => workflowToVercelAITools(tools, opt.dataStream))
+    .map((tools) =>
+      workflowToVercelAITools(tools, opt.dataStream, opt.mcpContext),
+    )
     .orElse({} as Record<string, VercelAIWorkflowTool>);
 
 export const loadAppDefaultTools = (opt?: {

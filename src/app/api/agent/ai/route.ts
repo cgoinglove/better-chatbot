@@ -10,7 +10,7 @@ import { colorize } from "consola/utils";
 import { AgentGenerateSchema } from "app-types/agent";
 import { z } from "zod";
 import { loadAppDefaultTools } from "../../chat/shared.chat";
-import { workflowRepository } from "lib/db/repository";
+import { mcpRepository, workflowRepository } from "lib/db/repository";
 import { safe } from "ts-safe";
 import { objectFlow } from "lib/utils";
 import { mcpClientsManager } from "lib/ai/mcp/mcp-manager";
@@ -46,7 +46,12 @@ export async function POST(request: Request) {
       })
       .unwrap();
 
-    await safe(mcpClientsManager.tools())
+    await safe(async () =>
+      mcpClientsManager.tools({
+        userId: session.user.id,
+        servers: await mcpRepository.selectAllForUser(session.user.id),
+      }),
+    )
       .ifOk((tools) => {
         objectFlow(tools).forEach((mcp) => {
           toolNames.add(mcp._originToolName);

@@ -18,6 +18,7 @@ import { convertDBNodeToUINode } from "../shared.workflow";
 import globalLogger from "logger";
 import { ConsolaInstance } from "consola";
 import { colorize } from "consola/utils";
+import type { MCPUserContext } from "lib/ai/mcp/create-mcp-clients-manager";
 
 /**
  * Maps node kinds to their corresponding executor functions.
@@ -68,6 +69,7 @@ export const createWorkflowExecutor = (workflow: {
   nodes: DBNode[];
   edges: DBEdge[];
   logger?: ConsolaInstance;
+  mcpContext?: MCPUserContext;
 }) => {
   // Create runtime state store for the workflow
   const store = createGraphStore({
@@ -128,6 +130,7 @@ export const createWorkflowExecutor = (workflow: {
         const result = await executor({
           node: convertDBNodeToUINode(node).data,
           state,
+          mcpContext: workflow.mcpContext,
         });
 
         // Store the execution results in the workflow state

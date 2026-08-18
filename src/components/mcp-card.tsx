@@ -53,6 +53,8 @@ export const MCPCard = memo(function MCPCard({
   user,
   userName,
   userAvatar,
+  perUserAuth,
+  isAuthorized,
 }: MCPServerInfo & { user: BasicUser }) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [visibilityChangeLoading, setVisibilityChangeLoading] = useState(false);
@@ -69,8 +71,10 @@ export const MCPCard = memo(function MCPCard({
     return isProcessing || status === "loading";
   }, [isProcessing, status]);
 
-  const needsAuthorization = status === "authorizing";
-  const isDisabled = isLoading || needsAuthorization;
+  const needsAuthorization =
+    status === "authorizing" ||
+    (perUserAuth && !isAuthorized && status === "disconnected");
+  const isDisabled = isLoading || status === "authorizing";
 
   // Check permissions (kept for potential future use)
 
@@ -184,6 +188,7 @@ export const MCPCard = memo(function MCPCard({
                     visibility,
                     enabled,
                     userId,
+                    perUserAuth,
                   },
                 })
               }
@@ -329,7 +334,7 @@ export const MCPCard = memo(function MCPCard({
             </div>
 
             <div className="flex-1 overflow-y-auto">
-              {toolInfo.length > 0 ? (
+              {toolInfo && toolInfo.length > 0 ? (
                 <ToolsList tools={toolInfo} serverId={id} />
               ) : (
                 <div className="bg-secondary/30 rounded-md p-3 text-center">

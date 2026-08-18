@@ -810,6 +810,12 @@
     "public": "Featured",
     "publicDescription": "Featured for all users to use",
     "featured": "Featured",
-    "featuredDescription": "Featured for all users to use"
+    "featuredDescription": "Featured for all users to use",
+    "perUserAuthentication": "Per-User Authentication",
+    "perUserAuthenticationDescription": "Each user must authenticate separately with their own credentials",
+    "authorizationRequired": "Authorization Required",
+    "authorizationRequiredDescription": "{serverName} requires authorization to access its tools.",
+    "authorize": "Authorize",
+    "authorizationFailed": "Authorization failed"
   }
 }
