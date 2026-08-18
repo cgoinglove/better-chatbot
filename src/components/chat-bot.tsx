@@ -49,11 +49,17 @@ import { getStorageManager } from "lib/browser-stroage";
 import { AnimatePresence, motion } from "framer-motion";
 import { useThreadFileUploader } from "@/hooks/use-thread-file-uploader";
 import { useFileDragOverlay } from "@/hooks/use-file-drag-overlay";
+import {
+  useUrlRewritePreset,
+  type UrlRewriteIntent,
+} from "@/hooks/use-url-rewrite-preset";
 
 type Props = {
   threadId: string;
   initialMessages: Array<UIMessage>;
   selectedChatModel?: string;
+  /** Preset carried by an admin-created `/goto/{slug}` link, if any. */
+  urlRewriteIntent?: UrlRewriteIntent | null;
 };
 
 const LightRays = dynamic(() => import("ui/light-rays"), {
@@ -70,7 +76,11 @@ const firstTimeStorage = getStorageManager("IS_FIRST");
 const isFirstTime = firstTimeStorage.get() ?? true;
 firstTimeStorage.set(false);
 
-export default function ChatBot({ threadId, initialMessages }: Props) {
+export default function ChatBot({
+  threadId,
+  initialMessages,
+  urlRewriteIntent,
+}: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isAtBottom, setIsAtBottom] = useState(true);
   const { uploadFiles } = useThreadFileUploader(threadId);
@@ -362,6 +372,14 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
       }));
     }
   }, [pendingThreadMention, threadId, appStoreMutate]);
+
+  useUrlRewritePreset({
+    threadId,
+    intent: urlRewriteIntent,
+    enabled: initialMessages.length === 0,
+    setInput,
+    sendMessage,
+  });
 
   useEffect(() => {
     if (isInitialThreadEntry)

@@ -9,6 +9,7 @@ import { pgArchiveRepository } from "./pg/repositories/archive-repository.pg";
 import { pgMcpOAuthRepository } from "./pg/repositories/mcp-oauth-repository.pg";
 import { pgBookmarkRepository } from "./pg/repositories/bookmark-repository.pg";
 import { pgChatExportRepository } from "./pg/repositories/chat-export-repository.pg";
+import { pgUrlRewriteRepository } from "./pg/repositories/url-rewrite-repository.pg";
 
 export const chatRepository = pgChatRepository;
 export const userRepository = pgUserRepository;
@@ -24,3 +25,4 @@ export const agentRepository = pgAgentRepository;
 export const archiveRepository = pgArchiveRepository;
 export const bookmarkRepository = pgBookmarkRepository;
 export const chatExportRepository = pgChatExportRepository;
+export const urlRewriteRepository = pgUrlRewriteRepository;

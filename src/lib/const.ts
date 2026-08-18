@@ -16,6 +16,13 @@ export const FILE_BASED_MCP_CONFIG =
 export const COOKIE_KEY_SIDEBAR_STATE = "sidebar:state";
 export const COOKIE_KEY_LOCALE = "i18n:locale";
 
+/**
+ * Carries a pending `/goto/{slug}` link across the sign-in / sign-up redirects,
+ * so a logged-out visitor still lands on the configured chat preset.
+ */
+export const COOKIE_KEY_GOTO_INTENT = "goto:intent";
+export const GOTO_INTENT_MAX_AGE = 60 * 30; // 30 minutes
+
 export const BASE_URL = (() => {
   if (process.env.BETTER_AUTH_URL) return process.env.BETTER_AUTH_URL;
 

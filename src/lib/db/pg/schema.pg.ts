@@ -12,12 +12,17 @@ import {
   unique,
   varchar,
   index,
+  integer,
 } from "drizzle-orm/pg-core";
 import { isNotNull } from "drizzle-orm";
 import { DBWorkflow, DBEdge, DBNode } from "app-types/workflow";
 import { UIMessage } from "ai";
 import { ChatMetadata } from "app-types/chat";
 import { TipTapMentionJsonContent } from "@/types/util";
+import type {
+  UrlRewriteTarget,
+  UrlRewriteTargetKind,
+} from "app-types/url-rewrite";
 
 export const ChatThreadTable = pgTable("chat_thread", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
@@ -375,6 +380,36 @@ export const ChatExportCommentTable = pgTable("chat_export_comment", {
   createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
+
+export const UrlRewriteTable = pgTable(
+  "url_rewrite",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    slug: varchar("slug", { length: 64 }).notNull().unique(),
+    name: text("name").notNull(),
+    description: text("description"),
+    enabled: boolean("enabled").notNull().default(true),
+    targetKind: varchar("target_kind", { length: 32 })
+      .notNull()
+      .$type<UrlRewriteTargetKind>()
+      .default("chat"),
+    payload: json("payload").notNull().$type<UrlRewriteTarget>(),
+    payloadVersion: integer("payload_version").notNull().default(1),
+    expiresAt: timestamp("expires_at"),
+    createdBy: uuid("created_by")
+      .notNull()
+      .references(() => UserTable.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: timestamp("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (t) => [index("url_rewrite_created_at_idx").on(t.createdAt)],
+);
+
+export type UrlRewriteEntity = typeof UrlRewriteTable.$inferSelect;
 
 export type ArchiveEntity = typeof ArchiveTable.$inferSelect;
 export type ArchiveItemEntity = typeof ArchiveItemTable.$inferSelect;

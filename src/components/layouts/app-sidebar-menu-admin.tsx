@@ -9,7 +9,7 @@ import {
 import { Tooltip } from "ui/tooltip";
 import { SidebarMenuItem } from "ui/sidebar";
 import { SidebarMenuButton } from "ui/sidebar";
-import { Shield, Users } from "lucide-react";
+import { Link2, Shield, Users } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 
@@ -28,6 +28,13 @@ const AppSidebarAdmin = () => {
         url: "/admin",
         icon: Users,
         isActive: pathname.startsWith("/admin/users"),
+      },
+      {
+        id: "url-rewrites",
+        title: t("UrlRewrites.title"),
+        url: "/admin/url-rewrites",
+        icon: Link2,
+        isActive: pathname.startsWith("/admin/url-rewrites"),
       },
     ],
     [t, pathname],
