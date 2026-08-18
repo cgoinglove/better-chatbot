@@ -718,6 +718,7 @@
     "title": "Admin",
     "Sidebar": {
       "users": "Users",
+      "usage": "Usage",
       "toggleSidebar": "Toggle Sidebar",
       "adminPanel": "Admin Panel",
       "backToApp": "Back to App"
@@ -735,7 +736,20 @@
       "role": "Role",
       "status": "Status",
       "joined": "Joined",
-      "backToUsers": "Back to Users"
+      "backToUsers": "Back to Users",
+      "total": "Total",
+      "online": "Online",
+      "usersRole": "Users",
+      "editorsRole": "Editors",
+      "adminsRole": "Admins",
+      "analytics": "Analytics",
+      "userGrowth": "User Growth",
+      "activeUsers": "Active Users",
+      "twoDayStreak": "2 days streak",
+      "threeDayStreak": "3 days streak",
+      "last7Days": "Last 7 days",
+      "last30Days": "Last 30 days",
+      "last90Days": "Last 90 days"
     },
     "UserDelete": {
       "title": "Delete User Account",
@@ -758,6 +772,35 @@
       "failedToUpdateRole": "Failed to update role",
       "cannotUpdateOwnRole": "You cannot update your own role",
       "roleUpdatedSuccessfullyTo": "User role updated successfully to {role}"
+    },
+    "Usage": {
+      "title": "Usage",
+      "description": "Per-model usage across your deployment, including unused models",
+      "analytics": "Analytics",
+      "period": "Period",
+      "allTime": "All time",
+      "last7Days": "Last 7 days",
+      "last30Days": "Last 30 days",
+      "last90Days": "Last 90 days",
+      "chats": "Chats",
+      "messages": "Messages",
+      "tokens": "Tokens",
+      "modelsUsed": "Models used",
+      "ofAvailable": "of {count} available",
+      "activeUsers": "{count} users",
+      "responses": "{count} responses",
+      "inputOutput": "{input} in · {output} out",
+      "activityOverTime": "Activity over time",
+      "topModelsByTokens": "Top models by tokens",
+      "model": "Model",
+      "provider": "Provider",
+      "lastUsed": "Last used",
+      "unused": "Unused",
+      "unavailable": "Unavailable",
+      "noApiKey": "No API key",
+      "never": "Never",
+      "noUsageYet": "No usage yet",
+      "unattributedNotice": "{count} responses predate model tracking and are excluded from the per-model figures below."
     }
   },
   "MCP": {

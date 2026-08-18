@@ -718,6 +718,7 @@
     "title": "Admin",
     "Sidebar": {
       "users": "Brukere",
+      "usage": "Bruk",
       "toggleSidebar": "Åpne sidefelt",
       "adminPanel": "Adminpanel",
       "backToApp": "Tilbake til appen"
@@ -735,7 +736,20 @@
       "role": "Rolle",
       "status": "Status",
       "joined": "Ble med",
-      "backToUsers": "Tilbake til brukere"
+      "backToUsers": "Tilbake til brukere",
+      "total": "Totalt",
+      "online": "Pålogget",
+      "usersRole": "Brukere",
+      "editorsRole": "Redaktører",
+      "adminsRole": "Administratorer",
+      "analytics": "Statistikk",
+      "userGrowth": "Brukervekst",
+      "activeUsers": "Aktive brukere",
+      "twoDayStreak": "2 dagers rekke",
+      "threeDayStreak": "3 dagers rekke",
+      "last7Days": "Siste 7 dager",
+      "last30Days": "Siste 30 dager",
+      "last90Days": "Siste 90 dager"
     },
     "UserDelete": {
       "title": "Slett brukerkonto",
@@ -758,6 +772,35 @@
       "failedToUpdateRole": "Kunne ikke oppdatere rolle",
       "cannotUpdateOwnRole": "Du kan ikke oppdatere din egen rolle",
       "roleUpdatedSuccessfullyTo": "Brukerrolle oppdatert til {role}"
+    },
+    "Usage": {
+      "title": "Modellbruk",
+      "description": "Bruk per modell på tvers av driftsmiljøet, inkludert ubrukte modeller",
+      "analytics": "Statistikk",
+      "period": "Periode",
+      "allTime": "Hele perioden",
+      "last7Days": "Siste 7 dager",
+      "last30Days": "Siste 30 dager",
+      "last90Days": "Siste 90 dager",
+      "chats": "Samtaler",
+      "messages": "Meldinger",
+      "tokens": "Tokens",
+      "modelsUsed": "Modeller i bruk",
+      "ofAvailable": "av {count} tilgjengelige",
+      "activeUsers": "{count} brukere",
+      "responses": "{count} svar",
+      "inputOutput": "{input} inn · {output} ut",
+      "activityOverTime": "Aktivitet over tid",
+      "topModelsByTokens": "Mest brukte modeller (tokens)",
+      "model": "Modell",
+      "provider": "Leverandør",
+      "lastUsed": "Sist brukt",
+      "unused": "Ubrukt",
+      "unavailable": "Utilgjengelig",
+      "noApiKey": "Ingen API-nøkkel",
+      "never": "Aldri",
+      "noUsageYet": "Ingen bruk ennå",
+      "unattributedNotice": "{count} svar er fra før modellsporing ble innført og er utelatt fra tallene per modell nedenfor."
     }
   },
   "MCP": {
