@@ -42,14 +42,15 @@ export async function POST(request: Request) {
       experimental_transform: smoothStream({ chunking: "word" }),
       prompt: message,
       abortSignal: request.signal,
-      onFinish: (ctx) => {
-        chatRepository
-          .upsertThread({
-            id: threadId,
-            title: ctx.text,
-            userId: session.user.id,
-          })
-          .catch((err) => logger.error(err));
+      onFinish: async (ctx) => {
+        const title = ctx.text.trim();
+        if (!title) return;
+
+        await chatRepository.upsertThread({
+          id: threadId,
+          title,
+          userId: session.user.id,
+        });
       },
     });
 

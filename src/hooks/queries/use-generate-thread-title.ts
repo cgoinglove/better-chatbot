@@ -18,7 +18,7 @@ export function useGenerateThreadTitle(option: {
   const updateTitle = useCallback(
     (title: string) => {
       appStore.setState((prev) => {
-        if (prev.threadList.some((v) => v.id !== option.threadId)) {
+        if (!prev.threadList.some((v) => v.id === option.threadId)) {
           return {
             threadList: [
               {
