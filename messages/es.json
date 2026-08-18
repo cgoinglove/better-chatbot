@@ -112,6 +112,8 @@
       "autoToolModeDescription": "Decide cuándo usar herramientas sin preguntarte",
       "manualToolModeDescription": "Pide tu permiso antes de usar cualquier herramienta",
       "noneToolModeDescription": "No usar herramientas. @mention sigue estando disponible.",
+      "codemode": "Modo Código",
+      "codemodeToolModeDescription": "El LLM escribe código TypeScript para orquestar herramientas.",
       "toolsSetup": "Configuración de Herramientas",
       "preset": "Preajuste",
       "toolPresets": "Preajustes de Herramientas",
@@ -161,7 +163,6 @@
     },
     "Thread": {
       "chat": "Chat",
-
       "renameChat": "Renombrar",
       "deleteChat": "Eliminar Chat",
       "deleteUnarchivedChats": "Eliminar Todos los Chats No Archivados",
@@ -181,7 +182,6 @@
       "createLink": "Crear Enlace",
       "linkCopied": "Enlace copiado"
     },
-
     "ChatPreferences": {
       "title": "Preferencias de Chat",
       "whatShouldWeCallYou": "¿Cómo deberíamos llamarte?",
@@ -249,7 +249,6 @@
     "theme": "Tema",
     "signOut": "Cerrar sesión",
     "language": "Idioma",
-
     "showAllChats": "Ver Todos los Chats",
     "showLessChats": "Mostrar menos",
     "reportAnIssue": "Reportar un problema",

@@ -27,7 +27,7 @@ export interface AppState {
   agentList: AgentSummary[];
   workflowToolList: WorkflowSummary[];
   currentThreadId: ChatThread["id"] | null;
-  toolChoice: "auto" | "none" | "manual";
+  toolChoice: "auto" | "none" | "manual" | "codemode";
   allowedMcpServers?: Record<string, AllowedMCPServer>;
   allowedAppDefaultToolkit?: AppDefaultToolkit[];
   generatingTitleThreadIds: string[];

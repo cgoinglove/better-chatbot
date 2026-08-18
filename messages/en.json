@@ -231,6 +231,8 @@
       "autoToolModeDescription": "Decides when to use tools without asking you",
       "manualToolModeDescription": "Asks your permission before using any tools",
       "noneToolModeDescription": "Do not use tools. @mention is still available.",
+      "codemode": "Code Mode",
+      "codemodeToolModeDescription": "LLM writes TypeScript code to orchestrate tools.",
       "toolsSetup": "Tools Setup",
       "preset": "Preset",
       "toolPresets": "Tool Presets",

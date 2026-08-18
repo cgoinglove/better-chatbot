@@ -231,6 +231,8 @@
       "autoToolModeDescription": "Bestemmer når verktøy skal brukes uten å spørre deg",
       "manualToolModeDescription": "Ber om tillatelse før bruk av verktøy",
       "noneToolModeDescription": "Ikke bruk verktøy. @nevning er fortsatt tilgjengelig.",
+      "codemode": "Kodemodus",
+      "codemodeToolModeDescription": "LLM skriver TypeScript-kode for å orkestrere verktøy.",
       "toolsSetup": "Verktøyoppsett",
       "preset": "Mal",
       "toolPresets": "Verktøymal",

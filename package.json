@@ -57,6 +57,7 @@
     "@ai-sdk/xai": "^2.0.42",
     "@aws-sdk/client-s3": "^3.958.0",
     "@aws-sdk/s3-request-presigner": "^3.958.0",
+    "@cloudflare/codemode": "^0.1.0",
     "@google/genai": "^1.34.0",
     "@modelcontextprotocol/sdk": "^1.25.1",
     "@openrouter/ai-sdk-provider": "^1.5.4",
@@ -157,10 +158,7 @@
     "vitest": "^3.2.4"
   },
   "lint-staged": {
-    "*.{js,json,mjs,ts,yaml,tsx,css}": [
-      "pnpm format",
-      "pnpm lint:fix"
-    ]
+    "*.{js,json,mjs,ts,yaml,tsx,css}": ["pnpm format", "pnpm lint:fix"]
   },
   "packageManager": "pnpm@10.2.1",
   "engines": {

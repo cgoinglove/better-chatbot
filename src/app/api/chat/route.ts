@@ -49,6 +49,7 @@ import { nanoBananaTool, openaiImageTool } from "lib/ai/tools/image";
 import { ImageToolName } from "lib/ai/tools";
 import { buildCsvIngestionPreviewParts } from "@/lib/ai/ingest/csv-ingest";
 import { serverFileStorage } from "lib/file-storage";
+import { buildCodemodeTools } from "lib/ai/codemode/create-codemode-tool";
 
 const logger = globalLogger.withDefaults({
   message: colorize("blackBright", `Chat API: `),
@@ -281,6 +282,18 @@ export async function POST(request: Request) {
           ...WORKFLOW_TOOLS,
         })
           .map((t) => {
+            if (toolChoice === "codemode") {
+              // Code Mode: two tools — explore (search API types) + execute.
+              // The LLM discovers types on-demand, then writes code.
+              // Only include tools that have an execute function — client-side
+              // tools (e.g. JS/Python execution in browser) are excluded.
+              const allTools = Object.fromEntries(
+                Object.entries({ ...t, ...APP_DEFAULT_TOOLS }).filter(
+                  ([, tool]) => "execute" in tool && tool.execute,
+                ),
+              );
+              return buildCodemodeTools(allTools);
+            }
             const bindingTools =
               toolChoice === "manual" ||
               (message.metadata as ChatMetadata)?.toolChoice === "manual"
@@ -325,6 +338,24 @@ export async function POST(request: Request) {
           stopWhen: stepCountIs(10),
           toolChoice: "auto",
           abortSignal: request.signal,
+          // In codemode, after the codemode execute tool has been called,
+          // force the LLM to produce a text summary. The LLM may call
+          // codemode_explore several times before calling codemode (execute),
+          // so we only stop tool use once the execute tool has actually fired.
+          prepareStep:
+            toolChoice === "codemode"
+              ? ({ steps }) => {
+                  const hasExecuted = steps.some((step) =>
+                    step.toolCalls?.some(
+                      (tc: { toolName: string }) => tc.toolName === "codemode",
+                    ),
+                  );
+                  if (hasExecuted) {
+                    return { toolChoice: "none" as const };
+                  }
+                  return undefined;
+                }
+              : undefined,
         });
         result.consumeStream();
         dataStream.merge(

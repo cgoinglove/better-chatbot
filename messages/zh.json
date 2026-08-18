@@ -113,6 +113,8 @@
       "autoToolModeDescription": "自动决定何时使用工具，无需询问您",
       "manualToolModeDescription": "在使用任何工具前询问您的许可",
       "noneToolModeDescription": "不使用工具。@mention仍然可用。",
+      "codemode": "代码模式",
+      "codemodeToolModeDescription": "LLM通过编写TypeScript代码来编排工具调用。",
       "toolsSetup": "工具设置",
       "preset": "预设",
       "toolPresets": "工具预设",

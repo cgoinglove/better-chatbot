@@ -35,6 +35,9 @@ importers:
       '@aws-sdk/s3-request-presigner':
         specifier: ^3.958.0
         version: 3.958.0
+      '@cloudflare/codemode':
+        specifier: ^0.1.0
+        version: 0.1.0(ai@5.0.116(zod@4.2.1))(typescript@5.9.3)(zod@4.2.1)
       '@google/genai':
         specifier: ^1.34.0
         version: 1.34.0(@modelcontextprotocol/sdk@1.25.1(hono@4.11.3)(zod@4.2.1))
@@ -665,6 +668,12 @@ packages:
 
   '@chevrotain/utils@11.0.3':
     resolution: {integrity: sha512-YslZMgtJUyuMbZ+aKvfF3x1f5liK4mWNxghFRv7jqRR9C3R3fAOGTTKvxXDa2Y1s9zSbcpuO0cAxDYsc9SrXoQ==}
+
+  '@cloudflare/codemode@0.1.0':
+    resolution: {integrity: sha512-y4+My9xBFJNQkRWzF02Tc6q/NLLxCLeYkN9a9t4yvoI+XOWAdiHJvpMGjjt7fqEDKbyTyH+7mCGifamZ87e1wQ==}
+    peerDependencies:
+      ai: ^6.0.0
+      zod: ^3.25.0 || ^4.0.0
 
   '@drizzle-team/brocli@0.10.2':
     resolution: {integrity: sha512-z33Il7l5dKjUgGULTqBsQBQwckHh5AbIuxhdsIxDDiZAzBOrZO6q9ogcWC65kU382AfynTfgNumVcNIjuIua6w==}
@@ -3269,6 +3278,11 @@ packages:
 
   acorn@8.15.0:
     resolution: {integrity: sha512-NZyJarBfL7nWwIq+FDL6Zp/yHEhePMNnnJ0y3qfieCrmNvYct8uvtiV41UvlSe6apAfk0fY1FbWx+NwfmpvtTg==}
+    engines: {node: '>=0.4.0'}
+    hasBin: true
+
+  acorn@8.16.0:
+    resolution: {integrity: sha512-UVJyE9MttOsBQIDKw1skb9nAwQuR5wuGD3+82K6JgJlm/Y+KI92oNsMNGZCYdDsVtRHSak0pcV5Dno5+4jh9sw==}
     engines: {node: '>=0.4.0'}
     hasBin: true
 
@@ -6579,6 +6593,12 @@ packages:
     peerDependencies:
       zod: ^3.25 || ^4
 
+  zod-to-ts@2.0.0:
+    resolution: {integrity: sha512-aHsUgIl+CQutKAxtRNeZslLCLXoeuSq+j5HU7q3kvi/c2KIAo6q4YjT7/lwFfACxLB923ELHYMkHmlxiqFy4lw==}
+    peerDependencies:
+      typescript: ^5.0.0
+      zod: ^3.25.0 || ^4.0.0
+
   zod@4.2.1:
     resolution: {integrity: sha512-0wZ1IRqGGhMP76gLqz8EyfBXKk0J2qo2+H3fi4mcUP/KtTocoX08nmIAHl1Z2kJIZbZee8KOpBCSNPRgauucjw==}
 
@@ -7297,6 +7317,15 @@ snapshots:
   '@chevrotain/types@11.0.3': {}
 
   '@chevrotain/utils@11.0.3': {}
+
+  '@cloudflare/codemode@0.1.0(ai@5.0.116(zod@4.2.1))(typescript@5.9.3)(zod@4.2.1)':
+    dependencies:
+      acorn: 8.16.0
+      ai: 5.0.116(zod@4.2.1)
+      zod: 4.2.1
+      zod-to-ts: 2.0.0(typescript@5.9.3)(zod@4.2.1)
+    transitivePeerDependencies:
+      - typescript
 
   '@drizzle-team/brocli@0.10.2': {}
 
@@ -9776,6 +9805,8 @@ snapshots:
       acorn: 8.15.0
 
   acorn@8.15.0: {}
+
+  acorn@8.16.0: {}
 
   agent-base@7.1.4: {}
 
@@ -13773,6 +13804,11 @@ snapshots:
 
   zod-to-json-schema@3.25.1(zod@4.2.1):
     dependencies:
+      zod: 4.2.1
+
+  zod-to-ts@2.0.0(typescript@5.9.3)(zod@4.2.1):
+    dependencies:
+      typescript: 5.9.3
       zod: 4.2.1
 
   zod@4.2.1: {}
