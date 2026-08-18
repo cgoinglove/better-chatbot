@@ -38,6 +38,26 @@ export interface AdminUsersPaginated {
   offset: number;
 }
 
+export interface AdminUserRoleCounts {
+  total: number;
+  online: number;
+  admin: number;
+  editor: number;
+  user: number;
+}
+
+export interface AdminAnalyticsPoint {
+  date: string; // ISO yyyy-MM-dd
+  count: number;
+}
+
+export interface AdminUserAnalytics {
+  growth: AdminAnalyticsPoint[];
+  activeUsers: AdminAnalyticsPoint[];
+  twoDayStreakUsers: AdminAnalyticsPoint[];
+  threeDayStreakUsers: AdminAnalyticsPoint[];
+}
+
 export interface AdminUpdateUserDetailsData {
   userId: string;
   name?: string;
@@ -49,4 +69,6 @@ export interface AdminUpdateUserDetailsData {
 export type AdminRepository = {
   // User queries
   getUsers: (query?: AdminUsersQuery) => Promise<AdminUsersPaginated>;
+  getUserRoleCounts: () => Promise<AdminUserRoleCounts>;
+  getUserAnalytics: (days: number) => Promise<AdminUserAnalytics>;
 };

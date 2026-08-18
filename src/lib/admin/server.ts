@@ -1,7 +1,12 @@
 import "server-only";
 
 import { getSession } from "lib/auth/server";
-import { AdminUsersQuery, AdminUsersPaginated } from "app-types/admin";
+import {
+  AdminUsersQuery,
+  AdminUsersPaginated,
+  AdminUserRoleCounts,
+  AdminUserAnalytics,
+} from "app-types/admin";
 import {
   requireAdminPermission,
   requireUserListPermission,
@@ -11,6 +16,9 @@ import pgAdminRepository from "lib/db/pg/repositories/admin-respository.pg";
 export const ADMIN_USER_LIST_LIMIT = 10;
 export const DEFAULT_SORT_BY = "createdAt";
 export const DEFAULT_SORT_DIRECTION = "desc";
+
+const VALID_ANALYTICS_WINDOWS = [7, 30, 90] as const;
+export const DEFAULT_ANALYTICS_WINDOW_DAYS = 7;
 
 /**
  * Require an admin session
@@ -60,4 +68,31 @@ export async function getAdminUsers(
     console.error("Error getting admin users", error);
     throw error;
   }
+}
+
+/**
+ * Get user counts broken down by role, for the admin users dashboard pills
+ */
+export async function getAdminUserRoleCounts(): Promise<AdminUserRoleCounts> {
+  await requireUserListPermission("view user role counts in admin panel");
+
+  return pgAdminRepository.getUserRoleCounts();
+}
+
+/**
+ * Get registered-user growth and active-user analytics for the admin
+ * users dashboard charts
+ */
+export async function getAdminUserAnalytics(
+  days: number = DEFAULT_ANALYTICS_WINDOW_DAYS,
+): Promise<AdminUserAnalytics> {
+  await requireUserListPermission("view user analytics in admin panel");
+
+  const validDays = (VALID_ANALYTICS_WINDOWS as readonly number[]).includes(
+    days,
+  )
+    ? days
+    : DEFAULT_ANALYTICS_WINDOW_DAYS;
+
+  return pgAdminRepository.getUserAnalytics(validDays);
 }

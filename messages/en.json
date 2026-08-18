@@ -735,7 +735,20 @@
       "role": "Role",
       "status": "Status",
       "joined": "Joined",
-      "backToUsers": "Back to Users"
+      "backToUsers": "Back to Users",
+      "total": "Total",
+      "online": "Online",
+      "usersRole": "Users",
+      "editorsRole": "Editors",
+      "adminsRole": "Admins",
+      "analytics": "Analytics",
+      "userGrowth": "User Growth",
+      "activeUsers": "Active Users",
+      "twoDayStreak": "2 days streak",
+      "threeDayStreak": "3 days streak",
+      "last7Days": "Last 7 days",
+      "last30Days": "Last 30 days",
+      "last90Days": "Last 90 days"
     },
     "UserDelete": {
       "title": "Delete User Account",
