@@ -22,6 +22,7 @@ import globalLogger from "logger";
 import { jsonSchema, ToolCallOptions } from "ai";
 import { createMemoryMCPConfigStorage } from "./memory-mcp-config-storage";
 import { colorize } from "consola/utils";
+import { IS_CLOUDFLARE_WORKER } from "lib/const";
 
 /**
  * Interface for storage of MCP server configurations.
@@ -65,8 +66,10 @@ export class MCPClientsManager {
     private storage: MCPConfigStorage = createMemoryMCPConfigStorage(),
     private autoDisconnectSeconds: number = 60 * 30, // 30 minutes
   ) {
-    process.on("SIGINT", this.cleanup.bind(this));
-    process.on("SIGTERM", this.cleanup.bind(this));
+    if (!IS_CLOUDFLARE_WORKER && typeof process?.on === "function") {
+      process.on("SIGINT", this.cleanup.bind(this));
+      process.on("SIGTERM", this.cleanup.bind(this));
+    }
   }
 
   private async waitInitialized() {

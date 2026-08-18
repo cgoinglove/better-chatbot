@@ -10,6 +10,8 @@ import {
   canShareMCPServer,
   getCurrentUser,
 } from "lib/auth/permissions";
+import { isMaybeRemoteConfig } from "lib/ai/mcp/is-mcp-config";
+import { IS_MCP_SERVER_REMOTE_ONLY } from "lib/const";
 
 export async function selectMcpClientsAction() {
   // Get current user to filter MCP servers
@@ -59,6 +61,9 @@ export async function saveMcpClientAction(
 ) {
   if (process.env.NOT_ALLOW_ADD_MCP_SERVERS) {
     throw new Error("Not allowed to add MCP servers");
+  }
+  if (IS_MCP_SERVER_REMOTE_ONLY && !isMaybeRemoteConfig(server.config)) {
+    throw new Error("Only remote HTTP/SSE MCP servers are supported");
   }
 
   // Get current user

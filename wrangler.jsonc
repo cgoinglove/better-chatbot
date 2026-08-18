@@ -1,0 +1,39 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "main": ".open-next/worker.js",
+  "name": "semantyka-app-better-chatbot",
+  "compatibility_date": "2026-07-06",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "observability": {
+    "enabled": true,
+  },
+  "cache": {
+    "enabled": true,
+  },
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS",
+  },
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+    },
+  ],
+  "vars": {
+    "APP_RUNTIME": "cloudflare-workers",
+    "FILE_STORAGE_TYPE": "s3",
+    "FILE_STORAGE_S3_REGION": "auto",
+    "FILE_STORAGE_S3_FORCE_PATH_STYLE": "1",
+    "FILE_STORAGE_PREFIX": "uploads",
+    "MCP_REMOTE_ONLY": "1",
+    "FILE_BASED_MCP_CONFIG": "false",
+    "NEXTJS_ENV": "production",
+  },
+  "hyperdrive": [
+    {
+      "binding": "HYPERDRIVE",
+      "id": "replace-with-hyperdrive-id",
+      "localConnectionString": "postgres://your_username:your_password@localhost:5432/your_database_name",
+    },
+  ],
+}

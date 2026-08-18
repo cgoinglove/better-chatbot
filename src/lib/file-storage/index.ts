@@ -1,8 +1,7 @@
 import "server-only";
-import { IS_DEV } from "lib/const";
+import { IS_CLOUDFLARE_WORKER, IS_DEV } from "lib/const";
 import type { FileStorage } from "./file-storage.interface";
 import { createS3FileStorage } from "./s3-file-storage";
-import { createVercelBlobStorage } from "./vercel-blob-storage";
 import logger from "logger";
 
 export type FileStorageDriver = "vercel-blob" | "s3";
@@ -11,26 +10,30 @@ const resolveDriver = (): FileStorageDriver => {
   const candidate = process.env.FILE_STORAGE_TYPE;
 
   const normalized = candidate?.trim().toLowerCase();
-  if (normalized === "vercel-blob" || normalized === "s3") {
-    return normalized;
-  }
+  if (IS_CLOUDFLARE_WORKER) return "s3";
+  if (normalized === "vercel-blob" || normalized === "s3") return normalized;
+  if (!normalized) return "s3";
 
-  // Default to Vercel Blob
-  return "vercel-blob";
+  throw new Error(`Unsupported FILE_STORAGE_TYPE: ${candidate}`);
 };
 
 declare global {
   // eslint-disable-next-line no-var
-  var __server__file_storage__: FileStorage | undefined;
+  var __server__file_storage__: Promise<FileStorage> | undefined;
 }
 
 const storageDriver = resolveDriver();
 
-const createFileStorage = (): FileStorage => {
+const createFileStorage = async (): Promise<FileStorage> => {
   logger.info(`Creating file storage: ${storageDriver}`);
   switch (storageDriver) {
-    case "vercel-blob":
+    case "vercel-blob": {
+      if (IS_CLOUDFLARE_WORKER) {
+        throw new Error("Vercel Blob is not supported on Cloudflare Workers");
+      }
+      const { createVercelBlobStorage } = await import("./vercel-blob-storage");
       return createVercelBlobStorage();
+    }
     case "s3":
       return createS3FileStorage();
     default: {
@@ -40,11 +43,25 @@ const createFileStorage = (): FileStorage => {
   }
 };
 
-const serverFileStorage =
-  globalThis.__server__file_storage__ || createFileStorage();
+const getServerFileStorage = () => {
+  const storage = globalThis.__server__file_storage__ || createFileStorage();
 
-if (IS_DEV) {
-  globalThis.__server__file_storage__ = serverFileStorage;
-}
+  if (IS_DEV) {
+    globalThis.__server__file_storage__ = storage;
+  }
+
+  return storage;
+};
+
+const serverFileStorage = new Proxy({} as FileStorage, {
+  get(_target, prop) {
+    return async (...args: unknown[]) => {
+      const storage = await getServerFileStorage();
+      const value = Reflect.get(storage, prop);
+      if (typeof value !== "function") return value;
+      return value.apply(storage, args);
+    };
+  },
+});
 
 export { serverFileStorage, storageDriver };

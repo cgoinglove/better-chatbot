@@ -1,7 +1,7 @@
 "use server";
 
 import { storageDriver } from "lib/file-storage";
-import { IS_VERCEL_ENV } from "lib/const";
+import { IS_CLOUDFLARE_WORKER, IS_VERCEL_ENV } from "lib/const";
 
 /**
  * Get storage configuration info.
@@ -26,8 +26,15 @@ interface StorageCheckResult {
  * Returns detailed error messages with solutions.
  */
 export async function checkStorageAction(): Promise<StorageCheckResult> {
-  // 1. Check Vercel Blob configuration
   if (storageDriver === "vercel-blob") {
+    if (IS_CLOUDFLARE_WORKER) {
+      return {
+        isValid: false,
+        error: "Vercel Blob is not supported on Cloudflare Workers",
+        solution: "Use FILE_STORAGE_TYPE=s3 with Cloudflare R2 S3 API.",
+      };
+    }
+
     if (!process.env.BLOB_READ_WRITE_TOKEN) {
       return {
         isValid: false,
@@ -43,9 +50,10 @@ export async function checkStorageAction(): Promise<StorageCheckResult> {
             : "5. Run 'vercel env pull' to get the token locally"),
       };
     }
+
+    return { isValid: true };
   }
 
-  // 2. Check S3 configuration
   if (storageDriver === "s3") {
     const missing: string[] = [];
     if (!process.env.FILE_STORAGE_S3_BUCKET)
@@ -59,34 +67,25 @@ export async function checkStorageAction(): Promise<StorageCheckResult> {
         isValid: false,
         error: `Missing S3 configuration: ${missing.join(", ")}`,
         solution:
-          "Add required env vars for S3 file storage:\n" +
+          "Add required env vars for R2 S3-compatible file storage:\n" +
           "- FILE_STORAGE_TYPE=s3\n" +
-          "- FILE_STORAGE_S3_BUCKET=your-bucket\n" +
-          "- FILE_STORAGE_S3_REGION=your-region (e.g., us-east-1)\n" +
+          "- FILE_STORAGE_S3_BUCKET=your-r2-bucket\n" +
+          "- FILE_STORAGE_S3_REGION=auto\n" +
+          "- FILE_STORAGE_S3_ENDPOINT=https://<account-id>.r2.cloudflarestorage.com\n" +
+          "- FILE_STORAGE_S3_FORCE_PATH_STYLE=1\n" +
+          "- AWS_ACCESS_KEY_ID=...\n" +
+          "- AWS_SECRET_ACCESS_KEY=...\n" +
           "(Optional) FILE_STORAGE_S3_PUBLIC_BASE_URL=https://cdn.example.com\n" +
-          "(Optional) FILE_STORAGE_S3_ENDPOINT for S3-compatible stores (e.g., MinIO)\n" +
-          "(Optional) FILE_STORAGE_S3_FORCE_PATH_STYLE=1 for path-style endpoints",
+          "(Optional) FILE_STORAGE_PREFIX=uploads",
       };
     }
 
-    // Warn if neither a public base URL nor a public bucket policy is set.
-    // We can't reliably detect bucket policy here; we just pass validation.
     return { isValid: true };
   }
 
-  // 3. Validate storage driver
-  if (!["vercel-blob", "s3"].includes(storageDriver)) {
-    return {
-      isValid: false,
-      error: `Invalid storage driver: ${storageDriver}`,
-      solution:
-        "FILE_STORAGE_TYPE must be one of:\n" +
-        "- 'vercel-blob' (default)\n" +
-        "- 's3' (coming soon)",
-    };
-  }
-
   return {
-    isValid: true,
+    isValid: false,
+    error: `Invalid storage driver: ${storageDriver}`,
+    solution: "FILE_STORAGE_TYPE must be 's3' or 'vercel-blob'.",
   };
 }

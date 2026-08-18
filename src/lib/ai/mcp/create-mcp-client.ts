@@ -1,5 +1,4 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import {
@@ -206,11 +205,13 @@ export class MCPClient {
 
       // Create appropriate transport based on server config type
       if (isMaybeStdioConfig(this.serverConfig)) {
-        // Skip stdio transport
         if (IS_MCP_SERVER_REMOTE_ONLY) {
-          throw new Error("VERCEL: Stdio transport is not supported");
+          throw new Error("Stdio MCP transport is not supported");
         }
 
+        const { StdioClientTransport } = await import(
+          "@modelcontextprotocol/sdk/client/stdio.js"
+        );
         const config = MCPStdioConfigZodSchema.parse(this.serverConfig);
         this.transport = new StdioClientTransport({
           command: config.command,

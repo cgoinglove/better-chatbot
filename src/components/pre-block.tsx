@@ -1,17 +1,7 @@
 "use client";
 
 import type { JSX } from "react";
-import {
-  bundledLanguages,
-  codeToHast,
-  type BundledLanguage,
-} from "shiki/bundle/web";
-import { Fragment, useLayoutEffect, useState } from "react";
-import { jsx, jsxs } from "react/jsx-runtime";
-import { toJsxRuntime } from "hast-util-to-jsx-runtime";
-import { safe } from "ts-safe";
 import { cn } from "lib/utils";
-import { useTheme } from "next-themes";
 import { Button } from "ui/button";
 import { CheckIcon, CopyIcon } from "lucide-react";
 import JsonView from "ui/json-view";
@@ -76,15 +66,7 @@ const PurePre = ({
   );
 };
 
-export async function Highlight(
-  code: string,
-  lang: BundledLanguage | (string & {}),
-  theme: string,
-) {
-  const parsed: BundledLanguage = (
-    bundledLanguages[lang] ? lang : "md"
-  ) as BundledLanguage;
-
+export function Highlight(code: string, lang: string): JSX.Element {
   if (lang === "json") {
     return (
       <PurePre code={code} lang={lang}>
@@ -101,50 +83,22 @@ export async function Highlight(
     );
   }
 
-  const out = await codeToHast(code, {
-    lang: parsed,
-    theme,
-  });
-
-  return toJsxRuntime(out, {
-    Fragment,
-    jsx,
-    jsxs,
-    components: {
-      pre: (props) => <PurePre {...props} code={code} lang={lang} />,
-    },
-  }) as JSX.Element;
+  return (
+    <PurePre code={code} lang={lang}>
+      <code className={`language-${lang}`}>{code}</code>
+    </PurePre>
+  );
 }
 
 export function PreBlock({ children }: { children: any }) {
   const code = children.props.children;
-  const { theme } = useTheme();
   const language = children.props.className?.split("-")?.[1] || "bash";
-  const [loading, setLoading] = useState(true);
-  const [component, setComponent] = useState<JSX.Element | null>(
-    <PurePre className="animate-pulse" code={code} lang={language}>
-      {children}
-    </PurePre>,
-  );
-
-  useLayoutEffect(() => {
-    safe()
-      .map(() =>
-        Highlight(
-          code,
-          language,
-          theme == "dark" ? "dark-plus" : "github-light",
-        ),
-      )
-      .ifOk(setComponent)
-      .watch(() => setLoading(false));
-  }, [theme, language, code]);
+  const component = Highlight(code, language);
 
   // For other code blocks, render as before
   return (
     <div
       className={cn(
-        loading && "animate-pulse",
         "text-sm flex bg-secondary/40 shadow border flex-col rounded relative my-4 overflow-hidden",
       )}
     >

@@ -5,9 +5,9 @@ import {
   smoothStream,
   stepCountIs,
   streamText,
-  Tool,
   UIMessage,
 } from "ai";
+import type { Tool } from "ai";
 
 import { customModelProvider, isToolCallUnsupportedModel } from "lib/ai/models";
 
@@ -45,10 +45,7 @@ import {
 import { getSession } from "auth/server";
 import { colorize } from "consola/utils";
 import { generateUUID } from "lib/utils";
-import { nanoBananaTool, openaiImageTool } from "lib/ai/tools/image";
 import { ImageToolName } from "lib/ai/tools";
-import { buildCsvIngestionPreviewParts } from "@/lib/ai/ingest/csv-ingest";
-import { serverFileStorage } from "lib/file-storage";
 
 const logger = globalLogger.withDefaults({
   message: colorize("blackBright", `Chat API: `),
@@ -105,10 +102,16 @@ export async function POST(request: Request) {
     if (messages.at(-1)?.id == message.id) {
       messages.pop();
     }
-    const ingestionPreviewParts = await buildCsvIngestionPreviewParts(
-      attachments,
-      (key) => serverFileStorage.download(key),
-    );
+    const ingestionPreviewParts = attachments.length
+      ? await Promise.all([
+          import("@/lib/ai/ingest/csv-ingest"),
+          import("lib/file-storage"),
+        ]).then(([{ buildCsvIngestionPreviewParts }, { serverFileStorage }]) =>
+          buildCsvIngestionPreviewParts(attachments, (key) =>
+            serverFileStorage.download(key),
+          ),
+        )
+      : [];
     if (ingestionPreviewParts.length) {
       const baseParts = [...message.parts];
       let insertionIndex = -1;
@@ -268,14 +271,14 @@ export async function POST(request: Request) {
           !supportToolCall && buildToolCallUnsupportedModelSystemPrompt,
         );
 
-        const IMAGE_TOOL: Record<string, Tool> = useImageTool
-          ? {
-              [ImageToolName]:
-                imageTool?.model === "google"
-                  ? nanoBananaTool
-                  : openaiImageTool,
-            }
-          : {};
+        const IMAGE_TOOL: Record<string, Tool> = {};
+        if (useImageTool) {
+          const { nanoBananaTool, openaiImageTool } = await import(
+            "lib/ai/tools/image"
+          );
+          IMAGE_TOOL[ImageToolName] =
+            imageTool?.model === "google" ? nanoBananaTool : openaiImageTool;
+        }
         const vercelAITooles = safe({
           ...MCP_TOOLS,
           ...WORKFLOW_TOOLS,

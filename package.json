@@ -10,7 +10,13 @@
     "dev:turbopack": "next dev --turbopack",
     "dev:https": "next dev --experimental-https",
     "build": "next build",
+    "build:worker": "cross-env APP_RUNTIME=cloudflare-workers MCP_REMOTE_ONLY=1 FILE_STORAGE_TYPE=s3 opennextjs-cloudflare build",
     "start": "next start",
+    "dev:worker": "pnpm build:worker && opennextjs-cloudflare preview",
+    "preview:worker": "pnpm build:worker && opennextjs-cloudflare preview",
+    "deploy:worker": "pnpm build:worker && opennextjs-cloudflare deploy -- --keep-vars",
+    "upload:worker": "pnpm build:worker && opennextjs-cloudflare upload -- --keep-vars",
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
     "build:local": "cross-env NO_HTTPS='1' next build",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -105,12 +111,13 @@
     "lucide-react": "^0.486.0",
     "mermaid": "^11.12.2",
     "nanoid": "^5.1.6",
-    "next": "16.1.6",
+    "next": "16.2.10",
     "next-intl": "^4.8.1",
     "next-themes": "^0.4.6",
     "ogl": "^1.0.11",
     "ollama-ai-provider-v2": "^1.5.5",
     "pg": "^8.16.3",
+    "pg-cloudflare": "^1.4.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-markdown": "^10.1.0",
@@ -135,6 +142,7 @@
   "devDependencies": {
     "@better-auth-kit/seed": "^1.0.12",
     "@biomejs/biome": "1.9.4",
+    "@opennextjs/cloudflare": "^1.20.1",
     "@playwright/test": "^1.57.0",
     "@tailwindcss/postcss": "^4.1.18",
     "@types/json-schema": "^7.0.15",
@@ -146,7 +154,7 @@
     "dotenv-cli": "^10.0.0",
     "drizzle-kit": "^0.30.6",
     "eslint": "^9.39.2",
-    "eslint-config-next": "15.3.0",
+    "eslint-config-next": "16.2.10",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
     "rimraf": "^6.1.2",
@@ -154,13 +162,11 @@
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "vite-tsconfig-paths": "^5.1.4",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "wrangler": "^4.107.0"
   },
   "lint-staged": {
-    "*.{js,json,mjs,ts,yaml,tsx,css}": [
-      "pnpm format",
-      "pnpm lint:fix"
-    ]
+    "*.{js,json,mjs,ts,yaml,tsx,css}": ["pnpm format", "pnpm lint:fix"]
   },
   "packageManager": "pnpm@10.2.1",
   "engines": {

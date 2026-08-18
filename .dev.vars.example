@@ -1,0 +1,19 @@
+NEXTJS_ENV=development
+APP_RUNTIME=cloudflare-workers
+FILE_STORAGE_TYPE=s3
+FILE_STORAGE_S3_REGION=auto
+FILE_STORAGE_S3_FORCE_PATH_STYLE=1
+FILE_STORAGE_PREFIX=uploads
+MCP_REMOTE_ONLY=1
+FILE_BASED_MCP_CONFIG=false
+
+# Runtime secrets belong in .env.local for next dev and in Cloudflare secrets
+# for deployed Workers.
+# POSTGRES_URL=postgres://...
+# BETTER_AUTH_SECRET=
+# BETTER_AUTH_URL=http://localhost:3000
+# FILE_STORAGE_S3_BUCKET=
+# FILE_STORAGE_S3_ENDPOINT=https://<account-id>.r2.cloudflarestorage.com
+# FILE_STORAGE_S3_PUBLIC_BASE_URL=https://<public-r2-domain>
+# AWS_ACCESS_KEY_ID=
+# AWS_SECRET_ACCESS_KEY=

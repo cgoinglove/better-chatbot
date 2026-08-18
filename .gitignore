@@ -19,6 +19,7 @@ playwright-report/
 
 # next.js
 /.next/
+/.open-next/
 /out/
 
 # production
@@ -42,10 +43,12 @@ yarn-error.log*
 
 # vercel
 .vercel
+.wrangler
 
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+cloudflare-env.d.ts
 .local-cache
 
 # memory-bank

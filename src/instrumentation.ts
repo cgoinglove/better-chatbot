@@ -1,4 +1,4 @@
-import { IS_VERCEL_ENV } from "lib/const";
+import { IS_CLOUDFLARE_WORKER, IS_VERCEL_ENV } from "lib/const";
 
 export async function register() {
   if (process.env.NEXT_RUNTIME === "nodejs") {
@@ -13,7 +13,7 @@ export async function register() {
       console.log(`[proxy] Using proxy for fetch requests: ${proxyUrl}`);
       setGlobalDispatcher(new ProxyAgent(proxyUrl));
     }
-    if (!IS_VERCEL_ENV) {
+    if (!IS_VERCEL_ENV && !IS_CLOUDFLARE_WORKER) {
       // run DB migration (skip on Vercel - migrations run separately)
       const runMigrate = await import("./lib/db/pg/migrate.pg").then(
         (m) => m.runMigrate,

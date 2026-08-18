@@ -8,16 +8,23 @@ export const PROMPT_PASTE_MAX_LENGTH = 1000;
 
 export const IS_VERCEL_ENV = process.env.VERCEL === "1";
 export const IS_DOCKER_ENV = process.env.DOCKER_BUILD === "1";
+export const IS_CLOUDFLARE_WORKER =
+  process.env.APP_RUNTIME === "cloudflare-workers";
 
-export const IS_MCP_SERVER_REMOTE_ONLY = IS_VERCEL_ENV;
+export const IS_MCP_SERVER_REMOTE_ONLY =
+  IS_VERCEL_ENV ||
+  IS_CLOUDFLARE_WORKER ||
+  process.env.MCP_REMOTE_ONLY === "1" ||
+  process.env.MCP_REMOTE_ONLY === "true";
 export const FILE_BASED_MCP_CONFIG =
-  process.env.FILE_BASED_MCP_CONFIG === "true";
+  !IS_CLOUDFLARE_WORKER && process.env.FILE_BASED_MCP_CONFIG === "true";
 
 export const COOKIE_KEY_SIDEBAR_STATE = "sidebar:state";
 export const COOKIE_KEY_LOCALE = "i18n:locale";
 
 export const BASE_URL = (() => {
   if (process.env.BETTER_AUTH_URL) return process.env.BETTER_AUTH_URL;
+  if (process.env.NEXT_PUBLIC_BASE_URL) return process.env.NEXT_PUBLIC_BASE_URL;
 
   if (IS_VERCEL_ENV) {
     const vercelDomain =

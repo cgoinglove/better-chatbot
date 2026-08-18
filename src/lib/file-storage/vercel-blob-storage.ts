@@ -84,8 +84,6 @@ export const createVercelBlobStorage = (): FileStorage => {
       };
     },
 
-    // Vercel Blob uses handleUpload flow instead of createUploadUrl
-    // Client should use @vercel/blob/client with handleUploadUrl: "/api/storage/upload-url"
     async createUploadUrl() {
       return null;
     },

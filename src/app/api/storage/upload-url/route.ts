@@ -1,4 +1,4 @@
-import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
+import type { HandleUploadBody } from "@vercel/blob/client";
 import { NextResponse } from "next/server";
 import { getSession } from "auth/server";
 import { serverFileStorage, storageDriver } from "lib/file-storage";
@@ -20,21 +20,6 @@ interface GenericUploadRequest {
   contentType?: string;
 }
 
-interface FallbackResponse {
-  directUploadSupported: false;
-  fallbackUrl: string;
-  message: string;
-}
-
-// Helpers
-function createFallbackResponse(): FallbackResponse {
-  return {
-    directUploadSupported: false,
-    fallbackUrl: FALLBACK_UPLOAD_URL,
-    message: "Use multipart/form-data upload to fallbackUrl",
-  };
-}
-
 function isVercelBlobRequest(body: unknown): body is HandleUploadBody {
   return (
     typeof body === "object" &&
@@ -43,26 +28,18 @@ function isVercelBlobRequest(body: unknown): body is HandleUploadBody {
   );
 }
 
-/**
- * Handles Vercel Blob client upload flow.
- * Generates client token and handles upload completion webhook.
- */
 async function handleVercelBlobUpload(
   body: HandleUploadBody,
   request: Request,
-  userId: string,
 ) {
+  const { handleUpload } = await import("@vercel/blob/client");
   const jsonResponse = await handleUpload({
     body,
     request,
     onBeforeGenerateToken: async () => {
       return {
-        allowedContentTypes: undefined, // Allow all file types
-        addRandomSuffix: true, // Prevent filename collisions
-        tokenPayload: JSON.stringify({
-          userId,
-          uploadedAt: new Date().toISOString(),
-        }),
+        allowedContentTypes: undefined,
+        addRandomSuffix: true,
       };
     },
     onUploadCompleted: async ({ blob, tokenPayload }) => {
@@ -71,14 +48,6 @@ async function handleVercelBlobUpload(
         pathname: blob.pathname,
         tokenPayload,
       });
-
-      try {
-        // TODO: Add custom logic here (save to database, send notification, etc.)
-        // const { userId } = JSON.parse(tokenPayload);
-        // await db.files.create({ url: blob.url, userId });
-      } catch (error) {
-        logger.error("Error in onUploadCompleted callback", error);
-      }
     },
   });
 
@@ -93,7 +62,11 @@ async function handleGenericUpload(request: GenericUploadRequest) {
   // Check if storage backend supports direct upload
   if (typeof serverFileStorage.createUploadUrl !== "function") {
     logger.info("Storage doesn't support createUploadUrl, using fallback");
-    return NextResponse.json(createFallbackResponse());
+    return NextResponse.json({
+      directUploadSupported: false,
+      fallbackUrl: FALLBACK_UPLOAD_URL,
+      message: "Use multipart/form-data upload to fallbackUrl",
+    });
   }
 
   const uploadUrl = await serverFileStorage.createUploadUrl({
@@ -104,7 +77,11 @@ async function handleGenericUpload(request: GenericUploadRequest) {
 
   if (!uploadUrl) {
     logger.info("Storage returned null, using fallback");
-    return NextResponse.json(createFallbackResponse());
+    return NextResponse.json({
+      directUploadSupported: false,
+      fallbackUrl: FALLBACK_UPLOAD_URL,
+      message: "Use multipart/form-data upload to fallbackUrl",
+    });
   }
 
   // Provide a public source URL for clients to reference after successful PUT
@@ -120,10 +97,7 @@ async function handleGenericUpload(request: GenericUploadRequest) {
 /**
  * Upload URL endpoint.
  *
- * Provides optimal upload method based on storage backend:
- * - Vercel Blob: Client token for direct upload
- * - S3: Presigned URL (future)
- * - Local FS: Fallback to server upload
+ * Provides direct upload credentials for the configured storage backend.
  */
 export async function POST(request: Request) {
   // Authenticate
@@ -159,9 +133,8 @@ export async function POST(request: Request) {
   }
 
   try {
-    // Route to appropriate handler
-    if (isVercelBlobRequest(body)) {
-      return await handleVercelBlobUpload(body, request, session.user.id);
+    if (storageDriver === "vercel-blob" && isVercelBlobRequest(body)) {
+      return await handleVercelBlobUpload(body, request);
     }
 
     return await handleGenericUpload(body as GenericUploadRequest);

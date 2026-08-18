@@ -13,7 +13,8 @@ export class MemoryCache implements Cache {
     this.defaultTtlMs = opts.defaultTtlMs ?? Infinity;
     const interval = opts.cleanupIntervalMs ?? 60_000;
     if (isFinite(interval) && interval > 0) {
-      setInterval(() => this.sweep(), interval).unref();
+      const timer = setInterval(() => this.sweep(), interval);
+      timer.unref?.();
     }
   }
 

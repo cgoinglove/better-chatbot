@@ -1,5 +1,4 @@
 import { createDbBasedMCPConfigsStorage } from "./db-mcp-config-storage";
-import { createFileBasedMCPConfigsStorage } from "./fb-mcp-config-storage";
 import {
   createMCPClientsManager,
   type MCPClientsManager,
@@ -10,12 +9,19 @@ declare global {
   var __mcpClientsManager__: MCPClientsManager;
 }
 
+const createMCPConfigStorage = async () => {
+  if (FILE_BASED_MCP_CONFIG) {
+    const { createFileBasedMCPConfigsStorage } = await import(
+      "./fb-mcp-config-storage"
+    );
+    return createFileBasedMCPConfigsStorage();
+  }
+
+  return createDbBasedMCPConfigsStorage();
+};
+
 if (!globalThis.__mcpClientsManager__) {
-  // Choose the appropriate storage implementation based on environment
-  // NOTE: FILE_BASED_MCP_CONFIG is deprecated and will be removed in a future version.
-  const storage = FILE_BASED_MCP_CONFIG
-    ? createFileBasedMCPConfigsStorage()
-    : createDbBasedMCPConfigsStorage();
+  const storage = await createMCPConfigStorage();
   globalThis.__mcpClientsManager__ = createMCPClientsManager(storage);
 }
 

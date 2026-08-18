@@ -31,6 +31,7 @@ interface MCPEditorProps {
   initialConfig?: MCPServerConfig;
   name?: string;
   id?: string;
+  remoteOnly?: boolean;
 }
 
 const STDIO_ARGS_ENV_PLACEHOLDER = `/** STDIO Example */
@@ -50,10 +51,19 @@ const STDIO_ARGS_ENV_PLACEHOLDER = `/** STDIO Example */
   }
 }`;
 
+const REMOTE_MCP_PLACEHOLDER = `/** Streamable HTTP or SSE MCP server */
+{
+  "url": "https://api.example.com",
+  "headers": {
+    "Authorization": "Bearer sk-..."
+  }
+}`;
+
 export default function MCPEditor({
   initialConfig,
   name: initialName,
   id,
+  remoteOnly = process.env.NEXT_PUBLIC_MCP_REMOTE_ONLY === "1",
 }: MCPEditorProps) {
   const t = useTranslations();
   const shouldInsert = useMemo(() => isNull(id), [id]);
@@ -97,15 +107,18 @@ export default function MCPEditor({
       isLoading ||
       !!jsonError ||
       !!nameError ||
-      !isMaybeMCPServerConfig(config)
+      (remoteOnly
+        ? !isMaybeRemoteConfig(config)
+        : !isMaybeMCPServerConfig(config))
     );
-  }, [isLoading, jsonError, nameError, config, name]);
+  }, [isLoading, jsonError, nameError, config, name, remoteOnly]);
 
   // Validate
   const validateConfig = (jsonConfig: unknown): boolean => {
-    const result = isMaybeRemoteConfig(jsonConfig)
-      ? MCPRemoteConfigZodSchema.safeParse(jsonConfig)
-      : MCPStdioConfigZodSchema.safeParse(jsonConfig);
+    const result =
+      remoteOnly || isMaybeRemoteConfig(jsonConfig)
+        ? MCPRemoteConfigZodSchema.safeParse(jsonConfig)
+        : MCPStdioConfigZodSchema.safeParse(jsonConfig);
     if (!result.success) {
       handleErrorWithToast(result.error, "mcp-editor-error");
     }
@@ -210,7 +223,11 @@ export default function MCPEditor({
                 onChange={(e) => handleConfigChange(e.target.value)}
                 data-testid="mcp-config-editor"
                 className="font-mono h-[40vh] resize-none overflow-y-auto"
-                placeholder={STDIO_ARGS_ENV_PLACEHOLDER}
+                placeholder={
+                  remoteOnly
+                    ? REMOTE_MCP_PLACEHOLDER
+                    : STDIO_ARGS_ENV_PLACEHOLDER
+                }
               />
             </div>
 

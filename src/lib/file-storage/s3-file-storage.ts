@@ -64,6 +64,41 @@ const buildPublicUrl = (
   return `https://${bucket}.s3.${region}.amazonaws.com/${encodeURI(key)}`;
 };
 
+const bodyToBuffer = async (body: unknown): Promise<Buffer> => {
+  if (!body) throw new Error("Missing response body");
+
+  if (body instanceof Uint8Array) {
+    return Buffer.from(body);
+  }
+
+  if (typeof (body as any).transformToByteArray === "function") {
+    return Buffer.from(await (body as any).transformToByteArray());
+  }
+
+  if (typeof (body as any).arrayBuffer === "function") {
+    return Buffer.from(await (body as Blob).arrayBuffer());
+  }
+
+  if (typeof ReadableStream !== "undefined" && body instanceof ReadableStream) {
+    return toBuffer(body);
+  }
+
+  if (typeof (body as NodeJS.ReadableStream).on === "function") {
+    const stream = body as NodeJS.ReadableStream;
+    const chunks: Buffer[] = [];
+    await new Promise<void>((resolve, reject) => {
+      stream.on("data", (c) =>
+        chunks.push(Buffer.isBuffer(c) ? c : Buffer.from(c)),
+      );
+      stream.once("end", () => resolve());
+      stream.once("error", (e) => reject(e));
+    });
+    return Buffer.concat(chunks);
+  }
+
+  throw new Error("Unsupported S3 response body");
+};
+
 export const createS3FileStorage = (): FileStorage => {
   const bucket = required(
     "FILE_STORAGE_S3_BUCKET",
@@ -152,16 +187,7 @@ export const createS3FileStorage = (): FileStorage => {
         );
         const body = res.Body;
         if (!body) throw new FileNotFoundError(key);
-        const stream = body as unknown as NodeJS.ReadableStream;
-        const chunks: Buffer[] = [];
-        await new Promise<void>((resolve, reject) => {
-          stream.on("data", (c) =>
-            chunks.push(Buffer.isBuffer(c) ? c : Buffer.from(c)),
-          );
-          stream.once("end", () => resolve());
-          stream.once("error", (e) => reject(e));
-        });
-        return Buffer.concat(chunks);
+        return bodyToBuffer(body);
       } catch (error: unknown) {
         if ((error as any)?.$metadata?.httpStatusCode === 404) {
           throw new FileNotFoundError(key, error);
