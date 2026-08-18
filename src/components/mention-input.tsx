@@ -195,9 +195,34 @@ export default function MentionInput({
           class:
             "w-full max-h-80 min-h-[2rem] break-words overflow-y-auto resize-none focus:outline-none px-2 py-1 prose prose-sm dark:prose-invert ",
         },
+        handleKeyDown: (view, event) => {
+          const isSubmit =
+            !open &&
+            event.key === "Enter" &&
+            view.state.doc.textContent.trim().length > 0 &&
+            !event.shiftKey &&
+            !event.metaKey &&
+            !event.isComposing;
+          if (isSubmit) {
+            event.preventDefault();
+            onEnter?.();
+            if (isMobile) {
+              view.dom.blur();
+            }
+            return true;
+          }
+        },
       },
     };
-  }, [disabled, MentionItem, suggestionChar, onChange]);
+  }, [
+    disabled,
+    MentionItem,
+    suggestionChar,
+    onChange,
+    open,
+    onEnter,
+    isMobile,
+  ]);
 
   const editor = useEditor(editorConfig);
 
@@ -211,27 +236,6 @@ export default function MentionInput({
   useEffect(() => {
     editor?.setEditable(!disabled);
   }, [disabled]);
-
-  // Memoize handlers
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      const isSubmit =
-        !open &&
-        e.key === "Enter" &&
-        editor?.getText().trim().length &&
-        !e.shiftKey &&
-        !e.metaKey &&
-        !e.nativeEvent.isComposing;
-      if (isSubmit) {
-        e.preventDefault();
-        onEnter?.();
-        if (isMobile) {
-          editor?.commands.blur();
-        }
-      }
-    },
-    [editor, onEnter, open],
-  );
 
   // Memoize the DOM structure
   const suggestion = useMemo(() => {
@@ -314,7 +318,7 @@ export default function MentionInput({
       onClick={focus}
       className={cn("relative w-full", className)}
     >
-      <EditorContent editor={editor} onKeyDown={handleKeyDown} />
+      <EditorContent editor={editor} />
       {suggestion}
       {placeholderElement}
     </div>
