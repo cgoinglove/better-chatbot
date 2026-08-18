@@ -1,6 +1,7 @@
 // Base auth instance without "server-only" - can be used in seed scripts
 import { betterAuth, type BetterAuthOptions } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { expo } from "@better-auth/expo";
 import { nextCookies } from "better-auth/next-js";
 import { admin as adminPlugin } from "better-auth/plugins";
 import { pgDb } from "lib/db/pg/db.pg";
@@ -26,6 +27,7 @@ const {
 const options = {
   secret: process.env.BETTER_AUTH_SECRET!,
   plugins: [
+    expo(),
     adminPlugin({
       defaultRole: DEFAULT_USER_ROLE,
       adminRoles: [USER_ROLES.ADMIN],
