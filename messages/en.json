@@ -194,6 +194,11 @@
   "Chat": {
     "Error": "Chat Error",
     "thisMessageWasNotSavedPleaseTryTheChatAgain": "This message was not saved. Please try the chat again.",
+    "rateLimitedTitle": "You’ve hit the AI limit",
+    "rateLimitedHourly": "You can send up to {limit} AI messages per hour.",
+    "rateLimitedDaily": "You can send up to {limit} AI messages per day.",
+    "rateLimitedRetryAfter": "Try again in {minutes} min",
+    "rateLimitedSupport": "Need more? Ask your admin.",
     "uploadImage": "Upload File",
     "generateImage": "Generate Image",
     "imageUploadedSuccessfully": "Image uploaded successfully",
