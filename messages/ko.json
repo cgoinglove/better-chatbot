@@ -52,21 +52,43 @@
       "noAccount": "계정이 없습니까?",
       "signUp": "회원가입",
       "signIn": "로그인",
-      "orContinueWith": "다른 계정으로 계속하기"
+      "orContinueWith": "다른 계정으로 계속하기",
+      "email": "이메일",
+      "emailPlaceholder": "user@example.com",
+      "password": "비밀번호"
     },
     "SignUp": {
       "title": "회원가입",
+      "titleAdmin": "관리자 계정 생성",
       "signIn": "로그인",
+      "email": "이메일",
+      "emailPlaceholder": "user@example.com",
+      "name": "이름",
+      "namePlaceholder": "홍길동",
+      "password": "비밀번호",
       "description": "계정에 회원가입하여 계속합니다",
+      "signUpDescription": "우리와 함께 여정을 시작하세요",
+      "signUpDescriptionAdmin": "첫 번째 사용자를 환영합니다! 시스템 관리자가 됩니다.",
       "step1": "우리와 함께 여정을 시작하기 위해 이메일 주소를 입력하세요",
       "step2": "우리와 대화할 때 이 이름을 사용할 거예요",
       "step3": "강력한 비밀번호를 만들어 계정을 보호하세요",
+      "stepProgress": "단계 {current} / {total}",
       "signUp": "회원가입",
       "invalidEmail": "이메일 주소가 유효하지 않습니다",
       "emailAlreadyExists": "이메일이 이미 존재합니다",
       "nameRequired": "이름이 필요합니다",
       "passwordRequired": "비밀번호가 필요합니다",
-      "createAccount": "계정 생성"
+      "createAccount": "계정 생성",
+      "passwordHintLength": "8-20자",
+      "passwordHintLetter": "최소 1개의 문자",
+      "passwordHintNumber": "최소 1개의 숫자"
+    },
+    "Error": {
+      "title": "인증 오류",
+      "signupDisabled": "회원가입이 비활성화되었습니다",
+      "unauthorized": "인증이 필요합니다",
+      "unknownError": "알 수 없는 오류",
+      "goToHome": "홈으로 이동"
     },
     "Intro": {
       "description": "better-chatbot에 오신 것을 환영합니다. 우리의 AI 기반 대화 도구를 경험하세요."

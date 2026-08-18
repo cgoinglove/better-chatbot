@@ -84,7 +84,7 @@ export default function SignIn({
           {emailAndPasswordEnabled && !isFirstUser && (
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{t("email")}</Label>
                 <Input
                   id="email"
                   autoFocus
@@ -92,13 +92,13 @@ export default function SignIn({
                   value={formData.email}
                   onChange={(e) => setFormData({ email: e.target.value })}
                   type="email"
-                  placeholder="user@example.com"
+                  placeholder={t("emailPlaceholder")}
                   required
                 />
               </div>
               <div className="grid gap-2">
                 <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password">{t("password")}</Label>
                 </div>
                 <Input
                   id="password"

@@ -121,7 +121,10 @@ export default function EmailSignUp({
         <CardDescription className="py-12">
           <div className="flex flex-col gap-2">
             <p className="text-xs text-muted-foreground text-right">
-              Step {step} of {steps.length}
+              {t("Auth.SignUp.stepProgress", {
+                current: step,
+                total: steps.length,
+              })}
             </p>
             <div className="h-2 w-full relative bg-input">
               <div
@@ -138,11 +141,11 @@ export default function EmailSignUp({
         <div className="flex flex-col gap-2">
           {step === 1 && (
             <div className={cn("flex flex-col gap-2")}>
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t("Auth.SignUp.email")}</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="mcp@example.com"
+                placeholder={t("Auth.SignUp.emailPlaceholder")}
                 disabled={isLoading}
                 autoFocus
                 value={formData.email}
@@ -161,11 +164,11 @@ export default function EmailSignUp({
           )}
           {step === 2 && (
             <div className={cn("flex flex-col gap-2")}>
-              <Label htmlFor="name">Full Name</Label>
+              <Label htmlFor="name">{t("Auth.SignUp.name")}</Label>
               <Input
                 id="name"
                 type="text"
-                placeholder="Cgoing"
+                placeholder={t("Auth.SignUp.namePlaceholder")}
                 disabled={isLoading}
                 autoFocus
                 value={formData.name}
@@ -185,7 +188,7 @@ export default function EmailSignUp({
           {step === 3 && (
             <div className={cn("flex flex-col gap-2")}>
               <div className="flex items-center">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{t("Auth.SignUp.password")}</Label>
               </div>
               <Input
                 id="password"
@@ -220,7 +223,7 @@ export default function EmailSignUp({
                           : "text-muted-foreground"
                       }
                     >
-                      8-20 characters
+                      {t("Auth.SignUp.passwordHintLength")}
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-xs">
@@ -236,7 +239,7 @@ export default function EmailSignUp({
                           : "text-muted-foreground"
                       }
                     >
-                      At least one letter
+                      {t("Auth.SignUp.passwordHintLetter")}
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-xs">
@@ -252,7 +255,7 @@ export default function EmailSignUp({
                           : "text-muted-foreground"
                       }
                     >
-                      At least one number
+                      {t("Auth.SignUp.passwordHintNumber")}
                     </span>
                   </div>
                 </div>
