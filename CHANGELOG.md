@@ -1,5 +1,49 @@
 # Changelog
 
+## [2.0.0](https://github.com/keinsaasforever/better-chatbot/releases/tag/v2.0.0)
+
+better-chatbot is now the community edition of
+[keinsaas Navigator](https://keinsaas.com), generated from that codebase rather
+than maintained as a separate fork. Everything Navigator does is here except
+team management and billing.
+
+### Added
+
+* Projects that group chats, documents and tools around a piece of work, with
+  retrieval over uploaded documents using pgvector — no external service needed
+* Knowledge bases for hosted retrieval with reranking and citations
+* Skills: reusable capabilities an agent loads on demand
+* Scheduled tasks that run an agent on a schedule and report back
+* Sandboxed code execution, published pages, and a model router that can pick a
+  model per task
+* An Electron desktop app with local (stdio) MCP servers, filesystem access and
+  keychain support
+* Voice: realtime conversation through the gateway, plus transcription
+
+### Changed
+
+* **Repository layout is now a monorepo.** The app lives in `apps/web`, with
+  shared packages alongside it
+* **Models are served through the Vercel AI Gateway.** One `AI_GATEWAY_API_KEY`
+  replaces the per-provider keys, which are no longer read. Ollama, LM Studio,
+  TensorX and any OpenAI-compatible endpoint still work
+* **Archives are now projects.** Existing archives are converted, and the
+  threads inside them stay linked
+* File uploads use Supabase Storage
+* Postgres must have the `pgvector` extension
+
+### Upgrading
+
+Back up your database, then:
+
+```bash
+pnpm tsx scripts/upgrade/from-better-chatbot-1.ts --dry-run
+pnpm tsx scripts/upgrade/from-better-chatbot-1.ts --yes
+```
+
+Your users, chats, agents, MCP servers and workflows carry over. The migration
+is one way, which is why the backup matters.
+
 ## [1.26.0](https://github.com/cgoinglove/better-chatbot/compare/v1.25.0...v1.26.0) (2025-11-07)
 
 

@@ -2,7 +2,10 @@ name: Lint and Type Check
 
 on:
   pull_request:
-    branches: [main]
+    # staging is where features accumulate before a release, so it needs the
+    # same gate as main — otherwise the branch that feeds releases is the one
+    # branch nothing is checked against.
+    branches: [main, staging]
 
 jobs:
   lint_and_type_check:
