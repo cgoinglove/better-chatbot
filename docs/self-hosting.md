@@ -125,6 +125,17 @@ Postgres database plus whatever you put in object storage.
 See [Upgrading](../README.md#upgrading-from-1x). Back up first — the migration
 is one-way.
 
+One migration in the sequence rewrites `chat_message` in place, converting its
+`metadata` column to `jsonb`. On a small database this is instant; on one with
+a long chat history it takes an `ACCESS EXCLUSIVE` lock for the duration of the
+rewrite, so the app is unavailable while it runs. Check the size first and
+schedule accordingly:
+
+```sql
+SELECT count(*), pg_size_pretty(pg_total_relation_size('chat_message'))
+FROM chat_message;
+```
+
 ## Telemetry
 
 There is none. No analytics, no phone-home, no usage reporting. If you want
