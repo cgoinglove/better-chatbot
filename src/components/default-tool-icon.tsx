@@ -10,6 +10,7 @@ import {
   CodeIcon,
   HammerIcon,
   TableOfContents,
+  LayoutList,
 } from "lucide-react";
 import { useMemo } from "react";
 
@@ -37,6 +38,9 @@ export function DefaultToolIcon({
       return (
         <TableOfContents className={cn("size-3.5 text-blue-500", className)} />
       );
+    }
+    if (name === DefaultToolName.CreateTimeline) {
+      return <LayoutList className={cn("size-3.5 text-blue-500", className)} />;
     }
     if (name === DefaultToolName.WebSearch) {
       return <GlobeIcon className={cn("size-3.5 text-blue-400", className)} />;
