@@ -100,14 +100,21 @@ export const pgChatRepository: ChatRepository = {
       .orderBy(desc(sql`last_message_at`));
 
     return threadWithLatestMessage.map((row) => {
+      let timestamp = 0;
+      if (row.lastMessageAt) {
+        // PostgreSQL returns timestamp without timezone info in format 'YYYY-MM-DD HH:MM:SS'
+        // We need to treat it as UTC, not local time
+        // Add 'Z' suffix to make it explicit UTC, or use Date.UTC
+        const utcTimestamp = row.lastMessageAt.replace(' ', 'T') + 'Z';
+        timestamp = new Date(utcTimestamp).getTime();
+      }
+
       return {
         id: row.threadId,
         title: row.title,
         userId: row.userId,
         createdAt: row.createdAt,
-        lastMessageAt: row.lastMessageAt
-          ? new Date(row.lastMessageAt).getTime()
-          : 0,
+        lastMessageAt: timestamp,
       };
     });
   },
