@@ -1,6 +1,7 @@
 import { Node } from "@xyflow/react";
 import { ChatModel } from "app-types/chat";
 import { ObjectJsonSchema7, TipTapMentionJsonContent } from "app-types/util";
+import { UIMessage } from "ai";
 import { ConditionBranches } from "./condition";
 import { JSONSchema7 } from "json-schema";
 
@@ -23,6 +24,41 @@ export enum NodeKind {
   Template = "template", // Template processing node
   Code = "code", // Code execution node (future implementation)
   Output = "output", // Exit point of workflow - produces final result
+  ReplyInThread = "reply-in-thread", // Create chat thread with predefined messages
+}
+
+export type WorkflowExecutionContext = {
+  user?: {
+    id: string;
+    email?: string | null;
+    name?: string | null;
+  };
+};
+
+export const WORKFLOW_CONTEXT_KEY = "__workflowContext" as const;
+
+export function withWorkflowContext(
+  query: Record<string, unknown> | undefined,
+  context?: WorkflowExecutionContext,
+): Record<string, unknown> {
+  const baseQuery: Record<string, unknown> = { ...(query ?? {}) };
+  if (!context) {
+    return baseQuery;
+  }
+
+  const existingContext =
+    typeof baseQuery[WORKFLOW_CONTEXT_KEY] === "object" &&
+    baseQuery[WORKFLOW_CONTEXT_KEY] !== null
+      ? (baseQuery[WORKFLOW_CONTEXT_KEY] as WorkflowExecutionContext)
+      : {};
+
+  baseQuery[WORKFLOW_CONTEXT_KEY] = {
+    ...existingContext,
+    ...context,
+    user: context.user ?? existingContext.user,
+  } as WorkflowExecutionContext;
+
+  return baseQuery;
 }
 
 /**
@@ -188,6 +224,16 @@ export type TemplateNodeData = BaseWorkflowNodeDataData<{
   };
 };
 
+export type ReplyInThreadNodeData = BaseWorkflowNodeDataData<{
+  kind: NodeKind.ReplyInThread;
+}> & {
+  title?: TipTapMentionJsonContent;
+  messages: {
+    role: UIMessage["role"];
+    content?: TipTapMentionJsonContent;
+  }[];
+};
+
 /**
  * Union type of all possible node data types.
  * When adding a new node type, include it in this union.
@@ -200,7 +246,8 @@ export type WorkflowNodeData =
   | ToolNodeData
   | ConditionNodeData
   | HttpNodeData
-  | TemplateNodeData;
+  | TemplateNodeData
+  | ReplyInThreadNodeData;
 
 /**
  * Runtime fields added during workflow execution

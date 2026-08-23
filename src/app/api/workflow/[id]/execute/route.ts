@@ -2,6 +2,10 @@ import { getSession } from "auth/server";
 import { createWorkflowExecutor } from "lib/ai/workflow/executor/workflow-executor";
 import { workflowRepository } from "lib/db/repository";
 import { encodeWorkflowEvent } from "lib/ai/workflow/shared.workflow";
+import {
+  withWorkflowContext,
+  WorkflowExecutionContext,
+} from "lib/ai/workflow/workflow.interface";
 import logger from "logger";
 import { colorize } from "consola/utils";
 import { safeJSONParse, toAny } from "lib/utils";
@@ -77,9 +81,24 @@ export async function POST(
       });
 
       // Start the workflow
+      const workflowContext: WorkflowExecutionContext | undefined = session.user
+        ?.id
+        ? {
+            user: {
+              id: session.user.id,
+              name: session.user.name,
+              email: session.user.email,
+            },
+          }
+        : undefined;
+      const runtimeQuery = withWorkflowContext(
+        query as Record<string, unknown> | undefined,
+        workflowContext,
+      );
+
       app
         .run(
-          { query },
+          { query: runtimeQuery },
           {
             disableHistory: true,
             timeout: 1000 * 60 * 5,
