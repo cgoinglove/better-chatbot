@@ -156,6 +156,7 @@ export function ChatMentionInputSuggestion({
   disabledType?: ("mcp" | "workflow" | "defaultTool" | "agent")[];
 }) {
   const t = useTranslations("Common");
+  const tChat = useTranslations("Chat");
   const [mcpList, workflowList, agentList] = appStore(
     useShallow((state) => [
       state.mcpList,
@@ -467,11 +468,11 @@ export function ChatMentionInputSuggestion({
   // Group mentions by type
   const groupedMentions = useMemo(() => {
     const groups = {
-      agent: { title: "Agents", items: [] as MentionItemType[] },
-      workflow: { title: "Workflows", items: [] as MentionItemType[] },
-      defaultTool: { title: "App Tools", items: [] as MentionItemType[] },
-      mcp: { title: "MCP Tools", items: [] as MentionItemType[] },
-      mcpTool: { title: "MCP Tools", items: [] as MentionItemType[] },
+      agent: { title: tChat("agents"), items: [] as MentionItemType[] },
+      workflow: { title: tChat("workflows"), items: [] as MentionItemType[] },
+      defaultTool: { title: tChat("appTools"), items: [] as MentionItemType[] },
+      mcp: { title: tChat("mcpTools"), items: [] as MentionItemType[] },
+      mcpTool: { title: tChat("mcpTools"), items: [] as MentionItemType[] },
     };
 
     allMentions.forEach((mention) => {

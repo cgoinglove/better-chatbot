@@ -11,7 +11,10 @@ import { Search, ChevronRight } from "lucide-react";
 import { Skeleton } from "ui/skeleton";
 import { Avatar, AvatarFallback } from "ui/avatar";
 
+import { useTranslations } from "next-intl";
+
 export function UsersTableSkeleton() {
+  const t = useTranslations("Admin.Users");
   // Generate reasonable number of skeleton rows
   const skeletonRows = Array.from({ length: 8 }, (_, i) => i);
 
@@ -22,7 +25,7 @@ export function UsersTableSkeleton() {
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search by name or email..."
+            placeholder={t("searchPlaceholder")}
             className="pl-9"
             disabled
           />
@@ -38,10 +41,14 @@ export function UsersTableSkeleton() {
         <Table data-testid="users-table-skeleton" className="w-full">
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              <TableHead className="font-semibold w-1/2">User</TableHead>
-              <TableHead className="font-semibold w-32">Role</TableHead>
-              <TableHead className="font-semibold w-24">Status</TableHead>
-              <TableHead className="font-semibold w-32">Joined</TableHead>
+              <TableHead className="font-semibold w-1/2">{t("user")}</TableHead>
+              <TableHead className="font-semibold w-32">{t("role")}</TableHead>
+              <TableHead className="font-semibold w-24">
+                {t("status")}
+              </TableHead>
+              <TableHead className="font-semibold w-32">
+                {t("joined")}
+              </TableHead>
               <TableHead className="w-[50px]"></TableHead>
             </TableRow>
           </TableHeader>

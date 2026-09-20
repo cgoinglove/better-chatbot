@@ -153,12 +153,12 @@ export function UserStatisticsCard({ stats, view }: UserStatisticsCardProps) {
                   {/* Pie Chart - TOP 3 Models */}
                   <div className="min-h-[300px]">
                     <PieChart
-                      title="Top 3 Models Usage"
+                      title={tCommon("top3ModelsUsage")}
                       data={modelPieData}
                       unit="tokens"
                       prefix=""
                       jsonView={false}
-                      description="Token usage by top 3 models"
+                      description={tCommon("tokenUsageByTop3Models")}
                     />
                   </div>
 

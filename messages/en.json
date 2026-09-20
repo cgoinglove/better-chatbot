@@ -42,7 +42,31 @@
     "createWithExample": "Create With Example",
     "resultsFound": "{count} results found",
     "youAreAnExpertIn": "You are an expert in {role}",
-    "sharedBy": "Shared by {userName}"
+    "sharedBy": "Shared by {userName}",
+    "authorize": "Authorize",
+    "authorizationRequired": "Authorization Required",
+    "authorizationRequiredDescription": "Click here to authorize this MCP server and access its tools.",
+    "error": "Error",
+    "parsingError": "Parsing Error",
+    "inputJSON": "Input JSON",
+    "jsonError": "JSON Error",
+    "copy": "Copy",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "daysAgo": "{count} days ago",
+    "weeksAgo": "{count} weeks ago",
+    "untitledChat": "Untitled Chat",
+    "default": "Default",
+    "avatar": "Avatar {number}",
+    "top3ModelsUsage": "Top 3 Models Usage",
+    "tokenUsageByTop3Models": "Token usage by top 3 models",
+    "usageStatistics": "Usage Statistics",
+    "chatThreads": "Chat Threads",
+    "messagesSent": "Messages Sent",
+    "last30Days": "Last 30 Days",
+    "searchByNameOrEmail": "Search by name or email...",
+    "changeVisibility": "Change visibility",
+    "searchModel": "Search model..."
   },
   "Error": {},
   "Info": {
@@ -154,7 +178,14 @@
     "noTools": "No published workflows available.\nCreate workflows to build custom tools.",
     "arrangeNodes": "Auto Layout",
     "nodesArranged": "Layout applied successfully",
-    "visibilityUpdated": "Visibility updated successfully"
+    "visibilityUpdated": "Visibility updated successfully",
+    "httpConfiguration": "HTTP Request Configuration",
+    "requestHeaders": "Request Headers",
+    "queryParams": "Query Parameters",
+    "requestBody": "Request Body",
+    "selectHttpMethod": "Select HTTP method",
+    "url": "URL",
+    "timeoutMs": "Timeout (ms)"
   },
   "Auth": {
     "SignIn": {
@@ -164,7 +195,9 @@
       "noAccount": "Don't have an account? ",
       "signUp": "Sign up",
       "signIn": "Sign in",
-      "orContinueWith": "OR CONTINUE WITH"
+      "orContinueWith": "OR CONTINUE WITH",
+      "email": "Email",
+      "password": "Password"
     },
     "SignUp": {
       "title": "Create an account",
@@ -185,10 +218,22 @@
       "emailAlreadyExists": "Email already exists",
       "nameRequired": "Name is required",
       "passwordRequired": "Password is required",
-      "createAccount": "Create account"
+      "createAccount": "Create account",
+      "fullName": "Full Name",
+      "password": "Password",
+      "eightToTwentyChars": "8-20 characters",
+      "atLeastOneLetter": "At least one letter",
+      "atLeastOneNumber": "At least one number"
     },
     "Intro": {
       "description": "Welcome to better-chatbot. Sign in to experience our AI-powered conversational tools."
+    },
+    "Error": {
+      "title": "Auth Error",
+      "authenticationRequired": "Authentication required",
+      "unknownError": "Unknown error",
+      "signupDisabled": "Signup is disabled",
+      "goToHome": "Go to home"
     }
   },
   "Chat": {
@@ -338,7 +383,15 @@
       "confirmDeleteExport": "Are you sure you want to delete this export? This action cannot be undone.",
       "exportDeleted": "Export deleted successfully",
       "failedToDeleteExport": "Failed to delete export"
-    }
+    },
+    "editYourMessage": "Edit your message...",
+    "agents": "Agents",
+    "workflows": "Workflows",
+    "appTools": "App Tools",
+    "mcpTools": "MCP Tools",
+    "error": "Error",
+    "deleteMessageTitle": "Delete Message",
+    "deleteMessageDescription": "Are you sure you want to delete this message?"
   },
   "Layout": {
     "workflow": "Workflow",
@@ -810,6 +863,58 @@
     "public": "Featured",
     "publicDescription": "Featured for all users to use",
     "featured": "Featured",
-    "featuredDescription": "Featured for all users to use"
+    "featuredDescription": "Featured for all users to use",
+    "authorize": "Authorize",
+    "authorizationRequired": "Authorization Required",
+    "authorizationRequiredDescription": "Click here to authorize this MCP server and access its tools.",
+    "parsingError": "Parsing Error",
+    "inputJSON": "Input JSON",
+    "jsonError": "JSON Error",
+    "error": "Error"
+  },
+  "ToolInvocation": {
+    "generatingImage": "Generating image...",
+    "generatedImage": "Generated Image",
+    "imageGenerationFailed": "Image generation failed",
+    "generatingCode": "Generating Code...",
+    "executedCode": "Executed Code",
+    "executionError": "Execution error",
+    "interactiveTable": "Interactive Table",
+    "tableData": "Table data",
+    "searchAcrossAllColumns": "Search across all columns...",
+    "pieChart": "Pie Chart",
+    "editingImage": "Editing image...",
+    "compositingImages": "Compositing images...",
+    "imageEdited": "Image edited",
+    "imagesComposited": "Images composited",
+    "imageGenerated": "Image generated",
+    "imageGenerationMayTake": "Image generation may take up to 1 minute.",
+    "noImagesGenerated": "No images generated",
+    "failedToGenerateImage": "Failed to generate image. Please try again.",
+    "generatedImageAlt": "Generated image {number}",
+    "open": "Open"
+  },
+  "JSONSchema": {
+    "pleaseEnterKeyAndType": "Please enter a key and type",
+    "pleaseEnterAtLeastOneOption": "Please enter at least one option",
+    "pleaseEnterValidOption": "Please enter a valid option",
+    "fieldType": "Field Type",
+    "string": "String",
+    "number": "Number",
+    "boolean": "Boolean",
+    "enum": "Enum",
+    "defaultToTrue": "Default to true"
+  },
+  "Mermaid": {
+    "errorRenderingDiagram": "Error rendering Mermaid diagram:",
+    "failedToRenderDiagram": "Failed to render diagram",
+    "renderingDiagram": "Rendering diagram"
+  },
+  "Export": {
+    "comments": "Comments",
+    "addComment": "Add Comment",
+    "writeAComment": "Write a comment...",
+    "exportChat": "Export Chat",
+    "shareExport": "Share Export"
   }
 }

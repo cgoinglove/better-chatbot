@@ -77,16 +77,16 @@ export function EditJsonSchemaFieldPopup({
 
   const handleSave = useCallback(() => {
     if (!field.key || !field.type)
-      return toast.warning("Please enter a key and type");
+      return toast.warning(t("JSONSchema.pleaseEnterKeyAndType"));
     if (field.enum) {
       if (!field.enum?.length)
-        return toast.warning("Please enter at least one option");
+        return toast.warning(t("JSONSchema.pleaseEnterAtLeastOneOption"));
       if (field.enum.some((item) => !item))
-        return toast.warning("Please enter a valid option");
+        return toast.warning(t("JSONSchema.pleaseEnterValidOption"));
     }
     onChange?.(field);
     setOpen(false);
-  }, [field, onChange]);
+  }, [field, onChange, t]);
 
   useEffect(() => {
     setField(defaultField ?? _defaultField);
@@ -141,76 +141,69 @@ export function EditJsonSchemaFieldContent({
     () => [
       {
         type: "string" as FieldType,
-        label: "String",
+        label: t("JSONSchema.string"),
         key: "string",
         icon: TypeIcon,
       },
       {
         type: "number" as FieldType,
-        label: "Number",
+        label: t("JSONSchema.number"),
         key: "number",
         icon: HashIcon,
       },
       {
         type: "boolean" as FieldType,
-        label: "Boolean",
+        label: t("JSONSchema.boolean"),
         key: "boolean",
         icon: CheckIcon,
       },
       {
         type: "string" as FieldType,
-        label: "Enum",
+        label: t("JSONSchema.enum"),
         key: "enum",
         icon: CopyCheckIcon as any,
       },
     ],
-    [],
+    [t],
   );
 
   const handleAddEnumValue = useCallback(() => {
-    const currentEnum = field.enum ?? [];
     onChange((prev) => ({
       ...prev,
-      enum: [...currentEnum, ""],
+      enum: [...(prev.enum ?? []), ""],
     }));
-  }, [field.enum, onChange]);
+  }, [onChange]);
 
   const handleRemoveEnumValue = useCallback(
     (index: number) => {
-      const currentEnum = field.enum ?? [];
       onChange((prev) => ({
         ...prev,
-        enum: currentEnum.filter((_, i) => i !== index),
+        enum: (prev.enum ?? []).filter((_, i) => i !== index),
       }));
     },
-    [field.enum, onChange],
+    [onChange],
   );
 
   const handleUpdateEnumValue = useCallback(
     (index: number, value: string) => {
-      const currentEnum = field.enum ?? [];
-      const newEnum = [...currentEnum];
-      newEnum[index] = value;
       onChange((prev) => ({
         ...prev,
-        enum: newEnum,
+        enum: (prev.enum ?? []).map((item, i) => (i === index ? value : item)),
       }));
     },
-    [field.enum, onChange],
+    [onChange],
   );
 
   const currentFieldKey = useMemo(() => {
-    if (field.type == "string" && field.enum) {
-      return "enum";
-    }
+    if (field.type == "string" && field.enum) return "enum";
     return field.type;
-  }, [field]);
+  }, [field.type, field.enum]);
 
   return (
     <div className="flex flex-col gap-6">
       {/* Field Type */}
       <div className="flex flex-col gap-2">
-        <Label>Field Type</Label>
+        <Label>{t("JSONSchema.fieldType")}</Label>
         <div className="grid grid-cols-2 gap-3 my-2">
           {fieldTypes.map((fieldType) => {
             return (
@@ -337,7 +330,9 @@ export function EditJsonSchemaFieldContent({
                 }))
               }
             />
-            <Label htmlFor="field-default-boolean">Default to true</Label>
+            <Label htmlFor="field-default-boolean">
+              {t("JSONSchema.defaultToTrue")}
+            </Label>
           </div>
         ) : field.enum ? (
           <Select

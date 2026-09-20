@@ -99,7 +99,7 @@ export function MessageEditor({
           className="overflow-y-auto bg-transparent outline-none overflow-hidden resize-none !text-base rounded-xl w-full min-h-[100px]"
           value={draftText}
           onChange={(e) => handleTextChange(e.target.value)}
-          placeholder="Edit your message..."
+          placeholder={t("Chat.editYourMessage")}
         />
       </div>
       <div className="flex flex-row gap-2 justify-end">

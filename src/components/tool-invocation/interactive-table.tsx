@@ -83,7 +83,10 @@ const loadXLSX = async () => {
   });
 };
 
+import { useTranslations } from "next-intl";
+
 export function InteractiveTable(props: InteractiveTableProps) {
+  const t = useTranslations("ToolInvocation");
   const { title, data, columns, description } = props;
 
   // Fixed settings for simplicity
@@ -313,7 +316,7 @@ export function InteractiveTable(props: InteractiveTableProps) {
         <CardHeader>
           <div className="flex flex-col">
             <CardTitle className="w-full flex items-center gap-2 justify-between">
-              Interactive Table - {title}
+              {t("interactiveTable")} - {title}
               <JsonViewPopup data={props} />
             </CardTitle>
             {description && (
@@ -326,7 +329,7 @@ export function InteractiveTable(props: InteractiveTableProps) {
             {searchable && (
               <div className="flex-1">
                 <Input
-                  placeholder="Search across all columns..."
+                  placeholder={t("searchAcrossAllColumns")}
                   value={searchTerm}
                   onChange={(e) => {
                     setSearchTerm(e.target.value);

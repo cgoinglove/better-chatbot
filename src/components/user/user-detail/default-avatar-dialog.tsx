@@ -48,6 +48,11 @@ export function DefaultAvatarDialog({
     }, 200);
   };
 
+  const getAvatarLabel = (avatar: (typeof DEFAULT_AVATARS)[number]) =>
+    avatar.id === "pf"
+      ? tCommon("default")
+      : tCommon("avatar", { number: avatar.id.replace("p", "") });
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -74,7 +79,7 @@ export function DefaultAvatarDialog({
               <Avatar className="size-full rounded-full ring ring-border">
                 <AvatarImage src={avatar.url || undefined} />
                 <AvatarFallback className="text-lg font-semibold">
-                  {avatar.label.slice(0, 2).toUpperCase()}
+                  {getAvatarLabel(avatar).slice(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
 

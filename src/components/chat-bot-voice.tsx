@@ -428,7 +428,7 @@ export function ChatBotVoice() {
                 <div className="max-w-3xl mx-auto">
                   <Alert variant={"destructive"}>
                     <TriangleAlertIcon className="size-4 " />
-                    <AlertTitle className="">Error</AlertTitle>
+                    <AlertTitle className="">{t("error")}</AlertTitle>
                     <AlertDescription>{error.message}</AlertDescription>
 
                     <AlertDescription className="my-4 ">

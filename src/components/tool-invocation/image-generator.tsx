@@ -8,6 +8,8 @@ import { memo, useMemo } from "react";
 import { TextShimmer } from "ui/text-shimmer";
 import LetterGlitch from "ui/letter-glitch";
 
+import { useTranslations } from "next-intl";
+
 interface ImageGeneratorToolInvocationProps {
   part: ToolUIPart;
 }
@@ -24,6 +26,7 @@ interface ImageGenerationResult {
 function PureImageGeneratorToolInvocation({
   part,
 }: ImageGeneratorToolInvocationProps) {
+  const t = useTranslations("ToolInvocation");
   const isGenerating = useMemo(() => {
     return !part.state.startsWith("output");
   }, [part.state]);
@@ -52,22 +55,22 @@ function PureImageGeneratorToolInvocation({
   const getModeText = (mode: string) => {
     switch (mode) {
       case "edit":
-        return "Editing image...";
+        return t("editingImage");
       case "composite":
-        return "Compositing images...";
+        return t("compositingImages");
       default:
-        return "Generating image...";
+        return t("generatingImage");
     }
   };
 
   const getModeHeader = (mode: string) => {
     switch (mode) {
       case "edit":
-        return "Image edited";
+        return t("imageEdited");
       case "composite":
-        return "Images composited";
+        return t("imagesComposited");
       default:
-        return "Image generated";
+        return t("imageGenerated");
     }
   };
 
@@ -80,7 +83,7 @@ function PureImageGeneratorToolInvocation({
           <LetterGlitch />
         </div>
         <p className="text-xs text-muted-foreground text-center">
-          Image generation may take up to 1 minute.
+          {t("imageGenerationMayTake")}
         </p>
       </div>
     );
@@ -91,7 +94,7 @@ function PureImageGeneratorToolInvocation({
       <div className="flex items-center gap-2">
         {!hasError && <ImagesIcon className="size-4" />}
         <span className="text-sm font-semibold">
-          {hasError ? "Image generation failed" : getModeHeader(mode)}
+          {hasError ? t("imageGenerationFailed") : getModeHeader(mode)}
         </span>
         <span className="text-xs text-muted-foreground">{result?.model}</span>
       </div>
@@ -101,8 +104,8 @@ function PureImageGeneratorToolInvocation({
           <div className="bg-card text-muted-foreground p-6 rounded-lg text-xs border border-border/20">
             {part.errorText ??
               (result?.images.length === 0
-                ? "No images generated"
-                : "Failed to generate image. Please try again.")}
+                ? t("noImagesGenerated")
+                : t("failedToGenerateImage"))}
           </div>
         ) : (
           <>
@@ -123,7 +126,7 @@ function PureImageGeneratorToolInvocation({
                   <img
                     src={image.url}
                     loading="lazy"
-                    alt={`Generated image ${index + 1}`}
+                    alt={t("generatedImageAlt", { number: index + 1 })}
                     className="w-full h-auto object-cover"
                   />
                   {/* Hover overlay */}
@@ -134,7 +137,7 @@ function PureImageGeneratorToolInvocation({
                       rel="noopener noreferrer"
                       className="bg-primary text-primary-foreground px-4 py-2 rounded-full text-sm font-medium hover:scale-105 transition-transform"
                     >
-                      Open
+                      {t("open")}
                     </a>
                   </div>
                 </div>

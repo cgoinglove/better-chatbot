@@ -643,7 +643,7 @@ export default function Page() {
                         <div className="space-y-2">
                           <div className="flex justify-between items-center mb-2">
                             <h5 className="text-xs font-medium flex items-center">
-                              Input JSON
+                              {t("MCP.inputJSON")}
                             </h5>
                             <GenerateExampleInputJsonDialog
                               toolInfo={selectedTool}
@@ -669,7 +669,7 @@ export default function Page() {
                           {jsonError && jsonInput && (
                             <Alert variant="destructive" className="mt-2">
                               <AlertTitle className="text-xs font-semibold">
-                                JSON Error
+                                {t("MCP.jsonError")}
                               </AlertTitle>
                               <AlertDescription className="text-xs">
                                 {jsonError}
@@ -696,7 +696,9 @@ export default function Page() {
                       {/* Results Display */}
                       {!isNull(callResult) && (
                         <div className="space-y-2">
-                          <h5 className="text-xs font-medium">Result</h5>
+                          <h5 className="text-xs font-medium">
+                            {t("Common.result")}
+                          </h5>
                           {callResult.success ? (
                             <div className="border border-input rounded-md p-4 max-h-[300px] overflow-auto">
                               <JsonView
@@ -710,7 +712,7 @@ export default function Page() {
                               className="mt-2 border-destructive"
                             >
                               <AlertTitle className="text-xs font-semibold">
-                                Error
+                                {t("MCP.error")}
                               </AlertTitle>
                               <AlertDescription className="text-xs mt-2 text-destructive">
                                 <pre className="whitespace-pre-wrap">

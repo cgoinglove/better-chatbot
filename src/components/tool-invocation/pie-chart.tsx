@@ -92,8 +92,11 @@ function formatLargeNumber(num: number | null | undefined): string {
   return `${value.toFixed(1)}${units[unitIndex]}`;
 }
 
+import { useTranslations } from "next-intl";
+
 export function PieChart(props: PieChartProps) {
-  const { title, data, unit, description, prefix, jsonView = true } = props;
+  const t = useTranslations("ToolInvocation");
+  const { title, data, unit, prefix, description, jsonView = true } = props;
   // Calculate total value
   const total = React.useMemo(() => {
     return data.reduce((acc, curr) => acc + curr.value, 0);
@@ -138,7 +141,7 @@ export function PieChart(props: PieChartProps) {
     <Card className="flex flex-col bg-card">
       <CardHeader className="items-center pb-0 flex flex-col gap-2 relative">
         <CardTitle className="flex items-center">
-          {prefix ?? "Pie Chart - "}
+          {prefix ?? `${t("pieChart")} - `}
           {title}
           {jsonView && (
             <div className="absolute right-4 top-0">

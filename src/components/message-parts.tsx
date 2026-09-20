@@ -135,8 +135,8 @@ export const UserMessagePart = memo(
     const deleteMessage = useCallback(async () => {
       if (!setMessages) return;
       const ok = await notify.confirm({
-        title: "Delete Message",
-        description: "Are you sure you want to delete this message?",
+        title: t("Chat.deleteMessageTitle"),
+        description: t("Chat.deleteMessageDescription"),
       });
       if (!ok) return;
       safe(() => setIsDeleting(true))
@@ -226,7 +226,7 @@ export const UserMessagePart = memo(
                   {copied ? <Check /> : <Copy />}
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="bottom">Copy</TooltipContent>
+              <TooltipContent side="bottom">{t("Common.copy")}</TooltipContent>
             </Tooltip>
             {!readonly && (
               <>
@@ -242,7 +242,9 @@ export const UserMessagePart = memo(
                       <Pencil />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent side="bottom">Edit</TooltipContent>
+                  <TooltipContent side="bottom">
+                    {t("Common.edit")}
+                  </TooltipContent>
                 </Tooltip>
 
                 <Tooltip>
@@ -297,6 +299,7 @@ export const AssistMessagePart = memo(function AssistMessagePart({
   sendMessage,
 }: AssistMessagePartProps) {
   const { copied, copy } = useCopy();
+  const t = useTranslations();
   const [isLoading, setIsLoading] = useState(false);
   const agentList = appStore((state) => state.agentList);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -310,8 +313,8 @@ export const AssistMessagePart = memo(function AssistMessagePart({
   const deleteMessage = useCallback(async () => {
     if (!setMessages) return;
     const ok = await notify.confirm({
-      title: "Delete Message",
-      description: "Are you sure you want to delete this message?",
+      title: t("Chat.deleteMessageTitle"),
+      description: t("Chat.deleteMessageDescription"),
     });
     if (!ok) return;
     safe(() => setIsDeleting(true))
@@ -328,7 +331,7 @@ export const AssistMessagePart = memo(function AssistMessagePart({
       .ifFail((error) => toast.error(error.message))
       .watch(() => setIsDeleting(false))
       .unwrap();
-  }, [message.id]);
+  }, [message.id, setMessages, t]);
 
   const handleModelChange = (model: ChatModel) => {
     if (!setMessages || !sendMessage || !prevMessage) return;
@@ -388,7 +391,7 @@ export const AssistMessagePart = memo(function AssistMessagePart({
                 {copied ? <Check /> : <Copy />}
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Copy</TooltipContent>
+            <TooltipContent>{t("Common.copy")}</TooltipContent>
           </Tooltip>
           {!readonly && (
             <>
@@ -807,8 +810,8 @@ export const ToolMessagePart = memo(
 
     const deleteMessage = useCallback(async () => {
       const ok = await notify.confirm({
-        title: "Delete Message",
-        description: "Are you sure you want to delete this message?",
+        title: t("Chat.deleteMessageTitle"),
+        description: t("Chat.deleteMessageDescription"),
       });
       if (!ok) return;
       safe(() => setIsDeleting(true))

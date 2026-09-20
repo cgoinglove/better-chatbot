@@ -10,16 +10,22 @@ import { Separator } from "ui/separator";
 import LightRays from "ui/light-rays";
 import Particles from "ui/particles";
 
+import { getTranslations } from "next-intl/server";
+
 // Simple date formatting function
-function formatTimeAgo(date: Date): string {
+function formatTimeAgo(
+  date: Date,
+  tCommon: (key: string, options?: any) => string,
+): string {
   const now = new Date();
   const diffInMs = now.getTime() - date.getTime();
   const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
 
-  if (diffInDays === 0) return "Today";
-  if (diffInDays === 1) return "Yesterday";
-  if (diffInDays < 7) return `${diffInDays} days ago`;
-  if (diffInDays < 30) return `${Math.floor(diffInDays / 7)} weeks ago`;
+  if (diffInDays === 0) return tCommon("today");
+  if (diffInDays === 1) return tCommon("yesterday");
+  if (diffInDays < 7) return tCommon("daysAgo", { count: diffInDays });
+  if (diffInDays < 30)
+    return tCommon("weeksAgo", { count: Math.floor(diffInDays / 7) });
   if (diffInDays < 365) return `${Math.floor(diffInDays / 30)} months ago`;
   return `${Math.floor(diffInDays / 365)} years ago`;
 }
@@ -85,6 +91,8 @@ export default async function ArchivePage({
     redirect("/");
   }
 
+  const tCommon = await getTranslations("Common");
+
   return (
     <>
       <>
@@ -115,7 +123,7 @@ export default async function ArchivePage({
             <h1 className="text-2xl font-bold">{archive.name}</h1>
             <div className="flex-1" />
             <p className="text-xs text-muted-foreground mr-2">
-              Created {formatTimeAgo(archive.createdAt)}
+              Created {formatTimeAgo(archive.createdAt, tCommon)}
             </p>
             <div className="h-4">
               <Separator orientation="vertical" />
@@ -162,12 +170,13 @@ export default async function ArchivePage({
                     <div className="flex items-center justify-between gap-4">
                       <div className="min-w-0 flex-1">
                         <h3 className="font-medium text-base truncate mb-1">
-                          {thread.title || "Untitled Chat"}
+                          {thread.title || tCommon("untitledChat")}
                         </h3>
                       </div>
                       <span className="text-xs text-muted-foreground">
                         {formatTimeAgo(
                           new Date(thread.lastMessageAt || thread.createdAt),
+                          tCommon,
                         )}
                       </span>
                     </div>
