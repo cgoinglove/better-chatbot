@@ -6,6 +6,7 @@ import { ChatModel } from "app-types/chat";
 import { cn } from "lib/utils";
 import { CheckIcon, ChevronDown } from "lucide-react";
 import { Fragment, memo, PropsWithChildren, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "ui/button";
 
 import {
@@ -28,8 +29,9 @@ interface SelectModelProps {
 }
 
 export const SelectModel = (props: PropsWithChildren<SelectModelProps>) => {
-  const [open, setOpen] = useState(false);
+  const tCommon = useTranslations("Common");
   const { data: providers } = useChatModels();
+  const [open, setOpen] = useState(false);
   const [model, setModel] = useState(props.currentModel);
 
   useEffect(() => {
@@ -74,11 +76,11 @@ export const SelectModel = (props: PropsWithChildren<SelectModelProps>) => {
           onClick={(e) => e.stopPropagation()}
         >
           <CommandInput
-            placeholder="search model..."
+            placeholder={tCommon("searchModel")}
             data-testid="model-search-input"
           />
           <CommandList className="p-2">
-            <CommandEmpty>No results found.</CommandEmpty>
+            <CommandEmpty>{tCommon("noResults")}</CommandEmpty>
             {providers?.map((provider, i) => (
               <Fragment key={provider.provider}>
                 <CommandGroup

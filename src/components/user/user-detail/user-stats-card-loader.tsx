@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { getUserStats } from "lib/user/server";
 import { UserStatisticsCard } from "./user-statistics-card";
 import { Card, CardContent, CardHeader, CardTitle } from "ui/card";
@@ -11,9 +12,10 @@ export const UserStatsCardLoader = async ({
   view?: "admin" | "user";
 }) => {
   const userStats = await getUserStats(userId);
+  const tCommon = await getTranslations("Common");
   return (
     <UserStatisticsCard
-      stats={{ ...userStats, period: "Last 30 Days" }}
+      stats={{ ...userStats, period: tCommon("last30Days") }}
       view={view}
     />
   );

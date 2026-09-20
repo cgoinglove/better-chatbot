@@ -1,4 +1,5 @@
 import { useCopy } from "@/hooks/use-copy";
+import { useTranslations } from "next-intl";
 import { ToolUIPart } from "ai";
 
 import { callCodeRunWorker } from "lib/code-runner/call-worker";
@@ -33,6 +34,7 @@ export const CodeExecutor = memo(function CodeExecutor({
   onResult?: (result?: any) => void;
   type: "javascript" | "python";
 }) {
+  const t = useTranslations("ToolInvocation");
   const isRun = useRef(false);
 
   const { copy, copied } = useCopy();
@@ -182,7 +184,7 @@ export const CodeExecutor = memo(function CodeExecutor({
       return (
         <>
           <Loader className="size-3 animate-spin text-muted-foreground" />
-          <TextShimmer className="text-xs">Generating Code...</TextShimmer>
+          <TextShimmer className="text-xs">{t("generatingCode")}</TextShimmer>
         </>
       );
     return (
@@ -190,7 +192,9 @@ export const CodeExecutor = memo(function CodeExecutor({
         {result?.error ? (
           <>
             <AlertTriangleIcon className="size-3 text-destructive" />
-            <span className="text-destructive text-xs">ERROR</span>
+            <span className="text-destructive text-xs">
+              {t("executionError")}
+            </span>
           </>
         ) : (
           <div className="text-[7px] bg-input rounded-xs w-4 h-4 p-0.5 flex items-end justify-end font-bold">
@@ -199,7 +203,7 @@ export const CodeExecutor = memo(function CodeExecutor({
         )}
       </>
     );
-  }, [part.state, result, isRunning]);
+  }, [part.state, result, isRunning, t]);
 
   const fallback = useMemo(() => {
     return <CodeFallback />;

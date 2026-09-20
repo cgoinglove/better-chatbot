@@ -232,7 +232,7 @@ export default function MCPEditor({
                   <div className="absolute w-full bottom-0 right-0 px-2 pb-2 animate-in fade-in-0 duration-300">
                     <Alert variant="destructive" className="border-destructive">
                       <AlertTitle className="text-xs font-semibold">
-                        Parsing Error
+                        {t("parsingError")}
                       </AlertTitle>
                       <AlertDescription className="text-xs">
                         {jsonError}

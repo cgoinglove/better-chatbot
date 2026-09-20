@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import {
   Card,
   CardContent,
@@ -8,12 +9,12 @@ import {
 } from "ui/card";
 import LightRays from "ui/light-rays";
 
-const convertErrorToMessage = (error: string) => {
+const convertErrorToMessage = (error: string, t: (key: string) => string) => {
   switch (error) {
     case "signup_disabled":
-      return "Signup is disabled";
+      return t("signupDisabled");
     case "UNAUTHORIZED":
-      return "Authentication required";
+      return t("authenticationRequired");
     default:
       return error;
   }
@@ -25,6 +26,7 @@ export default async function ErrorPage({
   searchParams: Promise<{ error?: string }>;
 }) {
   const { error } = await searchParams;
+  const t = await getTranslations("Auth.Error");
 
   return (
     <div className="w-full h-screen flex items-center justify-center relative">
@@ -33,9 +35,11 @@ export default async function ErrorPage({
       </div>
       <Card className="w-sm z-10">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">Auth Error</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            {t("title")}
+          </CardTitle>
           <CardDescription>
-            {convertErrorToMessage(error ?? "Unknown error")}
+            {convertErrorToMessage(error ?? t("unknownError"), t)}
           </CardDescription>
         </CardHeader>
         <CardContent className="flex justify-center">
@@ -43,7 +47,7 @@ export default async function ErrorPage({
             className="text-sm text-muted-foreground text-center underline"
             href="/"
           >
-            Go to home
+            {t("goToHome")}
           </Link>
         </CardContent>
       </Card>

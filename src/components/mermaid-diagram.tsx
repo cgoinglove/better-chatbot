@@ -5,6 +5,8 @@ import { Loader } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { useTranslations } from "next-intl";
+
 let mermaidModule: typeof import("mermaid").default | null = null;
 
 const loadMermaid = async () => {
@@ -19,6 +21,7 @@ interface MermaidDiagramProps {
 }
 
 export function MermaidDiagram({ chart }: MermaidDiagramProps) {
+  const t = useTranslations("Mermaid");
   const { theme } = useTheme();
   const [state, setState] = useState<{
     svg: string;
@@ -70,7 +73,7 @@ export function MermaidDiagram({ chart }: MermaidDiagramProps) {
         setState({
           svg: "",
           error:
-            err instanceof Error ? err.message : "Failed to render diagram",
+            err instanceof Error ? err.message : t("failedToRenderDiagram"),
           loading: false,
         });
       }
@@ -79,14 +82,14 @@ export function MermaidDiagram({ chart }: MermaidDiagramProps) {
     return () => {
       debounce.clear();
     };
-  }, [chart, theme, debounce]);
+  }, [chart, theme, debounce, t]);
 
   if (state.loading) {
     return (
       <div className="px-6 overflow-auto">
         <div className="flex items-center justify-center h-20 w-full">
           <div className="text-muted-foreground flex items-center gap-2">
-            Rendering diagram <Loader className="size-4 animate-spin" />
+            {t("renderingDiagram")} <Loader className="size-4 animate-spin" />
           </div>
         </div>
       </div>
@@ -97,7 +100,7 @@ export function MermaidDiagram({ chart }: MermaidDiagramProps) {
     return (
       <div className="px-6 pb-6 overflow-auto">
         <div className="text-destructive p-4">
-          <p>Error rendering Mermaid diagram:</p>
+          <p>{t("errorRenderingDiagram")}</p>
           <pre className="mt-2 p-2 bg-destructive/10 dark:bg-destructive/20 rounded text-xs overflow-auto">
             {state.error}
           </pre>

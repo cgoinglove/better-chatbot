@@ -158,7 +158,7 @@ export const MCPCard = memo(function MCPCard({
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                <p>Authorize</p>
+                <p>{t("authorize")}</p>
               </TooltipContent>
             </Tooltip>
             <div className="h-4">
@@ -293,9 +293,9 @@ export const MCPCard = memo(function MCPCard({
             }}
           >
             <ShieldAlertIcon />
-            <AlertTitle>Authorization Required</AlertTitle>
+            <AlertTitle>{t("authorizationRequired")}</AlertTitle>
             <AlertDescription>
-              Click here to authorize this MCP server and access its tools.
+              {t("authorizationRequiredDescription")}
             </AlertDescription>
           </Alert>
         </div>
@@ -346,6 +346,8 @@ export const MCPCard = memo(function MCPCard({
   );
 });
 
+MCPCard.displayName = "MCPCard";
+
 // Tools list component
 const ToolsList = memo(
   ({ tools, serverId }: { tools: MCPToolInfo[]; serverId: string }) => (
@@ -376,15 +378,18 @@ const ToolsList = memo(
 ToolsList.displayName = "ToolsList";
 
 // Error alert component
-const ErrorAlert = memo(({ error }: { error: string }) => (
-  <div className="px-6 pb-2">
-    <Alert variant="destructive" className="border-destructive">
-      <AlertTitle>Error</AlertTitle>
-      <AlertDescription className="whitespace-pre-wrap break-words">
-        {error}
-      </AlertDescription>
-    </Alert>
-  </div>
-));
+const ErrorAlert = memo(({ error }: { error: string }) => {
+  const t = useTranslations("MCP");
+  return (
+    <div className="px-6 pb-2">
+      <Alert variant="destructive" className="border-destructive">
+        <AlertTitle>{t("error")}</AlertTitle>
+        <AlertDescription className="whitespace-pre-wrap break-words">
+          {error}
+        </AlertDescription>
+      </Alert>
+    </div>
+  );
+});
 
 ErrorAlert.displayName = "ErrorAlert";

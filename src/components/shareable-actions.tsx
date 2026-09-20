@@ -154,7 +154,7 @@ export function ShareableActions({
                     </DropdownMenuTrigger>
                   </div>
                 </TooltipTrigger>
-                <TooltipContent>Change visibility</TooltipContent>
+                <TooltipContent>{t("Common.changeVisibility")}</TooltipContent>
               </Tooltip>
               <DropdownMenuContent className="max-w-sm">
                 {visibilityItems.map((visibilityItem) => (
